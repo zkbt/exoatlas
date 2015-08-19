@@ -86,7 +86,7 @@ class Population(Talker):
         standard_ascii = directories['data'] + self.fileprefix + '.ascii'
         edited_ascii = standard_ascii.replace('.ascii', '.edited')
 
-        kw = dict( delimiter='|', fill_values=[('',-9999)])#, format='basic', fill_values=[('--', 'nan'), (' ', 'nan')], data_start=1)
+        kw = dict( delimiter='|', fill_values=[('',np.nan), ('--', np.nan)])#, format='basic', fill_values=[('--', 'nan'), (' ', 'nan')], data_start=1)
         try:
             self.speak('attempting to load {0}'.format(edited_ascii))
             self.standard = astropy.io.ascii.read(edited_ascii, **kw)
@@ -117,6 +117,11 @@ class Population(Talker):
         # and resave it as a numpy table (for faster loading next time)
         #np.save(standard_numpy, self.standard)
         #self.speak('and saved standardized table to {0}'.format(standard_numpy))
+
+    def removeRows(self, indices):
+        self.standard.remove_rows(indices)
+        self.propagate()
+
 
     def propagate(self):
         '''Link the columns of the standardized table as object attributes.'''

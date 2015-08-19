@@ -3,6 +3,7 @@ from imports import *
 from Population import Population
 import urllib
 
+
 url = 'http://exoplanetarchive.ipac.caltech.edu/cgi-bin/nstedAPI/nph-nstedAPI?table=exoplanets&format=bar-delimited&select=*'
 
 initial_filename = directories['data'] + 'exoplanetArchiveConfirmedPlanets.psv'
@@ -93,5 +94,81 @@ class Confirmed(Population):
         #s['teff'][s['name'] == 'GJ 436b'] = 3400.0
         #s['teff'][s['name'] == 'Qatar-1b'] = 4860.0
         #s['stellar_radius'][s['name'] == 'WASP-100b'] = 1.5#???
-
+        s.sort('name')
         self.standard = s
+
+class Subset(Confirmed):
+    def __init__(self, label, color='black', zorder=0):
+
+        # set the label
+        self.label=label
+        self.color=color
+        self.zorder=zorder
+        try:
+            # first try to load this population
+            Talker.__init__(self)
+            self.loadStandard()
+        except IOError:
+            # if that fails, recreate it from the confirmed population
+            Confirmed.__init__(self)
+            self.label=label
+            self.selectSubsample()
+
+    def selectSubsample(self):
+        tr = self.toRemove()
+        self.speak('removing {0} rows'.format(np.sum(tr)))
+        self.removeRows(tr)
+        self.speak('leaving {0} rows'.format(self.n))
+        self.saveStandard()
+
+#
+# a pair of subsamples, for those discovered by Kepler or not
+#
+
+stringsIndicatingKepler = ['Kepler', 'K2', 'KIC', 'KOI', 'PH', '116454']
+def discoveredByKepler(pop):
+    d = np.zeros(len(pop.standard)).astype(np.bool)
+    for s in stringsIndicatingKepler:
+        match = np.array([s in name for name in pop.standard['name']])
+        d = d + match
+    return d
+
+class Kepler(Subset):
+    def __init__(self):
+        Subset.__init__(self, label="Kepler", color='black', zorder=0)
+
+    def toRemove(self):
+        return discoveredByKepler(self) == False
+
+class NonKepler(Subset):
+    def __init__(self):
+        Subset.__init__(self, label="NonKepler", color='black', zorder=0)
+
+    def toRemove(self):
+        return discoveredByKepler(self) == True
+
+#
+# a pair of subsamples, for those with and without good mass measurements
+#
+threshold = 2.5
+def hasMass(pop):
+    mass_uncertainty = (np.abs(pop.planet_mass_lower) + np.abs(pop.planet_mass_upper))/2.0
+    smallEnough = mass_uncertainty/pop.planet_mass < pop.maximum_uncertainty
+    exists = (mass_uncertainty > 0)*np.isfinite(mass_uncertainty)
+    return smallEnough*exists
+
+class GoodMass(Subset):
+    def __init__(self):
+        self.maximum_uncertainty = 1.0/threshold
+        Subset.__init__(self, label="GoodMass", color='black', zorder=0)
+
+    def toRemove(self):
+        return hasMass(self) == False
+
+class BadMass(Subset):
+    def __init__(self):
+        self.maximum_uncertainty = 1.0/threshold
+        Subset.__init__(self, label="BadMass", color='blue', zorder=-100)
+
+    def toRemove(self):
+        return hasMass(self) == True
