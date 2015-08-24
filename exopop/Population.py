@@ -133,6 +133,18 @@ class Population(Talker):
         '''Return index of a particular planet in the population.'''
         return np.array([clean(name) in clean(x) for x in self.name]).nonzero()[0]
 
+    def correct(self, name, **kwargs):
+
+        # find the entry to replace
+        match = self.find(name)
+        assert(len(match) == 1)
+
+        # loop over the keys
+        for k, v in kwargs.iteritems():
+            self.speak('{0} used to be {1}'.format(k, v))
+            self.standard[k][match] = v
+            self.speak('  now it is {0}'.format(v))
+
     def __str__(self):
         return '<{0} | {1} planets>'.format(self.label, self.n)
 

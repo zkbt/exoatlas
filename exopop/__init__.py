@@ -7,4 +7,4 @@ except NameError:
 
 if not __EXOPOP_SETUP__:
     # this is where you could import things to have at the ready
-    pass
+    from .BubblePlot import BubblePlot

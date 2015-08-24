@@ -3,7 +3,7 @@
 from zachopy.Talker import Talker
 import numpy as np, matplotlib.pyplot as plt
 import astropy.io.ascii, astropy.table
-import zachopy.relations, zachopy.strings, zachopy.units, zachopy.utils
+import zachopy.relations, zachopy.strings, zachopy.units, zachopy.utils, zachopy.color
 
 directories = dict(data='data/', plots='plots/', models='models/')
 for k in directories.keys():

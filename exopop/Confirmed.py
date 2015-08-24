@@ -3,6 +3,11 @@ from imports import *
 from Population import Population
 import urllib
 
+try:
+    from Curations.Confirmed import correct
+except ImportError:
+    def correct(pop):
+        pass
 
 url = 'http://exoplanetarchive.ipac.caltech.edu/cgi-bin/nstedAPI/nph-nstedAPI?table=exoplanets&format=bar-delimited&select=*'
 
@@ -158,7 +163,7 @@ def hasMass(pop):
     return smallEnough*exists
 
 class GoodMass(Subset):
-    def __init__(self):
+    def __init__(self, threshold=threshold):
         self.maximum_uncertainty = 1.0/threshold
         Subset.__init__(self, label="GoodMass", color='black', zorder=0)
 
@@ -166,7 +171,7 @@ class GoodMass(Subset):
         return hasMass(self) == False
 
 class BadMass(Subset):
-    def __init__(self):
+    def __init__(self, threshold=threshold):
         self.maximum_uncertainty = 1.0/threshold
         Subset.__init__(self, label="BadMass", color='blue', zorder=-100)
 
