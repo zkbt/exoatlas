@@ -3,11 +3,8 @@ from imports import *
 from Population import Population
 import urllib
 
-try:
-    from Curations.Confirmed import correct
-except ImportError:
-    def correct(pop):
-        pass
+from curation.Confirmed import correct
+
 
 url = 'http://exoplanetarchive.ipac.caltech.edu/cgi-bin/nstedAPI/nph-nstedAPI?table=exoplanets&format=bar-delimited&select=*'
 
@@ -22,7 +19,8 @@ class Confirmed(Population):
 
         # set up the population
         Population.__init__(self, label=label, **kwargs)
-
+        correct(self)
+        self.saveStandard()
         # defing some plotting parameters
         self.color = 'black'
         self.zorder = -1

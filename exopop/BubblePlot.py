@@ -48,15 +48,19 @@ class BubblePlot(Talker):
         #plt.cla()
         for key in self.pops.keys():
             self.plot(key, **kw)
-            plt.savefig(self.label(key)+ '.pdf')
+            #plt.savefig(self.label(key)+ '.pdf')
             if interactive:
                 self.input(key)
 
-    def kw(self, key):
+    def kw(self, key, **kwargs):
         pop = self.pops[key]
-        return dict(s=self.size*scale, marker='o', linewidth=1, facecolors='none', edgecolors=pop.color, alpha=0.5, zorder=pop.zorder, label=pop.name)
 
-    def plot(self, key, labels=False, ax=None, withmass=None, **kw):
+        default = dict(s=self.size*scale, marker='o', linewidth=1, facecolors='none', edgecolors=pop.color, alpha=0.5, zorder=pop.zorder, label=pop.name)
+        for k, v in kwargs.iteritems():
+            default[k] = v
+        return default
+
+    def plot(self, key, labels=False, ax=None, withmass=None, **kwargs):
         self.set(key)
         try:
             self.ax
@@ -66,7 +70,7 @@ class BubblePlot(Talker):
         if (withmass is not None)&(key.lower()=='confirmed'):
             if len(self.x) > 1:
                 ok = withmass# == True
-                kw = self.kw(key)
+                kw = self.kw(key,**kwargs)
                 kw['alpha'] = 1
                 kw['s'] = (self.size*scale)[ok]
                 self.ax.scatter(self.x[ok], self.y[ok],**kw)
@@ -79,10 +83,10 @@ class BubblePlot(Talker):
 
                 self.ax.scatter(self.x[ok], self.y[ok],**kw)
             else:
-                self.ax.scatter(self.x, self.y, **self.kw(key))
+                self.ax.scatter(self.x, self.y, **self.kw(key,**kwargs))
 
         else:
-            self.ax.scatter(self.x, self.y, **self.kw(key))
+            self.ax.scatter(self.x, self.y, **self.kw(key,**kwargs))
 
         self.ax.set_xscale(self.xscale)
         self.ax.set_yscale(self.yscale)
