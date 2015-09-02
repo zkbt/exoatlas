@@ -55,7 +55,7 @@ class BubblePlot(Talker):
     def kw(self, key, **kwargs):
         pop = self.pops[key]
 
-        default = dict(s=self.size*scale, marker='o', linewidth=1, facecolors='none', edgecolors=pop.color, alpha=0.5, zorder=pop.zorder, label=pop.name)
+        default = dict(s=self.size*scale, marker='o', linewidth=1, facecolors='none', edgecolors=pop.color, alpha=0.5, zorder=pop.zorder, label=pop.label)
         for k, v in kwargs.iteritems():
             default[k] = v
         return default

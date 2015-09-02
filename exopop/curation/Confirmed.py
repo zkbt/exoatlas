@@ -124,3 +124,13 @@ def correct(pop):
                 teff=5376.0)
     pop.correct('Kepler-417c',
                 teff=5376.0)
+
+    # from discovery paper
+    pop.correct('WASP-100b',
+                stellar_radius=2.0)
+
+    # supposedly HIPPARCOS, via exoplanets.org
+    pop.correct('HD80606b',
+                stellar_distance=58,
+                stellar_distance_upper=30,
+                stellar_distance_lower=-14.8)

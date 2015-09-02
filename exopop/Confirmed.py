@@ -1,7 +1,6 @@
 # exoplanet population of all "confirmed" exoplanets from exoplanet archive
 from imports import *
 from Population import Population
-import urllib
 
 from curation.Confirmed import correct
 
@@ -145,7 +144,7 @@ class Kepler(Subset):
 
 class NonKepler(Subset):
     def __init__(self):
-        Subset.__init__(self, label="NonKepler", color='black', zorder=0)
+        Subset.__init__(self, label="NonKepler", color='blue', zorder=0)
 
     def toRemove(self):
         return discoveredByKepler(self) == True
