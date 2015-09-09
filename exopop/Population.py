@@ -137,6 +137,9 @@ class Population(Talker):
 
         # find the entry to replace
         match = self.find(name)
+        if len(match) != 1:
+            self.speak('FAILED WHEN TRYING TO REPLACE {0}'.format(name))
+            return
         assert(len(match) == 1)
 
         # loop over the keys
@@ -189,7 +192,8 @@ class Population(Talker):
 
         distance[bad] = 10**(1 + 0.2*(self.J - self.absoluteJ))[bad]
 
-        assert((distance == 10.0).any() == False)
+        if self.__class__.__name__ != 'TESS':
+            assert((distance == 10.0).any() == False)
         return distance
 
     @property

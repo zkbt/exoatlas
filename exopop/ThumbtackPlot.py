@@ -1,6 +1,8 @@
 from imports import *
 from BubblePlot import BubblePlot
 from Confirmed import NonKepler, Kepler
+from KOI import UnconfirmedKepler
+from TESS import TESS
 # the figure size
 figsize=7
 
@@ -17,7 +19,7 @@ angle = 67.5*np.pi/180
 class ThumbtackPlot(BubblePlot):
     '''Plot exoplanet populations on a (possibly animated) thumbtack plot.'''
 
-    def __init__(self, pops=dict(nonkepler=NonKepler(), kepler=Kepler()), **kwargs):
+    def __init__(self, pops, **kwargs):
         '''initialize the thumbtack object'''
         BubblePlot.__init__(self, pops=pops, **kwargs)
         self.title = 'Thumbtacks'
@@ -135,7 +137,7 @@ class ThumbtackPlot(BubblePlot):
                 if key == 'kepler':
                     self.namestars('kepler')
                 plt.draw()
-                plt.savefig(self.label(key)+ '.pdf')
+                plt.savefig(directories['plots'] + self.label(key)+ '.pdf')
 
             if interactive:
                 self.input(key)
@@ -156,7 +158,7 @@ class ThumbtackPlot(BubblePlot):
                 self.highlight((self.pop.planet_radius > 0.7)*(self.pop.planet_radius < 1.6)*(self.pop.teq < 310)*(self.pop.teq > 200), 'Potentially Habitable Planets')
 
             f = plt.gcf()
-            filename = 'exoplanets_zoom_{0}{1}.mp4'.format(key, highlight)
+            filename = directories['plots'] + 'exoplanets_zoom_{0}{1}.mp4'.format(key, highlight)
             self.speak('writing movie to {0}'.format(filename))
             z = 2.0
 
@@ -235,7 +237,7 @@ class ThumbtackPlot(BubblePlot):
         try:
             self.signature
         except:
-            self.signature = self.ax.text(0.02, 0.02, 'zoom by Zach Berta-Thompson, early 2015', transform=self.ax.transAxes, alpha=0.5, size=8)
+            self.signature = self.ax.text(0.02, 0.02, 'animation by Zach Berta-Thompson, 2015', transform=self.ax.transAxes, alpha=0.5, size=8)
         self.ax.scatter(self.x, self.y, **kw)
         self.ax.scatter(0,0, marker='x', s=100, alpha=1, color='lightgray', linewidth=4, zorder=-90)
 
@@ -271,3 +273,19 @@ class ThumbtackPlot(BubblePlot):
         if style == 'equalarea':
             return np.array(d)**1.5
         assert(False)
+
+def tessComparison():
+    non = NonKepler()
+    kep = Kepler()
+    unc = UnconfirmedKepler()
+    kep.standard = astropy.table.vstack([kep.standard, unc.standard])
+    kep.propagate()
+    tes = TESS()
+    non.color = 'royalblue'
+    non.zorder=-1
+    kep.color='black'
+    kep.zorder=0
+    tes.color='coral'
+    tes.zorder=1
+    t = ThumbtackPlot(pops=dict(nonkepler=non, kepler=kep, tess=tes))
+    return t

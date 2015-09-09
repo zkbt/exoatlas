@@ -50,7 +50,7 @@ class Confirmed(Population):
         print "  having removed"
         print self.table[ok == False]
 
-    def createStandard(self):
+    def createStandard(self, **kwargs):
         t = self.trimmed
         s = astropy.table.Table()
         s['name'] = [t['pl_hostname'][i] + t['pl_letter'][i] for i in range(len(t))]
@@ -112,7 +112,7 @@ class Subset(Confirmed):
             self.loadStandard()
         except IOError:
             # if that fails, recreate it from the confirmed population
-            Confirmed.__init__(self)
+            Confirmed.__init__(self, color=color, zorder=zorder)
             self.label=label
             self.selectSubsample()
 
@@ -137,14 +137,14 @@ def discoveredByKepler(pop):
 
 class Kepler(Subset):
     def __init__(self):
-        Subset.__init__(self, label="Kepler", color='black', zorder=0)
+        Subset.__init__(self, label="Kepler (confirmed)", color='black', zorder=0)
 
     def toRemove(self):
         return discoveredByKepler(self) == False
 
 class NonKepler(Subset):
     def __init__(self):
-        Subset.__init__(self, label="NonKepler", color='blue', zorder=0)
+        Subset.__init__(self, label="NonKepler", color='royalblue', zorder=10)
 
     def toRemove(self):
         return discoveredByKepler(self) == True

@@ -10,3 +10,130 @@ initial_filename = directories['data'] + 'exoplanetArchiveCumulativeCandidates.p
 def downloadLatest():
     print 'downloading the latest list of confirmed exoplanets from the Exoplanet Archive'
     urllib.urlretrieve(url, initial_filename)
+
+class KOI(Population):
+    def __init__(self, label='KOI', **kwargs):
+        '''Initialize a population of KOI's, from Exoplanet archive.'''
+
+        # set up the population
+        Population.__init__(self, label=label, **kwargs)
+        correct(self)
+        self.saveStandard()
+        # defing some plotting parameters
+        self.color = 'gray'
+        self.zorder = -1
+
+    def loadFromScratch(self):
+
+        # load from a NASA Exoplanet Archive csv file
+        try:
+            self.table = astropy.io.ascii.read(initial_filename)
+        except IOError:
+            downloadLatest()
+            self.table = astropy.io.ascii.read(initial_filename)
+
+        self.speak('loaded Exoplanet Archive KOIs from {0}'.format(initial_filename))
+
+        # report original size
+        self.speak('original table contains {0} elements'.format(len(self.table)))
+
+    def trimRaw(self):
+        ok = (self.table['koi_jmag'] > 1.0)* \
+                (self.table['koi_srad'] > 0)* \
+                (self.table['koi_disposition'] != 'FALSE POSITIVE')* \
+                (self.table['koi_prad'] < 20)* \
+                (self.table['koi_prad_err1'] != 0.0)*\
+                (self.table['koi_impact'] < 1.0)#*(self.table['pl_rade'] < 3.5)
+        self.trimmed = self.table[ok]
+        self.speak('trimmed from {0} to {1}'.format(len(self.table), len(self.trimmed)))
+        print "  having removed"
+        print self.table[ok == False]
+
+
+
+    def createStandard(self):
+        t = self.trimmed
+        n = len(t)
+
+        s = astropy.table.Table()
+        s['name'] = t['kepler_name']#[t['kepler_name'][i] + t['pl_letter'][i] for i in range(len(t))]
+        for i in range(n):
+            if t['kepler_name'][i] != '0':
+                s['name'][i] = t['kepler_name'][i].replace(' ','')
+            else:
+                s['name'][i] = t['kepoi_name'][i]
+        s['period'] = t['koi_period']
+
+        s['teff'] = t['koi_steff']
+        s['stellar_radius'] = t['koi_srad']
+        s['J'] = t['koi_jmag']
+
+        # planet radius
+        s['planet_radius'] = t['koi_prad']
+        s['planet_radius_upper'] = t['koi_prad_err1']
+        s['planet_radius_lower'] = t['koi_prad_err2']
+
+
+        #KLUDGE?
+        s['a_over_r'] = t['koi_dor']
+
+        #KLUDGE?
+        #s['rv_semiamplitude'] =  t['pl_rvamp'] #t.MaskedColumn(t['K'], mask=t['K']==0.0)
+
+        s['planet_mass'] = np.zeros(n) + np.nan
+        s['planet_mass_upper'] = np.zeros(n) + np.nan
+        s['planet_mass_lower'] = np.zeros(n) + np.nan
+
+
+        s['radius_ratio'] = t['koi_ror']
+
+        badpos = (t['ra'] ==0.0)*(t['dec'] == 0.0)
+        s['ra'] = t.MaskedColumn(t['ra'], mask=badpos)
+        s['dec'] = t.MaskedColumn(t['dec'], mask=badpos)
+
+        s['b'] = t['koi_impact']
+
+
+        s['stellar_distance'] = np.zeros(n) + np.nan
+        s['stellar_distance_upper'] = np.zeros(n) + np.nan
+        s['stellar_distance_lower'] = np.zeros(n) + np.nan
+
+        s['disposition'] = t['koi_disposition']
+
+        # a little kludge
+        #s['teff'][s['name'] == 'GJ 436b'] = 3400.0
+        #s['teff'][s['name'] == 'Qatar-1b'] = 4860.0
+        #s['stellar_radius'][s['name'] == 'WASP-100b'] = 1.5#???
+        s.sort('name')
+        self.standard = s
+
+class Subset(KOI):
+    def __init__(self, label, color='black', zorder=0):
+
+        # set the label
+        self.label=label
+        self.color=color
+        self.zorder=zorder
+        try:
+            # first try to load this population
+            Talker.__init__(self)
+            self.loadStandard()
+        except IOError:
+            # if that fails, recreate it from the confirmed population
+            KOI.__init__(self)
+            self.label=label
+            self.selectSubsample()
+
+    def selectSubsample(self):
+        tr = self.toRemove()
+        self.speak('removing {0} rows'.format(np.sum(tr)))
+        self.removeRows(tr)
+        self.speak('leaving {0} rows'.format(self.n))
+        self.saveStandard()
+
+class UnconfirmedKepler(Subset):
+    def __init__(self):
+        Subset.__init__(self, label="Kepler (candidates)", color='gray', zorder=-1e6)
+
+    def toRemove(self):
+        return self.standard['disposition'] == 'CONFIRMED'
