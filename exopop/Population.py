@@ -193,7 +193,8 @@ class Population(Talker):
         distance[bad] = 10**(1 + 0.2*(self.J - self.absoluteJ))[bad]
 
         if self.__class__.__name__ != 'TESS':
-            assert((distance == 10.0).any() == False)
+            probablybad = distance == 10.0
+            distance[probablybad] = np.nan
         return distance
 
     @property
@@ -201,8 +202,38 @@ class Population(Talker):
         try:
             return self.standard['teq']
         except KeyError:
+            a_over_r = self.a_over_r
+            bad = (np.isfinite(a_over_r) == False) | (a_over_r == 0.0)
+
+
+            try:
+                stellar_mass = self.stellar_mass
+            except AttributeError:
+                #KLUDGE!
+                stellar_mass = self.stellar_radius
+
+            period = self.period
+            stellar_radius = self.stellar_radius
+            otherestimate = (zachopy.units.G*(period*zachopy.units.day)**2*(stellar_mass*zachopy.units.Msun)/4/np.pi**2/(stellar_radius*zachopy.units.Rsun)**3)**(1./3.)
+
+            a_over_r[bad] = otherestimate[bad]
+
+            '''plt.ion()
+            plt.figure(self.label)
+            plt.plot(a_over_r, otherestimate, '.')
+            for i in range(len(a_over_r)):
+                try:
+                    plt.text(a_over_r[i], otherestimate[i], self.name[i])
+                except:
+                    pass'''
+
+
             return self.teff/np.sqrt(2*self.a_over_r)
 
+    @property
+    def insolation(self):
+        u = zachopy.units
+        return 1.0/self.a_over_r**2*self.teff**4/(u.Rsun/u.au)**2/u.Tsun**4
 
     @property
     def duration(self):

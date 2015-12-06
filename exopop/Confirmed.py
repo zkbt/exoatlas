@@ -5,7 +5,9 @@ from Population import Population
 from curation.Confirmed import correct
 
 
-url = 'http://exoplanetarchive.ipac.caltech.edu/cgi-bin/nstedAPI/nph-nstedAPI?table=exoplanets&format=bar-delimited&select=*'
+url='http://exoplanetarchive.ipac.caltech.edu/cgi-bin/nstedAPI/nph-nstedAPI?table=exoplanets&select=pl_hostname,pl_letter,pl_orbper,pl_tranmid,pl_trandur,st_teff,st_rad,st_mass,st_j,ra,dec,pl_rade,pl_radeerr1,pl_radeerr2,pl_ratdor,pl_rvamp,pl_masse,pl_masseerr1,pl_masseerr2,pl_ratror,pl_imppar,st_dist,st_disterr1,st_disterr2,pl_tranflag&format=bar-delimited'
+
+#url = 'http://exoplanetarchive.ipac.caltech.edu/cgi-bin/nstedAPI/nph-nstedAPI?table=exoplanets&getAllColumns'
 
 initial_filename = directories['data'] + 'exoplanetArchiveConfirmedPlanets.psv'
 def downloadLatest():
@@ -43,6 +45,9 @@ class Confirmed(Population):
         self.table = self.table[good]
         self.speak('trimmed to {0} transiting planets'.format(np.sum(good)))
 
+
+
+
     def trimRaw(self):
         ok = (self.table['st_j'] > 1.0)*(self.table['st_rad'] > 0)#*(self.table['pl_rade'] < 3.5)
         self.trimmed = self.table[ok]
@@ -56,9 +61,12 @@ class Confirmed(Population):
         s['name'] = [t['pl_hostname'][i] + t['pl_letter'][i] for i in range(len(t))]
 
         s['period'] = t['pl_orbper']
+        s['transit_epoch'] = t['pl_tranmid']
+        s['transit_duration'] = t['pl_trandur']
 
         s['teff'] = t['st_teff']
         s['stellar_radius'] = t['st_rad']
+        s['stellar_mass'] = t['st_mass']
         s['J'] = t['st_j']
 
         # planet radius
@@ -68,7 +76,17 @@ class Confirmed(Population):
 
 
         #KLUDGE?
+        #rsovera = (3*np.pi/u.G/period**2/stellar_density/(1.0+mass_ratio))**(1.0/3.0)
+
         s['a_over_r'] = t['pl_ratdor']
+
+        bad = (np.isfinite(s['a_over_r']) == False)+( s['a_over_r'].data == 0.0)
+        period = s['period']
+        stellar_radius = s['stellar_radius']
+        stellar_mass = s['stellar_mass']
+        otherestimate = (zachopy.units.G*(period*zachopy.units.day)**2*(stellar_mass*zachopy.units.Msun)/4/np.pi**2/(stellar_radius*zachopy.units.Rsun)**3)**(1./3.)
+
+        s['a_over_r'][bad] = otherestimate[bad]
 
 
         #KLUDGE?
@@ -127,7 +145,7 @@ class Subset(Confirmed):
 # a pair of subsamples, for those discovered by Kepler or not
 #
 
-stringsIndicatingKepler = ['Kepler', 'K2', 'KIC', 'KOI', 'PH', '116454']
+stringsIndicatingKepler = ['Kepler', 'K2', 'KIC', 'KOI', 'PH', '116454', 'WASP-47d', 'WASP-47e']
 def discoveredByKepler(pop):
     d = np.zeros(len(pop.standard)).astype(np.bool)
     for s in stringsIndicatingKepler:

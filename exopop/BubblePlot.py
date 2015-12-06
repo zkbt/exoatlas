@@ -44,11 +44,12 @@ class BubblePlot(Talker):
     def label(self, key):
         return self.title.replace(' ','') + '_' + key.title()
 
-    def build(self, interactive=False, **kw):
+    def build(self, interactive=False, output=True,  **kw):
         #plt.cla()
         for key in self.pops.keys():
             self.plot(key, **kw)
-            #plt.savefig(self.label(key)+ '.pdf')
+            if output:
+                plt.savefig(self.label(key)+ '.pdf')
             if interactive:
                 self.input(key)
 
@@ -60,7 +61,7 @@ class BubblePlot(Talker):
             default[k] = v
         return default
 
-    def plot(self, key, labels=False, ax=None, withmass=None, **kwargs):
+    def plot(self, key, labels=False, ax=None, withmass=None, custom=True, **kwargs):
         self.set(key)
         try:
             self.ax
@@ -71,7 +72,10 @@ class BubblePlot(Talker):
             if len(self.x) > 1:
                 ok = withmass# == True
                 kw = self.kw(key,**kwargs)
-                kw['alpha'] = 1
+                try:
+                    kw['alpha'] = self.pop.alpha
+                except AttributeError:
+                    kw['alpha'] = 1
                 kw['s'] = (self.size*scale)[ok]
                 self.ax.scatter(self.x[ok], self.y[ok],**kw)
 
@@ -97,7 +101,8 @@ class BubblePlot(Talker):
         t = [1,2,3,4,5,6,7,8,9,10,20,30]
         s = ['1','2','3','4','5',' ',' ',' ',' ','10','20','30']
 
-        plt.yticks(t,s)
+        if custom:
+            plt.yticks(t,s)
         #self.ax.yaxis.set_major_formatter(plt.matplotlib.ticker.ScalarFormatter('{}'))
         #self.ax.yaxis.set_minor_formatter(plt.matplotlib.ticker.ScalarFormatter())
 

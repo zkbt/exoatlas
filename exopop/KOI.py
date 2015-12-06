@@ -136,4 +136,6 @@ class UnconfirmedKepler(Subset):
         Subset.__init__(self, label="Kepler (candidates)", color='gray', zorder=-1e6)
 
     def toRemove(self):
-        return self.standard['disposition'] == 'CONFIRMED'
+        isconfirmed = self.standard['disposition'] == 'CONFIRMED'
+        isjunk = self.distance == 10.0
+        return isconfirmed | isjunk

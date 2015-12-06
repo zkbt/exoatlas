@@ -1,3 +1,4 @@
+import numpy as np
 def correct(pop):
 
     """ I went through all the planets shown in the Dressing et al. (2015)
@@ -25,6 +26,10 @@ def correct(pop):
                 planet_mass_upper=0.31,
                 planet_mass_lower=-0.31,
                 b=0.459)
+
+    # from von Braun et al. (2012)
+    pop.correct('GJ 436b',
+                teff=3416.0)
 
     # from the updates in Anglada-Escude et al. (2013)
     pop.correct('GJ 1214b',
@@ -134,3 +139,9 @@ def correct(pop):
                 stellar_distance=58,
                 stellar_distance_upper=30,
                 stellar_distance_lower=-14.8)
+
+    # from discovery paper
+    pop.correct('Kepler-128b',
+                planet_mass=np.nan)
+    pop.correct('Kepler-128c',
+                planet_mass=np.nan)

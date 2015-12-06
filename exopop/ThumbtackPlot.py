@@ -11,7 +11,7 @@ aspect = 768/1024.0
 
 
 # the angle of the distance labels
-angle = 67.5*np.pi/180
+angle = 30*np.pi/180#67.5
 
 
 
@@ -19,13 +19,16 @@ angle = 67.5*np.pi/180
 class ThumbtackPlot(BubblePlot):
     '''Plot exoplanet populations on a (possibly animated) thumbtack plot.'''
 
-    def __init__(self, pops, **kwargs):
+    def __init__(self, pops, lightyears=False, **kwargs):
         '''initialize the thumbtack object'''
+        self.lightyears=lightyears
         BubblePlot.__init__(self, pops=pops, **kwargs)
         self.title = 'Thumbtacks'
         self.xlabel = ''
         self.ylabel = ''
         self.circlegrid = [3,10,30,100,300,1000]
+        if self.lightyears:
+            self.circlegrid = np.array([10,20,40,100,200,400,1000,2000,4000])*zachopy.units.ly/zachopy.units.pc
 
 
 
@@ -118,9 +121,13 @@ class ThumbtackPlot(BubblePlot):
                             linewidth=4, **gridkw)
 
             # label the circles with their distances
+            if self.lightyears:
+                circletext = '{0:.0f} ly'.format(originalradius*zachopy.units.pc/zachopy.units.ly)
+            else:
+                circletext = '{0:.0f} pc'.format(originalradius)
             self.circlelabels[originalradius] = self.ax.text(
                     (nudge+r)*np.cos(angle), (nudge+r)*np.sin(angle),
-                    '{0:.0f} pc'.format(originalradius),
+                    circletext,
                     rotation=-90+ angle*180/np.pi,
                     va='center', ha='center',
                     size=13, weight='extra bold', **gridkw)
@@ -143,12 +150,14 @@ class ThumbtackPlot(BubblePlot):
                 self.input(key)
 
 
-    def movie(self, step=1.02, interactive=False, bitrate=10000, highlight=''):
+    def movie(self, step=1.02, interactive=False, bitrate=10000, highlight='', keys=None, maxdistance=1500.0):
         metadata = dict(title='Exoplanets Zoom', artist='Zach Berta-Thompson (zkbt@mit.edu)')
         self.writer = animation.FFMpegWriter(fps=15, metadata=metadata, bitrate=bitrate)
 
         plt.cla()
-        for key in self.pops.keys():
+        if keys is None:
+            keys = self.pops.keys()
+        for key in keys:
             self.plot(key)
             if highlight == 'completeness':
                 self.highlight((self.pop.planet_radius > 2)*(self.pop.planet_radius < 4)*(self.pop.period < 10), '2-4 Earth radii\nP<10 days')
@@ -164,12 +173,13 @@ class ThumbtackPlot(BubblePlot):
 
             with self.writer.saving(f, filename, 1024.0/figsize):
                 # loop over exposures
-                while(z < 1100):
+                while(z < maxdistance):
                     self.zoom(z)
 
                     self.clearnames()
                     if highlight != 'habitable':
                         self.namestars('nonkepler')
+                        self.namestars('new')
                         if key == 'kepler':
                             self.namestars('kepler')
 
@@ -207,7 +217,11 @@ class ThumbtackPlot(BubblePlot):
                 ylim = self.ax.get_ylim()
                 onplot = (self.x > np.min(xlim))*(self.x < np.max(xlim))* (self.y > np.min(ylim))*(self.y < np.max(ylim))
                 nottooclose = self.pop.distance > self.outer*0.2
-                nottoofar = self.pop.distance <= 30
+                if self.lightyears:
+                    maxlabeldistance = 100.0*zachopy.units.ly/zachopy.units.pc
+                else:
+                    maxlabeldistance = 30.0
+                nottoofar = (self.pop.distance <= maxlabeldistance) | (self.pop.name == 'GJ1132b')
                 #print np.sum(onplot*nottooclose*nottoofar)
                 tolabel = (nottooclose*onplot*nottoofar).nonzero()[0]
                 #tolabel = self.pop.find('WASP94Ab')
@@ -238,6 +252,10 @@ class ThumbtackPlot(BubblePlot):
             self.signature
         except:
             self.signature = self.ax.text(0.02, 0.02, 'animation by Zach Berta-Thompson, 2015', transform=self.ax.transAxes, alpha=0.5, size=8)
+        try:
+            kw['alpha'] = self.pop.alpha
+        except AttributeError:
+            pass
         self.ax.scatter(self.x, self.y, **kw)
         self.ax.scatter(0,0, marker='x', s=100, alpha=1, color='lightgray', linewidth=4, zorder=-90)
 

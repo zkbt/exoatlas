@@ -12,6 +12,8 @@ class TESS(Population):
     def __init__(self, **kwargs):
         '''Initialize a population of simulated TESS planets.'''
         Population.__init__(self, label='Predicted TESS', **kwargs)
+        self.color = 'orange'
+        self.zorder = 1
 
     def loadFromScratch(self):
 
