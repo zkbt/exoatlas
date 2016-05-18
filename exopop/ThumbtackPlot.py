@@ -133,11 +133,11 @@ class ThumbtackPlot(BubblePlot):
                     size=13, weight='extra bold', **gridkw)
 
 
-    def build(self, interactive=False):
+    def build(self, distances=[10,30,100,300,1000], interactive=False):
         plt.cla()
         for key in self.pops.keys():
             self.plot(key)
-            for z in [10,30,100,300,1000]:
+            for z in distances:
                 self.zoom(z)
                 self.clearnames()
                 self.namestars('nonkepler')
@@ -179,7 +179,7 @@ class ThumbtackPlot(BubblePlot):
                     self.clearnames()
                     if highlight != 'habitable':
                         self.namestars('nonkepler')
-                        self.namestars('new')
+                        #KLUDGE! self.namestars('new')
                         if key == 'kepler':
                             self.namestars('kepler')
 
@@ -251,7 +251,7 @@ class ThumbtackPlot(BubblePlot):
         try:
             self.signature
         except:
-            self.signature = self.ax.text(0.02, 0.02, 'animation by Zach Berta-Thompson, 2015', transform=self.ax.transAxes, alpha=0.5, size=8)
+            self.signature = self.ax.text(0.02, 0.02, 'animation by Zach Berta-Thompson, 2016', transform=self.ax.transAxes, alpha=0.5, size=8)
         try:
             kw['alpha'] = self.pop.alpha
         except AttributeError:
