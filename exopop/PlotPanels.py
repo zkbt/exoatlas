@@ -240,6 +240,25 @@ class MassRadius(BubblePlot):
         self.ax.set_xlim(*self.xlim)
         self.ax.set_xlabel(self.xlabel)
         self.ax.set_ylabel(self.ylabel)
+
+
+        #self.ax.yaxis.set_major_formatter(plt.matplotlib.ticker.ScalarFormatter('{}'))
+        #self.ax.yaxis.set_minor_formatter(plt.matplotlib.ticker.ScalarFormatter())
+
+        if labels:
+            best = np.argsort(self.size)
+            for i in best[-10:]:
+                try:
+                    plt.text(self.x[i], self.y[i], self.pop.name[i])
+                except:
+                    print '!#!!@$!@$!@$'
+                    print self.pop.name[i]
+
+
+        plt.draw()
+
+    def fusswithticks(self):
+        plt.sca(self.ax)
         t = [1,2,3,4,5,6,7,8,9,10,20,30]
         s = ['1','2','3','4',' ',' ',' ',' ',' ','10','20']
         plt.yticks(t,s)
@@ -256,18 +275,3 @@ class MassRadius(BubblePlot):
 
 
         plt.xticks(t,s)
-
-        #self.ax.yaxis.set_major_formatter(plt.matplotlib.ticker.ScalarFormatter('{}'))
-        #self.ax.yaxis.set_minor_formatter(plt.matplotlib.ticker.ScalarFormatter())
-
-        if labels:
-            best = np.argsort(self.size)
-            for i in best[-10:]:
-                try:
-                    plt.text(self.x[i], self.y[i], self.pop.name[i])
-                except:
-                    print '!#!!@$!@$!@$'
-                    print self.pop.name[i]
-
-
-        plt.draw()

@@ -265,7 +265,7 @@ class Population(Talker):
 
     @property
     def scaleheight(self):
-        return zachopy.units.k*self.teq/self.mu/zachopy.units.mp/self.surfacegravity
+        return zachopy.units.k_B*self.teq/self.mu/zachopy.units.mp/self.surfacegravity
 
     @property
     def noisepertransit(self):

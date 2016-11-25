@@ -35,6 +35,12 @@ class TESS(Population):
         s['V'] = t['Vmag']
 
         s['planet_radius'] = t['Rplanet']
+        s['planet_radius_lower'] = np.zeros_like(t['Rplanet']) + 0.0001
+        s['planet_radius_upper'] = np.zeros_like(t['Rplanet']) + 0.0001
+
+        s['planet_mass'] = np.nan + np.zeros_like(t['Rplanet'])
+        s['planet_mass_lower'] = np.nan + np.zeros_like(t['Rplanet'])
+        s['planet_mass_upper'] = np.nan + np.zeros_like(t['Rplanet']) 
 
         s['teq'] = 280.0*t['S/SEarth']**0.25
         s['a_over_r'] = 0.5*(s['teff']/s['teq'])**2

@@ -192,3 +192,45 @@ class BadMass(Subset):
 
     def toRemove(self):
         return hasMass(self) == True
+
+class lateM(Subset):
+    def __init__(self, threshold=threshold):
+        Subset.__init__(self, label="T$_{eff}$<3400K", color='darkred', zorder=-100)
+
+    def toRemove(self):
+        return self.teff > 3400
+
+class earlyM(Subset):
+    def __init__(self, threshold=threshold):
+        Subset.__init__(self, label="3400K<T$_{eff}$<3800K", color='darkred', zorder=-100)
+
+    def toRemove(self):
+        return (self.teff > 3800) | (self.teff < 3400)
+
+class M(Subset):
+    def __init__(self, threshold=threshold):
+        Subset.__init__(self, label="M", color='darkred', zorder=-100)
+
+    def toRemove(self):
+        return (self.teff > 3800)
+
+class K(Subset):
+    def __init__(self, threshold=threshold):
+        Subset.__init__(self, label="K", color='darkred', zorder=-100)
+
+    def toRemove(self):
+        return (self.teff > 5300) | (self.teff < 3800)
+
+class G(Subset):
+    def __init__(self, threshold=threshold):
+        Subset.__init__(self, label="G", color='darkred', zorder=-100)
+
+    def toRemove(self):
+        return (self.teff > 6000) | (self.teff < 5300)
+
+class F(Subset):
+    def __init__(self, threshold=threshold):
+        Subset.__init__(self, label="F", color='darkred', zorder=-100)
+
+    def toRemove(self):
+        return (self.teff > 7200) | (self.teff < 6000)
