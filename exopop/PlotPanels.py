@@ -210,10 +210,13 @@ class MassRadius(BubblePlot):
 
         #assert(False)
         weights = np.minimum((0.1*np.sqrt(2)/density_uncertainty)**2, 1)
-        over = weights > 1
-        weights[over] = 1
+        #over = weights > 1
+        #weights[over] = 1
         kw['zorder'] = weights
 
+        print "!$!@%*!#%!@$!@#"
+        print self.pop
+        print weights
         #rgba[:,3] = 1.0*weights
         rgba[:,:3] = 1.0 - (1.0 - rgba[:,:3])*weights.reshape(len(weights), 1)
         rgba[:,3] = 1.0#*weights
