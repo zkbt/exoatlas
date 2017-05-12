@@ -206,10 +206,12 @@ class MassRadius(BubblePlot):
 
         #density_uncertainty = np.sqrt((merr/mass)**2 + 9*(rerr/radius)**2)
         #density = mass/radius**3
-        density_uncertainty = np.sqrt((merr/mass)**2 + (rerr/radius)**2)#*density
+        even_uncertainty = np.sqrt((merr/mass)**2 + (rerr/radius)**2)#*density
+        density_uncertainty = np.sqrt((merr/mass)**2 + 3*(rerr/radius)**2)#*density
+        gravity_uncertainty = np.sqrt((merr/mass)**2 + 2*(rerr/radius)**2)
 
         #assert(False)
-        weights = np.minimum((0.1*np.sqrt(2)/density_uncertainty)**2, 1)
+        weights = np.minimum(1.0/density_uncertainty**2, 50.0)/50
         #over = weights > 1
         #weights[over] = 1
         kw['zorder'] = weights

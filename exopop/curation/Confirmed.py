@@ -16,6 +16,15 @@ def correct(pop):
                 planet_mass_lower=-0.31,
                 b=0.36)'''
 
+    pop.correct('HD 209458b',
+
+                planet_mass=235.0,
+                planet_mass_upper=19.0,
+                planet_mass_lower=-19.0,
+                teff=6065.0)
+
+
+
     # from Gillon et al. (2012) (and some from Demory et al.)
     pop.correct('55 Cnce',
                 planet_radius=2.17,
