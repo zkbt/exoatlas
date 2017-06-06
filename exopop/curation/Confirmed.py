@@ -1,8 +1,27 @@
 import numpy as np
+
+
 def correct(pop):
 
+
+    """I corrected the famous ones, which have weird choices in the archive."""
+    pop.correct('HD 209458b',
+
+                planet_mass=235.0,
+                planet_mass_upper=19.0,
+                planet_mass_lower=-19.0,
+                teff=6065.0)
+
+    pop.correct('HD 189733b',
+                planet_radius=13.630,
+                planet_radius_upper=0.269,
+                planet_radius_lower=-0.269,
+                planet_mass=369.303,
+                planet_mass_upper=18.433,
+                planet_mass_lower=-18.433)
+
     """ I went through all the planets shown in the Dressing et al. (2015)
-        mass-radius diagram to double the values that are present in the
+        mass-radius diagram to double check the values that are present in the
         NASA Exoplanet Archive."""
 
     # parameters taken from the updates in Demory et al. (2015, *submitted*)
@@ -15,13 +34,6 @@ def correct(pop):
                 planet_mass_upper=0.31,
                 planet_mass_lower=-0.31,
                 b=0.36)'''
-
-    pop.correct('HD 209458b',
-
-                planet_mass=235.0,
-                planet_mass_upper=19.0,
-                planet_mass_lower=-19.0,
-                teff=6065.0)
 
 
 
