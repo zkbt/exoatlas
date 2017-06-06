@@ -145,7 +145,7 @@ class Subset(Confirmed):
 # a pair of subsamples, for those discovered by Kepler or not
 #
 
-stringsIndicatingKepler = ['Kepler', 'K2', 'KIC', 'KOI', 'PH', '116454', 'WASP-47d', 'WASP-47e']
+stringsIndicatingKepler = ['Kepler', 'K2', 'KIC', 'KOI', 'PH', '116454', 'WASP-47d', 'WASP-47e', 'HD 3167']
 def discoveredByKepler(pop):
     d = np.zeros(len(pop.standard)).astype(np.bool)
     for s in stringsIndicatingKepler:
