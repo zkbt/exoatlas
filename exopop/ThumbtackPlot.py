@@ -1,8 +1,8 @@
-from imports import *
-from BubblePlot import BubblePlot
-from Confirmed import NonKepler, Kepler
-from KOI import UnconfirmedKepler
-from TESS import TESS
+from .imports import *
+from .BubblePlot import BubblePlot
+from .Confirmed import NonKepler, Kepler
+from .KOI import UnconfirmedKepler
+from .TESS import TESS
 # the figure size
 figsize=7
 
@@ -15,13 +15,18 @@ angle = 30*np.pi/180#67.5
 
 
 
-
 class ThumbtackPlot(BubblePlot):
     '''Plot exoplanet populations on a (possibly animated) thumbtack plot.'''
 
     def __init__(self, pops, lightyears=False, **kwargs):
         '''initialize the thumbtack object'''
         self.lightyears=lightyears
+
+        if self.lightyears:
+            self.maxlabeldistance = 100.0*zachopy.units.ly/zachopy.units.pc
+        else:
+            self.maxlabeldistance = 30.0
+        self.planetfontsize=6
         BubblePlot.__init__(self, pops=pops, **kwargs)
         self.title = 'Thumbtacks'
         self.xlabel = ''
@@ -92,7 +97,7 @@ class ThumbtackPlot(BubblePlot):
                         va='center', ha='center',
                         size=10, alpha=0.5)
             if (i % 2) == 0:
-                self.ax.text(x, y, '\n\n' + months[i/2],
+                self.ax.text(x, y, '\n\n' + months[np.int(i/2)],
                             size=6, rotation=-90+theta[i]*180/np.pi,
                             transform=self.ax.transAxes,
                             va='center', ha='center',
@@ -105,7 +110,7 @@ class ThumbtackPlot(BubblePlot):
         theta = np.linspace(0,2*np.pi,1000)
 
         # graphics keywords for plotting the circle lines
-        gridkw = dict( color='gray', alpha=0.8, zorder=-100)
+        gridkw = dict( color='gray', alpha=0.5, zorder=-100)
 
         # store the plotted circles, so they can be erased elsewhere
         self.circlelabels = {}
@@ -133,27 +138,40 @@ class ThumbtackPlot(BubblePlot):
                     size=13, weight='extra bold', **gridkw)
 
 
-    def build(self, distances=[10,30,100,300,1000], interactive=False):
+    def build(self, keys=None, distances=[10,30,100,300,1000], interactive=False):
+        try:
+            del self.ax
+            del self.signature
+        except AttributeError:
+            pass
         plt.cla()
-        for key in self.pops.keys():
+        if keys is None:
+            keys = self.pops.keys()
+        for key in keys:
             self.plot(key)
             for z in distances:
                 self.zoom(z)
                 self.clearnames()
                 self.namestars('nonkepler')
-                if key == 'kepler':
-                    self.namestars('kepler')
+                #if key == 'kepler':
+                self.namestars('kepler')
                 plt.draw()
-                plt.savefig(directories['plots'] + self.label(key)+ '.pdf')
+                plt.savefig(directories['plots'] + self.label(key))
 
             if interactive:
                 self.input(key)
 
 
-    def movie(self, step=1.02, interactive=False, bitrate=10000, highlight='', keys=None, maxdistance=1500.0):
+    def movie(self, step=1.02, interactive=False, bitrate=10000, highlight='', keys=None, maxdistance=1500.0, fileprefix='kalirai'):
         metadata = dict(title='Exoplanets Zoom', artist='Zach Berta-Thompson (zkbt@mit.edu)')
         self.writer = animation.FFMpegWriter(fps=15, metadata=metadata, bitrate=bitrate)
 
+        try:
+            del self.ax
+            del self.signature
+
+        except AttributeError:
+            pass
         plt.cla()
         if keys is None:
             keys = self.pops.keys()
@@ -167,7 +185,7 @@ class ThumbtackPlot(BubblePlot):
                 self.highlight((self.pop.planet_radius > 0.7)*(self.pop.planet_radius < 1.6)*(self.pop.teq < 310)*(self.pop.teq > 200), 'Potentially Habitable Planets')
 
             f = plt.gcf()
-            filename = directories['plots'] + 'exoplanets_zoom_{0}{1}.mp4'.format(key, highlight)
+            filename = directories['plots'] + '{}_{}{}.mp4'.format(fileprefix, key, highlight)
             self.speak('writing movie to {0}'.format(filename))
             z = 2.0
 
@@ -176,12 +194,12 @@ class ThumbtackPlot(BubblePlot):
                 while(z < maxdistance):
                     self.zoom(z)
 
-                    self.clearnames()
-                    if highlight != 'habitable':
-                        self.namestars('nonkepler')
-                        #KLUDGE! self.namestars('new')
-                        if key == 'kepler':
-                            self.namestars('kepler')
+#                    self.clearnames()
+#                    if highlight != 'habitable':
+#                        self.namestars('nonkepler')
+#                        #KLUDGE! self.namestars('new')
+#                        #if key == 'kepler':
+#                        self.namestars('kepler')
 
                     self.writer.grab_frame()
                     self.speak('zoomed to {0}'.format(z))
@@ -197,6 +215,12 @@ class ThumbtackPlot(BubblePlot):
         self.ax.set_ylim(-height, height)
         self.ax.set_xlim(-width, width)
 
+        # handle adding and removing names
+        self.clearnames()
+        self.namestars('nonkepler')
+        self.namestars('kepler')
+
+
         nudge = 0.05*self.stretch(self.outer)
         for d in self.circlelabels.keys():
             self.circlelabels[d].set_visible(d > 0.2*distance)
@@ -205,39 +229,52 @@ class ThumbtackPlot(BubblePlot):
 
 
     def label(self, key):
-        return self.title.replace(' ','') + '_' + key.title()  + '_{0:04.0f}pc'.format(self.outer)+'.pdf'
+        return self.title.replace(' ','') + '_' + key.lower()  + '_{0:04.0f}pc'.format(self.outer)+'.pdf'
 
     def namestars(self, key):
 
         if True:
-                old = self.key + ''
-                self.set(key)
+            old = self.key + ''
+            self.set(key)
 
-                xlim = self.ax.get_xlim()
-                ylim = self.ax.get_ylim()
-                onplot = (self.x > np.min(xlim))*(self.x < np.max(xlim))* (self.y > np.min(ylim))*(self.y < np.max(ylim))
-                nottooclose = self.pop.distance > self.outer*0.2
-                if self.lightyears:
-                    maxlabeldistance = 100.0*zachopy.units.ly/zachopy.units.pc
-                else:
-                    maxlabeldistance = 30.0
-                nottoofar = (self.pop.distance <= maxlabeldistance) | (self.pop.name == 'GJ1132b')
-                #print np.sum(onplot*nottooclose*nottoofar)
-                tolabel = (nottooclose*onplot*nottoofar).nonzero()[0]
-                #tolabel = self.pop.find('WASP94Ab')
-                if tolabel.size > 1:
-                    tolabel = tolabel[np.unique(self.x[tolabel], return_index=True)[1]]
+            xlim = self.ax.get_xlim()
+            ylim = self.ax.get_ylim()
+            onplot = (self.x > np.min(xlim))*(self.x < np.max(xlim))* (self.y > np.min(ylim))*(self.y < np.max(ylim))
+            nottooclose = self.pop.distance > self.outer*0.2
 
-                for c in tolabel:
-                    #print self.pop.name[c]
-                    self.named.append(plt.text(self.x[c], self.y[c] + self.stretch(self.outer)*0.02,  self.pop.name[c].replace('Kepler-444 b', 'Kepler-444 bcdef') , color=self.pop.color, alpha=0.75, va='bottom', ha='center', weight='bold', size=10))
-                self.set(old)
+            nottoofar = (self.pop.distance <= self.maxlabeldistance)
+            #print np.sum(onplot*nottooclose*nottoofar)
+            tolabel = (nottooclose*onplot*nottoofar).nonzero()[0]
+            #tolabel = self.pop.find('WASP94Ab')
+            if tolabel.size > 1:
+                tolabel = tolabel[np.unique(self.x[tolabel], return_index=True)[1]]
+
+            for c in tolabel:
+                #print(self.pop.name[c])
+                #self.named.append(plt.text(self.x[c], self.y[c],
+                #	self.pop.name[c].replace(' ', '') ,
+                #	color=self.pop.color, alpha=0.75, va='center',
+                #	ha='center', weight='bold', size=self.planetfontsize))
+				#- self.stretch(self.outer)*0.02
+                try:
+                    assert(self.pop.alpha == 0)
+                    downwardnudge = ''
+                except (AttributeError, AssertionError):
+                    downwardnudge = '\n\n'
+
+                self.named.append(plt.text(self.x[c], self.y[c],
+                	downwardnudge + self.pop.name[c].replace(' ', '') ,
+                	color=self.pop.color, alpha=0.75, va='center',
+                	ha='center', weight='bold', size=self.planetfontsize))
+            self.set(old)
 
     def clearnames(self):
-
+        '''Remove system names that have been added to the plot.'''
         while(len(self.named) > 0):
-            self.named.pop().remove()
-
+            try:
+                self.named.pop().remove()
+            except ValueError:
+                pass
     def plot(self, key, labels=False):
         self.set(key)
         try:
@@ -251,7 +288,7 @@ class ThumbtackPlot(BubblePlot):
         try:
             self.signature
         except:
-            self.signature = self.ax.text(0.02, 0.02, 'animation by Zach Berta-Thompson, 2016', transform=self.ax.transAxes, alpha=0.5, size=8)
+            self.signature = self.ax.text(0.02, 0.02, 'Zach Berta-Thompson, 2017', transform=self.ax.transAxes, alpha=0.5, size=8)
         try:
             kw['alpha'] = self.pop.alpha
         except AttributeError:
@@ -259,10 +296,11 @@ class ThumbtackPlot(BubblePlot):
         self.ax.scatter(self.x, self.y, **kw)
         self.ax.scatter(0,0, marker='x', s=100, alpha=1, color='lightgray', linewidth=4, zorder=-90)
 
-        self.leg = plt.legend(bbox_to_anchor=(1, 1), fontsize=10, framealpha=0.0, scatterpoints=1, markerscale=1.5, title='Transiting Exoplanets')
+		# kludge!
+        self.leg = plt.legend(loc='upper right', fontsize=10, framealpha=0.0, scatterpoints=1, markerscale=1.5, title='Transiting Exoplanets')
 
     def highlight(self, indices, label='special!'):
-        print self.pop.standard[indices]
+        print(self.pop.standard[indices])
         kw = self.kw(self.key)
         kw['marker'] = '*'
         kw['edgecolors'] = self.pop.color.replace('black', 'gray')
@@ -278,8 +316,9 @@ class ThumbtackPlot(BubblePlot):
         r = self.pop.planet_radius[indices]
         #kic = self.pop.standard['kepid'][indices]
         for i in range(len(t)):
-            self.ax.text(self.x[indices][i], self.y[indices][i], r'{0:.0f}K, {1:.1f}R$_\oplus$'.format(t[i], r[i]) +'\n', size=8, ha='center', va='bottom', color=self.pop.color.replace('black', 'gray'))
-            print  r[i], t[i]#, self.pop.distance[indices][i]
+            self.ax.text(self.x[indices][i], self.y[indices][i], r'{0:.0f}K, {1:.1f}R$_\oplus$'.format(t[i], r[i]) +'\n',
+			size=8, ha='center', va='bottom', color=self.pop.color.replace('black', 'gray'))
+            print(r[i], t[i])#, self.pop.distance[indices][i]
         #(self.name == 'WASP-94A b').nonzero()[0]
 
     def toclock(self, hour):

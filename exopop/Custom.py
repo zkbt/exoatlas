@@ -1,5 +1,5 @@
-from imports import *
-from Population import Population
+from .imports import *
+from .Population import Population
 
 class Custom(Population):
     def __init__(self, listofdictionaries=None, **kwargs):

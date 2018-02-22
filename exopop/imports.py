@@ -3,8 +3,10 @@
 from zachopy.Talker import Talker
 import numpy as np, matplotlib.pyplot as plt, matplotlib.animation as animation
 import astropy.io.ascii, astropy.table
-import urllib
-import zachopy.relations, zachopy.strings, zachopy.units, zachopy.utils, zachopy.color
+#from urllib import request
+#from urllib2 import request
+
+import thistothat, zachopy.strings, zachopy.units, zachopy.utils, zachopy.color
 
 directories = dict(data='data/', plots='plots/', models='models/')
 for k in directories.keys():

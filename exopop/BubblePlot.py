@@ -57,11 +57,11 @@ class BubblePlot(Talker):
         pop = self.pops[key]
 
         default = dict(s=self.size*scale, marker='o', linewidth=1, facecolors='none', edgecolors=pop.color, alpha=0.5, zorder=pop.zorder, label=pop.label)
-        for k, v in kwargs.iteritems():
+        for k, v in kwargs.items():
             default[k] = v
         return default
 
-    def plot(self, key, labels=False, ax=None, withmass=None, custom=True, **kwargs):
+    def plot(self, key, labels=False, ax=None, withmass=None, custom=False, **kwargs):
         self.set(key)
         try:
             self.ax
@@ -112,8 +112,8 @@ class BubblePlot(Talker):
                 try:
                     plt.text(self.x[i], self.y[i], self.pop.name[i])
                 except:
-                    print '!#!!@$!@$!@$'
-                    print self.pop.name[i]
+                    print('!#!!@$!@$!@$')
+                    print(self.pop.name[i])
 
 
         plt.draw()

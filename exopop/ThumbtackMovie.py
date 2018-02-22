@@ -7,7 +7,6 @@ pops = dict(kepler=Kepler(), candidates=UnconfirmedKepler(),
             nonkepler=NonKepler(), new=TESS())
 
 
-
 t = ThumbtackPlot(pops=pops, lightyears=False)
 pops['kepler'].label='Kepler'
 pops['candidates'].label=None
@@ -22,4 +21,5 @@ pops['new'].label='Predicted TESS'
 pops['new'].standard['name'] = ''
 pops['new'].color = 'darkorange'
 
-t.movie(keys=['candidates','nonkepler', 'kepler', 'new'], maxdistance=1300.0)
+
+t.movie(keys=['candidates', 'kepler', 'nonkepler', 'new'], maxdistance=1300.0)

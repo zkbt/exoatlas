@@ -1,8 +1,8 @@
 # exoplanet population of all "confirmed" exoplanets from exoplanet archive
-from imports import *
-from Population import Population
+from .imports import *
+from .Population import Population
 
-from curation.Confirmed import correct
+from .curation.Confirmed import correct
 
 
 url='http://exoplanetarchive.ipac.caltech.edu/cgi-bin/nstedAPI/nph-nstedAPI?table=exoplanets&select=pl_hostname,pl_letter,pl_orbper,pl_tranmid,pl_trandur,st_teff,st_rad,st_mass,st_j,ra,dec,pl_rade,pl_radeerr1,pl_radeerr2,pl_ratdor,pl_rvamp,pl_masse,pl_masseerr1,pl_masseerr2,pl_ratror,pl_imppar,st_dist,st_disterr1,st_disterr2,pl_tranflag&format=bar-delimited'
@@ -11,8 +11,8 @@ url='http://exoplanetarchive.ipac.caltech.edu/cgi-bin/nstedAPI/nph-nstedAPI?tabl
 
 initial_filename = directories['data'] + 'exoplanetArchiveConfirmedPlanets.psv'
 def downloadLatest():
-    print 'downloading the latest list of confirmed exoplanets from the Exoplanet Archive'
-    urllib.urlretrieve(url, initial_filename)
+    print('downloading the latest list of confirmed exoplanets from the Exoplanet Archive')
+    request.urlretrieve(url, initial_filename)
 
 class Confirmed(Population):
     def __init__(self, label='Confirmed', **kwargs):
@@ -25,6 +25,7 @@ class Confirmed(Population):
         # defing some plotting parameters
         self.color = 'black'
         self.zorder = -1
+        self.ink=True
 
     def loadFromScratch(self):
 
@@ -52,8 +53,8 @@ class Confirmed(Population):
         ok = (self.table['st_j'] > 1.0)*(self.table['st_rad'] > 0)#*(self.table['pl_rade'] < 3.5)
         self.trimmed = self.table[ok]
         self.speak('trimmed from {0} to {1}'.format(len(self.table), len(self.trimmed)))
-        print "  having removed"
-        print self.table[ok == False]
+        print("  having removed")
+        print(self.table[ok == False])
 
     def createStandard(self, **kwargs):
         t = self.trimmed
@@ -110,6 +111,9 @@ class Confirmed(Population):
         s['stellar_distance_upper'] = t['st_disterr1']
         s['stellar_distance_lower'] = t['st_disterr2']
 
+
+
+
         # a little kludge
         #s['teff'][s['name'] == 'GJ 436b'] = 3400.0
         #s['teff'][s['name'] == 'Qatar-1b'] = 4860.0
@@ -145,7 +149,8 @@ class Subset(Confirmed):
 # a pair of subsamples, for those discovered by Kepler or not
 #
 
-stringsIndicatingKepler = ['Kepler', 'K2', 'KIC', 'KOI', 'PH', '116454', 'WASP-47d', 'WASP-47e', 'HD 3167']
+stringsIndicatingKepler = ['Kepler', 'K2', 'KIC', 'KOI', 'PH', '116454', 'WASP-47d', 'WASP-47e',
+                            'HD 3167', 'EPIC', '106315', '41378', "BD+20"]
 def discoveredByKepler(pop):
     d = np.zeros(len(pop.standard)).astype(np.bool)
     for s in stringsIndicatingKepler:
@@ -181,6 +186,7 @@ class GoodMass(Subset):
     def __init__(self, threshold=threshold):
         self.maximum_uncertainty = 1.0/threshold
         Subset.__init__(self, label="GoodMass", color='black', zorder=0)
+        self.ink=True
 
     def toRemove(self):
         return hasMass(self) == False
@@ -189,6 +195,7 @@ class BadMass(Subset):
     def __init__(self, threshold=threshold):
         self.maximum_uncertainty = 1.0/threshold
         Subset.__init__(self, label="BadMass", color='blue', zorder=-100)
+        self.ink=True
 
     def toRemove(self):
         return hasMass(self) == True

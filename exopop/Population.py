@@ -1,13 +1,16 @@
 # general class for exoplanet populations
-from imports import *
+from .imports import *
+import string
 
 # the mamajek relation is needed for estimating distances to stars, for those without
-mamajek = zachopy.relations.Mamajek()
+mamajek = thistothat.Mamajek()
 #columns =['name','kepid','period','teff','stellar_radius','planet_radius','a_over_r','b','rv_semiamplitude','planet_mass','radius_ratio','J','ra','dec']
 
 
 def clean(s):
-    return s.translate(None, ' !@#$%^&*()-')
+
+	translator = s.maketrans('', '', ' ' + string.punctuation)
+	return s.translate(translator)
 
 class Population(Talker):
     '''Population object keeps track of an exoplanet population.'''
@@ -20,11 +23,16 @@ class Population(Talker):
                 2) ingest a raw table, and standardize it
         '''
 
+        # kuldge
+        self.ink=True
+
         # initialize the talker
         Talker.__init__(self)
 
         # set the name for this population
         self.label = label
+
+
 
         try:
             # try to load the standardized table
@@ -33,6 +41,7 @@ class Population(Talker):
         except IOError:
             # or create a new standardized table and save it
             self.ingestNew(**kwargs)
+
 
     @property
     def fileprefix(self):
@@ -143,7 +152,7 @@ class Population(Talker):
         assert(len(match) == 1)
 
         # loop over the keys
-        for k, v in kwargs.iteritems():
+        for k, v in kwargs.items():
             self.speak('{0} used to be {1}'.format(k, v))
             self.standard[k][match] = v
             self.speak('  now it is {0}'.format(v))
@@ -237,7 +246,39 @@ class Population(Talker):
 
     @property
     def duration(self):
-        return self.period/np.pi/self.a_over_r
+
+        d = self.standard['transit_duration']
+
+        try:
+
+            # try to calculate it from the parameters
+            bad = np.isfinite(d)
+            estimate = self.period/np.pi/self.a_over_r*np.sqrt(1-self.b**2)
+            d[bad] = estimate[bad]
+
+
+            # try to calculate it from the parameters
+            bad = np.isfinite(d)
+            estimate = self.period/np.pi/self.a_over_r
+            d[bad] = estimate[bad]
+        except TypeError:
+            # try to calculate it from the parameters
+            if np.isfinite(d):
+                return d
+            else:
+                if np.isfinite(self.b):
+                    b = self.b
+                else:
+                    b = 0.0
+                return self.period/np.pi/self.a_over_r*np.sqrt(1-b**2)
+
+
+            # try to calculate it from the parameters
+            bad = np.isfinite(d)
+            estimate = self.period/np.pi/self.a_over_r
+            d[bad] = estimate[bad]
+
+        return d#self.period/np.pi/self.a_over_r
 
     @property
     def photons(self):

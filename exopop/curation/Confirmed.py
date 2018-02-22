@@ -1,18 +1,90 @@
 import numpy as np
-
+import astropy.units as u
 
 def correct(pop):
 
+    pop.correct('GJ 1132b',
+            a_over_r=16.54,
+            planet_mass=1.62,
+            planet_mass_upper=0.55,
+            planet_mass_lower=-0.55,
+			planet_radius=1.130,
+			planet_radius_upper=0.056,
+			planet_radius_lower=-0.056,
+			teff=3270.0, b=0.38,
+			stellar_radius=0.2105,
+			stellar_mass=0.181)
+
+    pop.correct('HD 17156b',
+            transit_duration=0.1338, a_over_r=23.2, b=0.477)
+
+    pop.correct('HD 80606b',
+            transit_duration=0.4958, a_over_r=94, b=0.75)
+
+    pop.correct('GJ 1132b',
+                transit_duration=47.0/60.0/24.0)
+
+    pop.correct('GJ 1214b',
+                transit_duration=0.03620)
+
+    pop.correct('GJ 436b',
+                transit_duration=0.04227)
+
+    pop.correct('HD 219134b',
+            a_over_r=0.03876*u.au/0.778/u.Rsun,
+            planet_mass=4.74,
+            planet_mass_upper=0.19,
+            planet_mass_lower=-0.19)
+
+    pop.correct('HD 219134c',
+            a_over_r=0.06530*u.au/0.778/u.Rsun,
+            planet_mass=4.36,
+            planet_mass_upper=0.22,
+            planet_mass_lower=-0.22)
+
+    pop.correct('LHS 1140b',
+            transit_duration=2.0/24.0,
+            a_over_r=101.0,
+            b=0.16)
+
+    pop.correct('GJ 3470b',
+            transit_duration=0.07992)
+
+    pop.correct('Kepler-51b',
+            transit_duration=0.24154)
+
+    pop.correct('Kepler-51c',
+            transit_duration=0.1171)
+
+    pop.correct('Kepler-51d',
+            transit_duration=0.351992)
+
+    pop.correct('Kepler-42b',
+            transit_duration=0.022329)
+
+    pop.correct('Kepler-42c',
+            transit_duration=0.02)
+
+    pop.correct('Kepler-42d',
+            transit_duration=0.016554)
+
+    pop.correct('WASP-43b',
+            transit_duration=0.0483, a_over_r=4.8, b=0.66)
+
+    pop.correct('K2-18b', transit_duration=0.1117)
 
     """I corrected the famous ones, which have weird choices in the archive."""
     pop.correct('HD 209458b',
-
                 planet_mass=235.0,
                 planet_mass_upper=19.0,
                 planet_mass_lower=-19.0,
-                teff=6065.0)
+                teff=6065.0,
+                a_over_r=8.9,
+                b=0.5)
+
 
     pop.correct('HD 189733b',
+                a_over_r=8.9,
                 planet_radius=13.630,
                 planet_radius_upper=0.269,
                 planet_radius_lower=-0.269,
@@ -79,13 +151,6 @@ def correct(pop):
                 planet_mass=4.73,
                 planet_mass_upper=0.95,
                 planet_mass_lower=-0.95)
-
-    # from Motalebi et al. (2015)
-    pop.correct('HD 219134b',
-                a_over_r=10.53,
-                planet_mass=4.46,
-                planet_mass_upper=0.47,
-                planet_mass_lower=-0.47)
 
     # from Carter et al.
     pop.correct('Kepler-36b',

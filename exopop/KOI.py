@@ -1,15 +1,15 @@
 # exoplanet population of all "confirmed" exoplanets from exoplanet archive
-from imports import *
-from Population import Population
-from curation.KOI import correct
+from .imports import *
+from .Population import Population
+from .curation.KOI import correct
 
 
 url ='http://exoplanetarchive.ipac.caltech.edu/cgi-bin/nstedAPI/nph-nstedAPI?table=cumulative&format=bar-delimited&select=*'
 initial_filename = directories['data'] + 'exoplanetArchiveCumulativeCandidates.psv'
 
 def downloadLatest():
-    print 'downloading the latest list of confirmed exoplanets from the Exoplanet Archive'
-    urllib.urlretrieve(url, initial_filename)
+    print('downloading the latest list of confirmed exoplanets from the Exoplanet Archive')
+    request.urlretrieve(url, initial_filename)
 
 class KOI(Population):
     def __init__(self, label='KOI', **kwargs):
@@ -22,6 +22,7 @@ class KOI(Population):
         # defing some plotting parameters
         self.color = 'gray'
         self.zorder = -1
+        self.ink=True
 
     def loadFromScratch(self):
 
@@ -46,8 +47,8 @@ class KOI(Population):
                 (self.table['koi_impact'] < 1.0)#*(self.table['pl_rade'] < 3.5)
         self.trimmed = self.table[ok]
         self.speak('trimmed from {0} to {1}'.format(len(self.table), len(self.trimmed)))
-        print "  having removed"
-        print self.table[ok == False]
+        print("  having removed")
+        print(self.table[ok == False])
 
 
 
@@ -123,6 +124,7 @@ class Subset(KOI):
             KOI.__init__(self)
             self.label=label
             self.selectSubsample()
+        self.ink=True
 
     def selectSubsample(self):
         tr = self.toRemove()
@@ -134,6 +136,7 @@ class Subset(KOI):
 class UnconfirmedKepler(Subset):
     def __init__(self):
         Subset.__init__(self, label="Kepler (candidates)", color='gray', zorder=-1e6)
+        self.ink=True
 
     def toRemove(self):
         isconfirmed = self.standard['disposition'] == 'CONFIRMED'

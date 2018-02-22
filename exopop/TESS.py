@@ -1,5 +1,5 @@
-from imports import *
-from Population import Population
+from .imports import *
+from .Population import Population
 
 
 initial_filename = directories['data'] + 'TESSsimulations.tsv'
@@ -40,7 +40,7 @@ class TESS(Population):
 
         s['planet_mass'] = np.nan + np.zeros_like(t['Rplanet'])
         s['planet_mass_lower'] = np.nan + np.zeros_like(t['Rplanet'])
-        s['planet_mass_upper'] = np.nan + np.zeros_like(t['Rplanet']) 
+        s['planet_mass_upper'] = np.nan + np.zeros_like(t['Rplanet'])
 
         s['teq'] = 280.0*t['S/SEarth']**0.25
         s['a_over_r'] = 0.5*(s['teff']/s['teq'])**2

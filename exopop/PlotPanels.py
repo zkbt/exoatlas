@@ -124,7 +124,6 @@ class MassRadius(BubblePlot):
         self.xlim=[0.7, 30]
         self.xscale='log'
         self.yscale='linear'
-
         self.set('goodmass')
         #self.pop.find('GJ1214b')
         self.normalization = self.unnormalizedsize[self.pop.standard['name'] == 'GJ 1214b']
@@ -216,14 +215,14 @@ class MassRadius(BubblePlot):
         #weights[over] = 1
         kw['zorder'] = weights
 
-        print "!$!@%*!#%!@$!@#"
-        print self.pop
-        print weights
+        print("!$!@%*!#%!@$!@#")
+        print(self.pop)
+        print(weights)
         #rgba[:,3] = 1.0*weights
         rgba[:,:3] = 1.0 - (1.0 - rgba[:,:3])*weights.reshape(len(weights), 1)
         rgba[:,3] = 1.0#*weights
         #print rgba
-        if len(x) > 1:
+        if (len(x) > 1)&(self.pop.ink):
             self.speak(key)
             ink_errorbar(x, y, xerr=xerr, yerr=yerr, colors=rgba, **kw)
             #assert(False)
@@ -256,8 +255,8 @@ class MassRadius(BubblePlot):
                 try:
                     plt.text(self.x[i], self.y[i], self.pop.name[i])
                 except:
-                    print '!#!!@$!@$!@$'
-                    print self.pop.name[i]
+                    print('!#!!@$!@$!@$')
+                    print(self.pop.name[i])
 
 
         plt.draw()
