@@ -4,17 +4,19 @@ import string
 
 # the mamajek relation is needed for estimating distances to stars, for those without
 mamajek = thistothat.Mamajek()
-#columns =['name','kepid','period','teff','stellar_radius','planet_radius','a_over_r','b','rv_semiamplitude','planet_mass','radius_ratio','J','ra','dec']
-
+mamajek._pithy = True
 
 def clean(s):
-
-	translator = s.maketrans('', '', ' ' + string.punctuation)
-	return s.translate(translator)
+    bad = ' !@#$%^&*()-,./<>?'
+    cleaned = s + ''
+    for c in bad:
+        cleaned = cleaned.replace(c, '')
+    return cleaned
 
 class Population(Talker):
     '''Population object keeps track of an exoplanet population.'''
 
+    # set up some plotting defaults
 
     def __init__(self, label, remake=False, **kwargs):
         '''Initialize a population, by trying the following steps:
@@ -22,6 +24,11 @@ class Population(Talker):
                 1) load a standardized ASCII table
                 2) ingest a raw table, and standardize it
         '''
+
+        self.color = 'black'
+        self.alpha = 1
+        self.zorder = 0
+        self.labelplanets = False
 
         # kuldge
         self.ink=True
@@ -34,14 +41,25 @@ class Population(Talker):
 
 
 
+
+
         try:
             # try to load the standardized table
             assert(remake == False)
             self.loadStandard()
-        except IOError:
+            self.propagate()
+        except (IOError,FileNotFoundError,AssertionError):
             # or create a new standardized table and save it
             self.ingestNew(**kwargs)
 
+        # make sure it's searchable via planet name
+        self.standard.add_index('name')
+
+        #self.propagate()
+
+    def single(self, name):
+        '''a wrapper to extract a single planet from the standardized table'''
+        return self.standard.loc[name]
 
     @property
     def fileprefix(self):
@@ -100,7 +118,7 @@ class Population(Talker):
             self.speak('attempting to load {0}'.format(edited_ascii))
             self.standard = astropy.io.ascii.read(edited_ascii, **kw)
             self.speak('success!')
-        except IOError:
+        except (IOError, FileNotFoundError):
             self.speak('failed!')
             self.speak('attempting to load {0}'.format(standard_ascii))
             self.standard = astropy.io.ascii.read(standard_ascii,**kw)
@@ -116,6 +134,9 @@ class Population(Talker):
 
     def saveStandard(self):
 
+        # KLUDGE!
+        from .curation.Confirmed import correct
+        correct(self)
         #standard_numpy = self.fileprefix + '.npy'
         standard_ascii = directories['data'] + self.fileprefix + '.ascii'
 
@@ -128,7 +149,7 @@ class Population(Talker):
         #self.speak('and saved standardized table to {0}'.format(standard_numpy))
 
     def removeRows(self, indices):
-        self.standard.remove_rows(indices)
+        self.standard.remove_rows(indices.nonzero()[0])
         self.propagate()
 
 
@@ -163,6 +184,19 @@ class Population(Talker):
     @property
     def n(self):
         return len(self.standard)
+
+    @property
+    def semimajoraxis(self):
+        P = self.period*u.day
+        G = con.G
+
+
+        M = self.stellar_mass*u.Msun
+        # kludge
+        bad = np.isfinite(M) == False
+        M[bad] = self.stellar_radius[bad]*u.Msun
+
+        return ((G*P**2*M/4/np.pi**2)**(1./3.)).to('AU').value
 
 
     @property
@@ -223,7 +257,7 @@ class Population(Talker):
 
             period = self.period
             stellar_radius = self.stellar_radius
-            otherestimate = (zachopy.units.G*(period*zachopy.units.day)**2*(stellar_mass*zachopy.units.Msun)/4/np.pi**2/(stellar_radius*zachopy.units.Rsun)**3)**(1./3.)
+            otherestimate = (craftroom.units.G*(period*craftroom.units.day)**2*(stellar_mass*craftroom.units.Msun)/4/np.pi**2/(stellar_radius*craftroom.units.Rsun)**3)**(1./3.)
 
             a_over_r[bad] = otherestimate[bad]
 
@@ -241,7 +275,7 @@ class Population(Talker):
 
     @property
     def insolation(self):
-        u = zachopy.units
+        u = craftroom.units
         return 1.0/self.a_over_r**2*self.teff**4/(u.Rsun/u.au)**2/u.Tsun**4
 
     @property
@@ -292,7 +326,7 @@ class Population(Talker):
             return 1000.0
         planet_mass = self.planet_mass
         pla
-        g = zachopy.units.G*self.planet_mass*zachopy.units.Mearth/(self.planet_radius*zachopy.units.Rearth)**2
+        g = craftroom.units.G*self.planet_mass*craftroom.units.Mearth/(self.planet_radius*craftroom.units.Rearth)**2
         g[g <= 0] = 2000.0
         g[g =='???'] = 0.0
         return g
@@ -306,7 +340,7 @@ class Population(Talker):
 
     @property
     def scaleheight(self):
-        return zachopy.units.k_B*self.teq/self.mu/zachopy.units.mp/self.surfacegravity
+        return craftroom.units.k_B*self.teq/self.mu/craftroom.units.mp/self.surfacegravity
 
     @property
     def noisepertransit(self):
@@ -342,7 +376,7 @@ class Population(Talker):
 
     @property
     def depth(self):
-        return (self.planet_radius*zachopy.units.Rearth/self.stellar_radius/zachopy.units.Rsun)**2
+        return (self.planet_radius*craftroom.units.Rearth/self.stellar_radius/craftroom.units.Rsun)**2
 
     def plot(self, xname, yname, names=True, xlog=True, ylog=True):
         '''Plot one parameter against another.'''

@@ -3,7 +3,7 @@
 
 import matplotlib.pyplot as plt, numpy as np
 import matplotlib.animation as animation
-from zachopy.Talker import Talker
+from craftroom.Talker import Talker
 
 from .setup import *
 
@@ -73,7 +73,7 @@ class BubblePlot(Talker):
                 self.input(key)
 
     def kw(self, key):
-        return dict(s=self.size*scale, marker='o', linewidth=2, facecolors='none', edgecolors=colors[key], alpha=0.5, zorder=zorders[key], label=names[key])
+        return dict(s=self.size()*scale, marker='o', linewidth=2, facecolors='none', edgecolors=colors[key], alpha=0.5, zorder=zorders[key], label=names[key])
 
     def plot(self, key, labels=False, ax=None, **kw):
         self.set(key)
@@ -96,7 +96,7 @@ class BubblePlot(Talker):
         #self.ax.yaxis.set_minor_formatter(plt.matplotlib.ticker.ScalarFormatter())
 
         if labels:
-            best = np.argsort(self.size)
+            best = np.argsort(self.size())
             for i in best[-10:]:
                 try:
                     plt.text(self.x[i], self.y[i], self.pop.name[i])
@@ -258,7 +258,7 @@ class thumbtacks(BubblePlot):
                 #print np.sum(onplot*nottooclose*nottoofar)
                 tolabel = (nottooclose*onplot*nottoofar).nonzero()[0]
                 #tolabel = self.pop.find('WASP94Ab')
-                if tolabel.size > 1:
+                if tolabel.size() > 1:
                     tolabel = tolabel[np.unique(self.x[tolabel], return_index=True)[1]]
 
                 for c in tolabel:
@@ -342,15 +342,14 @@ class trans(BubblePlot):
         self.yscale='log'
 
         self.set('known')
-        self.normalization = self.unnormalizedsize[self.pop.find('GJ1214b')]
+        self.normalization = self.unnormalizedsize()[self.pop.find('GJ1214b')]
 
-    @property
     def unnormalizedsize(self):
         return (self.pop.transmissionsignal/self.pop.noisepertime)**2
 
     @property
     def size(self):
-        return self.unnormalizedsize/self.normalization
+        return self.unnormalizedsize()/self.normalization
 
     @property
     def x(self):
@@ -397,7 +396,7 @@ class summ(trans):
         self.title = 'Summary'
 
     def kw(self, key):
-        return dict(s=self.size*scale, marker='o', linewidth=2, edgecolors='none', facecolors=colors[key], alpha=0.5, zorder=zorders[key], label=names[key])
+        return dict(s=self.size()*scale, marker='o', linewidth=2, edgecolors='none', facecolors=colors[key], alpha=0.5, zorder=zorders[key], label=names[key])
 
 
     @property
@@ -410,9 +409,8 @@ class emis(trans):
         self.title = 'Emission Spectroscopy'
 
         self.set('known')
-        self.normalization = self.unnormalizedsize[self.pop.find('WASP43b')]
+        self.normalization = self.unnormalizedsize()[self.pop.find('WASP43b')]
 
-    @property
     def unnormalizedsize(self):
         return (self.pop.emissionsignal/self.pop.noisepertime)**2
 
@@ -423,9 +421,8 @@ class dept(emis):
         self.title = 'Transit Depth'
 
         self.set('known')
-        self.normalization = self.unnormalizedsize[self.pop.find('HD209458b')]
+        self.normalization = self.unnormalizedsize()[self.pop.find('HD209458b')]
 
-    @property
     def unnormalizedsize(self):
         return (self.pop.depth/self.pop.noisepertime)**2
 
@@ -436,8 +433,7 @@ class refl(emis):
         self.title = 'Reflected Light'
 
         self.set('known')
-        self.normalization = self.unnormalizedsize[self.pop.find('HD209458b')]
+        self.normalization = self.unnormalizedsize()[self.pop.find('HD209458b')]
 
-    @property
     def unnormalizedsize(self):
         return (self.pop.depth/self.pop.a_over_r**2/self.pop.noisepertime)**2

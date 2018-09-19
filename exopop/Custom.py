@@ -5,7 +5,7 @@ class Custom(Population):
     def __init__(self, listofdictionaries=None, **kwargs):
         '''Initialize a population of KOIs, from the downloaded CSV.'''
         Population.__init__(self, label='New',  listofdictionaries=listofdictionaries, **kwargs)
-        self.color='orangered'
+        self.color='darkorange'
         self.zorder = 10
 
     def loadFromScratch(self, **kwargs):

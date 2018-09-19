@@ -23,7 +23,7 @@ class ThumbtackPlot(BubblePlot):
         self.lightyears=lightyears
 
         if self.lightyears:
-            self.maxlabeldistance = 100.0*zachopy.units.ly/zachopy.units.pc
+            self.maxlabeldistance = 100.0*craftroom.units.ly/craftroom.units.pc
         else:
             self.maxlabeldistance = 30.0
         self.planetfontsize=6
@@ -33,7 +33,7 @@ class ThumbtackPlot(BubblePlot):
         self.ylabel = ''
         self.circlegrid = [3,10,30,100,300,1000]
         if self.lightyears:
-            self.circlegrid = np.array([10,20,40,100,200,400,1000,2000,4000])*zachopy.units.ly/zachopy.units.pc
+            self.circlegrid = np.array([3,10,30,100,300,1000,3000])*craftroom.units.ly/craftroom.units.pc
 
 
 
@@ -70,7 +70,7 @@ class ThumbtackPlot(BubblePlot):
         self.aspect = aspect
 
         # make the figure
-        plt.figure(self.title, figsize=(figsize,figsize*self.aspect), dpi=100)
+        plt.figure(self.title, figsize=(figsize,figsize*self.aspect), dpi=200)
 
         # populate with an axis that fills entire frame
         gs = plt.matplotlib.gridspec.GridSpec(1,1,left=0,right=1,bottom=0,top=1,hspace=0,wspace=0)
@@ -127,7 +127,7 @@ class ThumbtackPlot(BubblePlot):
 
             # label the circles with their distances
             if self.lightyears:
-                circletext = '{0:.0f} ly'.format(originalradius*zachopy.units.pc/zachopy.units.ly)
+                circletext = '{0:.0f} ly'.format(originalradius*craftroom.units.pc/craftroom.units.ly)
             else:
                 circletext = '{0:.0f} pc'.format(originalradius)
             self.circlelabels[originalradius] = self.ax.text(
@@ -162,7 +162,7 @@ class ThumbtackPlot(BubblePlot):
                 self.input(key)
 
 
-    def movie(self, step=1.02, interactive=False, bitrate=10000, highlight='', keys=None, maxdistance=1500.0, fileprefix='kalirai'):
+    def movie(self, step=1.02, interactive=False, bitrate=20000, highlight='', keys=None, maxdistance=1500.0, fileprefix='exoplanetszoom'):
         metadata = dict(title='Exoplanets Zoom', artist='Zach Berta-Thompson (zkbt@mit.edu)')
         self.writer = animation.FFMpegWriter(fps=15, metadata=metadata, bitrate=bitrate)
 
@@ -246,7 +246,7 @@ class ThumbtackPlot(BubblePlot):
             #print np.sum(onplot*nottooclose*nottoofar)
             tolabel = (nottooclose*onplot*nottoofar).nonzero()[0]
             #tolabel = self.pop.find('WASP94Ab')
-            if tolabel.size > 1:
+            if tolabel.size() > 1:
                 tolabel = tolabel[np.unique(self.x[tolabel], return_index=True)[1]]
 
             for c in tolabel:
@@ -288,7 +288,7 @@ class ThumbtackPlot(BubblePlot):
         try:
             self.signature
         except:
-            self.signature = self.ax.text(0.02, 0.02, 'Zach Berta-Thompson, 2017', transform=self.ax.transAxes, alpha=0.5, size=8)
+            self.signature = self.ax.text(0.02, 0.02, 'animation by Zach Berta-Thompson (2018)\nwith data from NASA Exoplanet Archive and Sullivan et al. (2015)', transform=self.ax.transAxes, ha='left', va='bottom', alpha=0.5, size=6)
         try:
             kw['alpha'] = self.pop.alpha
         except AttributeError:

@@ -12,7 +12,7 @@ class TESS(Population):
     def __init__(self, **kwargs):
         '''Initialize a population of simulated TESS planets.'''
         Population.__init__(self, label='Predicted TESS', **kwargs)
-        self.color = 'orange'
+        self.color = 'darkorange'
         self.zorder = 1
 
     def loadFromScratch(self):
@@ -45,7 +45,7 @@ class TESS(Population):
         s['teq'] = 280.0*t['S/SEarth']**0.25
         s['a_over_r'] = 0.5*(s['teff']/s['teq'])**2
         s['rv_semiamplitude'] = t['K']
-        s['radius_ratio'] = t['Rplanet']*zachopy.units.Rearth/(t['Rstar']*zachopy.units.Rsun)
+        s['radius_ratio'] = t['Rplanet']*craftroom.units.Rearth/(t['Rstar']*craftroom.units.Rsun)
         s['stellar_distance'] = 10*10**(0.2*t['Dist']) + np.nan
         s['ra'] = t['RA']
         s['dec'] = t['Dec']

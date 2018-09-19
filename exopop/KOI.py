@@ -65,6 +65,8 @@ class KOI(Population):
                 s['name'][i] = t['kepoi_name'][i]
         s['period'] = t['koi_period']
 
+        s['transit_duration'] = t['koi_duration']/24.0
+
         s['teff'] = t['koi_steff']
         s['stellar_radius'] = t['koi_srad']
         s['J'] = t['koi_jmag']

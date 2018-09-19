@@ -10,9 +10,7 @@ url='http://exoplanetarchive.ipac.caltech.edu/cgi-bin/nstedAPI/nph-nstedAPI?tabl
 #url = 'http://exoplanetarchive.ipac.caltech.edu/cgi-bin/nstedAPI/nph-nstedAPI?table=exoplanets&getAllColumns'
 
 initial_filename = directories['data'] + 'exoplanetArchiveConfirmedPlanets.psv'
-def downloadLatest():
-    print('downloading the latest list of confirmed exoplanets from the Exoplanet Archive')
-    request.urlretrieve(url, initial_filename)
+
 
 class Confirmed(Population):
     def __init__(self, label='Confirmed', **kwargs):
@@ -20,12 +18,14 @@ class Confirmed(Population):
 
         # set up the population
         Population.__init__(self, label=label, **kwargs)
-        correct(self)
-        self.saveStandard()
         # defing some plotting parameters
         self.color = 'black'
         self.zorder = -1
         self.ink=True
+
+    def downloadLatest(self):
+        self.speak('downloading the latest list of confirmed exoplanets from the Exoplanet Archive')
+        request.urlretrieve(url, initial_filename)
 
     def loadFromScratch(self):
 
@@ -33,7 +33,7 @@ class Confirmed(Population):
         try:
             self.table = astropy.io.ascii.read(initial_filename)
         except IOError:
-            downloadLatest()
+            self.downloadLatest()
             self.table = astropy.io.ascii.read(initial_filename)
 
         self.speak('loaded Exoplanet Archive planets from {0}'.format(initial_filename))
@@ -46,6 +46,9 @@ class Confirmed(Population):
         self.table = self.table[good]
         self.speak('trimmed to {0} transiting planets'.format(np.sum(good)))
 
+        #correct(self)
+        #self.saveStandard()
+        #self.propagate()
 
 
 
@@ -85,7 +88,7 @@ class Confirmed(Population):
         period = s['period']
         stellar_radius = s['stellar_radius']
         stellar_mass = s['stellar_mass']
-        otherestimate = (zachopy.units.G*(period*zachopy.units.day)**2*(stellar_mass*zachopy.units.Msun)/4/np.pi**2/(stellar_radius*zachopy.units.Rsun)**3)**(1./3.)
+        otherestimate = (craftroom.units.G*(period*craftroom.units.day)**2*(stellar_mass*craftroom.units.Msun)/4/np.pi**2/(stellar_radius*craftroom.units.Rsun)**3)**(1./3.)
 
         s['a_over_r'][bad] = otherestimate[bad]
 
@@ -122,12 +125,15 @@ class Confirmed(Population):
         self.standard = s
 
 class Subset(Confirmed):
-    def __init__(self, label, color='black', zorder=0):
+    def __init__(self, label, color='black', zorder=0, alpha=1, ink=True, labelplanets=False):
 
         # set the label
         self.label=label
         self.color=color
         self.zorder=zorder
+        self.alpha=alpha
+        self.labelplanets=labelplanets
+        self.ink=ink
         try:
             # first try to load this population
             Talker.__init__(self)
@@ -150,7 +156,7 @@ class Subset(Confirmed):
 #
 
 stringsIndicatingKepler = ['Kepler', 'K2', 'KIC', 'KOI', 'PH', '116454', 'WASP-47d', 'WASP-47e',
-                            'HD 3167', 'EPIC', '106315', '41378', "BD+20"]
+                            'HD 3167', 'EPIC', '106315', '41378', "BD+20", '9827']
 def discoveredByKepler(pop):
     d = np.zeros(len(pop.standard)).astype(np.bool)
     for s in stringsIndicatingKepler:
@@ -160,14 +166,14 @@ def discoveredByKepler(pop):
 
 class Kepler(Subset):
     def __init__(self):
-        Subset.__init__(self, label="Kepler (confirmed)", color='black', zorder=0)
+        Subset.__init__(self, label="Kepler (confirmed)", color='royalblue', zorder=0)
 
     def toRemove(self):
         return discoveredByKepler(self) == False
 
 class NonKepler(Subset):
     def __init__(self):
-        Subset.__init__(self, label="NonKepler", color='royalblue', zorder=10)
+        Subset.__init__(self, label="NonKepler", color='black', zorder=10)
 
     def toRemove(self):
         return discoveredByKepler(self) == True
@@ -241,3 +247,8 @@ class F(Subset):
 
     def toRemove(self):
         return (self.teff > 7200) | (self.teff < 6000)
+
+class Highlight(Confirmed):
+    def __init__(self, name):
+        Confirmed.__init__(self)
+        self.removeRows(np.array([name in n.lower().replace(' ', '') for n in self.name]) == False)

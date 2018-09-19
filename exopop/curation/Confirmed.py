@@ -3,6 +3,36 @@ import astropy.units as u
 
 def correct(pop):
 
+
+    # Grimm et al. masses
+    pop.correct('TRAPPIST-1b',      planet_mass=  1.017,
+                                    planet_mass_upper=0.154,
+                                    planet_mass_lower= -0.143)
+
+    pop.correct('TRAPPIST-1c',      planet_mass= 1.156,
+                                    planet_mass_upper=0.142,
+                                    planet_mass_lower= -0.131)
+
+    pop.correct('TRAPPIST-1d',      planet_mass= 0.297,
+                                    planet_mass_upper=0.039,
+                                    planet_mass_lower= -0.035)
+
+
+    pop.correct('TRAPPIST-1e',      planet_mass= 0.772,
+                                    planet_mass_upper=0.079,
+                                    planet_mass_lower= -0.075)
+
+
+    pop.correct('TRAPPIST-1f',      planet_mass= 0.934,
+                                    planet_mass_upper=0.080,
+                                    planet_mass_lower=-0.078)
+    pop.correct('TRAPPIST-1g',      planet_mass=1.148,
+                                    planet_mass_upper=0.098,
+                                    planet_mass_lower=-0.095)
+    pop.correct('TRAPPIST-1h',      planet_mass=0.331,
+                                    planet_mass_upper=0.056,
+                                    planet_mass_lower=-0.049)
+
     pop.correct('GJ 1132b',
             a_over_r=16.54,
             planet_mass=1.62,
@@ -14,6 +44,13 @@ def correct(pop):
 			teff=3270.0, b=0.38,
 			stellar_radius=0.2105,
 			stellar_mass=0.181)
+
+    pop.correct('30 Ari Bb',
+            planet_radius=np.nan)
+
+
+    pop.correct('HD 17156b',
+            transit_duration=0.1338, a_over_r=23.2, b=0.4)
 
     pop.correct('HD 17156b',
             transit_duration=0.1338, a_over_r=23.2, b=0.477)
@@ -31,13 +68,13 @@ def correct(pop):
                 transit_duration=0.04227)
 
     pop.correct('HD 219134b',
-            a_over_r=0.03876*u.au/0.778/u.Rsun,
+            a_over_r=1/(0.03876*u.au/0.778/u.Rsun).decompose().value,
             planet_mass=4.74,
             planet_mass_upper=0.19,
             planet_mass_lower=-0.19)
 
     pop.correct('HD 219134c',
-            a_over_r=0.06530*u.au/0.778/u.Rsun,
+            a_over_r=1/(0.06530*u.au/0.778/u.Rsun).decompose().value,
             planet_mass=4.36,
             planet_mass_upper=0.22,
             planet_mass_lower=-0.22)
