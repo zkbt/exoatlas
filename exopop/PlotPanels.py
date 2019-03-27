@@ -27,7 +27,6 @@ class DistanceRadius(BubblePlot):
         #return (self.pop.planet_radius/self.pop.stellar_radius)**2
         return self.pop.depth
 
-    @property
     def size(self):
         return 0.5*self.unnormalizedsize()/self.normalization
 

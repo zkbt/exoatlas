@@ -37,7 +37,6 @@ class ThumbtackPlot(BubblePlot):
 
 
 
-    @property
     def size(self):
         '''by default, all points are the same size'''
         return 50.0/1000.0

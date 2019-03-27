@@ -204,10 +204,11 @@ class Population(Talker):
         # use the effective temperature to select a J-band bolometric correction, then
 
         # pull out a proxy for the Sun from the Mamajek table
-        sun = mamajek.table[mamajek.table['SpT'] == 'G2V']
+        #sun = mamajek.table['SpT'] == 'G2V'
+        solar_teff = 5780
 
         # figure out the bolometric luminosities
-        teffratio = self.teff/sun['Teff']
+        teffratio = self.teff/solar_teff
         radiusratio = self.stellar_radius
         luminosities = teffratio**4*radiusratio**2
 
@@ -226,11 +227,11 @@ class Population(Talker):
     @property
     def distance(self):
 
-        distance = self.standard['stellar_distance'] + 0.0
+        distance = self.standard['stellar_distance'].data + 0.0
         bad = ((distance > 0.1) == False) + (np.isfinite(distance) == False)
 
         kludge = (self.teff == 0.0) + (np.isfinite(self.teff) == False)
-        self.standard['teff'][kludge] = 5771.8
+        self.standard['teff'][kludge] = 5780
 
 
         distance[bad] = 10**(1 + 0.2*(self.J - self.absoluteJ))[bad]

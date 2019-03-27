@@ -26,6 +26,9 @@ class BubblePlot(Talker):
         self.named = []
         self.pops = pops
 
+    def size(self):
+        return 5
+
     def set(self, key):
         self.pop = self.pops[key]
         self.key = key
