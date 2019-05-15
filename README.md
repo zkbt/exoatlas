@@ -53,4 +53,4 @@ plt.show()
 ```
 
 ### Authors
-This toolkits was made by [Zach Berta-Thompson](http://casa.colorado.edu/~bertathompson/). It relies heavily on the incredible work done by the folks over at the [NASA Exoplanet Archive](https://exoplanetarchive.ipac.caltech.edu), and their generously designed API.
+This toolkit was made by [Zach Berta-Thompson](http://casa.colorado.edu/~bertathompson/). It relies heavily on the incredible work done by the folks over at the [NASA Exoplanet Archive](https://exoplanetarchive.ipac.caltech.edu), and their generously designed API.
