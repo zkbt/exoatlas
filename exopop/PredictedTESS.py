@@ -4,7 +4,7 @@ from .Population import Population
 
 initial_filename = directories['data'] + 'TESSsimulations.tsv'
 
-class TESS(Population):
+class PredictedTESS(Population):
     '''TESS population object contains a simulated TESS planet yield
         from 200,000 two-minute cadence postage stamps,
         as calculated by Peter Sullivan et al. (2015)'''

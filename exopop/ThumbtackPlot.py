@@ -1,8 +1,9 @@
 from .imports import *
 from .BubblePlot import BubblePlot
-from .Confirmed import NonKepler, Kepler
+from .Confirmed import NonKepler, Kepler, TESS
 from .KOI import UnconfirmedKepler
-from .TESS import TESS
+import datetime
+
 # the figure size
 figsize=7
 
@@ -151,9 +152,8 @@ class ThumbtackPlot(BubblePlot):
             for z in distances:
                 self.zoom(z)
                 self.clearnames()
-                self.namestars('nonkepler')
-                #if key == 'kepler':
-                self.namestars('kepler')
+                for thiskey in keys:
+                    self.namestars(thiskey)
                 plt.draw()
                 plt.savefig(self.label(key))
 
@@ -183,15 +183,15 @@ class ThumbtackPlot(BubblePlot):
             if highlight == 'habitable':
                 self.highlight((self.pop.planet_radius > 0.7)*(self.pop.planet_radius < 1.6)*(self.pop.teq < 310)*(self.pop.teq > 200), 'Potentially Habitable Planets')
 
-            f = plt.gcf()
-            filename = '{}_{}{}.mp4'.format(fileprefix, key, highlight)
-            self.speak('writing movie to {0}'.format(filename))
-            z = 2.0
+        f = plt.gcf()
+        filename = '{}_{}{}.mp4'.format(fileprefix, '+'.join(keys), highlight)
+        self.speak('writing movie to {0}'.format(filename))
+        z = 2.0
 
-            with self.writer.saving(f, filename, 1024.0/figsize):
-                # loop over exposures
-                while(z < maxdistance):
-                    self.zoom(z)
+        with self.writer.saving(f, filename, 1024.0/figsize):
+            # loop over exposures
+            while(z < maxdistance):
+                self.zoom(z)
 
 #                    self.clearnames()
 #                    if highlight != 'habitable':
@@ -200,11 +200,11 @@ class ThumbtackPlot(BubblePlot):
 #                        #if key == 'kepler':
 #                        self.namestars('kepler')
 
-                    self.writer.grab_frame()
-                    self.speak('zoomed to {0}'.format(z))
-                    z *= step
-                    #plt.draw()
-                #plt.savefig(self.label(key))
+                self.writer.grab_frame()
+                self.speak('zoomed to {0}'.format(z))
+                z *= step
+                #plt.draw()
+            #plt.savefig(self.label(key))
 
 
     def zoom(self, distance):
@@ -216,9 +216,8 @@ class ThumbtackPlot(BubblePlot):
 
         # handle adding and removing names
         self.clearnames()
-        self.namestars('nonkepler')
-        self.namestars('kepler')
-
+        for thiskey in self.pops.keys():
+            self.namestars(thiskey)
 
         nudge = 0.05*self.stretch(self.outer)
         for d in self.circlelabels.keys():
@@ -243,7 +242,12 @@ class ThumbtackPlot(BubblePlot):
 
             nottoofar = (self.pop.distance <= self.maxlabeldistance)
             #print np.sum(onplot*nottooclose*nottoofar)
-            tolabel = (nottooclose*onplot*nottoofar).nonzero()[0]
+
+            #KLUDGE!!!!!
+            if key.lower() == 'tess':
+                tolabel = (nottooclose*onplot).nonzero()[0]
+            else:
+                tolabel = (nottooclose*onplot*nottoofar).nonzero()[0]
             #tolabel = self.pop.find('WASP94Ab')
             if np.size(tolabel) > 1:
                 tolabel = tolabel[np.unique(self.x[tolabel], return_index=True)[1]]
@@ -262,9 +266,10 @@ class ThumbtackPlot(BubblePlot):
                     downwardnudge = '\n\n'
 
                 self.named.append(plt.text(self.x[c], self.y[c],
-                	downwardnudge + self.pop.name[c].replace(' ', '') ,
-                	color=self.pop.color, alpha=0.75, va='center',
-                	ha='center', weight='bold', size=self.planetfontsize))
+                	downwardnudge + r'{}'.format(self.pop.name[c].replace(' ', '')),
+                	color=self.pop.color, alpha=self.pop.alpha, va='center',
+                	ha='center', weight='bold', size=self.planetfontsize,
+                    zorder=self.pop.zorder))
             self.set(old)
 
     def clearnames(self):
@@ -287,7 +292,8 @@ class ThumbtackPlot(BubblePlot):
         try:
             self.signature
         except:
-            self.signature = self.ax.text(0.02, 0.02, 'animation by Zach Berta-Thompson (2018)\nwith data from NASA Exoplanet Archive and Sullivan et al. (2015)', transform=self.ax.transAxes, ha='left', va='bottom', alpha=0.5, size=6)
+            date = datetime.datetime.now().strftime("%B %Y")
+            self.signature = self.ax.text(0.02, 0.02, 'animation by Zach Berta-Thompson\ndata from NASA Exoplanet Archive ({})'.format(date), transform=self.ax.transAxes, ha='left', va='bottom', alpha=0.5, size=6)
         try:
             kw['alpha'] = self.pop.alpha
         except AttributeError:

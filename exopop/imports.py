@@ -1,7 +1,7 @@
 # imports that are need by many exopop subsections
 
 from craftroom.Talker import Talker
-import os, sys
+import os, sys, time
 import numpy as np, matplotlib.pyplot as plt, matplotlib.animation as animation
 import astropy.io.ascii, astropy.table
 
