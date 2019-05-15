@@ -204,18 +204,28 @@ class Population(Talker):
         # use the effective temperature to select a J-band bolometric correction, then
 
         # pull out a proxy for the Sun from the Mamajek table
-        sun = mamajek.table[mamajek.table['SpT'] == 'G2V']
+        #sun = mamajek.table['SpT'] == 'G2V'
+        solar_teff = 5780
 
         # figure out the bolometric luminosities
-        teffratio = self.teff/sun['Teff']
+        teffratio = self.teff/solar_teff
         radiusratio = self.stellar_radius
         luminosities = teffratio**4*radiusratio**2
 
+        # SUUUUUUPER KLUDGE
+        for i in range(2):
+            try:
+                test = self.teff.data
+                assert(len(test) == len(self.teff))
+                teff = np.array(test)
+            except:
+                pass
+
         # figure out the absolute J magnitude of a dwarf with this teff
-        dwarf_absolutej = mamajek.tofrom('M_J')('Teff')(self.teff.data)
+        dwarf_absolutej = mamajek.tofrom('M_J')('Teff')(teff)
 
         # figure out how bright a dwarf star of the same effective temperature would be
-        dwarf_luminosities = 10**mamajek.tofrom('logL')('Teff')(self.teff.data)
+        dwarf_luminosities = 10**mamajek.tofrom('logL')('Teff')(teff)
 
         # figure out how much brighter this star is than its Teff-equivalent dwarf
         ratio = luminosities/dwarf_luminosities
@@ -227,10 +237,19 @@ class Population(Talker):
     def distance(self):
 
         distance = self.standard['stellar_distance'] + 0.0
+
+        # SUUUUUUPER KLUDGE
+        for i in range(2):
+            try:
+                test = distance.data
+                assert(len(test) == len(distance))
+                distance = np.array(test)
+            except:
+                pass
         bad = ((distance > 0.1) == False) + (np.isfinite(distance) == False)
 
         kludge = (self.teff == 0.0) + (np.isfinite(self.teff) == False)
-        self.standard['teff'][kludge] = 5771.8
+        self.standard['teff'][kludge] = 5780
 
 
         distance[bad] = 10**(1 + 0.2*(self.J - self.absoluteJ))[bad]

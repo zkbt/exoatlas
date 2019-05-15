@@ -169,7 +169,6 @@ class thumbtacks(BubblePlot):
             ax.plot(radii*np.cos(theta), radii*np.sin(theta), linewidth=4, **gridkw)
             self.circlelabels[originalradius] = ax.text((nudge+radii)*np.cos(angle), (nudge+radii)*np.sin(angle), '{0:.0f} pc'.format(originalradius), rotation=-90+ angle*180/np.pi, va='center', ha='center', size=13, weight='extra bold', **gridkw)
 
-    @property
     def size(self):
         return 50.0/1000.0
 
@@ -347,7 +346,6 @@ class trans(BubblePlot):
     def unnormalizedsize(self):
         return (self.pop.transmissionsignal/self.pop.noisepertime)**2
 
-    @property
     def size(self):
         return self.unnormalizedsize()/self.normalization
 
@@ -399,7 +397,6 @@ class summ(trans):
         return dict(s=self.size()*scale, marker='o', linewidth=2, edgecolors='none', facecolors=colors[key], alpha=0.5, zorder=zorders[key], label=names[key])
 
 
-    @property
     def size(self):
         return 40.0/1000.0
 

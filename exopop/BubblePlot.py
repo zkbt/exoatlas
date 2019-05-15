@@ -25,6 +25,9 @@ class BubblePlot(Talker):
         Talker.__init__(self)
         self.named = []
         self.pops = pops
+        self.dot_size = 2
+    def size(self):
+        return self.dot_size
 
     def set(self, key):
         self.pop = self.pops[key]
@@ -127,14 +130,22 @@ class BubblePlot(Talker):
                 x, y, name = self.x[i], self.y[i], self.pop.name[i]
                 #name = name.replace('TRAPPIST-', 'T').replace('T1e', 'Trappist-1e')
                 if restrictlimits:
-                    if x < np.min(self.xlim) or x > np.max(self.xlim):
-                        if y < np.min(self.ylim) or y > np.max(self.ylim):
-                            continue
 
+                    try:
+                        if x < np.min(self.xlim) or x > np.max(self.xlim):
+                            if y < np.min(self.ylim) or y > np.max(self.ylim):
+                                continue
+                    except:
+                        pass
                 textkw = dict(ha='center', va='top', fontsize=6, color=self.pop.color, alpha=self.pop.alpha)
                 # think this is just as Python 3 thing
                 textkw.update(**kw)
 
                 # store the text plot, so it can be modified
-                self.labels[name] = plt.text(x, y, before + name + after, **textkw)
+                try:
+                    print(x, y)
+                    assert(np.isfinite(x*y))
+                    self.labels[name] = plt.text(x, y, before + name + after, **textkw)
+                except:
+                    pass
                 #self.labels[name] = plt.text(x, y, name, **textkw)

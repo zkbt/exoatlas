@@ -5,8 +5,39 @@ from .Population import Population
 from .curation.Confirmed import correct
 
 
-url='http://exoplanetarchive.ipac.caltech.edu/cgi-bin/nstedAPI/nph-nstedAPI?table=exoplanets&select=pl_hostname,pl_letter,pl_orbper,pl_tranmid,pl_trandur,st_teff,st_rad,st_mass,st_j,ra,dec,pl_rade,pl_radeerr1,pl_radeerr2,pl_ratdor,pl_rvamp,pl_masse,pl_masseerr1,pl_masseerr2,pl_ratror,pl_imppar,st_dist,st_disterr1,st_disterr2,pl_tranflag&format=bar-delimited'
+base = 'http://exoplanetarchive.ipac.caltech.edu/cgi-bin/nstedAPI/nph-nstedAPI?'
+table = 'exoplanets'
+columns = [  'pl_hostname',
+             'pl_letter',
+             'pl_orbper',
+             'pl_tranmid',
+             'pl_trandur',
+             'st_teff',
+             'st_rad',
+             'st_mass',
+             'st_j',
+             'ra',
+             'dec',
+             'pl_rade',
+             'pl_radeerr1',
+             'pl_radeerr2',
+             'pl_ratdor',
+             'pl_rvamp',
+             'pl_masse',
+             'pl_masseerr1',
+             'pl_masseerr2',
+             'pl_ratror',
+             'pl_imppar',
+             'st_dist',
+             'st_disterr1',
+             'st_disterr2',
+             'pl_tranflag',
+             'pl_facility']
+select = ','.join(columns)
+format='bar-delimited'
+url = f'{base}table={table}&select={select}&format={format}'
 
+#url='http://exoplanetarchive.ipac.caltech.edu/cgi-bin/nstedAPI/nph-nstedAPI?table=exoplanets&select=pl_hostname,pl_letter,pl_orbper,pl_tranmid,pl_trandur,st_teff,st_rad,st_mass,st_j,ra,dec,pl_rade,pl_radeerr1,pl_radeerr2,pl_ratdor,pl_rvamp,pl_masse,pl_masseerr1,pl_masseerr2,pl_ratror,pl_imppar,st_dist,st_disterr1,st_disterr2,pl_tranflag&format=bar-delimited'
 #url = 'http://exoplanetarchive.ipac.caltech.edu/cgi-bin/nstedAPI/nph-nstedAPI?table=exoplanets&getAllColumns'
 
 initial_filename = directories['data'] + 'exoplanetArchiveConfirmedPlanets.psv'
@@ -32,6 +63,9 @@ class Confirmed(Population):
         # load from a NASA Exoplanet Archive csv file
         try:
             self.table = astropy.io.ascii.read(initial_filename)
+            dt = time.time() - os.path.getmtime(initial_filename)
+            ndays = 3
+            assert(dt < ndays*24*60*60)
         except IOError:
             self.downloadLatest()
             self.table = astropy.io.ascii.read(initial_filename)
@@ -115,7 +149,7 @@ class Confirmed(Population):
         s['stellar_distance_lower'] = t['st_disterr2']
 
 
-
+        s['discoverer'] = t['pl_facility']
 
         # a little kludge
         #s['teff'][s['name'] == 'GJ 436b'] = 3400.0
@@ -157,23 +191,44 @@ class Subset(Confirmed):
 
 stringsIndicatingKepler = ['Kepler', 'K2', 'KIC', 'KOI', 'PH', '116454', 'WASP-47d', 'WASP-47e',
                             'HD 3167', 'EPIC', '106315', '41378', "BD+20", '9827']
+
 def discoveredByKepler(pop):
-    d = np.zeros(len(pop.standard)).astype(np.bool)
-    for s in stringsIndicatingKepler:
-        match = np.array([s in name for name in pop.standard['name']])
-        d = d + match
+
+
+    iskepler = pop.standard['discoverer'] == 'Kepler'
+    isk2 =  pop.standard['discoverer'] == 'K2'
+    d = iskepler | isk2
+
     return d
+
+def discoveredByTESS(pop):
+    return  pop.standard['discoverer'] == 'Transiting Exoplanet Survey Satellite (TESS)'
+
+class TESS(Subset):
+    def __init__(self):
+        Subset.__init__(self, label="TESS", color='darkorange', zorder=0)
+
+    def toRemove(self):
+        return discoveredByTESS(self) == False
 
 class Kepler(Subset):
     def __init__(self):
-        Subset.__init__(self, label="Kepler (confirmed)", color='royalblue', zorder=0)
+        Subset.__init__(self, label="Kepler", color='royalblue', zorder=0)
 
     def toRemove(self):
         return discoveredByKepler(self) == False
 
+class Others(Subset):
+    def __init__(self):
+        Subset.__init__(self, label="Others", color='black', zorder=10)
+
+    def toRemove(self):
+        return (discoveredByKepler(self) == True) | (discoveredByTESS(self) == True)
+
+
 class NonKepler(Subset):
     def __init__(self):
-        Subset.__init__(self, label="NonKepler", color='black', zorder=10)
+        Subset.__init__(self, label="Non-Kepler", color='black', zorder=10)
 
     def toRemove(self):
         return discoveredByKepler(self) == True

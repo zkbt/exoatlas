@@ -18,6 +18,9 @@ You probably also need [craftroom](https://github.com/zkbt/craftroom) and [thist
 Here's a quick preview:
 
 ```
+import matplotlib.pyplot as plt
+import numpy as np
+
 # pull the confirmed exoplanets from the NASA Exoplanet Archive
 from exopop.Confirmed import Confirmed
 confirmed = Confirmed()
@@ -36,7 +39,7 @@ plt.yscale('log')
 plt.xscale('log')
 plt.show()
 
-# or rely on some prepackaged ones 
+# or rely on some prepackaged ones
 from exopop.PlotPanels import MassRadius
 import matplotlib.pyplot as plt
 pops = dict(goodmass=confirmed)
@@ -51,4 +54,3 @@ plt.show()
 
 ### Authors
 This toolkits was made by [Zach Berta-Thompson](http://casa.colorado.edu/~bertathompson/). It relies heavily on the incredible work done by the folks over at the [NASA Exoplanet Archive](https://exoplanetarchive.ipac.caltech.edu), and their generously designed API.
-
