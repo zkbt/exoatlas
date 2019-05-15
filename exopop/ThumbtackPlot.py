@@ -155,7 +155,7 @@ class ThumbtackPlot(BubblePlot):
                 #if key == 'kepler':
                 self.namestars('kepler')
                 plt.draw()
-                plt.savefig(directories['plots'] + self.label(key))
+                plt.savefig(self.label(key))
 
             if interactive:
                 self.input(key)
@@ -184,7 +184,7 @@ class ThumbtackPlot(BubblePlot):
                 self.highlight((self.pop.planet_radius > 0.7)*(self.pop.planet_radius < 1.6)*(self.pop.teq < 310)*(self.pop.teq > 200), 'Potentially Habitable Planets')
 
             f = plt.gcf()
-            filename = directories['plots'] + '{}_{}{}.mp4'.format(fileprefix, key, highlight)
+            filename = '{}_{}{}.mp4'.format(fileprefix, key, highlight)
             self.speak('writing movie to {0}'.format(filename))
             z = 2.0
 
@@ -245,7 +245,7 @@ class ThumbtackPlot(BubblePlot):
             #print np.sum(onplot*nottooclose*nottoofar)
             tolabel = (nottooclose*onplot*nottoofar).nonzero()[0]
             #tolabel = self.pop.find('WASP94Ab')
-            if tolabel.size() > 1:
+            if np.size(tolabel) > 1:
                 tolabel = tolabel[np.unique(self.x[tolabel], return_index=True)[1]]
 
             for c in tolabel:

@@ -171,7 +171,7 @@ class MassRadius(BubblePlot):
             plotkw = dict(label=self.pop.name, color=self.pop.color, edgecolor=self.pop.color, **kw)
             plotkw['alpha'] = 1
             plotkw['zorder'] = 1e9
-            plt.scatter(x, y, **plotkw)
+            self.scattered[key] = plt.scatter(x, y, **plotkw)
         else:
             kw = dict(marker='o', linewidth=0, elinewidth=width, alpha=1.0,  label=self.pop.name, color=self.pop.color, markeredgecolor=self.pop.color, capthick=width, capsize=2, markersize=3)
 
