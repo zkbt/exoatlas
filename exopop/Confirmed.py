@@ -66,7 +66,7 @@ class Confirmed(Population):
             dt = time.time() - os.path.getmtime(initial_filename)
             ndays = 3
             assert(dt < ndays*24*60*60)
-        except IOError:
+        except (IOError, AssertionError):
             self.downloadLatest()
             self.table = astropy.io.ascii.read(initial_filename)
 

@@ -43,7 +43,8 @@ def correct(pop):
 			planet_radius_lower=-0.056,
 			teff=3270.0, b=0.38,
 			stellar_radius=0.2105,
-			stellar_mass=0.181)
+			stellar_mass=0.181,
+            transit_epoch=2457184.55786)
 
     pop.correct('30 Ari Bb',
             planet_radius=np.nan)
@@ -127,7 +128,8 @@ def correct(pop):
                 planet_radius_lower=-0.269,
                 planet_mass=369.303,
                 planet_mass_upper=18.433,
-                planet_mass_lower=-18.433)
+                planet_mass_lower=-18.433,
+                transit_epoch=2454279.436714)
 
     """ I went through all the planets shown in the Dressing et al. (2015)
         mass-radius diagram to double check the values that are present in the

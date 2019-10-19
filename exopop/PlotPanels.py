@@ -46,6 +46,14 @@ class DistanceRadius(BubblePlot):
         for key in self.pops.keys():
             self.plot(key, **kw)
 
+class EscapeRadius(DistanceRadius):
+    xlabel = '$\lambda = E_{grav}/E_{thermal}$'
+    xscale = 'log'
+    xlim = [None, None]
+
+    @property
+    def x(self):
+        return self.pop.escape_parameter
 
 class FluxRadius(DistanceRadius):
     xlabel = 'Flux Received\n(relative to Earth)'

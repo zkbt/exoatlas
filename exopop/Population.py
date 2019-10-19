@@ -295,7 +295,13 @@ class Population(Talker):
     @property
     def insolation(self):
         u = craftroom.units
-        return 1.0/self.a_over_r**2*self.teff**4/(u.Rsun/u.au)**2/u.Tsun**4
+        a_over_rearth = u.au/u.Rsun
+        teqearth = u.Tsun/np.sqrt(2*u.au/u.Rsun)
+        return (self.teq/teqearth)**4
+
+        #        u = craftroom.units
+        #        return 1.0/self.a_over_r**2*self.teff**4/(u.Rsun/u.au)**2/u.Tsun**4
+
 
     @property
     def duration(self):
@@ -344,7 +350,6 @@ class Population(Talker):
         except AttributeError:
             return 1000.0
         planet_mass = self.planet_mass
-        pla
         g = craftroom.units.G*self.planet_mass*craftroom.units.Mearth/(self.planet_radius*craftroom.units.Rearth)**2
         g[g <= 0] = 2000.0
         g[g =='???'] = 0.0
@@ -362,6 +367,18 @@ class Population(Talker):
         return craftroom.units.k_B*self.teq/self.mu/craftroom.units.mp/self.surfacegravity
 
     @property
+    def escape_velocity(self):
+        e_grav = craftroom.units.G*self.planet_mass*craftroom.units.Mearth/self.planet_radius/craftroom.units.Rearth
+        return np.sqrt(2*e_grav)
+
+
+    @property
+    def escape_parameter(self):
+        e_thermal = craftroom.units.k_B*self.teq
+        e_grav = craftroom.units.G*self.planet_mass*craftroom.units.Mearth*craftroom.units.mp/self.planet_radius/craftroom.units.Rearth
+        return e_grav/e_thermal
+
+    @property
     def noisepertransit(self):
         return 1.0/np.sqrt(self.photons*self.duration)
 
@@ -373,9 +390,13 @@ class Population(Talker):
     def noise(self):
         return 1.0/np.sqrt(self.photons)
 
+
     @property
     def transmissionsignal(self):
-        return 2*self.scaleheight*self.planet_radius/self.stellar_radius**2
+        H = self.scaleheight #cm
+        Rp = self.planet_radius*craftroom.units.Rearth # cm
+        Rs = self.stellar_radius*craftroom.units.Rsun
+        return 2*H*Rp/Rs**2
 
     @property
     def emissionsignal(self):
