@@ -69,7 +69,7 @@ class Population(Talker):
         raw_numpy = directories['data'] + self.fileprefix + '_raw.npy'
         try:
             assert(remake==False)
-            self.table = astropy.table.Table(np.load(raw_numpy))
+            self.table = Table(np.load(raw_numpy))
             self.speak('loaded raw (but pre-saved) population from {0}'.format(raw_numpy))
         except IOError:
             self.loadFromScratch()
@@ -106,7 +106,7 @@ class Population(Talker):
         standard_numpy = directories['data'] + self.fileprefix + '.npy'
         '''try:
             # first try to load the saved numpy table
-            self.standard = astropy.table.Table(np.load(standard_numpy))
+            self.standard = Table(np.load(standard_numpy))
             self.speak('loaded standardized table from {0}'.format(standard_numpy))
         except IOError:'''
         # then try to load the table from a text file
@@ -116,12 +116,12 @@ class Population(Talker):
         kw = dict( delimiter='|', fill_values=[('',np.nan), ('--', np.nan)])#, format='basic', fill_values=[('--', 'nan'), (' ', 'nan')], data_start=1)
         try:
             self.speak('attempting to load {0}'.format(edited_ascii))
-            self.standard = astropy.io.ascii.read(edited_ascii, **kw)
+            self.standard = ascii.read(edited_ascii, **kw)
             self.speak('success!')
         except (IOError, FileNotFoundError):
             self.speak('failed!')
             self.speak('attempting to load {0}'.format(standard_ascii))
-            self.standard = astropy.io.ascii.read(standard_ascii,**kw)
+            self.standard = ascii.read(standard_ascii,**kw)
             self.speak('loaded (hopefully) standardized table from {0}'.format(standard_ascii))
 
         #    # and resave it as a numpy table (for faster loading next time)

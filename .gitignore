@@ -1,6 +1,7 @@
 data/
 *.pdf
 .ipynb_checkpoints
+scratch/
 
 .DS_Store
 

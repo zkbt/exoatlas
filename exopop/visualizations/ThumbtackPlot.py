@@ -340,7 +340,7 @@ def tessComparison():
     non = NonKepler()
     kep = Kepler()
     unc = UnconfirmedKepler()
-    kep.standard = astropy.table.vstack([kep.standard, unc.standard])
+    kep.standard = vstack([kep.standard, unc.standard])
     kep.propagate()
     tes = TESS()
     non.color = 'royalblue'

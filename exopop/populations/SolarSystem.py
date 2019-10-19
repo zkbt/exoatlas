@@ -15,7 +15,7 @@ class SolarSystem(Population):
 
     def loadFromScratch(self):
 
-        self.table = astropy.io.ascii.read(initial_filename)
+        self.table = ascii.read(initial_filename)
         self.speak('loaded TESS simulated population from {0}'.format(initial_filename))
 
     def trimRaw(self):
@@ -23,7 +23,7 @@ class SolarSystem(Population):
 
     def createStandard(self):
         t = self.trimmed
-        s = astropy.table.Table()
+        s = Table()
         s['name'] = t['name']
         s['kepid'] = None
 

@@ -24,7 +24,7 @@ class Custom(Population):
 
         d = listofdictionaries
 
-        self.standard = astropy.table.Table(d)
+        self.standard = Table(d)
         #    # and resave it as a numpy table (for faster loading next time)
         #    np.save(standard_numpy, self.standard)
 

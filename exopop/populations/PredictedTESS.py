@@ -17,7 +17,7 @@ class PredictedTESS(Population):
 
     def loadFromScratch(self):
 
-        self.table = astropy.io.ascii.read(initial_filename)
+        self.table = ascii.read(initial_filename)
         self.speak('loaded TESS simulated population from {0}'.format(initial_filename))
 
     def trimRaw(self):
@@ -25,7 +25,7 @@ class PredictedTESS(Population):
 
     def createStandard(self):
         t = self.trimmed
-        s = astropy.table.Table()
+        s = Table()
         s['name'] = ['tess{0:04}i'.format(i) for i in range(len(t))]
         s['kepid'] = None
         s['period'] = t['P']

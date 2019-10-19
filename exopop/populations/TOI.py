@@ -55,7 +55,7 @@ class TOI(Population):
         t = self.trimmed
         n = len(t)
 
-        s = astropy.table.Table()
+        s = Table()
 
         # pull out the name as the CTOI
         s['name'] = ['CTOI{:.2f}'.format(c) for c in t['CTOI']]

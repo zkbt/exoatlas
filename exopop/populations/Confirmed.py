@@ -62,13 +62,13 @@ class Confirmed(Population):
 
         # load from a NASA Exoplanet Archive csv file
         try:
-            self.table = astropy.io.ascii.read(initial_filename)
+            self.table = ascii.read(initial_filename)
             dt = time.time() - os.path.getmtime(initial_filename)
             ndays = 3
             assert(dt < ndays*24*60*60)
         except (IOError, AssertionError):
             self.downloadLatest()
-            self.table = astropy.io.ascii.read(initial_filename)
+            self.table = ascii.read(initial_filename)
 
         self.speak('loaded Exoplanet Archive planets from {0}'.format(initial_filename))
 
@@ -95,7 +95,7 @@ class Confirmed(Population):
 
     def createStandard(self, **kwargs):
         t = self.trimmed
-        s = astropy.table.Table()
+        s = Table()
         s['name'] = [t['pl_hostname'][i] + t['pl_letter'][i] for i in range(len(t))]
 
         s['period'] = t['pl_orbper']

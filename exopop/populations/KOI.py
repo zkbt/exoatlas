@@ -28,10 +28,10 @@ class KOI(Population):
 
         # load from a NASA Exoplanet Archive csv file
         try:
-            self.table = astropy.io.ascii.read(initial_filename)
+            self.table = ascii.read(initial_filename)
         except IOError:
             downloadLatest()
-            self.table = astropy.io.ascii.read(initial_filename)
+            self.table = ascii.read(initial_filename)
 
         self.speak('loaded Exoplanet Archive KOIs from {0}'.format(initial_filename))
 
@@ -56,7 +56,7 @@ class KOI(Population):
         t = self.trimmed
         n = len(t)
 
-        s = astropy.table.Table()
+        s = Table()
         s['name'] = t['kepler_name']#[t['kepler_name'][i] + t['pl_letter'][i] for i in range(len(t))]
         for i in range(n):
             if t['kepler_name'][i] != '0':
