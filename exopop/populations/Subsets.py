@@ -1,38 +1,41 @@
 from .Exoplanets import *
 
 class Subset(TransitingExoplanets):
-    def __init__(self, label, color='black', zorder=0, alpha=1, ink=True, labelplanets=False):
+    def __init__(self, label, **plotkw):
+
+        TransitingExoplanets.__init__(self, **plotkw)
 
         # set the label
-        self.label=label
-        self.color=color
-        self.zorder=zorder
-        self.alpha=alpha
-        self.labelplanets=labelplanets
-        self.ink=ink
-        try:
-            # first try to load this population
-            Talker.__init__(self)
-            self.load_standard()
-        except IOError:
-            # if that fails, recreate it from the confirmed population
-            TransitingExoplanets.__init__(self, color=color, zorder=zorder)
-            self.label=label
-            self.selectSubsample()
+        self.label = label
 
-    def selectSubsample(self):
-        tr = self.toRemove()
-        self.speak('removing {0} rows'.format(np.sum(tr)))
-        self.removeRows(tr)
-        self.speak('leaving {0} rows'.format(self.n))
-        self.save_standard()
+        # trim to just the data we want
+        self.standard = self.standard[self.to_include()]
 
-#
-# a pair of subsamples, for those discovered by Kepler or not
-#
+    def to_include(self):
+        raise NotImplementedError('!')
 
-stringsIndicatingKepler = ['Kepler', 'K2', 'KIC', 'KOI', 'PH', '116454', 'WASP-47d', 'WASP-47e',
-                            'HD 3167', 'EPIC', '106315', '41378', "BD+20", '9827']
+
+class Kepler(Subset):
+    def __init__(self):
+        Subset.__init__(self, label="Kepler", color='royalblue', zorder=0)
+
+    def to_include(self):
+        foundbykepler = (self.discoverer == 'Kepler') | (self.discoverer == 'K2')
+        return foundbykepler
+
+class NonKepler(Subset):
+    def __init__(self):
+        Subset.__init__(self, label="Non-Kepler", color='black', zorder=0)
+
+    def to_include(self):
+        foundbykepler = (self.discoverer == 'Kepler') | (self.discoverer == 'K2')
+        return  foundbykepler == False
+
+
+'''
+
+#stringsIndicatingKepler = ['Kepler', 'K2', 'KIC', 'KOI', 'PH', '116454', 'WASP-47d', 'WASP-47e',
+#                            'HD 3167', 'EPIC', '106315', '41378', "BD+20", '9827']
 
 def discoveredByKepler(pop):
 
@@ -53,12 +56,6 @@ class TESS(Subset):
     def toRemove(self):
         return discoveredByTESS(self) == False
 
-class Kepler(Subset):
-    def __init__(self):
-        Subset.__init__(self, label="Kepler", color='royalblue', zorder=0)
-
-    def toRemove(self):
-        return discoveredByKepler(self) == False
 
 class Others(Subset):
     def __init__(self):
@@ -149,3 +146,4 @@ class Highlight(TransitingExoplanets):
     def __init__(self, name):
         TransitingExoplanets.__init__(self)
         self.removeRows(np.array([name in n.lower().replace(' ', '') for n in self.name]) == False)
+'''
