@@ -67,7 +67,7 @@ class KOI(Population):
 
         s['transit_duration'] = t['koi_duration']/24.0
 
-        s['teff'] = t['koi_steff']
+        s['stellar_teff'] = t['koi_sstellar_teff']
         s['stellar_radius'] = t['koi_srad']
         s['J'] = t['koi_jmag']
 
@@ -104,8 +104,8 @@ class KOI(Population):
         s['disposition'] = t['koi_disposition']
 
         # a little kludge
-        #s['teff'][s['name'] == 'GJ 436b'] = 3400.0
-        #s['teff'][s['name'] == 'Qatar-1b'] = 4860.0
+        #s['stellar_teff'][s['name'] == 'GJ 436b'] = 3400.0
+        #s['stellar_teff'][s['name'] == 'Qatar-1b'] = 4860.0
         #s['stellar_radius'][s['name'] == 'WASP-100b'] = 1.5#???
         s.sort('name')
         self.standard = s
@@ -120,7 +120,7 @@ class Subset(KOI):
         try:
             # first try to load this population
             Talker.__init__(self)
-            self.loadStandard()
+            self.load_standard()
         except IOError:
             # if that fails, recreate it from the confirmed population
             KOI.__init__(self)

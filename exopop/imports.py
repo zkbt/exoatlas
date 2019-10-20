@@ -32,3 +32,13 @@ try:
     FileNotFoundError
 except NameError:
     FileNotFoundError = IOError
+
+def clean(s):
+    '''
+    A wrapper function to clean up complicated strings.
+    '''
+    bad = ' !@#$%^&*()-,./<>?'
+    cleaned = s + ''
+    for c in bad:
+        cleaned = cleaned.replace(c, '')
+    return cleaned

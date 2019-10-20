@@ -1,65 +1,129 @@
 # general class for exoplanet populations
-from .imports import *
+from ..imports import *
 import string
 
 # the mamajek relation is needed for estimating distances to stars, for those without
 mamajek = thistothat.Mamajek()
 mamajek._pithy = True
 
-def clean(s):
-    bad = ' !@#$%^&*()-,./<>?'
-    cleaned = s + ''
-    for c in bad:
-        cleaned = cleaned.replace(c, '')
-    return cleaned
+necessary_columns = [
+'name',
+'period',
+'transit_epoch',
+'transit_duration',
+'stellar_teff',
+'stellar_mass',
+'stellar_radius',
+'stellar_distance',
+'planet_radius',
+'planet_mass',
+'a_over_r',
+'b',
+'ra', 'dec',
+'J',
+'discover']
 
-class Population(Talker):
-    '''Population object keeps track of an exoplanet population.'''
+desired_columns = [
+'radius_ratio',
+'planet_mass_upper',
+'planet_mass_lower',
+'planet_radius_upper',
+'planet_radius_lower',
+'stellar_distance_upper',
+'stellar_distance_lower']
 
-    # set up some plotting defaults
 
-    def __init__(self, label, remake=False, **kwargs):
+
+
+class PopulationFromStandard(Talker):
+    '''
+    Create a population from a standardized table.
+    '''
+
+    def __init__(self, standard,  **plotkw):
+        '''
+        Initialize a Population of exoplanets from a standardized table.
+
+        Parameters
+        ----------
+        standard : astropy.table.Table
+            A table that contains all the necessary columns.
+        **plotkw : dict
+            All other keyword arguments wil
+        '''
+
+        # a standardized table with a minimum set of columns we can expect
+        self.standard = standard
+
+        # keywords to use for plotting
+        self.plotkw = plotkw
+
+        # make sure it's searchable via planet name
+        self.standard.add_index('name')
+
+
+    def __getitem__(self, key):
+        '''
+        Create a subpopulation by indexing or masking this one.
+        '''
+        subset = self.standard[key]
+        cls = type(self)
+        return cls(standard=subset, label=self.label, **self.plotkw)
+
+    def single(self, name):
+        '''
+        Create a subpopulation of a single planet.
+        '''
+
+        subset = self.standard.loc[name]
+        cls = type(self)
+        return cls(standard=subset, label=name, **self.plotkw)
+
+    def validate_columns(self):
+        '''
+        Make sure this standardized table has all the necessary columns.
+        Summarize the amount of good data in each.
+        '''
+
+        N = len(self.standard)
+        for k in necessary_columns:
+            n = sum(self.standard[k].mask == False)
+            self.speak(f'{k:>25} | {n}/{N} rows = {n/N:.0%} are OK!')
+
+
+class Population(PopulationFromStandard):
+    '''
+    Population object keeps track of an exoplanet population.
+    '''
+
+
+    def __init__(self, label='exoplanets', remake=False, **plotkw):
+
         '''Initialize a population, by trying the following steps:
                 #) load a standardized .npy
                 1) load a standardized ASCII table
                 2) ingest a raw table, and standardize it
+
+        Parameters
+        ----------
+        
         '''
-
-        self.color = 'black'
-        self.alpha = 1
-        self.zorder = 0
-        self.labelplanets = False
-
-        # kuldge
-        self.ink=True
-
-        # initialize the talker
-        Talker.__init__(self)
 
         # set the name for this population
         self.label = label
 
 
-
-
-
         try:
             # try to load the standardized table
             assert(remake == False)
-            self.loadStandard()
+            standard = self.load_standard()
             self.propagate()
         except (IOError,FileNotFoundError,AssertionError):
             # or create a new standardized table and save it
             self.ingestNew(**kwargs)
 
-        # make sure it's searchable via planet name
-        self.standard.add_index('name')
+        PopulationFromStandard()
 
-        #self.propagate()
-
-    def single(self, name):
-        '''a wrapper to extract a single planet from the standardized table'''
-        return self.standard.loc[name]
 
     @property
     def fileprefix(self):
@@ -98,7 +162,7 @@ class Population(Talker):
         self.saveStandard()
 
 
-    def loadStandard(self, remake=False):
+    def load_standard(self, remake=False):
         '''Load a standardized population table, attempting...
             ...first from an .npy file (fast)
             ...then from a text file.'''
@@ -205,29 +269,29 @@ class Population(Talker):
 
         # pull out a proxy for the Sun from the Mamajek table
         #sun = mamajek.table['SpT'] == 'G2V'
-        solar_teff = 5780
+        solar_stellar_teff = 5780
 
         # figure out the bolometric luminosities
-        teffratio = self.teff/solar_teff
+        stellar_teffratio = self.stellar_teff/solar_stellar_teff
         radiusratio = self.stellar_radius
-        luminosities = teffratio**4*radiusratio**2
+        luminosities = stellar_teffratio**4*radiusratio**2
 
         # SUUUUUUPER KLUDGE
         for i in range(2):
             try:
-                test = self.teff.data
-                assert(len(test) == len(self.teff))
-                teff = np.array(test)
+                test = self.stellar_teff.data
+                assert(len(test) == len(self.stellar_teff))
+                stellar_teff = np.array(test)
             except:
                 pass
 
-        # figure out the absolute J magnitude of a dwarf with this teff
-        dwarf_absolutej = mamajek.tofrom('M_J')('Teff')(teff)
+        # figure out the absolute J magnitude of a dwarf with this stellar_teff
+        dwarf_absolutej = mamajek.tofrom('M_J')('stellar_teff')(stellar_teff)
 
         # figure out how bright a dwarf star of the same effective temperature would be
-        dwarf_luminosities = 10**mamajek.tofrom('logL')('Teff')(teff)
+        dwarf_luminosities = 10**mamajek.tofrom('logL')('stellar_teff')(stellar_teff)
 
-        # figure out how much brighter this star is than its Teff-equivalent dwarf
+        # figure out how much brighter this star is than its stellar_teff-equivalent dwarf
         ratio = luminosities/dwarf_luminosities
         return dwarf_absolutej - 2.5*np.log10(ratio)
 
@@ -248,8 +312,8 @@ class Population(Talker):
                 pass
         bad = ((distance > 0.1) == False) + (np.isfinite(distance) == False)
 
-        kludge = (self.teff == 0.0) + (np.isfinite(self.teff) == False)
-        self.standard['teff'][kludge] = 5780
+        kludge = (self.stellar_teff == 0.0) + (np.isfinite(self.stellar_teff) == False)
+        self.standard['stellar_teff'][kludge] = 5780
 
 
         distance[bad] = 10**(1 + 0.2*(self.J - self.absoluteJ))[bad]
@@ -290,7 +354,7 @@ class Population(Talker):
                     pass'''
 
 
-            return self.teff/np.sqrt(2*self.a_over_r)
+            return self.stellar_teff/np.sqrt(2*self.a_over_r)
 
     @property
     def insolation(self):
@@ -300,7 +364,7 @@ class Population(Talker):
         return (self.teq/teqearth)**4
 
         #        u = craftroom.units
-        #        return 1.0/self.a_over_r**2*self.teff**4/(u.Rsun/u.au)**2/u.Tsun**4
+        #        return 1.0/self.a_over_r**2*self.stellar_teff**4/(u.Rsun/u.au)**2/u.Tsun**4
 
 
     @property
@@ -400,7 +464,7 @@ class Population(Talker):
 
     @property
     def emissionsignal(self):
-        return (self.planet_radius/self.stellar_radius)**2*self.teq/self.teff
+        return (self.planet_radius/self.stellar_radius)**2*self.teq/self.stellar_teff
 
     @property
     def reflectionsignal(self):

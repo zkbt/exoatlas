@@ -41,7 +41,7 @@ def correct(pop):
 			planet_radius=1.130,
 			planet_radius_upper=0.056,
 			planet_radius_lower=-0.056,
-			teff=3270.0, b=0.38,
+			stellar_teff=3270.0, b=0.38,
 			stellar_radius=0.2105,
 			stellar_mass=0.181,
             transit_epoch=2457184.55786)
@@ -116,7 +116,7 @@ def correct(pop):
                 planet_mass=235.0,
                 planet_mass_upper=19.0,
                 planet_mass_lower=-19.0,
-                teff=6065.0,
+                stellar_teff=6065.0,
                 a_over_r=8.9,
                 b=0.5)
 
@@ -161,11 +161,11 @@ def correct(pop):
 
     # from von Braun et al. (2012)
     pop.correct('GJ 436b',
-                teff=3416.0)
+                stellar_teff=3416.0)
 
     # from the updates in Anglada-Escude et al. (2013)
     pop.correct('GJ 1214b',
-                teff=3252.0,
+                stellar_teff=3252.0,
                 stellar_radius=0.211,
                 planet_radius=2.72,
                 planet_radius_upper=0.24,
@@ -220,40 +220,40 @@ def correct(pop):
     pop.correct('Kepler-11g',
                 stellar_radius=1.053)
 
-    # googling the ones that have messed up Teffs
+    # googling the ones that have messed up stellar_teffs
     pop.correct('Qatar-1b',
-                teff=4861.)
+                stellar_teff=4861.)
     pop.correct('Kepler-450b',
-                teff=6215.0)
+                stellar_teff=6215.0)
     pop.correct('Kepler-450c',
-                teff=6215.0)
+                stellar_teff=6215.0)
     pop.correct('Kepler-450d',
-                teff=6215.0)
+                stellar_teff=6215.0)
 
     pop.correct('Kepler-449b',
-                teff=5588.0)
+                stellar_teff=5588.0)
     pop.correct('Kepler-449c',
-                teff=5588.0)
+                stellar_teff=5588.0)
 
     pop.correct('Kepler-414b',
-                teff=5523.0)
+                stellar_teff=5523.0)
     pop.correct('Kepler-414c',
-                teff=5523.0)
+                stellar_teff=5523.0)
 
     pop.correct('Kepler-415b',
-                teff=4523.0)
+                stellar_teff=4523.0)
     pop.correct('Kepler-415c',
-                teff=4523.0)
+                stellar_teff=4523.0)
 
     pop.correct('Kepler-416b',
-                teff=5670.0)
+                stellar_teff=5670.0)
     pop.correct('Kepler-416c',
-                teff=5670.0)
+                stellar_teff=5670.0)
 
     pop.correct('Kepler-417b',
-                teff=5376.0)
+                stellar_teff=5376.0)
     pop.correct('Kepler-417c',
-                teff=5376.0)
+                stellar_teff=5376.0)
 
     # from discovery paper
     pop.correct('WASP-100b',

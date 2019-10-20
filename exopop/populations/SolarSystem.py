@@ -27,7 +27,7 @@ class SolarSystem(Population):
         s['name'] = t['name']
         s['kepid'] = None
 
-        s['teff'] = 5780
+        s['stellar_teff'] = 5780
 
         s['period'] = (t['period']*u.year/u.day).decompose()
 
@@ -49,7 +49,7 @@ class SolarSystem(Population):
         semimajoraxis = t['period']**(2.0/3.0)
         s['a_over_r'] = (semimajoraxis*u.au/(1*u.Rsun)).decompose().value
 
-        s['teq'] = s['teff']*(0.25*1.0/s['a_over_r']**2)**0.25
+        s['teq'] = s['stellar_teff']*(0.25*1.0/s['a_over_r']**2)**0.25
 
         s['rv_semiamplitude'] = None
         s['radius_ratio'] = (s['planet_radius']*u.Rearth/(s['stellar_radius']*u.Rsun)).decompose().value

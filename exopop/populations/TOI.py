@@ -62,7 +62,7 @@ class TOI(Population):
         s['period'] = t['Period (days)']
         s['transit_duration'] = t['Duration (hrs)']/24
 
-        s['teff'] = t['Stellar Eff Temp (K)']
+        s['stellar_teff'] = t['Stellar Eff Temp (K)']
         s['stellar_radius'] = t['Stellar Radius (R_Sun)']
 
         #t['TIC'].name = 'TIC ID'
@@ -119,8 +119,8 @@ class TOI(Population):
         s['disposition'] = withtic['User Disposition']
 
         # a little kludge
-        #s['teff'][s['name'] == 'GJ 436b'] = 3400.0
-        #s['teff'][s['name'] == 'Qatar-1b'] = 4860.0
+        #s['stellar_teff'][s['name'] == 'GJ 436b'] = 3400.0
+        #s['stellar_teff'][s['name'] == 'Qatar-1b'] = 4860.0
         #s['stellar_radius'][s['name'] == 'WASP-100b'] = 1.5#???
         s.sort('name')
         self.standard = s
@@ -135,7 +135,7 @@ class Subset(TOI):
         try:
             # first try to load this population
             Talker.__init__(self)
-            self.loadStandard()
+            self.load_standard()
         except IOError:
             # if that fails, recreate it from the confirmed population
             KOI.__init__(self)
