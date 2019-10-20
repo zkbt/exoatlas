@@ -6,7 +6,7 @@ import numpy as np, matplotlib.pyplot as plt, matplotlib.animation as animation
 # this function downloads a file and returns its filepath
 from astropy.utils.data import download_file
 from astropy.io import ascii
-from astropy.table import Table, vstack
+from astropy.table import Table, vstack, join
 
 # some general custom utilities from Zach
 import thistothat, craftroom.strings, craftroom.units, craftroom.utils, craftroom.color
@@ -42,3 +42,38 @@ def clean(s):
     for c in bad:
         cleaned = cleaned.replace(c, '')
     return cleaned
+
+def time_from_modified(filename):
+    '''
+    How long ago was this file last modified?
+    '''
+    try:
+        dt = Time.now().unix - os.path.getmtime(filename)
+        return dt/60/60/24
+    except FileNotFoundError:
+        return np.inf
+
+
+def check_if_needs_updating(filename, maximum_age=1.0):
+    '''
+    Do a (possibly interactive) check to see if this file
+    is so old that it needs to be updated.
+
+    Returns
+    -------
+    old : bool
+        True if the file is so old it needs updating
+        False if the file doesn't need updating
+    '''
+
+    # how long ago was the data updated?
+    dt = time_from_modified(filename)
+
+    old = False
+    if dt == np.inf:
+        old = True
+    elif dt > maximum_age:
+        print(f'{filename} is {dt:.3f} days old.')
+        old = 'y' in input('Should it be updated? [y/N]').lower()
+
+    return old

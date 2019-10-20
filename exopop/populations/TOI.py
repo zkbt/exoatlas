@@ -19,14 +19,14 @@ def downloadLatest():
     print('downloading the latest list of TOI candidates from ExoFOP')
     request.urlretrieve(url, initial_filename)
 
-class TOI(Population):
+class TOI(PredefinedPopulation):
     def __init__(self, label='TOI', **kwargs):
         '''Initialize a population of KOI's, from Exoplanet archive.'''
 
         # set up the population
         Population.__init__(self, label=label, **kwargs)
         #correct(self)
-        self.saveStandard()
+        self.save_standard()
         # defing some plotting parameters
         self.color = 'gray'
         self.zorder = -1
@@ -47,11 +47,11 @@ class TOI(Population):
         # report original size
         self.speak('original table contains {0} elements'.format(len(self.table)))
 
-    def trimRaw(self):
+    def trim_raw(self):
         self.trimmed = self.table
 
 
-    def createStandard(self):
+    def create_standard(self):
         t = self.trimmed
         n = len(t)
 
@@ -148,7 +148,7 @@ class Subset(TOI):
         self.speak('removing {0} rows'.format(np.sum(tr)))
         self.removeRows(tr)
         self.speak('leaving {0} rows'.format(self.n))
-        self.saveStandard()
+        self.save_standard()
 
 
 """class UnconfirmedKepler(Subset):

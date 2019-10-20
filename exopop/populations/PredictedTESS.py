@@ -4,7 +4,7 @@ from .Population import Population
 
 initial_filename = directories['data'] + 'TESSsimulations.tsv'
 
-class PredictedTESS(Population):
+class PredictedTESS(PredefinedPopulation):
     '''TESS population object contains a simulated TESS planet yield
         from 200,000 two-minute cadence postage stamps,
         as calculated by Peter Sullivan et al. (2015)'''
@@ -20,10 +20,10 @@ class PredictedTESS(Population):
         self.table = ascii.read(initial_filename)
         self.speak('loaded TESS simulated population from {0}'.format(initial_filename))
 
-    def trimRaw(self):
+    def trim_raw(self):
         self.trimmed = self.table
 
-    def createStandard(self):
+    def create_standard(self):
         t = self.trimmed
         s = Table()
         s['name'] = ['tess{0:04}i'.format(i) for i in range(len(t))]

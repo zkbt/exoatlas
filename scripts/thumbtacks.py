@@ -7,7 +7,7 @@ It still has some kludges in it.
 ''''
 
 from exopop.ThumbtackPlot import ThumbtackPlot
-from exopop.Confirmed import Kepler, TESS, Others
+from exopop.TransitingExoplanets import Kepler, TESS, Others
 import numpy as np, matplotlib.pyplot as plt
 
 
@@ -61,7 +61,6 @@ for label in [0, 20, 30, 50, np.inf]:
 
 		# redefine the planet names to have only one (grouped one) per system
 		pops[k].standard['name'] = planetnames
-		pops[k].propagate()
 
 
 	# specifiy the radius out to which planets should be labeled

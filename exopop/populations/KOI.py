@@ -11,14 +11,14 @@ def downloadLatest():
     print('downloading the latest list of confirmed exoplanets from the Exoplanet Archive')
     request.urlretrieve(url, initial_filename)
 
-class KOI(Population):
+class KOI(PredefinedPopulation):
     def __init__(self, label='KOI', **kwargs):
         '''Initialize a population of KOI's, from Exoplanet archive.'''
 
         # set up the population
         Population.__init__(self, label=label, **kwargs)
         correct(self)
-        self.saveStandard()
+        self.save_standard()
         # defing some plotting parameters
         self.color = 'gray'
         self.zorder = -1
@@ -38,7 +38,7 @@ class KOI(Population):
         # report original size
         self.speak('original table contains {0} elements'.format(len(self.table)))
 
-    def trimRaw(self):
+    def trim_raw(self):
         ok = (self.table['koi_jmag'] > 1.0)* \
                 (self.table['koi_srad'] > 0)* \
                 (self.table['koi_disposition'] != 'FALSE POSITIVE')* \
@@ -52,7 +52,7 @@ class KOI(Population):
 
 
 
-    def createStandard(self):
+    def create_standard(self):
         t = self.trimmed
         n = len(t)
 
@@ -133,7 +133,7 @@ class Subset(KOI):
         self.speak('removing {0} rows'.format(np.sum(tr)))
         self.removeRows(tr)
         self.speak('leaving {0} rows'.format(self.n))
-        self.saveStandard()
+        self.save_standard()
 
 class UnconfirmedKepler(Subset):
     def __init__(self):

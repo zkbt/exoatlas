@@ -6,25 +6,29 @@ import string
 mamajek = thistothat.Mamajek()
 mamajek._pithy = True
 
-necessary_columns = [
+exoplanet_columns = [
 'name',
+'ra', 'dec',
+'stellar_distance',
+'J',
+'discoverer']
+
+transit_columns = [
 'period',
 'transit_epoch',
 'transit_duration',
+'transit_depth',
 'stellar_teff',
 'stellar_mass',
 'stellar_radius',
-'stellar_distance',
 'planet_radius',
 'planet_mass',
 'a_over_r',
-'b',
-'ra', 'dec',
-'J',
-'discover']
+'b']
+
+necessary_columns = exoplanet_columns + transit_columns
 
 desired_columns = [
-'radius_ratio',
 'planet_mass_upper',
 'planet_mass_lower',
 'planet_radius_upper',
@@ -33,14 +37,12 @@ desired_columns = [
 'stellar_distance_lower']
 
 
-
-
-class PopulationFromStandard(Talker):
+class Population(Talker):
     '''
     Create a population from a standardized table.
     '''
 
-    def __init__(self, standard,  **plotkw):
+    def __init__(self, standard, label='unknown', **plotkw):
         '''
         Initialize a Population of exoplanets from a standardized table.
 
@@ -53,7 +55,10 @@ class PopulationFromStandard(Talker):
         '''
 
         # a standardized table with a minimum set of columns we can expect
-        self.standard = standard
+        self.standard = Table(standard)
+
+        # store a label for this population
+        self.label = label
 
         # keywords to use for plotting
         self.plotkw = plotkw
@@ -66,18 +71,42 @@ class PopulationFromStandard(Talker):
         '''
         Create a subpopulation by indexing or masking this one.
         '''
-        subset = self.standard[key]
-        cls = type(self)
-        return cls(standard=subset, label=self.label, **self.plotkw)
+        try:
+            subset = self.standard[key]
+        except KeyError:
+            # remove spaces from the strings (or from lists of strings)
+            if type(key) == str:
+                key = key.replace(' ', '')
+            elif type(key[0]) == str:
+                key = [k.replace(' ', '') for k in key]
+            subset = self.standard.loc[key]
+        return Population(standard=subset, label=self.label, **self.plotkw)
+
+    def __getattr__(self, key):
+        '''
+        If an attribute/method isn't defined for a population,
+        look for it as a column of the standardized table.
+        For example, `population.stellar_radius` will try to
+        access `population.standard['stellar_radius']`.
+        '''
+        return self.standard[key]
+
+    def __repr__(self):
+        '''
+        How should this population appear as a repr/str?
+        '''
+        return f'<{self.label} | {self.n} planets>'
 
     def single(self, name):
         '''
         Create a subpopulation of a single planet.
         '''
 
+        # create a subset of the standardized table
         subset = self.standard.loc[name]
-        cls = type(self)
-        return cls(standard=subset, label=name, **self.plotkw)
+
+        # create a new object, from this subset
+        return Population(standard=subset, label=name, **self.plotkw)
 
     def validate_columns(self):
         '''
@@ -87,166 +116,64 @@ class PopulationFromStandard(Talker):
 
         N = len(self.standard)
         for k in necessary_columns:
-            n = sum(self.standard[k].mask == False)
-            self.speak(f'{k:>25} | {n}/{N} rows = {n/N:.0%} are OK!')
-
-
-class Population(PopulationFromStandard):
-    '''
-    Population object keeps track of an exoplanet population.
-    '''
-
-
-    def __init__(self, label='exoplanets', remake=False, **plotkw):
-
-        '''Initialize a population, by trying the following steps:
-                #) load a standardized .npy
-                1) load a standardized ASCII table
-                2) ingest a raw table, and standardize it
-
-        Parameters
-        ----------
-        
-        '''
-
-        # set the name for this population
-        self.label = label
-
-
-        try:
-            # try to load the standardized table
-            assert(remake == False)
-            standard = self.load_standard()
-            self.propagate()
-        except (IOError,FileNotFoundError,AssertionError):
-            # or create a new standardized table and save it
-            self.ingestNew(**kwargs)
-
-        PopulationFromStandard()
-
-
-    @property
-    def fileprefix(self):
-        return clean(self.label)
-
-    def loadRaw(self, remake=False):
-        raw_numpy = directories['data'] + self.fileprefix + '_raw.npy'
-        try:
-            assert(remake==False)
-            self.table = Table(np.load(raw_numpy))
-            self.speak('loaded raw (but pre-saved) population from {0}'.format(raw_numpy))
-        except IOError:
-            self.loadFromScratch()
-            np.save(raw_numpy, self.table)
-            self.speak('saved raw population to {0} for faster future loading'.format(raw_numpy))
-
-    def ingestNew(self, **kwargs):
-        '''Ingest a new population table of arbitrary format,
-            and then standardize it, using the tools defined in
-            inherited population classes.'''
-
-
-        # load the raw table
-        self.loadRaw()
-
-        # trim elements from raw table as necessary
-        self.trimRaw()
-
-        # create a standardized table from the array
-        self.createStandard(**kwargs)
-
-        # propagate into the attribute names
-        self.propagate()
-
-        # save the standardized table
-        self.saveStandard()
-
-
-    def load_standard(self, remake=False):
-        '''Load a standardized population table, attempting...
-            ...first from an .npy file (fast)
-            ...then from a text file.'''
-
-        standard_numpy = directories['data'] + self.fileprefix + '.npy'
-        '''try:
-            # first try to load the saved numpy table
-            self.standard = Table(np.load(standard_numpy))
-            self.speak('loaded standardized table from {0}'.format(standard_numpy))
-        except IOError:'''
-        # then try to load the table from a text file
-        standard_ascii = directories['data'] + self.fileprefix + '.ascii'
-        edited_ascii = standard_ascii.replace('.ascii', '.edited')
-
-        kw = dict( delimiter='|', fill_values=[('',np.nan), ('--', np.nan)])#, format='basic', fill_values=[('--', 'nan'), (' ', 'nan')], data_start=1)
-        try:
-            self.speak('attempting to load {0}'.format(edited_ascii))
-            self.standard = ascii.read(edited_ascii, **kw)
-            self.speak('success!')
-        except (IOError, FileNotFoundError):
-            self.speak('failed!')
-            self.speak('attempting to load {0}'.format(standard_ascii))
-            self.standard = ascii.read(standard_ascii,**kw)
-            self.speak('loaded (hopefully) standardized table from {0}'.format(standard_ascii))
-
-        #    # and resave it as a numpy table (for faster loading next time)
-        #    np.save(standard_numpy, self.standard)
-
-
-        self.standard = np.ma.filled(self.standard, fill_value=np.nan)
-        # add all of the table columns as attributes of the object
-        self.propagate()
-
-    def saveStandard(self):
-
-        # KLUDGE!
-        from .curation.Confirmed import correct
-        correct(self)
-        #standard_numpy = self.fileprefix + '.npy'
-        standard_ascii = directories['data'] + self.fileprefix + '.ascii'
-
-        # save it as an ascii table for humans to read
-        self.standard.write(standard_ascii, format='ascii.fixed_width', bookend=False, delimiter='|', )#, include_names=columns)
-        self.speak('wrote a standardized ascii table to {0}'.format(standard_ascii))
-
-        # and resave it as a numpy table (for faster loading next time)
-        #np.save(standard_numpy, self.standard)
-        #self.speak('and saved standardized table to {0}'.format(standard_numpy))
-
-    def removeRows(self, indices):
-        self.standard.remove_rows(indices.nonzero()[0])
-        self.propagate()
-
-
-    def propagate(self):
-        '''Link the columns of the standardized table as object attributes.'''
-        for k in self.standard.colnames:
-            self.__dict__[k] = self.standard[k]
-
+            try:
+                n = sum(self.standard[k].mask == False)
+            except AttributeError:
+                try:
+                    n = sum(np.isfinite(self.standard[k]))
+                except TypeError:
+                    n = sum(self.standard[k] != '')
+            self.speak(f'{k:>25} | {n:4}/{N} rows = {n/N:4.0%} are not empty')
 
     def find(self, name):
-        '''Return index of a particular planet in the population.'''
+        '''
+        Return index of a particular planet in the population.
+
+        ??? = maybe this could/should be replaced with some table cleverness?
+        '''
+
         return np.array([clean(name) in clean(x) for x in self.name]).nonzero()[0]
 
     def correct(self, name, **kwargs):
+        '''
+        Correct the properties of a particular planet,
+        modifying its values in the standardized table.
+
+        Parameters
+        ----------
+        name : str
+            The name of the planet to fix.
+        **kwargs : dict
+            Keyword arguments will go into modifying
+            the properties of that planet.
+        '''
 
         # find the entry to replace
         match = self.find(name)
         if len(match) != 1:
-            self.speak('FAILED WHEN TRYING TO REPLACE {0}'.format(name))
+            self.speak(f'failed when trying to modify parameters for {name}')
             return
-        assert(len(match) == 1)
 
-        # loop over the keys
-        for k, v in kwargs.items():
-            self.speak('{0} used to be {1}'.format(k, v))
-            self.standard[k][match] = v
-            self.speak('  now it is {0}'.format(v))
+        # loop over the keys, modifying each
+        self.speak(f'for planet "{name}"')
+        for k, new in kwargs.items():
+            old = self.standard[k][match]
+            self.speak(f' {k} changed from {old} to {new}')
+            self.standard[k][match] = new
 
-    def __str__(self):
-        return '<{0} | {1} planets>'.format(self.label, self.n)
+    def removeRows(self, indices):
+
+        raise NotImplementedError('''
+        The `removeRows` method has been removed. Please use something like
+        `population[0:42]` or `population[ok]` to use slices, indices, or masks
+        to pull subsets out of this population.
+        ''')
 
     @property
     def n(self):
+        '''
+        How many planets are in this population?
+        '''
         return len(self.standard)
 
     @property
@@ -549,3 +476,125 @@ class Population(PopulationFromStandard):
         sizeplot = np.sqrt(area/np.nanmax(area)*maxarea)
 
         plt.scatter(xplot, yplot, linewidth=0, marker='o', markersize=sizeplot)
+
+
+class PredefinedPopulation(Population):
+    '''
+    Population object keeps track of an exoplanet population.
+    '''
+
+    expiration = 0.00001
+    def __init__(self, label='exoplanets', remake=False, **plotkw):
+        '''
+        Initialize a population, by trying the following steps:
+                1) Load a standardized ascii table.
+                2) Ingest a raw table, and standardize it.
+
+        Parameters
+        ----------
+        label : str
+            The name of this population, for use both in filenames
+            and labeling points on plots.
+        remake : bool
+            Should we re-ingest this table from its raw ingredients?
+        **plotkw : dict
+            All other keywords are stored as plotting suggestions.
+        '''
+
+        # set the name for this population
+        self.label = label
+
+        try:
+            # try to load the standardized table
+            assert(remake == False)
+            standard = self.load_standard()
+        except (IOError,FileNotFoundError,AssertionError):
+            # or create a new standardized table and save it
+            standard = self.ingest_table(remake=remake)
+
+        # initialize with a standard table
+        Population.__init__(self,
+                            standard=standard,
+                            label=label,
+                            **plotkw)
+
+    @property
+    def fileprefix(self):
+        '''
+        Define a fileprefix for this population, to be used
+        for setting the filename of the standardized population.
+        '''
+        return clean(self.label)
+
+    def ingest_table(self, **kwargs):
+        '''
+        Ingest a new population table of arbitrary format,
+        and then standardize it, using the tools defined in
+        inherited population classes.'''
+
+
+        # load the raw table
+        raw = self.load_raw()
+
+        # trim elements from raw table as necessary
+        trimmed = self.trim_raw(raw)
+
+        # create a standardized table from the array
+        standard = self.create_standard(trimmed)
+
+        # save the standardized table
+        self.save_standard(standard)
+
+        return standard
+
+    @property
+    def standard_path(self):
+        '''
+        Define the filepath for the standardized table.
+        '''
+        return os.path.join(directories['data'],
+                            f'standardized-{self.fileprefix}.txt')
+
+    def load_standard(self):
+        '''
+        Load a standardized population table. Generally this
+        will be from a file like ~/.exopop/standardized-*.txt
+
+        Returns
+        -------
+
+        standard : astropy.table.Table
+            A table of planet properties,
+            with a minimal set of columns.
+        '''
+
+        # make sure this file is recent enough
+        old = check_if_needs_updating(self.standard_path, self.expiration)
+        assert(old == False)
+
+
+        # keywords for reading a standardized table
+        readkw = dict(delimiter='|',
+                      fill_values=[('',np.nan), ('--', np.nan)])
+
+        standard = ascii.read(self.standard_path, **readkw)
+        self.speak(f'Loaded standardized table from {self.standard_path}')
+
+        # ??? change this to do something more clever with tables
+        # masked = np.ma.filled(standard, fill_value = np.nan)
+
+        return standard
+
+    def save_standard(self, standard):
+        '''
+        Save the standardized table out to a text file
+        like ~/exopop/standardized-*.txt
+        '''
+
+        # save it as an ascii table for humans to read
+        standard.write(self.standard_path,
+                            format='ascii.fixed_width',
+                            bookend=False,
+                            delimiter='|',
+                            overwrite=True )
+        self.speak(f'Saved a standardized text table to {self.standard_path}')

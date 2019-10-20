@@ -4,7 +4,7 @@ import astropy.units as u
 
 initial_filename = directories['data'] + 'solarsystem.txt'
 
-class SolarSystem(Population):
+class SolarSystem(PredefinedPopulation):
     '''The Solar System, very crudely.'''
 
     def __init__(self, **kwargs):
@@ -18,10 +18,10 @@ class SolarSystem(Population):
         self.table = ascii.read(initial_filename)
         self.speak('loaded TESS simulated population from {0}'.format(initial_filename))
 
-    def trimRaw(self):
+    def trim_raw(self):
         self.trimmed = self.table
 
-    def createStandard(self):
+    def create_standard(self):
         t = self.trimmed
         s = Table()
         s['name'] = t['name']

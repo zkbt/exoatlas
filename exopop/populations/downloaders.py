@@ -7,42 +7,23 @@
 
 from ..imports import *
 
-# how many days old can local data be, before we try to download it
-maximum_age = 1.0
-
 class Downloader(Talker):
     # anything special to know about reading this file format?
-    readkw = dict(delimiter='|')
+    readkw =  dict(delimiter='|',
+                   fill_values=[('',np.nan), ('--', np.nan)])
 
-    def time_from_modified(self):
-        '''
-        How long ago was this file last modified?
-        '''
-        try:
-            dt = Time.now().unix - os.path.getmtime(self.path)
-            return dt/60/60/24
-        except FileNotFoundError:
-            return np.inf
 
-    def get(self, remake=False, ask=True):
+
+    def get(self, remake=False):
         '''
         Get the table, downloading it from online if necessary.
         If the table is older than some particular threshold,
         then ask the user whether or not they want to download.
         '''
 
-        # how long ago was the data updated?
-        dt = self.time_from_modified()
 
         # if file doesn't exist, download it
-        if dt == np.inf:
-            remake = True
-        # if file is old, ask if we should remake it
-        elif dt > maximum_age:
-            self.speak(f'{self.path} is {dt:.3f} days old.')
-            if ask:
-                answer = 'y' in self.input('Should we download a new one? [y/N]').lower()
-                remake = remake | answer
+        remake = remake | check_if_needs_updating(self.path)
 
         # either download a fresh file, or load a local one
         if remake:
@@ -89,7 +70,7 @@ class ExoplanetArchiveDownloader(Downloader):
     select = '*'
 
     # what tables are currently support through this mode of access?
-    supported_tables = ['exoplanets', 'compositepars', ]
+    supported_tables = ['exoplanets', 'compositepars']
 
     def __init__(self, table='exoplanets'):#, where='*'):
         self.table = table
@@ -118,6 +99,54 @@ class ExoplanetArchiveDownloader(Downloader):
                             f'nea-{self.table}.txt')
 
 
+
+
+exoplanets = ExoplanetArchiveDownloader('exoplanets')
+composite_exoplanets = ExoplanetArchiveDownloader('compositepars')
+
+
+class MergedExoplanetArchiveDownloader(ExoplanetArchiveDownloader):
+    def __init__(self):
+        self.table = 'merged'
+
+    def download_fresh(self):
+        '''
+        Download a brand new merged table from the Exoplanet Archive.
+        This grabs both the `exoplanets` and `compositepars` tables,
+        and merges them together into one massive table with lots
+        of columns for options.
+        '''
+
+        self.speak(f'Creating a merged exoplanet table from the NASA Exoplanet Archive.')
+
+        # load the individual tables
+        e = exoplanets.get()
+        c = composite_exoplanets.get()
+
+        # join the two tables together on the planets' names
+        self.speak('Joining the two Exoplanet Archive tables together.')
+        self.speak(' (This may take a while. The tables are big!)')
+        c.rename_column('fpl_name', 'pl_name')
+        j = join(e, c, keys='pl_name', table_names=['exoplanets', 'composite'])
+
+        # tidy up some of the column names
+        for k in j.colnames:
+            if '_exoplanets' in k:
+                j.rename_column(k, k.replace('_exoplanets', ''))
+
+        # write the merged table out to a file
+        self.speak(f'Merge successful! Saving file to {self.path}.')
+        self.speak(' (This may take a while. The table is big!)')
+        j.write(self.path,
+                format='ascii.fixed_width',
+                bookend=False,
+                delimiter='|',
+                overwrite=True)
+
+        self.speak('File saved.')
+
+merged_exoplanets = MergedExoplanetArchiveDownloader()
+
 class ExoFOPDownloader(Downloader):
 
     def __init__(self):
@@ -130,7 +159,4 @@ class ExoFOPDownloader(Downloader):
         '''
         return os.path.join(directories['data'], 'TOI.txt')
 
-
-all_exoplanets = ExoplanetArchiveDownloader('exoplanets')
-composite_exoplanets = ExoplanetArchiveDownloader('compositepars')
 toi_exofop = ExoFOPDownloader()

@@ -22,8 +22,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 # pull the confirmed exoplanets from the NASA Exoplanet Archive
-from exopop.Confirmed import Confirmed
-confirmed = Confirmed()
+from exopop.TransitingExoplanets import TransitingExoplanets
+confirmed = TransitingExoplanets()
 
 # there's a standardized table of properties
 print(confirmed.standard)

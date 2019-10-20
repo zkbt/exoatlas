@@ -1,6 +1,6 @@
 from .imports import *
 from .BubblePlot import BubblePlot
-from .Confirmed import NonKepler, Kepler, TESS
+from .TransitingExoplanets import NonKepler, Kepler, TESS
 from .KOI import UnconfirmedKepler
 import datetime
 
@@ -341,7 +341,6 @@ def tessComparison():
     kep = Kepler()
     unc = UnconfirmedKepler()
     kep.standard = vstack([kep.standard, unc.standard])
-    kep.propagate()
     tes = TESS()
     non.color = 'royalblue'
     non.zorder=-1
