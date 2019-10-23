@@ -80,7 +80,9 @@ class Population(Talker):
             elif type(key[0]) == str:
                 key = [k.replace(' ', '') for k in key]
             subset = self.standard.loc[key]
-        return Population(standard=subset, label=self.label, **self.plotkw)
+        return Population(standard=subset,
+                          label=f'Subset of {self.label}',
+                          **self.plotkw)
 
     def __getattr__(self, key):
         '''
@@ -93,9 +95,9 @@ class Population(Talker):
 
     def __repr__(self):
         '''
-        How should this population appear as a repr/str?
+        How should this object appear as a repr/str?
         '''
-        return f'<{self.label} | {self.n} planets>'
+        return f'<{self.label} | population of {self.n} planets>'
 
     def single(self, name):
         '''

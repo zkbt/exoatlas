@@ -6,7 +6,7 @@ from .Population import PredefinedPopulation
 from .downloaders import merged_exoplanets
 
 class Exoplanets(PredefinedPopulation):
-    def __init__(self, label='Exoplanets', remake=False, **plotkw):
+    def __init__(self, label='All Exoplanets', remake=False, **plotkw):
         '''
         Initialize a population of all known exoplanets,
         from a table downloaded from the NASA Exoplanet Archive.

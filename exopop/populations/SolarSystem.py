@@ -1,5 +1,5 @@
-from .imports import *
-from .Population import Population
+from ..imports import *
+from .Population import PredefinedPopulation
 import astropy.units as u
 
 initial_filename = directories['data'] + 'solarsystem.txt'
@@ -9,20 +9,28 @@ class SolarSystem(PredefinedPopulation):
 
     def __init__(self, **kwargs):
         '''Initialize a population of simulated TESS planets.'''
-        Population.__init__(self, label='Solar System', **kwargs)
+        PredefinedPopulation.__init__(self, label='Solar System', **kwargs)
         self.color = 'cornflowerblue'
         self.zorder = 1e10
 
-    def loadFromScratch(self):
+    def load_raw(self, remake=False):
+        '''
+        Load the raw table of data from the NASA Exoplanet Archive.
+        '''
 
-        self.table = ascii.read(initial_filename)
-        self.speak('loaded TESS simulated population from {0}'.format(initial_filename))
+        # load the table of Solar System planets
+        raw = ascii.read(initial_filename)
 
-    def trim_raw(self):
-        self.trimmed = self.table
+        return raw
 
-    def create_standard(self):
-        t = self.trimmed
+
+    def trim_raw(self, raw):
+        self._trimmed = raw
+        return self._trimmed
+
+
+    def create_standard(self, trimmed):
+        t = trimmed
         s = Table()
         s['name'] = t['name']
         s['kepid'] = None
@@ -56,9 +64,14 @@ class SolarSystem(PredefinedPopulation):
         s['stellar_distance'] = 0.0
         s['ra'] = 0.0
         s['dec'] = 0.0
+        s['discoverer'] = 'humans'
+        s['transit_epoch'] = 0.0
+        s['transit_duration'] = 0.0
+        s['transit_depth'] = 0.0
+        s['b'] = 0.0
 
         self.standard = s
-
+        return s
     @property
     def distance(self):
         return np.nan*np.zeros_like(self.standard['stellar_distance'])

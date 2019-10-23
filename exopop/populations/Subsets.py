@@ -31,46 +31,41 @@ class NonKepler(Subset):
         foundbykepler = (self.discoverer == 'Kepler') | (self.discoverer == 'K2')
         return  foundbykepler == False
 
+class TESS(Subset):
+    def __init__(self):
+        Subset.__init__(self, label="TESS", color='orangered', zorder=0)
+
+    def to_include(self):
+        foundbytess = (self.discoverer == 'Transiting Exoplanet Survey Satellite (TESS)')
+        return foundbytess == False
+
+space_telescopes = ['Transiting Exoplanet Survey Satellite (TESS)',
+                    'K2', 'Kepler',
+                    'CoRoT',
+                    'Hubble Space Telescope']
+class Space(Subset):
+    def __init__(self):
+        Subset.__init__(self, label="Space-based", color='orangered', zorder=0)
+
+    def to_include(self):
+        foundfromspace = np.zeros(self.n).astype(np.bool)
+        for x in space_telescopes:
+            foundfromspace = foundfromspace | (self.discoverer == x)
+        return foundfromspace
+
+class Ground(Subset):
+    def __init__(self):
+        Subset.__init__(self, label="Ground-based", color='orangered', zorder=0)
+
+    def to_include(self):
+        foundfromspace = np.zeros(self.n).astype(np.bool)
+        for x in space_telescopes:
+            foundfromspace = foundfromspace | (self.discoverer == x)
+        return foundfromspace == False
+
 
 '''
 
-#stringsIndicatingKepler = ['Kepler', 'K2', 'KIC', 'KOI', 'PH', '116454', 'WASP-47d', 'WASP-47e',
-#                            'HD 3167', 'EPIC', '106315', '41378', "BD+20", '9827']
-
-def discoveredByKepler(pop):
-
-
-    iskepler = pop.standard['discoverer'] == 'Kepler'
-    isk2 =  pop.standard['discoverer'] == 'K2'
-    d = iskepler | isk2
-
-    return d
-
-def discoveredByTESS(pop):
-    return  pop.standard['discoverer'] == 'Transiting Exoplanet Survey Satellite (TESS)'
-
-class TESS(Subset):
-    def __init__(self):
-        Subset.__init__(self, label="TESS", color='darkorange', zorder=0)
-
-    def toRemove(self):
-        return discoveredByTESS(self) == False
-
-
-class Others(Subset):
-    def __init__(self):
-        Subset.__init__(self, label="Others", color='black', zorder=10)
-
-    def toRemove(self):
-        return (discoveredByKepler(self) == True) | (discoveredByTESS(self) == True)
-
-
-class NonKepler(Subset):
-    def __init__(self):
-        Subset.__init__(self, label="Non-Kepler", color='black', zorder=10)
-
-    def toRemove(self):
-        return discoveredByKepler(self) == True
 
 #
 # a pair of subsamples, for those with and without good mass measurements

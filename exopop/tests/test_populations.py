@@ -11,6 +11,14 @@ def test_population():
     p.validate_columns()
     return p
 
+def test_solarsystem():
+    '''
+    Can we make a population of Solar System planets?
+    '''
+    p = SolarSystem()
+    p.validate_columns()
+    return p
+
 def test_transitingexoplanets():
     '''
     Can we make a population of confirmed transiting exoplanets?
