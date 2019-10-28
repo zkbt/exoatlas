@@ -1,5 +1,5 @@
-from exopop.imports import *
-from exopop import BubblePlot
+from ..imports import *
+from .BubblePlot import BubblePlot
 from craftroom.painting import ink_errorbar
 import craftroom.units as u
 
@@ -80,7 +80,6 @@ class PlanetDensityRadius(DistanceRadius):
         volume =4*np.pi*(self.pop.planet_radius*u.Rearth)**3/3.0
         return mass/volume
 
-
 class StellarRadius(DistanceRadius):
     xlabel = 'Stellar Radius\n(solar radii)'
     xscale = 'linear'
@@ -89,7 +88,6 @@ class StellarRadius(DistanceRadius):
     @property
     def x(self):
         return self.pop.stellar_radius
-
 
 class JRadius(DistanceRadius):
     xlabel = 'J (magnitude)\n'
@@ -100,7 +98,6 @@ class JRadius(DistanceRadius):
     def x(self):
         return self.pop.J
 
-
 class PeriodRadius(DistanceRadius):
     xlabel = 'Period (days)\n'
     xscale = 'log'
@@ -109,7 +106,6 @@ class PeriodRadius(DistanceRadius):
     @property
     def x(self):
         return self.pop.period
-
 
 class MassRadius(BubblePlot):
     title = ''
@@ -217,7 +213,7 @@ class MassRadius(BubblePlot):
             rgba[:,3] = 1.0#*weights
             #print rgba
 
-            if (len(x) > 1)&(self.pop.ink):
+            if (len(x) > 1)&(self.pop.plotkw.get('ink', True)):
                 self.speak(key)
                 ink_errorbar(x, y, xerr=xerr, yerr=yerr, colors=rgba, **kw)
                 #assert(False)

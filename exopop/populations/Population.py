@@ -36,6 +36,24 @@ desired_columns = [
 'stellar_distance_upper',
 'stellar_distance_lower']
 
+# these are keywords that can be set for
+default_plotkw = dict(color='black',
+                      alpha=1,
+                      zorder=0,
+                      ink=True)
+
+# what keywords can we set for the population plotkw?
+allowed_plotkw = list(default_plotkw.keys())
+allowed_plotkw += ['s',
+                   'c',
+                   'marker',
+                   'cmap',
+                   'norm',
+                   'vmin',
+                   'vmax'
+                   'linewidths',
+                   'edgecolors',
+                   'facecolors']
 
 class Population(Talker):
     '''
@@ -69,17 +87,37 @@ class Population(Talker):
 
     def __getitem__(self, key):
         '''
-        Create a subpopulation by indexing or masking this one.
+        Create a subpopulation of planets by indexing, slicing, or masking.
         '''
+
         try:
+            # if the key is an index/slice/mask, return it
             subset = self.standard[key]
+
+            # if the key is a column, raise an error
+            if type(key) in self.standard.colnames:
+                raise IndexError(f'''
+                You seem to be trying to access a column from this
+                population via `pop[{key}]`. For clarity, all `[]`
+                indexing is reserved for selecting subsets of the
+                population.
+
+                To access your particular column, please try either
+                `pop.{key}` or `pop.standard[{key}]` to return a
+                1D array of the entries in that column.
+                ''')
         except KeyError:
-            # remove spaces from the strings (or from lists of strings)
+            # use a string or a list of strings to index the population by name
             if type(key) == str:
+                # remove spaces, to match the cleaned "name" index column
                 key = key.replace(' ', '')
             elif type(key[0]) == str:
+                # remove spaces, to match the cleaned "name" index column
                 key = [k.replace(' ', '') for k in key]
+            # pull out rows by planet name
             subset = self.standard.loc[key]
+
+        # create a new population out of this subset
         return Population(standard=subset,
                           label=f'Subset of {self.label}',
                           **self.plotkw)
@@ -88,10 +126,49 @@ class Population(Talker):
         '''
         If an attribute/method isn't defined for a population,
         look for it as a column of the standardized table.
+
         For example, `population.stellar_radius` will try to
         access `population.standard['stellar_radius']`.
+
+        Parameters
+        ----------
+        key : str
+            The attribute we're trying to get.
         '''
-        return self.standard[key]
+        if key == 'label':
+            raise RuntimeError('Yikes!')
+        try:
+            # extract the column from the standardized table
+            return self.standard[key]
+        except KeyError:
+            # try to get a plotkw from this pop, from the default, then None
+            try:
+                assert(key in allowed_plotkw)
+                return self.plotkw.get(key, default_plotkw[key])
+            except KeyError:
+                return None
+
+    def __setattr__(self, key, value):
+        '''
+        Define what happens when we try to set an attribute via `pop.attr = x`.
+        If the keyword is a pre-defined "plotting" keyword in `allowed_plotkw`,
+        then we should save it in a special `plotkw` dictionary. Otherwise,
+        the attribute should be set as normal.
+
+        Parameters
+        ----------
+        key : str
+            The attribute we're trying to set.
+        value : anything
+            The value we're trying to give that attribute.
+        '''
+
+        if key in allowed_plotkw:
+            # store plotting keywords in a separate plotting dictionary
+            self.plotkw[key] = value
+        else:
+            # otherwise, store attributes as normal for objects
+            self.__dict__[key] = value
 
     def __repr__(self):
         '''

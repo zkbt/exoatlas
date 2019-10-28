@@ -82,9 +82,16 @@ class Exoplanets(PredefinedPopulation):
 
         # what is the planet radius?
         s['planet_radius'] = t['pl_rade']
-        s['uncertainty_planet_radius'] = [(l, u) for l, u in
-                                zip(t['pl_radeerr1'], t['pl_radeerr2'])]
 
+        # pull out the radius uncertainties
+        upper = t['pl_radeerr1'].data
+        lower = t['pl_radeerr2'].data
+        bad = upper.mask | lower.mask
+        upper[bad] = np.inf
+        lower[bad] = np.inf
+        s['uncertainty_planet_radius'] = [(u,l) for u, l in zip(upper, lower)]
+        s['planet_radius_lower'] = lower
+        s['planet_radius_upper'] = upper
 
         # what are the (often) transit-derived properties?
         s['a_over_r'] = t['pl_ratdor']
@@ -108,10 +115,16 @@ class Exoplanets(PredefinedPopulation):
         s['rv_semiamplitude'] =  t['pl_rvamp'] #t.MaskedColumn(t['K'], mask=t['K']==0.0)
 
         s['planet_mass'] = t['pl_masse']
-        s['uncertainty_planet_mass'] = [(l, u) for l, u in
-                                zip(t['pl_masseerr1'], t['pl_masseerr2'])]
 
-
+        # pull out the mass uncertainties
+        upper = t['pl_masseerr1'].data
+        lower = t['pl_masseerr2'].data
+        bad = upper.mask | lower.mask
+        upper[bad] = np.inf
+        lower[bad] = np.inf
+        s['uncertainty_planet_mass'] = [(u,l) for u, l in zip(upper, lower)]
+        s['planet_mass_lower'] = lower
+        s['planet_mass_upper'] = upper
 
 
         # how far away is the star?
