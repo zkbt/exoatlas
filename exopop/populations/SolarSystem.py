@@ -7,13 +7,18 @@ initial_filename = directories['data'] + 'solarsystem.txt'
 class SolarSystem(PredefinedPopulation):
     '''The Solar System, very crudely.'''
 
+    # the data in the table probably don't need to be updated
+    expiration = np.inf
+
     def __init__(self, **kwargs):
-        '''Initialize a population of simulated TESS planets.'''
+        '''
+        Initialize a population of simulated TESS planets.
+        '''
         PredefinedPopulation.__init__(self, label='Solar System', **kwargs)
         self.color = 'cornflowerblue'
         self.zorder = 1e10
 
-    def load_raw(self, remake=False):
+    def load_raw(self):
         '''
         Load the raw table of data from the NASA Exoplanet Archive.
         '''
@@ -21,27 +26,51 @@ class SolarSystem(PredefinedPopulation):
         # load the table of Solar System planets
         raw = ascii.read(initial_filename)
 
+        # for debugging, hang on to the raw table as a hidden attribute
+        self._raw = raw
+
+        # a table of unstandardized planet properties
         return raw
 
-
     def trim_raw(self, raw):
-        self._trimmed = raw
+        '''
+        Trim bad/unnecessary rows out of a raw table of planet properties.
+        '''
+
+        # no trimming necessary
+        trimmed = raw
+
+        # for debugging, hang onto the trimmed table
+        self._trimmed = trimmed
+
+        # a trimmed table
         return self._trimmed
 
 
     def create_standard(self, trimmed):
+        '''
+        Create a standardized table of planet properties.
+        It must at least contain the columns in
+        `necessary_columns`.
+        '''
+
+        # start from the trimmed table
         t = trimmed
+
+        # create an empty standardized table
         s = Table()
         s['name'] = t['name']
-        s['kepid'] = None
 
-        s['stellar_teff'] = 5780
+        # set up the Sun
+        s['stellar_teff'] = 5780*u.K
 
-        s['period'] = (t['period']*u.year/u.day).decompose()
+        s['stellar_radius'] = 1.0*u.Rsun
+        s['stellar_mass'] = 1.0*u.Msun
 
-        s['stellar_radius'] = 1.0
-        s['stellar_mass'] = 1.0
+        # store the period, by default, in day
+        s['period'] = (t['period']*u.year).to(u.day)
 
+        # hide the stellar magnitudes
         s['J'] = None
         s['V'] = None
 
