@@ -55,9 +55,13 @@ class SolarSystem(PredefinedPopulation):
         # store the period, by default, in day
         s['period'] = (t['period']*u.year).to(u.day)
 
+        # store an eccentricity and longitude of periastron
+        s['e'] = np.nan
+        s['omega'] = np.nan*u.deg
+
         # hide the stellar magnitudes
-        s['J'] = np.nan
-        s['V'] = np.nan
+        s['Jmag'] = np.nan
+        s['Vmag'] = np.nan
 
         # pull out the radius and mass
         s['planet_radius'] = (t['radius']*u.km).to(u.Rearth)
@@ -70,10 +74,11 @@ class SolarSystem(PredefinedPopulation):
 
         # use Kepler's (actual) 3rd Law to get semimajor axis
         semimajoraxis = (s['period'].to(u.year).value)**(2.0/3.0)*u.AU
-        s['a_over_r'] = (semimajoraxis/u.Rsun).decompose().value
+        s['semimajoraxis'] = semimajoraxis
+        s['transit_ar'] = (semimajoraxis/u.Rsun).decompose().value
 
         # equilibrium temperature assuming uniform redistribution + 0 albedo
-        s['teq'] = s['stellar_teff']*(0.25*1.0/s['a_over_r']**2)**0.25
+        s['teq'] = s['stellar_teff']*(0.25*1.0/s['transit_ar']**2)**0.25
 
         # some other planet parameters we might not need for the solar system
         s['rv_semiamplitude'] = np.nan*u.m/u.s
@@ -82,10 +87,11 @@ class SolarSystem(PredefinedPopulation):
         s['ra'] = 0.0*u.deg
         s['dec'] = 0.0*u.deg
         s['discoverer'] = 'humans'
-        s['transit_epoch'] = 0.0
-        s['transit_duration'] = 0.0
-        s['transit_depth'] = 0.0
-        s['b'] = 0.0
+        s['transit_epoch'] = np.nan*u.day
+        s['transit_duration'] = np.nan*u.day
+        s['transit_depth'] = (s['planet_radius'].quantity/s['stellar_radius']).decompose()**2
+        s['transit_b'] = 0.0
+        s['inclination'] = 90*u.deg
 
         self.standard = s
         return s

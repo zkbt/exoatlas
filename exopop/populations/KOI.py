@@ -69,7 +69,7 @@ class KOI(PredefinedPopulation):
 
         s['stellar_teff'] = t['koi_sstellar_teff']
         s['stellar_radius'] = t['koi_srad']
-        s['J'] = t['koi_jmag']
+        s['Jmag'] = t['koi_jmag']
 
         # planet radius
         s['planet_radius'] = t['koi_prad']
@@ -78,7 +78,7 @@ class KOI(PredefinedPopulation):
 
 
         #KLUDGE?
-        s['a_over_r'] = t['koi_dor']
+        s['transit_ar'] = t['koi_dor']
 
         #KLUDGE?
         #s['rv_semiamplitude'] =  t['pl_rvamp'] #t.MaskedColumn(t['K'], mask=t['K']==0.0)
@@ -94,7 +94,7 @@ class KOI(PredefinedPopulation):
         s['ra'] = t.MaskedColumn(t['ra'], mask=badpos)
         s['dec'] = t.MaskedColumn(t['dec'], mask=badpos)
 
-        s['b'] = t['koi_impact']
+        s['transit_b'] = t['koi_impact']
 
 
         s['stellar_distance'] = np.zeros(n) + np.nan

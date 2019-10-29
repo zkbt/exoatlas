@@ -110,7 +110,7 @@ def test_indexing():
     a = p[[]]
     b = p[5]
     c = p[0:10]
-    d = p[p.stellar_radius < 1.0]
+    d = p[p.stellar_radius < 1.0*u.Rsun]
     e = p['GJ 1214b']
     f = p[['GJ 1214b', 'GJ 1132b', 'LHS 1140b']]
     g = p[p.discoverer == 'Kepler']
@@ -128,6 +128,21 @@ def test_attributes():
     p.alpha = 0.5
     assert(p.plotkw['alpha'] == 0.5)
 
+
+    for k in necessary_columns:
+        p.__getattr__(k)
+
+    p.b
+    p.transit_duration
+    p.insolation
+    p.stellar_luminosity
+    p.a_over_rs
+    p.teq
+    p.mu
+    p.surface_gravity
+    p.escape_velocity
+    p.escape_parameter
+    p.scale_height
     return p
 
 if __name__ == '__main__':

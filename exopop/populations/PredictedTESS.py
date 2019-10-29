@@ -31,8 +31,8 @@ class PredictedTESS(PredefinedPopulation):
         s['period'] = t['P']
         s['stellar_teff'] = t['stellar_teff']
         s['stellar_radius'] = t['Rstar']
-        s['J'] = t['Jmag']
-        s['V'] = t['Vmag']
+        s['Jmag'] = t['Jmag']
+        s['Vmag'] = t['Vmag']
 
         s['planet_radius'] = t['Rplanet']
         s['planet_radius_uncertainty_lower'] = np.zeros_like(t['Rplanet']) + 0.0001
@@ -43,7 +43,7 @@ class PredictedTESS(PredefinedPopulation):
         s['planet_mass_uncertainty_upper'] = np.nan + np.zeros_like(t['Rplanet'])
 
         s['teq'] = 280.0*t['S/SEarth']**0.25
-        s['a_over_r'] = 0.5*(s['stellar_teff']/s['teq'])**2
+        s['transit_ar'] = 0.5*(s['stellar_teff']/s['teq'])**2
         s['rv_semiamplitude'] = t['K']
         s['radius_ratio'] = t['Rplanet']*craftroom.units.Rearth/(t['Rstar']*craftroom.units.Rsun)
         s['stellar_distance'] = 10*10**(0.2*t['Dist']) + np.nan

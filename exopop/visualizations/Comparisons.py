@@ -433,4 +433,4 @@ class refl(emis):
         self.normalization = self.unnormalizedsize()[self.pop.find('HD209458b')]
 
     def unnormalizedsize(self):
-        return (self.pop.depth/self.pop.a_over_r**2/self.pop.noisepertime)**2
+        return (self.pop.depth/self.pop.transit_ar**2/self.pop.noisepertime)**2

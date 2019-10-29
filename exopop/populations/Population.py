@@ -10,11 +10,12 @@ exoplanet_columns = [
 'name',
 'ra', 'dec',
 'stellar_distance',
-'J',
 'discoverer']
 
 transit_columns = [
 'period',
+'semimajoraxis', #pl_orbsmax
+'e', 'omega', 'inclination',
 'transit_epoch',
 'transit_duration',
 'transit_depth',
@@ -23,8 +24,8 @@ transit_columns = [
 'stellar_radius',
 'planet_radius',
 'planet_mass',
-'a_over_r',
-'b']
+'transit_ar',
+'transit_b']
 
 necessary_columns = exoplanet_columns + transit_columns
 
@@ -139,7 +140,12 @@ class Population(Talker):
             raise RuntimeError('Yikes!')
         try:
             # extract the column from the standardized table
-            return self.standard[key]
+            try:
+                # try to return the array of quantities (with units)
+                return self.standard[key].quantity
+            except TypeError:
+                # columns without units don't have quantities
+                return self.standard[key].data
         except KeyError:
             # try to get a plotkw from this pop, from the default, then None
             try:
@@ -315,7 +321,7 @@ class Population(Talker):
         raise NotImplementedError('''
         The `removeRows` method has been removed. Please use something like
         `population[0:42]` or `population[ok]` to use slices, indices, or masks
-        to pull subsets out of this population.
+        to create new sub-populations that extract subsets from this one.
         ''')
 
     @property
@@ -327,204 +333,272 @@ class Population(Talker):
 
     @property
     def semimajoraxis(self):
-        P = self.period*u.day
+        '''
+        Have a safe way to calculate the semimajor axis of planets,
+        that fills in gaps as necessary. Basic strategy:
+
+            First from table.
+            Then from NVK3L.
+            Then from a/R*.
+
+        '''
+
+        # pull out the actual values from the table
+        a = self.standard['semimajoraxis'].copy().quantity
+
+        # try to replace bad ones with NVK3L
+        bad = np.isfinite(a) == False
+        self.speak(f'{sum(bad)}/{self.n} semimajoraxes are missing')
+
+        # calculate from the period and the stellar mass
+        P = self.period[bad]
+        M = self.stellar_mass[bad]
         G = con.G
+        a[bad] = ((G*M*P**2/4/np.pi**2)**(1/3)).to('AU')
 
+        # replace those that are still bad with the a/R*
+        stillbad = np.isfinite(a) == False
+        self.speak(f'{sum(stillbad)}/{self.n} are still missing after NVK3L')
+        # (pull from table to avoid potential for recursion)
+        a_over_rs = self.standard['transit_ar'][stillbad].quantity
+        rs = self.standard['stellar_radius'][stillbad].quantity
+        a[stillbad] = a_over_rs*rs
 
-        M = self.stellar_mass*u.Msun
-        # kludge
-        bad = np.isfinite(M) == False
-        M[bad] = self.stellar_radius[bad]*u.Msun
-
-        return ((G*P**2*M/4/np.pi**2)**(1./3.)).to('AU').value
-
-
-    @property
-    def absoluteJ(self):
-        # use the effective temperature to select a J-band bolometric correction, then
-
-        # pull out a proxy for the Sun from the Mamajek table
-        #sun = mamajek.table['SpT'] == 'G2V'
-        solar_stellar_teff = 5780
-
-        # figure out the bolometric luminosities
-        stellar_teffratio = self.stellar_teff/solar_stellar_teff
-        radiusratio = self.stellar_radius
-        luminosities = stellar_teffratio**4*radiusratio**2
-
-        # SUUUUUUPER KLUDGE
-        for i in range(2):
-            try:
-                test = self.stellar_teff.data
-                assert(len(test) == len(self.stellar_teff))
-                stellar_teff = np.array(test)
-            except:
-                pass
-
-        # figure out the absolute J magnitude of a dwarf with this stellar_teff
-        dwarf_absolutej = mamajek.tofrom('M_J')('stellar_teff')(stellar_teff)
-
-        # figure out how bright a dwarf star of the same effective temperature would be
-        dwarf_luminosities = 10**mamajek.tofrom('logL')('stellar_teff')(stellar_teff)
-
-        # figure out how much brighter this star is than its stellar_teff-equivalent dwarf
-        ratio = luminosities/dwarf_luminosities
-        return dwarf_absolutej - 2.5*np.log10(ratio)
-
-
+        return a
 
     @property
-    def distance(self):
+    def a_over_rs(self):
+        '''
+        Have a safe way to calculate the scaled semimajor axis of planets,
+        that fills in gaps as necessary. Basic strategy:
 
-        distance = self.standard['stellar_distance'] + 0.0
+            First from table, mostly derived from transit.
+            Then from the semimajor axis.
+        '''
 
-        # SUUUUUUPER KLUDGE
-        for i in range(2):
-            try:
-                test = distance.data
-                assert(len(test) == len(distance))
-                distance = np.array(test)
-            except:
-                pass
-        bad = ((distance > 0.1) == False) + (np.isfinite(distance) == False)
+        # pull out the values from the table
+        a_over_rs = self.standard['transit_ar'].copy()
 
-        kludge = (self.stellar_teff == 0.0) + (np.isfinite(self.stellar_teff) == False)
-        self.standard['stellar_teff'][kludge] = 5780
+        # try to replace bad ones with NVK3L
+        bad = np.isfinite(a_over_rs) == False
+        self.speak(f'{sum(bad)}/{self.n} values for a/R* are missing')
 
+        a = self.semimajoraxis[bad]
+        R = self.stellar_radius[bad]
+        a_over_rs[bad] = a/R
 
-        distance[bad] = 10**(1 + 0.2*(self.J - self.absoluteJ))[bad]
+        stillbad = np.isfinite(a_over_rs) == False
+        self.speak(f'{sum(stillbad)}/{self.n} are still missing after a and R*')
 
-        if self.__class__.__name__ != 'TESS':
-            probablybad = distance == 10.0
-            distance[probablybad] = np.nan
-        return distance
+        return a_over_rs
 
     @property
-    def teq(self):
-        try:
-            return self.standard['teq']
-        except KeyError:
-            a_over_r = self.a_over_r
-            bad = (np.isfinite(a_over_r) == False) | (a_over_r == 0.0)
+    def stellar_luminosity(self):
+        T = self.stellar_teff
+        R = self.stellar_radius
+        sigma = con.sigma_sb
+        return (4*np.pi*R**2*sigma*T**4).to(u.Lsun)
 
+    @property
+    def e(self):
+        '''
+        FIXME -- assumes are missing eccentricities are 0!
+        '''
 
-            try:
-                stellar_mass = self.stellar_mass
-            except AttributeError:
-                #KLUDGE!
-                stellar_mass = self.stellar_radius
+        # pull out the actual values from the table
+        e = self.standard['e'].copy().quantity
 
-            period = self.period
-            stellar_radius = self.stellar_radius
-            otherestimate = (craftroom.units.G*(period*craftroom.units.day)**2*(stellar_mass*craftroom.units.Msun)/4/np.pi**2/(stellar_radius*craftroom.units.Rsun)**3)**(1./3.)
+        # try to replace bad ones with NVK3L
+        bad = np.isfinite(e) == False
+        self.speak(f'{sum(bad)}/{self.n} eccentricities are missing')
+        self.speak(f'assuming they are all zero')
+        e[bad] = 0
 
-            a_over_r[bad] = otherestimate[bad]
+        return e
 
-            '''plt.ion()
-            plt.figure(self.label)
-            plt.plot(a_over_r, otherestimate, '.')
-            for i in range(len(a_over_r)):
-                try:
-                    plt.text(a_over_r[i], otherestimate[i], self.name[i])
-                except:
-                    pass'''
+    @property
+    def omega(self):
+        '''
+        (FIXME! we need better longitudes of periastron)
+        '''
 
+        # pull out the actual values from the table
+        omega = self.standard['omega'].copy().quantity
 
-            return self.stellar_teff/np.sqrt(2*self.a_over_r)
+        # try to replace bad ones with NVK3L
+        bad = np.isfinite(omega) == False
+        self.speak(f'{sum(bad)}/{self.n} longitudes of periastron are missing')
+        e_zero = self.e == 0
+        self.speak(f'{sum(e_zero)} have eccentricities assumed to be 0')
+        omega[e_zero] = 0*u.deg
+
+        return omega
+
+    @property
+    def b(self):
+        '''
+        Transit impact parameter.
+        (FIXME! split this into transit and occultation)
+        '''
+
+        # pull out the actual values from the table
+        b = self.standard['transit_b'].copy().quantity
+
+        # try to replace bad ones with NVK3L
+        bad = np.isfinite(b) == False
+        self.speak(f'{sum(bad)}/{self.n} impact parameters are missing')
+
+        # calculate from the period and the stellar mass
+        a_over_rs = self.a_over_rs[bad]
+        i = self.standard['inclination'][bad].quantity
+        e = self.e[bad]
+        omega = self.omega[bad]
+        b[bad] = a_over_rs*np.cos(i)*((1-e**2)/(1+e*np.sin(omega)))
+
+        # report those that are still bad
+        stillbad = np.isfinite(b) == False
+        self.speak(f'{sum(stillbad)}/{self.n} are still missing after using i')
+
+        return b
+
+    # the 1360 W/m^2 that Earth receives from the Sun
+    earth_insolation = (1*u.Lsun/4/np.pi/u.AU**2).to(u.W/u.m**2)
 
     @property
     def insolation(self):
-        u = craftroom.units
-        a_over_rearth = u.au/u.Rsun
-        teqearth = u.Tsun/np.sqrt(2*u.au/u.Rsun)
-        return (self.teq/teqearth)**4
+        '''
+        The insolation the planet receives, relative to Earth.
+        '''
 
-        #        u = craftroom.units
-        #        return 1.0/self.a_over_r**2*self.stellar_teff**4/(u.Rsun/u.au)**2/u.Tsun**4
-
+        # calculate the average insolation the planet receives
+        insolation = self.stellar_luminosity/4/np.pi/self.semimajoraxis**2
+        return insolation.to(u.W/u.m**2)
 
     @property
-    def duration(self):
+    def teq(self):
+        '''
+        The equilibrium temperature of the planet.
+        '''
+        f = self.insolation
+        sigma = con.sigma_sb
+        A = 1
+        return ((f*A/4/sigma)**(1/4)).to(u.K)
 
-        d = self.standard['transit_duration']
+    @property
+    def transit_duration(self):
+        '''
+        The duration of the transit
+        (FIXME, clarify if this is 1.5-3.5 or what)
+        '''
 
-        try:
+        # pull out the actual values from the table
+        d = self.standard['transit_duration'].copy().quantity
 
-            # try to calculate it from the parameters
-            bad = np.isfinite(d)
-            estimate = self.period/np.pi/self.a_over_r*np.sqrt(1-self.b**2)
-            d[bad] = estimate[bad]
-
-
-            # try to calculate it from the parameters
-            bad = np.isfinite(d)
-            estimate = self.period/np.pi/self.a_over_r
-            d[bad] = estimate[bad]
-        except TypeError:
-            # try to calculate it from the parameters
-            if np.isfinite(d):
-                return d
-            else:
-                if np.isfinite(self.b):
-                    b = self.b
-                else:
-                    b = 0.0
-                return self.period/np.pi/self.a_over_r*np.sqrt(1-b**2)
+        # try to replace bad ones with NVK3L
+        bad = np.isfinite(d) == False
+        self.speak(f'{sum(bad)}/{self.n} transit durations are missing')
 
 
-            # try to calculate it from the parameters
-            bad = np.isfinite(d)
-            estimate = self.period/np.pi/self.a_over_r
-            d[bad] = estimate[bad]
+        P = self.period[bad]
+        a_over_rs = self.a_over_rs[bad]
+        b = self.b[bad]
 
-        return d#self.period/np.pi/self.a_over_r
+        T0 = P/np.pi/a_over_rs
+        T = T0*np.sqrt(1-b**2)
+
+        e = self.e[bad]
+        omega = self.omega[bad]
+        factor = np.sqrt(1 - e**2)/(1 + e*np.sin(omega))
+
+        d[bad] = (T*factor).to(u.day)
+
+        # report those that are still bad
+        stillbad = np.isfinite(d) == False
+        self.speak(f'{sum(stillbad)}/{self.n} are still missing after P, a/R*, b')
+
+        return d
 
     @property
     def photons(self):
-        return 10**(-0.4*self.J)
+        '''
+        FIXME -- make this an actual flux?
+        should it be a function for photons/s/m2/nm
+        '''
+        return 10**(-0.4*self.Jmag)
 
     @property
-    def surfacegravity(self):
-        try:
-            self.planet_mass
-        except AttributeError:
-            return 1000.0
-        planet_mass = self.planet_mass
-        g = craftroom.units.G*self.planet_mass*craftroom.units.Mearth/(self.planet_radius*craftroom.units.Rearth)**2
-        g[g <= 0] = 2000.0
-        g[g =='???'] = 0.0
-        return g
+    def surface_gravity(self):
+        '''
+        (FIXME) -- make an assumption for planets without masses
+        '''
 
-        # for comparing with mass-less planets!
+        G = con.G
+        M = self.planet_mass
+        R = self.planet_radius
+
+        g = (G*M/R**2).to('m/s**2')
+        return g
 
     @property
     def mu(self):
+        '''
+        The mean molecular weight of an atmosphere.
+        Here, assumed to be H/He-dominated at reasonable temperature.
+        '''
+
         # for comparing planets of different compositions
         return 2.32
 
     @property
-    def scaleheight(self):
-        return craftroom.units.k_B*self.teq/self.mu/craftroom.units.mp/self.surfacegravity
+    def scale_height(self):
+        '''
+        The scale height of the atmosphere, at equilibrium temperature.
+        '''
+        k = con.k_B
+        T = self.teq
+        mu = self.mu
+        m_p = con.m_p
+        g = self.surface_gravity
+        return k*T/mu/m_p/g
 
     @property
     def escape_velocity(self):
-        e_grav = craftroom.units.G*self.planet_mass*craftroom.units.Mearth/self.planet_radius/craftroom.units.Rearth
-        return np.sqrt(2*e_grav)
+        '''
+        The escape velocity of the planet.
+        '''
+        G = con.G
+        M = self.planet_mass
+        R = self.planet_radius
+        return np.sqrt(2*G*M/R).to('m/s')
 
 
     @property
     def escape_parameter(self):
-        e_thermal = craftroom.units.k_B*self.teq
-        e_grav = craftroom.units.G*self.planet_mass*craftroom.units.Mearth*craftroom.units.mp/self.planet_radius/craftroom.units.Rearth
+        '''
+        The Jeans atmospheric escape parameter for atomic hydrogen,
+        at the equilibrium temperature of the planet.
+        '''
+        k = con.k_B
+        T = self.teq
+        mu = 1
+        m_p = con.m_p
+        G = con.G
+        M = self.planet_mass
+        R = self.planet_radius
+
+        e_thermal = k*T
+        e_grav = G*M*m_p/R
         return e_grav/e_thermal
 
+    # PICK UP FROM HERE! THESE ARE ALL RELATIVE, SHOULD WE MAKE THEM ABSOLUTE?
+    # (e.g. define a R=10-JWST-hour as m**2*s)
     @property
     def noisepertransit(self):
-        return 1.0/np.sqrt(self.photons*self.duration)
+        return 1.0/np.sqrt(self.photons*self.transit_duration)
 
     @property
     def noisepertime(self):
-        return 1.0/np.sqrt(self.photons/self.a_over_r)
+        return 1.0/np.sqrt(self.photons/self.transit_ar)
 
     @property
     def noise(self):
@@ -533,7 +607,7 @@ class Population(Talker):
 
     @property
     def transmissionsignal(self):
-        H = self.scaleheight #cm
+        H = self.scale_height #cm
         Rp = self.planet_radius*craftroom.units.Rearth # cm
         Rs = self.stellar_radius*craftroom.units.Rsun
         return 2*H*Rp/Rs**2
@@ -544,14 +618,14 @@ class Population(Talker):
 
     @property
     def reflectionsignal(self):
-        return self.depth/self.a_over_r**2
+        return self.depth/self.transit_ar**2
 
 
     @property
     def cheopsnoisepertransit(self):
         #150 ppm/min for a 9th magnitude star (in V)
         cheopsnoiseperminute =  150.0/1e6/np.sqrt(10**(-0.4*(self.V - 9.0)))
-        durationinminutes = self.duration*24.0*60.0
+        durationinminutes = self.transit_duration*24.0*60.0
         return cheopsnoiseperminute/np.sqrt(durationinminutes)
 
     @property

@@ -65,9 +65,33 @@ class Exoplanets(PredefinedPopulation):
         s['ra'] = t['ra']*u.deg#t.MaskedColumn(t['ra'], mask=badpos)
         s['dec'] = t['dec']*u.deg#t.MaskedColumn(t['dec'], mask=badpos)
 
+        def merge(k):
+            '''
+            For some particular column from the raw table, take all the data
+            we can from the confirmed planets table, and then
+            try to fill in from the composite planets table.
+            '''
+
+            # make an array from the confirmed table
+            x = t[k].copy()
+
+            # try to fill in the bad ones from the composite table
+            bad = x.mask
+            n = len(x)
+            nmissing = sum(bad)
+            self.speak(f'{nmissing}/{n} missing from confirmed')
+
+            x[bad] = t['f' + k][bad]
+            self.speak(f'{nmissing}/{n} missing from confirmed and composite')
+
+            return x
 
         # what's the period of the planet?
         s['period'] = t['pl_orbper']*u.day
+        s['semimajoraxis'] = t['pl_orbsmax']*u.AU
+        s['e'] = t['pl_orbeccen']
+        s['omega'] = t['pl_orblper']*u.deg
+        s['inclination'] = t['pl_orbincl']*u.deg
 
         # what are the observed transit properties?
         s['transit_epoch'] = t['pl_tranmid']*u.day
@@ -75,12 +99,16 @@ class Exoplanets(PredefinedPopulation):
         s['transit_depth'] = t['pl_trandep']
 
         # what are the basic stellar properties?
-        s['stellar_teff'] = t['st_teff']*u.K
-        s['stellar_radius'] = t['st_rad']*u.Rsun
-        s['stellar_mass'] = t['st_mass']*u.Msun
+        s['stellar_teff'] = merge('st_teff')*u.K
+        s['stellar_radius'] = merge('st_rad')*u.Rsun
+        s['stellar_mass'] = merge('st_mass')*u.Msun
 
         # what are the stellar magnitudes?
-        s['J'] = t['st_j']
+        bands = ['UJ', 'VJ', 'BJ', 'RC', 'IC',
+                 'J', 'H', 'K',
+                 'WISE1', 'WISE2', 'WISE3', 'WISE4']
+        for b in bands:
+            s[f'{b}mag'] = t[f'st_{b.lower()}']
 
         # what is the planet radius?
         s['planet_radius'] = t['pl_rade']*u.Rearth
@@ -95,21 +123,21 @@ class Exoplanets(PredefinedPopulation):
         s['planet_radius_uncertainty_lower'] = lower*u.Rearth
 
         # what are the (often) transit-derived properties?
-        s['a_over_r'] = t['pl_ratdor']
-        s['b'] = t['pl_imppar']
+        s['transit_ar'] = t['pl_ratdor']
+        s['transit_b'] = t['pl_imppar']
 
         #KLUDGE?
         #rsovera = (3*np.pi/u.G/period**2/stellar_density/(1.0+mass_ratio))**(1.0/3.0)
 
 
         '''
-        bad = (np.isfinite(s['a_over_r']) == False)+( s['a_over_r'].data == 0.0)
+        bad = (np.isfinite(s['transit_ar']) == False)+( s['transit_ar'].data == 0.0)
         period = s['period']
         stellar_radius = s['stellar_radius']
         stellar_mass = s['stellar_mass']
         otherestimate = (craftroom.units.G*(period*craftroom.units.day)**2*(stellar_mass*craftroom.units.Msun)/4/np.pi**2/(stellar_radius*craftroom.units.Rsun)**3)**(1./3.)
 
-        s['a_over_r'][bad] = otherestimate[bad]
+        s['transit_ar'][bad] = otherestimate[bad]
         '''
 
         #KLUDGE?
@@ -128,9 +156,9 @@ class Exoplanets(PredefinedPopulation):
 
 
         # how far away is the star?
-        s['stellar_distance'] = t['st_dist']*u.pc
-        s['stellar_distance_uncertainty_upper'] = t['st_disterr1']*u.pc
-        s['stellar_distance_uncertainty_lower'] = t['st_disterr2']*u.pc
+        s['stellar_distance'] = merge('st_dist')*u.pc
+        s['stellar_distance_uncertainty_upper'] = merge('st_disterr1')*u.pc
+        s['stellar_distance_uncertainty_lower'] = merge('st_disterr2')*u.pc
 
         # what facility discovered the planet?
         s['discoverer'] = t['pl_facility']
@@ -169,10 +197,10 @@ class TransitingExoplanets(Exoplanets):
         masks['transits'] = raw['pl_tranflag'] == 1
 
         # does this planet have a J magnitude?
-        masks['has_J'] = raw['st_j'] > 1.0
+        # masks['has_J'] = raw['st_j'] > 1.0
 
         # does this planet have a stellar radius?
-        masks['has_radius'] = raw['st_rad'] > 0.0
+        # masks['has_radius'] = raw['st_rad'] > 0.0
 
 
         ok = np.ones(len(raw)).astype(np.bool)

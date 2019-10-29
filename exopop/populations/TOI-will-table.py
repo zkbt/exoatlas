@@ -1,4 +1,5 @@
-# exoplanet population of all "confirmed" exoplanets from exoplanet archive
+# exoplanets from Will's summary table
+
 from ..imports import *
 from .Population import PredefinedPopulation
 
