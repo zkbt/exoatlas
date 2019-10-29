@@ -22,7 +22,7 @@ class Exoplanets(PredefinedPopulation):
         # load (or download) the table of composite exoplanet properties
         raw = merged_exoplanets.get(remake=remake)
 
-        # mostly for debugging
+        # for debugging, hang on to the raw table as a hidden attribute
         self._raw = raw
 
         return raw
@@ -32,14 +32,18 @@ class Exoplanets(PredefinedPopulation):
         Trim the raw table down to ones with reasonable values.
         '''
 
+        # trim the raw table
         N = len(raw)
         ok = np.ones(N).astype(np.bool)
         trimmed = raw[ok]
+
+        # for debugging, hang onto the trimmed table as a hidden attribute
         self._trimmed = trimmed
 
+        # report how many points got trimmed away
         ntotal = len(raw)
-        nbad = ntotal - len(trimmed)
-        self.speak(f'trimmed out {nbad}/{ntotal} rows')
+        ntrimmed = len(trimmed)
+        self.speak(f'trimmed down to {ntrimmed}/{ntotal} rows')
 
         return trimmed
 
@@ -53,11 +57,9 @@ class Exoplanets(PredefinedPopulation):
         t = trimmed
 
         s = Table()
-        s_uncertainties = Table()
 
         # what's the name of the planet?
         s['name'] = [x.replace(' ', '') for x in t['pl_name']]
-        #[t['pl_hostname'][i] + t['pl_letter'][i] for i in range(len(t))]
 
         #badpos = (t['ra'] ==0.0)*(t['dec'] == 0.0)
         s['ra'] = t['ra']*u.deg#t.MaskedColumn(t['ra'], mask=badpos)
@@ -81,7 +83,7 @@ class Exoplanets(PredefinedPopulation):
         s['J'] = t['st_j']
 
         # what is the planet radius?
-        s['planet_radius'] = t['pl_rade']
+        s['planet_radius'] = t['pl_rade']*u.Rearth
 
         # pull out the radius uncertainties
         upper = t['pl_radeerr1'].data
@@ -89,9 +91,8 @@ class Exoplanets(PredefinedPopulation):
         bad = upper.mask | lower.mask
         upper[bad] = np.inf
         lower[bad] = np.inf
-        s['uncertainty_planet_radius'] = [(u,l) for u, l in zip(upper, lower)]
-        s['planet_radius_uncertainty_lower'] = lower
-        s['planet_radius_uncertainty_upper'] = upper
+        s['planet_radius_uncertainty_upper'] = upper*u.Rearth
+        s['planet_radius_uncertainty_lower'] = lower*u.Rearth
 
         # what are the (often) transit-derived properties?
         s['a_over_r'] = t['pl_ratdor']
@@ -114,7 +115,7 @@ class Exoplanets(PredefinedPopulation):
         #KLUDGE?
         s['rv_semiamplitude'] =  t['pl_rvamp'] #t.MaskedColumn(t['K'], mask=t['K']==0.0)
 
-        s['planet_mass'] = t['pl_masse']
+        s['planet_mass'] = t['pl_masse']*u.Mearth
 
         # pull out the mass uncertainties
         upper = t['pl_masseerr1'].data
@@ -122,31 +123,30 @@ class Exoplanets(PredefinedPopulation):
         bad = upper.mask | lower.mask
         upper[bad] = np.inf
         lower[bad] = np.inf
-        s['uncertainty_planet_mass'] = [(u,l) for u, l in zip(upper, lower)]
-        s['planet_mass_uncertainty_lower'] = lower
-        s['planet_mass_uncertainty_upper'] = upper
+        s['planet_mass_uncertainty_upper'] = upper*u.Mearth
+        s['planet_mass_uncertainty_lower'] = lower*u.Mearth
 
 
         # how far away is the star?
-        s['stellar_distance'] = t['st_dist']
-        s['uncertainty_stellar_distance'] = [(l, u) for l, u in
-                                zip(t['st_disterr1'], t['st_disterr2'])]
-
+        s['stellar_distance'] = t['st_dist']*u.pc
+        s['stellar_distance_uncertainty_upper'] = t['st_disterr1']*u.pc
+        s['stellar_distance_uncertainty_lower'] = t['st_disterr2']*u.pc
 
         # what facility discovered the planet?
         s['discoverer'] = t['pl_facility']
 
-        # a little kludge
-        #s['stellar_teff'][s['name'] == 'GJ 436b'] = 3400.0
-        #s['stellar_teff'][s['name'] == 'Qatar-1b'] = 4860.0
-        #s['stellar_radius'][s['name'] == 'WASP-100b'] = 1.5#???
+        # sort these planets by their names
         s.sort('name')
 
+        # set the fill_value for any numeric columns to nans
         for k in s.colnames:
             if not isinstance(s[k][0], str):
                 s[k].fill_value = np.nan
 
+        # fill in all the masked elements to make an unmasked array with nans
         standard = s.filled()
+
+        # return that standardized table
         return standard
 
 class TransitingExoplanets(Exoplanets):
@@ -163,18 +163,32 @@ class TransitingExoplanets(Exoplanets):
         Trim the raw table down to ones with reasonable values.
         '''
 
-        transits = raw['pl_tranflag'] == 1
-        has_J = raw['st_j'] > 1.0
-        has_radius = raw['st_rad'] > 0.0
+        masks = {}
 
-        ok = transits #& has_J & has_radius
+        # does this planet transit?
+        masks['transits'] = raw['pl_tranflag'] == 1
 
+        # does this planet have a J magnitude?
+        masks['has_J'] = raw['st_j'] > 1.0
+
+        # does this planet have a stellar radius?
+        masks['has_radius'] = raw['st_rad'] > 0.0
+
+
+        ok = np.ones(len(raw)).astype(np.bool)
+        for k in masks:
+            ok *= masks[k]
+            N = sum(ok == True)
+            self.speak(f'{N} planets pass the `{k}` filter')
+
+        # trim down the table to just those that are OK
         trimmed = raw[ok]
 
+        # for debugging, hang onto the trimmed table as a hidden attribute
         self._trimmed = trimmed
 
         ntotal = len(raw)
-        nbad = ntotal - len(trimmed)
-        self.speak(f'trimmed out {nbad}/{ntotal} rows')
+        ntrimmed = len(trimmed)
+        self.speak(f'trimmed down to {ntrimmed}/{ntotal} rows')
 
         return trimmed

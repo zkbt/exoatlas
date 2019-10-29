@@ -706,6 +706,27 @@ class PredefinedPopulation(Population):
         return os.path.join(directories['data'],
                             f'standardized-{self.fileprefix}.txt')
 
+    def load_raw(self):
+        raise NotImplementedError('''
+        Yikes! The `.load_raw` method has not been defined
+        for whatever object is trying to call it!
+        ''')
+
+    def trim_raw(self, raw):
+        '''
+        Trim bad/unnecessary rows out of a raw table of planet properties.
+        '''
+
+        # no trimming necessary
+        trimmed = raw
+
+        # for debugging, hang onto the trimmed table as a hidden attribute
+        self._trimmed = trimmed
+
+        # a trimmed table
+        return self._trimmed
+
+
     def load_standard(self, skip_update=False):
         '''
         Load a standardized population table. Generally this
@@ -728,8 +749,7 @@ class PredefinedPopulation(Population):
 
 
         # keywords for reading a standardized table
-        readkw = dict(delimiter='|',
-                      fill_values=[('',np.nan), ('--', np.nan)])
+        readkw = dict(format='ecsv', fill_values=[('',np.nan), ('--', np.nan)])
 
         standard = ascii.read(self.standard_path, **readkw)
         self.speak(f'Loaded standardized table from {self.standard_path}')
@@ -747,8 +767,6 @@ class PredefinedPopulation(Population):
 
         # save it as an ascii table for humans to read
         standard.write(self.standard_path,
-                            format='ascii.fixed_width',
-                            bookend=False,
-                            delimiter='|',
+                            format='ascii.ecsv',
                             overwrite=True )
         self.speak(f'Saved a standardized text table to {self.standard_path}')

@@ -1,15 +1,12 @@
-
-
 # exoplanet population of all "confirmed" exoplanets from exoplanet archive
-from .imports import *
-from .Population import Population
+from ..imports import *
+from .Population import PredefinedPopulation
+
 import pandas as pd
-from astropy.table import Table, join
 from astroquery.mast import Catalogs
 
 
-
-#from .curation.KOI import correct
+from .downloaders import toi_exofop
 
 
 url = 'https://exofop.ipac.caltech.edu/tess/download_ctoi.php?sort=ctoi&output=pipe'
@@ -20,39 +17,37 @@ def downloadLatest():
     request.urlretrieve(url, initial_filename)
 
 class TOI(PredefinedPopulation):
-    def __init__(self, label='TOI', **kwargs):
-        '''Initialize a population of KOI's, from Exoplanet archive.'''
 
+    def __init__(self, label='TOI', remake=False, **kw):
+        '''
+        Initialize a population of TESS Objects of Interest
+        from a table downloaded from the NASA Exoplanet Archive.
+        '''
         # set up the population
-        Population.__init__(self, label=label, **kwargs)
-        #correct(self)
-        self.save_standard()
-        # defing some plotting parameters
-        self.color = 'gray'
-        self.zorder = -1
-        self.ink=True
-
-    def loadFromScratch(self):
-
-        # load from a NASA Exoplanet Archive csv file
-        try:
-            t = pd.read_csv(initial_filename, sep='|')
-            self.table = Table.from_pandas(t)
-        except IOError:
-            downloadLatest()
-            t = pd.read_csv(initial_filename, sep='|')
-            self.table = Table.from_pandas(t)
-        self.speak('loaded TOIs from {0}'.format(initial_filename))
-
-        # report original size
-        self.speak('original table contains {0} elements'.format(len(self.table)))
-
-    def trim_raw(self):
-        self.trimmed = self.table
+        PredefinedPopulation.__init__(self, label=label, remake=remake, **kw)
 
 
-    def create_standard(self):
-        t = self.trimmed
+    def load_raw(self, remake=False):
+        '''
+        Load the raw table of TOI data from the NASA Exoplanet Archive.
+        '''
+
+        # load (or download) the table of composite exoplanet properties
+        raw = toi_exofop.get(remake=remake)
+
+        # for debugging, hang on to the raw table as a hidden attribute
+        self._raw = raw
+
+        return raw
+
+    def create_standard(self, trimmed):
+        '''
+        Create a standardized table, pulling at least the necessary columns
+        from the raw table and potentially including others too.
+        '''
+
+
+        t = trimmed
         n = len(t)
 
         s = Table()

@@ -12,7 +12,7 @@ class SolarSystem(PredefinedPopulation):
 
     def __init__(self, **kwargs):
         '''
-        Initialize a population of simulated TESS planets.
+        Initialize a population of Solar System (main) planets.
         '''
         PredefinedPopulation.__init__(self, label='Solar System', **kwargs)
         self.color = 'cornflowerblue'
@@ -20,7 +20,7 @@ class SolarSystem(PredefinedPopulation):
 
     def load_raw(self):
         '''
-        Load the raw table of data from the NASA Exoplanet Archive.
+        Load the raw table of data for the Solar System.
         '''
 
         # load the table of Solar System planets
@@ -31,21 +31,6 @@ class SolarSystem(PredefinedPopulation):
 
         # a table of unstandardized planet properties
         return raw
-
-    def trim_raw(self, raw):
-        '''
-        Trim bad/unnecessary rows out of a raw table of planet properties.
-        '''
-
-        # no trimming necessary
-        trimmed = raw
-
-        # for debugging, hang onto the trimmed table
-        self._trimmed = trimmed
-
-        # a trimmed table
-        return self._trimmed
-
 
     def create_standard(self, trimmed):
         '''
@@ -104,7 +89,7 @@ class SolarSystem(PredefinedPopulation):
 
         self.standard = s
         return s
-        
+
     @property
     def distance(self):
         return np.nan*np.zeros_like(self.standard['stellar_distance'])
