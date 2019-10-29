@@ -90,8 +90,8 @@ class Exoplanets(PredefinedPopulation):
         upper[bad] = np.inf
         lower[bad] = np.inf
         s['uncertainty_planet_radius'] = [(u,l) for u, l in zip(upper, lower)]
-        s['planet_radius_lower'] = lower
-        s['planet_radius_upper'] = upper
+        s['planet_radius_uncertainty_lower'] = lower
+        s['planet_radius_uncertainty_upper'] = upper
 
         # what are the (often) transit-derived properties?
         s['a_over_r'] = t['pl_ratdor']
@@ -123,8 +123,8 @@ class Exoplanets(PredefinedPopulation):
         upper[bad] = np.inf
         lower[bad] = np.inf
         s['uncertainty_planet_mass'] = [(u,l) for u, l in zip(upper, lower)]
-        s['planet_mass_lower'] = lower
-        s['planet_mass_upper'] = upper
+        s['planet_mass_uncertainty_lower'] = lower
+        s['planet_mass_uncertainty_upper'] = upper
 
 
         # how far away is the star?

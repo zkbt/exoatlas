@@ -1,7 +1,10 @@
 data/
 *.pdf
 .ipynb_checkpoints
+*.ipynb
 scratch/
+notebooks/
+.pytest_cache/
 
 .DS_Store
 

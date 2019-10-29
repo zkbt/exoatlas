@@ -72,7 +72,7 @@ class Ground(Subset):
 #
 threshold = 2.5
 def hasMass(pop):
-    mass_uncertainty = (np.abs(pop.planet_mass_lower) + np.abs(pop.planet_mass_upper))/2.0
+    mass_uncertainty = (np.abs(pop.planet_mass_uncertainty_lower) + np.abs(pop.planet_mass_uncertainty_upper))/2.0
     smallEnough = mass_uncertainty/pop.planet_mass < pop.maximum_uncertainty
     exists = (mass_uncertainty > 0)*np.isfinite(mass_uncertainty)
     return smallEnough*exists

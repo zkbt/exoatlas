@@ -88,8 +88,8 @@ class TOI(PredefinedPopulation):
 
         # planet radius
         s['planet_radius'] = withtic['Radius (R_Earth)']
-        s['planet_radius_upper'] = withtic['Radius (R_Earth) Error']
-        s['planet_radius_lower'] = -withtic['Radius (R_Earth) Error']
+        s['planet_radius_uncertainty_upper'] = withtic['Radius (R_Earth) Error']
+        s['planet_radius_uncertainty_lower'] = -withtic['Radius (R_Earth) Error']
 
 
         #KLUDGE?
@@ -99,8 +99,8 @@ class TOI(PredefinedPopulation):
         #s['rv_semiamplitude'] =  t['pl_rvamp'] #t.MaskedColumn(t['K'], mask=t['K']==0.0)
 
         s['planet_mass'] = withtic['Mass (M_Earth)']
-        s['planet_mass_upper'] = withtic['Mass (M_Earth) Error']
-        s['planet_mass_lower'] = -withtic['Mass (M_Earth) Error']
+        s['planet_mass_uncertainty_upper'] = withtic['Mass (M_Earth) Error']
+        s['planet_mass_uncertainty_lower'] = -withtic['Mass (M_Earth) Error']
 
 
 
@@ -113,8 +113,8 @@ class TOI(PredefinedPopulation):
 
         # is this usually Gaia??
         s['stellar_distance'] = withtic['Stellar Distance (pc)']
-        s['stellar_distance_upper'] = np.zeros(n) + np.nan
-        s['stellar_distance_lower'] = np.zeros(n) + np.nan
+        s['stellar_distance_uncertainty_upper'] = np.zeros(n) + np.nan
+        s['stellar_distance_uncertainty_lower'] = np.zeros(n) + np.nan
 
         s['disposition'] = withtic['User Disposition']
 

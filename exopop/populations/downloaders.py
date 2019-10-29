@@ -14,16 +14,24 @@ class Downloader(Talker):
 
 
 
-    def get(self, remake=False):
+    def get(self, remake=False, skip_update=False):
         '''
         Get the table, downloading it from online if necessary.
         If the table is older than some particular threshold,
         then ask the user whether or not they want to download.
+
+        Parameters
+        ----------
+        remake : bool
+            Should we definitely redownload the table?
+        skip_update : bool
+            Should we skip checking if the table's out of date?
         '''
 
 
         # if file doesn't exist, download it
-        remake = remake | check_if_needs_updating(self.path)
+        if not skip_update:
+            remake = remake | check_if_needs_updating(self.path)
 
         # either download a fresh file, or load a local one
         if remake:

@@ -136,13 +136,13 @@ class MassRadius(BubblePlot):
         self.ax.set_xscale(self.xscale)
         self.ax.set_yscale(self.yscale)
 
-        rlower = np.abs(self.pop.planet_radius_lower)
-        rupper = np.abs(self.pop.planet_radius_upper)
+        rlower = np.abs(self.pop.planet_radius_uncertainty_lower)
+        rupper = np.abs(self.pop.planet_radius_uncertainty_upper)
         rissmallenough = 0.5*(rlower+rupper)/self.pop.planet_radius < 1.0/1.0#2.5#/2.5
         risntzero = 0.5*(rlower+rupper) > 0.0
 
-        mlower = np.abs( self.pop.planet_mass_lower)
-        mupper = np.abs(self.pop.planet_mass_upper)
+        mlower = np.abs( self.pop.planet_mass_uncertainty_lower)
+        mupper = np.abs(self.pop.planet_mass_uncertainty_upper)
         missmallenough = 0.5*(mlower+mupper)/self.pop.planet_mass < 1.0/1.0#2.5#/2.5
         misntzero = 0.5*(mlower+mupper) > 0.0
 
@@ -158,15 +158,15 @@ class MassRadius(BubblePlot):
         #self.ok = np.arange(len(self.pop.planet_mass))
         x = self.pop.planet_mass[self.ok]
         try:
-            xerr = np.vstack([-self.pop.planet_mass_lower[self.ok].filled(), self.pop.planet_mass_upper[self.ok].filled()])
+            xerr = np.vstack([-self.pop.planet_mass_uncertainty_lower[self.ok].filled(), self.pop.planet_mass_uncertainty_upper[self.ok].filled()])
         except:
-            xerr = np.vstack([-self.pop.planet_mass_lower[self.ok], self.pop.planet_mass_upper[self.ok]])
+            xerr = np.vstack([-self.pop.planet_mass_uncertainty_lower[self.ok], self.pop.planet_mass_uncertainty_upper[self.ok]])
 
         y = self.pop.planet_radius[self.ok]
         try:
-            yerr = np.vstack([-self.pop.planet_radius_lower[self.ok].filled(), self.pop.planet_radius_upper[self.ok].filled()])
+            yerr = np.vstack([-self.pop.planet_radius_uncertainty_lower[self.ok].filled(), self.pop.planet_radius_uncertainty_upper[self.ok].filled()])
         except:
-            yerr = np.vstack([-self.pop.planet_radius_lower[self.ok], self.pop.planet_radius_upper[self.ok]])
+            yerr = np.vstack([-self.pop.planet_radius_uncertainty_lower[self.ok], self.pop.planet_radius_uncertainty_upper[self.ok]])
 
 
         #print self.ok

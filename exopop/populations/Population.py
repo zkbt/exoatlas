@@ -29,12 +29,12 @@ transit_columns = [
 necessary_columns = exoplanet_columns + transit_columns
 
 desired_columns = [
-'planet_mass_upper',
-'planet_mass_lower',
-'planet_radius_upper',
-'planet_radius_lower',
-'stellar_distance_upper',
-'stellar_distance_lower']
+'planet_mass_uncertainty_upper',
+'planet_mass_uncertainty_lower',
+'planet_radius_uncertainty_upper',
+'planet_radius_uncertainty_lower',
+'stellar_distance_uncertainty_upper',
+'stellar_distance_uncertainty_lower']
 
 # these are keywords that can be set for
 default_plotkw = dict(color='black',
@@ -175,6 +175,76 @@ class Population(Talker):
         How should this object appear as a repr/str?
         '''
         return f'<{self.label} | population of {self.n} planets>'
+
+    def uncertainty(self, key):
+        '''
+        Return an array of symmetric uncertainties on a column.
+
+        Parameters
+        ----------
+        key : str
+            The column for which we want errors.
+        '''
+
+        # first try for an `uncertainty_{key}` column
+        try:
+            return self.standard[f'{key}_uncertainty']
+        except KeyError:
+            # this can be removed after debugging
+            self.speak(f'no symmetric uncertainties found for "{key}"')
+
+        # then try for crudely averaging asymmetric uncertainties
+        try:
+            lower = self.standard[f'{key}_uncertainty_lower']
+            upper = self.standard[f'{key}_uncertainty_upper']
+            avg = 0.5*(np.abs(lower) + np.abs(upper))
+            return avg
+        except KeyError:
+            # this can be removed after debugging
+            self.speak(f'no asymmetric uncertainties found for "{key}"')
+
+        # then give up and return nans
+        return np.nan*self.standard[key]
+
+    def uncertainty_lowerupper(self, key):
+        '''
+        Return two arrays of lower and upper uncertainties on a column.
+
+        Parameters
+        ----------
+        key : str
+            The column for which we want errors.
+
+        Returns
+        -------
+        lower : np.array
+            The magnitude of the lower uncertainties (x_{-lower}^{+upper})
+        upper : np.array
+            The magnitude of the upper uncertainties (x_{-lower}^{+upper})
+        '''
+
+        # first try for actual asymmetric uncertainties
+        try:
+            lower = self.standard[f'{key}_uncertainty_lower']
+            upper = self.standard[f'{key}_uncertainty_upper']
+            return np.abs(lower), np.abs(upper)
+        except KeyError:
+            # this can be removed after debugging
+            self.speak(f'no asymmetric uncertainties found for "{key}"')
+
+
+        # first try for an `uncertainty_{key}` column
+        try:
+            sym = self.standard[f'{key}_uncertainty']
+            return np.abs(sym), np.abs(sym)
+        except KeyError:
+            # this can be removed after debugging
+            self.speak(f'no symmetric uncertainties found for "{key}"')
+
+        # then give up and return nans
+        unc = np.nan*self.standard[key]
+        return unc, unc
+
 
     def single(self, name):
         '''
@@ -563,7 +633,7 @@ class PredefinedPopulation(Population):
     '''
 
     expiration = 0.00001
-    def __init__(self, label='exoplanets', remake=False, **plotkw):
+    def __init__(self, label='exoplanets', remake=False, skip_update=False, **plotkw):
         '''
         Initialize a population, by trying the following steps:
                 1) Load a standardized ascii table.
@@ -576,6 +646,8 @@ class PredefinedPopulation(Population):
             and labeling points on plots.
         remake : bool
             Should we re-ingest this table from its raw ingredients?
+        skip_update : bool
+            Should we skip checking for updates in the existing data?
         **plotkw : dict
             All other keywords are stored as plotting suggestions.
         '''
@@ -586,7 +658,7 @@ class PredefinedPopulation(Population):
         try:
             # try to load the standardized table
             assert(remake == False)
-            standard = self.load_standard()
+            standard = self.load_standard(skip_update=skip_update)
         except (IOError,FileNotFoundError,AssertionError):
             # or create a new standardized table and save it
             standard = self.ingest_table(remake=remake)
@@ -634,7 +706,7 @@ class PredefinedPopulation(Population):
         return os.path.join(directories['data'],
                             f'standardized-{self.fileprefix}.txt')
 
-    def load_standard(self):
+    def load_standard(self, skip_update=False):
         '''
         Load a standardized population table. Generally this
         will be from a file like ~/.exopop/standardized-*.txt
@@ -645,11 +717,14 @@ class PredefinedPopulation(Population):
         standard : astropy.table.Table
             A table of planet properties,
             with a minimal set of columns.
+        skip_update : bool
+            Should we skip checks to see if the data are too stale?
         '''
 
-        # make sure this file is recent enough
-        old = check_if_needs_updating(self.standard_path, self.expiration)
-        assert(old == False)
+        # make sure this file is recent enough (unless we're skipping updates)
+        if not skip_update:
+            old = check_if_needs_updating(self.standard_path, self.expiration)
+            assert(old == False)
 
 
         # keywords for reading a standardized table

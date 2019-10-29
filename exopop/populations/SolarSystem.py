@@ -71,28 +71,31 @@ class SolarSystem(PredefinedPopulation):
         s['period'] = (t['period']*u.year).to(u.day)
 
         # hide the stellar magnitudes
-        s['J'] = None
-        s['V'] = None
+        s['J'] = np.nan
+        s['V'] = np.nan
 
-        s['planet_radius'] = (t['radius']*u.km/u.Rearth).decompose().value
-        s['planet_radius_lower'] = 0.0
-        s['planet_radius_upper'] = 0.0
-        assert((s['planet_radius'] < 20).all())
-        s['planet_mass'] = (t['mass']*u.kg/u.Mearth).decompose().value
-        s['planet_mass_lower'] = 0.0
-        s['planet_mass_upper'] = 0.0
+        # pull out the radius and mass
+        s['planet_radius'] = (t['radius']*u.km).to(u.Rearth)
+        s['planet_radius_uncertainty_lower'] = 0.0*u.Rearth
+        s['planet_radius_uncertainty_upper'] = 0.0*u.Rearth
+        assert((s['planet_radius'] < 20*u.Rearth).all())
+        s['planet_mass'] = (t['mass']*u.kg).to(u.Mearth)
+        s['planet_mass_uncertainty_lower'] = 0.0*u.Mearth
+        s['planet_mass_uncertainty_upper'] = 0.0*u.Mearth
 
-        flux = (s['period'])**(-4.0/3.0)
-        semimajoraxis = t['period']**(2.0/3.0)
-        s['a_over_r'] = (semimajoraxis*u.au/(1*u.Rsun)).decompose().value
+        # use Kepler's (actual) 3rd Law to get semimajor axis
+        semimajoraxis = (s['period'].to(u.year).value)**(2.0/3.0)*u.AU
+        s['a_over_r'] = (semimajoraxis/u.Rsun).decompose().value
 
+        # equilibrium temperature assuming uniform redistribution + 0 albedo
         s['teq'] = s['stellar_teff']*(0.25*1.0/s['a_over_r']**2)**0.25
 
-        s['rv_semiamplitude'] = None
-        s['radius_ratio'] = (s['planet_radius']*u.Rearth/(s['stellar_radius']*u.Rsun)).decompose().value
-        s['stellar_distance'] = 0.0
-        s['ra'] = 0.0
-        s['dec'] = 0.0
+        # some other planet parameters we might not need for the solar system
+        s['rv_semiamplitude'] = np.nan*u.m/u.s
+        s['radius_ratio'] = (s['planet_radius'].quantity/s['stellar_radius'].quantity).decompose().value
+        s['stellar_distance'] = np.nan*u.pc
+        s['ra'] = 0.0*u.deg
+        s['dec'] = 0.0*u.deg
         s['discoverer'] = 'humans'
         s['transit_epoch'] = 0.0
         s['transit_duration'] = 0.0
@@ -101,6 +104,7 @@ class SolarSystem(PredefinedPopulation):
 
         self.standard = s
         return s
+        
     @property
     def distance(self):
         return np.nan*np.zeros_like(self.standard['stellar_distance'])

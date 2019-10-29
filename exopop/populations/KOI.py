@@ -73,8 +73,8 @@ class KOI(PredefinedPopulation):
 
         # planet radius
         s['planet_radius'] = t['koi_prad']
-        s['planet_radius_upper'] = t['koi_prad_err1']
-        s['planet_radius_lower'] = t['koi_prad_err2']
+        s['planet_radius_uncertainty_upper'] = t['koi_prad_err1']
+        s['planet_radius_uncertainty_lower'] = t['koi_prad_err2']
 
 
         #KLUDGE?
@@ -84,8 +84,8 @@ class KOI(PredefinedPopulation):
         #s['rv_semiamplitude'] =  t['pl_rvamp'] #t.MaskedColumn(t['K'], mask=t['K']==0.0)
 
         s['planet_mass'] = np.zeros(n) + np.nan
-        s['planet_mass_upper'] = np.zeros(n) + np.nan
-        s['planet_mass_lower'] = np.zeros(n) + np.nan
+        s['planet_mass_uncertainty_upper'] = np.zeros(n) + np.nan
+        s['planet_mass_uncertainty_lower'] = np.zeros(n) + np.nan
 
 
         s['radius_ratio'] = t['koi_ror']
@@ -98,8 +98,8 @@ class KOI(PredefinedPopulation):
 
 
         s['stellar_distance'] = np.zeros(n) + np.nan
-        s['stellar_distance_upper'] = np.zeros(n) + np.nan
-        s['stellar_distance_lower'] = np.zeros(n) + np.nan
+        s['stellar_distance_uncertainty_upper'] = np.zeros(n) + np.nan
+        s['stellar_distance_uncertainty_lower'] = np.zeros(n) + np.nan
 
         s['disposition'] = t['koi_disposition']
 
