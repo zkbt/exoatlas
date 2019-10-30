@@ -6,8 +6,11 @@
 # [] implement filtering by the "where" keyword to the archive
 
 from ..imports import *
+from astroquery.mast import Catalogs
 
 class Downloader(Talker):
+    expiration = np.inf
+
     # anything special to know about reading this file format?
     readkw =  dict(delimiter='|',
                    fill_values=[('',np.nan), ('--', np.nan)])
@@ -31,7 +34,8 @@ class Downloader(Talker):
 
         # if file doesn't exist, download it
         if not skip_update:
-            remake = remake | check_if_needs_updating(self.path)
+            remake = remake | check_if_needs_updating(self.path,
+                                                      self.expiration)
 
         # either download a fresh file, or load a local one
         if remake:
@@ -154,17 +158,3 @@ class MergedExoplanetArchiveDownloader(ExoplanetArchiveDownloader):
         self.speak('File saved.')
 
 merged_exoplanets = MergedExoplanetArchiveDownloader()
-
-class ExoFOPDownloader(Downloader):
-
-    def __init__(self):
-        self.url = 'https://exofop.ipac.caltech.edu/tess/download_toi.php?sort=toi&output=pipe'
-
-    @property
-    def path(self):
-        '''
-        Where should the local copy of this file be stored?
-        '''
-        return os.path.join(directories['data'], 'TOI.txt')
-
-toi_exofop = ExoFOPDownloader()

@@ -1,12 +1,7 @@
 # exoplanet population of all "confirmed" exoplanets from exoplanet archive
 from ..imports import *
 from .Population import PredefinedPopulation
-
-import pandas as pd
-from astroquery.mast import Catalogs
-
-
-from .downloaders import toi_exofop
+from .exofop_downloaders import toi_merged
 
 
 #url = 'https://exofop.ipac.caltech.edu/tess/download_ctoi.php?sort=ctoi&output=pipe'
@@ -33,12 +28,41 @@ class TOI(PredefinedPopulation):
         '''
 
         # load (or download) the table of composite exoplanet properties
-        raw = toi_exofop.get(remake=remake)
+        raw = toi_merged.get(remake=remake)
 
         # for debugging, hang on to the raw table as a hidden attribute
         self._raw = raw
 
         return raw
+
+    def trim_raw(self, raw):
+        '''
+        Trim the raw table down to ones with reasonable values.
+        '''
+
+        masks = {}
+
+        # is this a relatively cool star?
+        masks['cool'] = raw['Stellar Eff Temp (K)'] < 20000
+
+
+        ok = np.ones(len(raw)).astype(np.bool)
+        for k in masks:
+            ok *= masks[k]
+            N = sum(ok == True)
+            self.speak(f'{N} planets pass the `{k}` filter')
+
+        # trim down the table to just those that are OK
+        trimmed = raw[ok]
+
+        # for debugging, hang onto the trimmed table as a hidden attribute
+        self._trimmed = trimmed
+
+        ntotal = len(raw)
+        ntrimmed = len(trimmed)
+        self.speak(f'trimmed down to {ntrimmed}/{ntotal} rows')
+
+        return trimmed
 
     def create_standard(self, trimmed):
         '''
@@ -51,77 +75,78 @@ class TOI(PredefinedPopulation):
         n = len(t)
         s = Table()
 
-        # PICK UP FROM HERE!!!!!!!!!!!!!
 
-        # pull out the name as the CTOI
-        s['name'] = ['CTOI{:.2f}'.format(c) for c in t['CTOI']]
-        s['period'] = t['Period (days)']
-        s['transit_duration'] = t['Duration (hrs)']/24
+        # use the TOI as the name
+        s['name'] = [f'TOI{toi:.2f}' for toi in t['TOI']]
+        s['TIC ID'] = t['TIC ID']
 
-        s['stellar_teff'] = t['Stellar Eff Temp (K)']
-        s['stellar_radius'] = t['Stellar Radius (R_Sun)']
+        s['stellar_distance'] = t['Stellar Distance (pc)']*u.pc
+        s['stellar_distance_uncertainty'] = t['Stellar Distance (pc) err']*u.pc
+        s['discoverer'] = 'TESS'
 
-        #t['TIC'].name = 'TIC ID'
+        s['period'] = t['Period (days)']*u.day
+        s['period_uncertainty'] = t['Period (days) err']*u.day
 
-        # search for the table from MAST
-        print('downloading the TIC. this may take a minute? or restart?')
-        tic_table = Catalogs.query_criteria(catalog="Tic", ID=np.unique(t['TIC ID']))
 
-        # preface all the columns with TIC so we can keep them straight
-        for k in tic_table.colnames:
-            tic_table[k].name = f'TIC {k}'
+        s['e'] = np.nan
+        s['omega'] = np.nan*u.deg
 
-        # make sure the indices are integers
-        tic_table['TIC ID'] = np.array(tic_table['TIC ID']).astype(np.int)
+        s['transit_epoch'] = t['Epoch (BJD)']*u.day
+        #s['transit_epoch_uncertainty'] = t['Epoch (BJD) err']*u.day
 
-        withtic = join(t, tic_table, 'TIC ID', join_type='left')
+        s['transit_duration'] = t['Duration (hours)']*u.hour
+        s['transit_duration_uncertainty'] = t['Duration (hours) err']*u.hour
+
+        s['transit_depth'] = t['Depth (ppm)']*1e6
+        s['transit_depth_uncertainty'] = t['Depth (ppm) err']*1e6
+
+        s['stellar_teff'] = t['Stellar Eff Temp (K)']*u.K
+        s['stellar_teff_uncertainty'] = t['Stellar Eff Temp (K) err']*u.K
+
+        s['stellar_radius'] = t['Stellar Radius (R_Sun)']*u.Rsun
+        s['stellar_radius_uncertainty'] = t['Stellar Radius (R_Sun) err']*u.Rsun
+
+
+        s['planet_radius'] = t['Planet Radius (R_Earth)']*u.Rearth
+        s['planet_radius_uncertainty'] = t['Planet Radius (R_Earth) err']*u.Rearth
+
+        s['planet_mass'] = np.nan*u.Mearth
+        s['planet_mass_uncertainty'] = np.nan*u.Mearth
+
+
+        s['semimajoraxis'] = np.nan*u.AU
+
+        # KLUDGE! FIXME!
+        s['inclination'] = 90*u.deg
+        s['transit_ar'] = np.nan
+        s['transit_b'] = np.nan
+
 
         # pull out some magnitudes
-        s['Jmag'] = withtic['TIC Jmag']# KLUDGE!!!!!t['koi_jmag']
-        s['Vmag'] = withtic['TIC Vmag']
-        s['G'] = withtic['TIC GAIAmag']
-        s['T'] = withtic['TIC Tmag']
-
-        # planet radius
-        s['planet_radius'] = withtic['Radius (R_Earth)']
-        s['planet_radius_uncertainty_upper'] = withtic['Radius (R_Earth) Error']
-        s['planet_radius_uncertainty_lower'] = -withtic['Radius (R_Earth) Error']
-
-
-        #KLUDGE?
-        s['transit_ar'] = withtic['a/Rad_s']
-
-        #KLUDGE?
-        #s['rv_semiamplitude'] =  t['pl_rvamp'] #t.MaskedColumn(t['K'], mask=t['K']==0.0)
-
-        s['planet_mass'] = withtic['Mass (M_Earth)']
-        s['planet_mass_uncertainty_upper'] = withtic['Mass (M_Earth) Error']
-        s['planet_mass_uncertainty_lower'] = -withtic['Mass (M_Earth) Error']
+        s['Jmag'] = t['TIC Jmag']# KLUDGE!!!!!t['koi_jmag']
+        s['Vmag'] = t['TIC Vmag']
+        s['Gmag'] = t['TIC GAIAmag']
+        s['Tmag'] = t['TIC Tmag']
 
 
 
-        s['radius_ratio'] = withtic['Radius (R_Earth)']*u.Rearth/withtic['Stellar Radius (R_Sun)']/u.Rsun
+        s['stellar_mass'] = t['TIC mass']*u.Msun
+        s['stellar_mass_uncertainty'] = t['TIC e_mass']*u.Msun
 
-        s['ra'] = withtic['RA']
-        s['dec'] = withtic['Dec']
 
-        s['transit_b'] = withtic['Impact Param']
+        s['tic_luminosity'] = t['TIC lum']*u.Lsun
+        s['tic_luminosity_uncertainty'] = t['TIC e_lum']*u.Lsun
 
-        # is this usually Gaia??
-        s['stellar_distance'] = withtic['Stellar Distance (pc)']
-        s['stellar_distance_uncertainty_upper'] = np.zeros(n) + np.nan
-        s['stellar_distance_uncertainty_lower'] = np.zeros(n) + np.nan
+        s['ra'] = t['TIC ra']*u.deg
+        s['dec'] = t['TIC dec']*u.deg
 
-        s['disposition'] = withtic['User Disposition']
 
-        # a little kludge
-        #s['stellar_teff'][s['name'] == 'GJ 436b'] = 3400.0
-        #s['stellar_teff'][s['name'] == 'Qatar-1b'] = 4860.0
-        #s['stellar_radius'][s['name'] == 'WASP-100b'] = 1.5#???
         s.sort('name')
-        self.standard = s
+        standard = s.filled()
+        return standard
 
-class Subset(TOI):
+
+'''class ExoplanetSubsets(TOI):
     def __init__(self, label, color='black', zorder=0):
 
         # set the label
@@ -146,10 +171,10 @@ class Subset(TOI):
         self.speak('leaving {0} rows'.format(self.n))
         self.save_standard()
 
-
-"""class UnconfirmedKepler(Subset):
+'''
+"""class UnconfirmedKepler(ExoplanetSubsets):
     def __init__(self):
-        Subset.__init__(self, label="Kepler (candidates)", color='gray', zorder=-1e6)
+        ExoplanetSubsets.__init__(self, label="Kepler (candidates)", color='gray', zorder=-1e6)
         self.ink=True
 
     def toRemove(self):

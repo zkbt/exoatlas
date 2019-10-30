@@ -110,7 +110,7 @@ class KOI(PredefinedPopulation):
         s.sort('name')
         self.standard = s
 
-class Subset(KOI):
+class ExoplanetSubsets(KOI):
     def __init__(self, label, color='black', zorder=0):
 
         # set the label
@@ -135,9 +135,9 @@ class Subset(KOI):
         self.speak('leaving {0} rows'.format(self.n))
         self.save_standard()
 
-class UnconfirmedKepler(Subset):
+class UnconfirmedKepler(ExoplanetSubsets):
     def __init__(self):
-        Subset.__init__(self, label="Kepler (candidates)", color='gray', zorder=-1e6)
+        ExoplanetSubsets.__init__(self, label="Kepler (candidates)", color='gray', zorder=-1e6)
         self.ink=True
 
     def toRemove(self):

@@ -1,12 +1,12 @@
 from .Exoplanets import *
 
-__all__ = ['Subset',
+__all__ = ['ExoplanetSubsets',
            'Kepler', 'NonKepler',
            'TESS', 'NonTESS',
            'Space', 'Ground',
            'GoodMass', 'BadMass']
 
-class Subset(TransitingExoplanets):
+class ExoplanetSubsets(TransitingExoplanets):
     def __init__(self, label, **kw):
 
         TransitingExoplanets.__init__(self, **kw)
@@ -20,34 +20,34 @@ class Subset(TransitingExoplanets):
     def to_include(self):
         raise NotImplementedError('!')
 
-class Kepler(Subset):
+class Kepler(ExoplanetSubsets):
     def __init__(self, **kw):
-        Subset.__init__(self, label="Kepler", color='royalblue', zorder=0, **kw)
+        ExoplanetSubsets.__init__(self, label="Kepler", color='royalblue', zorder=0, **kw)
 
     def to_include(self):
         foundbykepler = (self.discoverer == 'Kepler') | (self.discoverer == 'K2')
         return foundbykepler
 
-class NonKepler(Subset):
+class NonKepler(ExoplanetSubsets):
     def __init__(self, **kw):
-        Subset.__init__(self, label="Non-Kepler", color='black', zorder=0, **kw)
+        ExoplanetSubsets.__init__(self, label="Non-Kepler", color='black', zorder=0, **kw)
 
     def to_include(self):
         foundbykepler = (self.discoverer == 'Kepler') | (self.discoverer == 'K2')
         return  foundbykepler == False
 
-class TESS(Subset):
+class TESS(ExoplanetSubsets):
     def __init__(self, **kw):
-        Subset.__init__(self, label="TESS", color='orangered', zorder=0, **kw)
+        ExoplanetSubsets.__init__(self, label="TESS", color='orangered', zorder=0, **kw)
 
     def to_include(self):
         foundbytess = (self.discoverer == 'Transiting Exoplanet Survey Satellite (TESS)')
         return foundbytess == True
 
 
-class NonTESS(Subset):
+class NonTESS(ExoplanetSubsets):
     def __init__(self, **kw):
-        Subset.__init__(self, label="TESS", color='orchid', zorder=0, **kw)
+        ExoplanetSubsets.__init__(self, label="TESS", color='orchid', zorder=0, **kw)
 
     def to_include(self):
         foundbytess = (self.discoverer == 'Transiting Exoplanet Survey Satellite (TESS)')
@@ -58,9 +58,9 @@ space_telescopes = ['Transiting Exoplanet Survey Satellite (TESS)',
                     'K2', 'Kepler',
                     'CoRoT',
                     'Hubble Space Telescope']
-class Space(Subset):
+class Space(ExoplanetSubsets):
     def __init__(self, **kw):
-        Subset.__init__(self, label="Space-based", color='orangered', zorder=0, **kw)
+        ExoplanetSubsets.__init__(self, label="Space-based", color='orangered', zorder=0, **kw)
 
     def to_include(self):
         foundfromspace = np.zeros(self.n).astype(np.bool)
@@ -68,9 +68,9 @@ class Space(Subset):
             foundfromspace = foundfromspace | (self.discoverer == x)
         return foundfromspace
 
-class Ground(Subset):
+class Ground(ExoplanetSubsets):
     def __init__(self, **kw):
-        Subset.__init__(self, label="Ground-based", color='orangered', zorder=0, **kw)
+        ExoplanetSubsets.__init__(self, label="Ground-based", color='orangered', zorder=0, **kw)
 
     def to_include(self):
         foundfromspace = np.zeros(self.n).astype(np.bool)
@@ -89,59 +89,59 @@ def mass_is_good(pop):
 
     return small & exists
 
-class GoodMass(Subset):
+class GoodMass(ExoplanetSubsets):
     def __init__(self, sigma=sigma, **kw):
         self.maximum_uncertainty = 1/sigma
-        Subset.__init__(self, label="Good Mass", **kw)
+        ExoplanetSubsets.__init__(self, label="Good Mass", **kw)
     def to_include(self):
         return mass_is_good(self)
 
-class BadMass(Subset):
+class BadMass(ExoplanetSubsets):
     def __init__(self, sigma=sigma, **kw):
         self.maximum_uncertainty = 1/sigma
-        Subset.__init__(self, label="Bad Mass", **kw)
+        ExoplanetSubsets.__init__(self, label="Bad Mass", **kw)
     def to_include(self):
         return mass_is_good(self) == False
 
 '''
-class lateM(Subset):
+class lateM(ExoplanetSubsets):
     def __init__(self, threshold=threshold):
-        Subset.__init__(self, label="T$_{eff}$<3400K", color='darkred', zorder=-100)
+        ExoplanetSubsets.__init__(self, label="T$_{eff}$<3400K", color='darkred', zorder=-100)
 
     def toRemove(self):
         return self.stellar_teff > 3400
 
-class earlyM(Subset):
+class earlyM(ExoplanetSubsets):
     def __init__(self, threshold=threshold):
-        Subset.__init__(self, label="3400K<T$_{eff}$<3800K", color='darkred', zorder=-100)
+        ExoplanetSubsets.__init__(self, label="3400K<T$_{eff}$<3800K", color='darkred', zorder=-100)
 
     def toRemove(self):
         return (self.stellar_teff > 3800) | (self.stellar_teff < 3400)
 
-class M(Subset):
+class M(ExoplanetSubsets):
     def __init__(self, threshold=threshold):
-        Subset.__init__(self, label="M", color='darkred', zorder=-100)
+        ExoplanetSubsets.__init__(self, label="M", color='darkred', zorder=-100)
 
     def toRemove(self):
         return (self.stellar_teff > 3800)
 
-class K(Subset):
+class K(ExoplanetSubsets):
     def __init__(self, threshold=threshold):
-        Subset.__init__(self, label="K", color='darkred', zorder=-100)
+        ExoplanetSubsets.__init__(self, label="K", color='darkred', zorder=-100)
 
     def toRemove(self):
         return (self.stellar_teff > 5300) | (self.stellar_teff < 3800)
 
-class G(Subset):
+class G(ExoplanetSubsets):
     def __init__(self, threshold=threshold):
-        Subset.__init__(self, label="G", color='darkred', zorder=-100)
+        ExoplanetSubsets.__init__(self, label="G", color='darkred', zorder=-100)
 
     def toRemove(self):
         return (self.stellar_teff > 6000) | (self.stellar_teff < 5300)
 
-class F(Subset):
+class F(ExoplanetSubsets):
     def __init__(self, threshold=threshold):
-        Subset.__init__(self, label="F", color='darkred', zorder=-100)
+        ExoplanetSubsets.__init__(self, label="F", color='darkred', zorder=-100)
 
     def toRemove(self):
         return (self.stellar_teff > 7200) | (self.stellar_teff < 6000)

@@ -120,7 +120,7 @@ class Population(Talker):
 
         # create a new population out of this subset
         return Population(standard=subset,
-                          label=f'Subset of {self.label}',
+                          label=f'ExoplanetSubsets of {self.label}',
                           **self.plotkw)
 
     def __getattr__(self, key):
@@ -635,7 +635,7 @@ class Population(Talker):
     def plot(self, xname, yname, names=True, xlog=True, ylog=True):
         '''Plot one parameter against another.'''
         plt.ion()
-        x, y = self.standard[xname], self.standard[yname]
+        x, y = self.__getattr__(xname), self.__getattr__(yname)
         try:
             self.ax.cla()
         except:
