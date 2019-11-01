@@ -45,6 +45,8 @@ class TOI(PredefinedPopulation):
         # is this a relatively cool star?
         masks['cool'] = raw['Stellar Eff Temp (K)'] < 20000
 
+        # is this not a single-transit candidate (without period)?
+        masks['notsingle'] = raw['Period (days)'] > 0
 
         ok = np.ones(len(raw)).astype(np.bool)
         for k in masks:
@@ -123,10 +125,15 @@ class TOI(PredefinedPopulation):
 
 
         # pull out some magnitudes
-        s['Jmag'] = t['TIC Jmag']# KLUDGE!!!!!t['koi_jmag']
+        s['Jmag'] = t['TIC Jmag']
+        s['Hmag'] = t['TIC Hmag']
+        s['Kmag'] = t['TIC Kmag']
         s['Vmag'] = t['TIC Vmag']
         s['Gmag'] = t['TIC GAIAmag']
+        s['GBPmag'] = t['TIC gaiabp']
+        s['GRPmag'] = t['TIC gaiarp']
         s['Tmag'] = t['TIC Tmag']
+        s['Bmag'] = t['TIC Bmag']
 
 
 
@@ -141,10 +148,48 @@ class TOI(PredefinedPopulation):
         s['dec'] = t['TIC dec']*u.deg
 
 
+        othercolumns = {'ACWG': 'ACWG',
+             'Comments': 'Comments',
+             'Date TOI Created (UTC)': 'Date TOI Created (UTC)',
+             'Master': 'Priority-Master',
+             'Planet Num': 'Planet Number',
+             'Planet SNR': 'Planet SNR',
+             'SG1A': 'Priority-SG1A',
+             'SG1B': 'Priority-SG1B',
+             'SG2': 'Priority-SG2',
+             'SG3': 'Priority-SG3',
+             'SG4': 'Priority-SG4',
+             'SG5': 'Priority-SG5',
+             'Sectors': 'Sectors',
+             'Source': 'Source',
+             'TESS Disposition': 'TESS Disposition',
+             'TFOPWG Disposition': 'TFOPWG Disposition',
+             'TIC GAIA': 'TIC GAIA',
+             'TIC ID': 'TIC ID',
+             'TIC KIC': 'TIC KIC',
+             'TIC PARflag': 'TIC PARflag',
+             'TIC TWOMASS': 'TIC TWOMASS',
+             'TIC contratio': 'TIC contratio',
+             'TIC disposition': 'TIC disposition'}
+        for c in othercolumns:
+            k = othercolumns[c]
+            s[k] = t[c]
+
         s.sort('name')
         standard = s.filled()
         return standard
 
+    @property
+    def is_falsepositive(self):
+        return self.standard['TFOPWG Disposition'] == 'FP'
+
+    @property
+    def is_knownplanet(self):
+        return self.standard['TFOPWG Disposition'] == 'KP'
+
+    @property
+    def is_candidateplanet(self):
+        return self.standard['TFOPWG Disposition'] == 'CP'
 
 '''class ExoplanetSubsets(TOI):
     def __init__(self, label, color='black', zorder=0):

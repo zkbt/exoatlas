@@ -1,3 +1,6 @@
+# the mamajek relation is needed for estimating distances to stars, for those without
+mamajek = thistothat.Mamajek()
+mamajek._pithy = True
 
 
     @property

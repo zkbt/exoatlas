@@ -2,10 +2,6 @@
 from ..imports import *
 import string
 
-# the mamajek relation is needed for estimating distances to stars, for those without
-mamajek = thistothat.Mamajek()
-mamajek._pithy = True
-
 exoplanet_columns = [
 'name',
 'ra', 'dec',
@@ -590,6 +586,11 @@ class Population(Talker):
         e_grav = G*M*m_p/R
         return e_grav/e_thermal
 
+    @property
+    def distance_modulus(self):
+        mu = 5*np.log10(self.stellar_distance/(10*u.pc))
+        return mu
+
     # PICK UP FROM HERE! THESE ARE ALL RELATIVE, SHOULD WE MAKE THEM ABSOLUTE?
     # (e.g. define a R=10-JWST-hour as m**2*s)
     @property
@@ -632,7 +633,7 @@ class Population(Talker):
     def depth(self):
         return (self.planet_radius*craftroom.units.Rearth/self.stellar_radius/craftroom.units.Rsun)**2
 
-    def plot(self, xname, yname, names=True, xlog=True, ylog=True):
+    def scatter(self, xname, yname, c=None, s=None, names=True, xlog=True, ylog=True, **kw):
         '''Plot one parameter against another.'''
         plt.ion()
         x, y = self.__getattr__(xname), self.__getattr__(yname)
@@ -641,9 +642,10 @@ class Population(Talker):
         except:
             self.figure = plt.figure('Exoplanet Population')
             self.ax = plt.subplot()
+
         self.ax.set_xlabel(xname)
         self.ax.set_ylabel(yname)
-        self.ax.plot(x, y, marker='o', alpha=0.5, color='gray', linewidth=0)
+        self.ax.scatter(x, y, c=c, s=s, **kw)
         if False:
             for i in range(len(x)):
                 self.ax.text(x[i], y[i], self.table['NAME'][i])
