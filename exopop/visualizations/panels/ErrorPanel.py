@@ -61,7 +61,7 @@ class ErrorPanel(Panel):
         dlny = self.y_unc/self.y
 
         # things with bigger errors should have lower weight
-        weight = (1 - np.sqrt(dlnx**2  + dlny**2)*2)
+        weight = (1 - np.sqrt(dlnx**2  + dlny**2)*4)
 
         # clip the weights above 1 (shouldn't exist?) or below zero
         # clipped = np.minimum(np.maximum(weight, 0), 1)
@@ -119,7 +119,7 @@ class ErrorPanel(Panel):
             #y_unc[0, :] = yl
             #y_unc[1, :] = yu
 
-            width=1.5
+            width=1
             kw = dict(#marker='o',
                       linewidth=0,
                       elinewidth=width,

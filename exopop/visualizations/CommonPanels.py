@@ -1,111 +1,82 @@
 from ..imports import *
 from .panels import BubblePanel, ErrorPanel
+from ..models import plot_both_seager
 
-import craftroom.units as u
 
-class DistanceRadius(BubblePanel):
-    title = ''
-    xlabel = 'Distance\n(parsecs)'
-    ylabel = 'Planet Radius (Earth radii)'
-    xscale = 'log'
-    yscale = 'log'
-    xlim = [3,1000]
-    ylim = [0.4, 40]
+class Scatter(BubblePanel):
+    def __init__(self, **kw):
 
-    def __init__(self, lightyears=False, **kw):
         BubblePanel.__init__(self, **kw)
 
-        self.lightyears = lightyears
-        if lightyears:
-            self.xlabel = "Distance from Earth (lightyears)"
-            self.xlim = np.array([3,1000])*3.26
-
-        self.normalization = 0.0001#self.unnormalizedsize()[self.pop.standard['name'] == 'GJ 1214b']
-
-    def unnormalizedsize(self):
-        # set the symbol size to be transit depth
-        #return (self.pop.planet_radius/self.pop.stellar_radius)**2
-        return self.pop.transit_depth
-
-    def get_sizes(self):
-        return self.unnormalizedsize()/self.normalization
+        for k in ['xsource', 'ysource',
+                  'xlabel', 'ylabel',
+                  'xscale', 'yscale',
+                  'xlim', 'ylim']:
+            if k in kw:
+                vars(self)[k] = kw[k]
 
     @property
     def x(self):
-        if self.lightyears:
-            return self.pop.stellar_distance.to(u.ly)
-        else:
-            return self.pop.stellar_distance
+        return getattr(self.pop, self.xsource)
 
     @property
     def y(self):
-        return self.pop.planet_radius
+        return getattr(self.pop, self.ysource)
 
-    def build(self, **kw):
-        for key in self.pops.keys():
-            self.plot(key, **kw)
+class FluxRadius(Scatter):
+    xsource='relative_insolation'
+    ysource='planet_radius'
+    xlabel='Flux Received\n(relative to Earth)'
+    ylabel='Planet Radius (Earth radii)'
+    xscale='log'
+    yscale='log'
+    xlim=[5e4,5e-4]
+    ylim=[.25, 25]
 
-class EscapeRadius(DistanceRadius):
+class FluxEscape(FluxRadius):
+    ysource='escape_velocity'
+    ylabel='Escape Velocity (m/s)'
+    ylim=[None, None]
+
+class DistanceRadius(FluxRadius):
+    xsource = 'stellar_distance'
+    xlabel = 'Distance\n(parsecs)'
+    xlim = [3,1000]
+
+    '''        if lightyears:
+                self.xlabel = "Distance from Earth (lightyears)"
+                self.xlim = np.array([3,1000])*3.26
+    '''
+class EscapeRadius(FluxRadius):
+    xsource = 'escape_parameter'
     xlabel = '$\lambda = E_{grav}/E_{thermal}$'
-    xscale = 'log'
     xlim = [None, None]
 
-    @property
-    def x(self):
-        return self.pop.escape_parameter
-
-class FluxRadius(DistanceRadius):
-    xlabel = 'Flux Received\n(relative to Earth)'
-    xscale = 'log'
-    xlim = [5e4, 0.5]
-
-    @property
-    def x(self):
-        return (self.pop.insolation/self.pop.earth_insolation)
-Teq = FluxRadius
-
-class PlanetDensityRadius(DistanceRadius):
-
-    title = ''
+class PlanetDensityRadius(FluxRadius):
+    xsource = 'planet_density'
     xlabel = 'Planet Density\n(g/cm$^3$)'
-    xscale = 'log'
     xlim = [0.3, 12]
 
-    @property
-    def x(self):
-        mass = self.pop.planet_mass
-        volume = 4/3*np.pi*(self.pop.planet_radius)**3
-        return (mass/volume).to('g/cm**3')
-
-class StellarRadius(DistanceRadius):
+class StellarRadius(FluxRadius):
+    xsource = 'stellar_radius'
     xlabel = 'Stellar Radius\n(solar radii)'
     xscale = 'linear'
-    xlim = [0.1, 1.1]
+    xlim = [0.08, 1.5]
 
-    @property
-    def x(self):
-        return self.pop.stellar_radius
-
-class JRadius(DistanceRadius):
+class JRadius(FluxRadius):
+    xsource = 'Jmag'
     xlabel = 'J (magnitude)\n'
     xscale = 'linear'
     xlim = [3.5, 14.5]
 
-    @property
-    def x(self):
-        return self.pop.J
-
-class PeriodRadius(DistanceRadius):
+class PeriodRadius(FluxRadius):
+    xsource = 'period'
     xlabel = 'Period (days)\n'
     xscale = 'log'
     xlim = [0.15, 365]
 
-    @property
-    def x(self):
-        return self.pop.period
-
 class MassRadius(ErrorPanel):
-    
+
     title = ''
     xlabel = 'Planet Mass (Earth masses)'
     ylabel = 'Planet Radius (Earth radii)'
@@ -129,3 +100,7 @@ class MassRadius(ErrorPanel):
     @property
     def y_lowerupper(self):
         return self.pop.uncertainty_lowerupper('planet_radius')
+
+    def plot_both_seager(self):
+        plt.sca(self.ax)
+        plot_both_seager()

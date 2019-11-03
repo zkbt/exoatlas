@@ -130,7 +130,7 @@ def test_attributes():
 
 
     for k in necessary_columns:
-        p.__getattr__(k)
+        getattr(p, k)
 
     p.b
     p.transit_duration

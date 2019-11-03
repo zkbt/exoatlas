@@ -17,22 +17,13 @@ class Panel(Talker):
     xlim = [None, None]
     ylim = [None, None]
 
-    def __init__(self, pops={}):
+    def __init__(self, **kw):
         '''
         Initialize a plotting panel.
 
         Parameters
         ----------
-        pops : dict
-            A dictionary of populations, with keys as labels values as
-            initialized populations. For example,
-
-                pops = {'solarsystem':SolarSystem(),
-                        'transiting':TransitingExoplanets()}
         '''
-
-        # store the populations inside this panel
-        self.pops = pops
 
         # dictionaries to store access points to items that appear on the plot
         self.scattered = {}
@@ -106,10 +97,22 @@ class Panel(Talker):
         '''
         return self.title.replace(' ','') + '_' + key.title()
 
-    def build(self, **kw):
+    def build(self, pops={}, **kw):
         '''
         Build up this panel by plotting every population into it.
+
+        Parameters
+        ----------
+        pops : dict
+            A dictionary of populations, with keys as labels values as
+            initialized populations. For example,
+
+                pops = {'solarsystem':SolarSystem(),
+                        'transiting':TransitingExoplanets()}
         '''
+
+        #
+        self.pops = pops
 
         # loop over all the populations
         for key in self.pops.keys():
@@ -185,3 +188,17 @@ class Panel(Talker):
         # if requested, label the individual planets in the plot
         if self.pop.label_planets:
             self.label_planets(**labelkw)
+
+    def remove_xlabel(self):
+        '''
+        Remove the xlabel and xticklabels from this panel.
+        '''
+        plt.setp(self.ax.get_xticklabels(), visible=False)
+        self.ax.set_xlabel('')
+
+    def remove_ylabel(self):
+        '''
+        Remove the ylabel and xticklabels from this panel.
+        '''
+        plt.setp(self.ax.get_yticklabels(), visible=False)
+        self.ax.set_ylabel('')

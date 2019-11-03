@@ -11,21 +11,12 @@ class BubblePanel(Panel):
     informative sizes and/or colors.
     '''
 
-    def __init__(self, pops={}, size=None, normalization=1, **kw):
+    def __init__(self,  size=None, normalization=1, **kw):
         '''
         Initialize a plotting panel.
-
-        Parameters
-        ----------
-        pops : dict
-            A dictionary of populations, with keys as labels values as
-            initialized populations. For example,
-
-                pops = {'solarsystem':SolarSystem(),
-                        'transiting':TransitingExoplanets()}
         '''
 
-        Panel.__init__(self, pops=pops, **kw)
+        Panel.__init__(self, **kw)
 
         # keep track of how we should assign symbols
         self.size = size
@@ -36,7 +27,7 @@ class BubblePanel(Panel):
         The sizes of the bubbles.
         '''
         if type(self.size) == str:
-            x = self.pop.__getattr__(self.size)
+            x = getattr(self.pop, self.size)
             return default_size*x/self.normalization
         else:
             return self.size

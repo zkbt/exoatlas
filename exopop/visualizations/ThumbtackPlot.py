@@ -3,6 +3,7 @@ from .Panels import BubblePanel
 from .TransitingExoplanets import NonKepler, Kepler, TESS
 from .KOI import UnconfirmedKepler
 import datetime
+import craftroom.units
 
 # the figure size
 figsize=7

@@ -464,12 +464,19 @@ class Population(Talker):
     @property
     def insolation(self):
         '''
-        The insolation the planet receives, relative to Earth.
+        The insolation the planet receives, in W/m^2.
         '''
 
         # calculate the average insolation the planet receives
         insolation = self.stellar_luminosity/4/np.pi/self.semimajoraxis**2
         return insolation.to(u.W/u.m**2)
+
+    @property
+    def relative_insolation(self):
+        '''
+        The insolation the planet receives, relative to Earth.
+        '''
+        return self.insolation/self.earth_insolation
 
     @property
     def teq(self):
@@ -541,13 +548,6 @@ class Population(Talker):
 
         return d
 
-    @property
-    def photons(self):
-        '''
-        FIXME -- make this an actual flux?
-        should it be a function for photons/s/m2/nm
-        '''
-        return 10**(-0.4*self.Jmag)
 
     @property
     def surface_gravity(self):
@@ -562,6 +562,15 @@ class Population(Talker):
         g = (G*M/R**2).to('m/s**2')
         return g
 
+    @property
+    def planet_density(self):
+        '''
+        The density of the planet.
+        '''
+        mass = self.pop.planet_mass
+        volume = 4/3*np.pi*(self.pop.planet_radius)**3
+        return (mass/volume).to('g/cm**3')
+        
     @property
     def mu(self):
         '''
@@ -615,8 +624,20 @@ class Population(Talker):
 
     @property
     def distance_modulus(self):
+        '''
+        The distance modulus to the system, in magnitudes.
+        '''
         mu = 5*np.log10(self.stellar_distance/(10*u.pc))
         return mu
+
+
+    @property
+    def photons(self):
+        '''
+        FIXME -- make this an actual flux?
+        should it be a function for photons/s/m2/nm
+        '''
+        return 10**(-0.4*self.Jmag)
 
     # PICK UP FROM HERE! THESE ARE ALL RELATIVE, SHOULD WE MAKE THEM ABSOLUTE?
     # (e.g. define a R=10-JWST-hour as m**2*s)
@@ -635,10 +656,10 @@ class Population(Talker):
 
     @property
     def transmissionsignal(self):
-        H = self.scale_height #cm
-        Rp = self.planet_radius*craftroom.units.Rearth # cm
-        Rs = self.stellar_radius*craftroom.units.Rsun
-        return 2*H*Rp/Rs**2
+        H = self.scale_height
+        Rp = self.planet_radius
+        Rs = self.stellar_radius
+        return (2*H*Rp/Rs**2).decompose()
 
     @property
     def emissionsignal(self):

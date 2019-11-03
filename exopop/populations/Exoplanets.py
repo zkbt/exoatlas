@@ -34,9 +34,16 @@ class Exoplanets(PredefinedPopulation):
         Trim the raw table down to ones with reasonable values.
         '''
 
-        # trim the raw table
-        N = len(raw)
-        ok = np.ones(N).astype(np.bool)
+        masks = {}
+
+
+        ok = np.ones(len(raw)).astype(np.bool)
+        for k in masks:
+            ok *= masks[k]
+            N = sum(ok == True)
+            self.speak(f'{N} planets pass the `{k}` filter')
+
+        # trim down the table to just those that are OK
         trimmed = raw[ok]
 
         # for debugging, hang onto the trimmed table as a hidden attribute
@@ -128,19 +135,6 @@ class Exoplanets(PredefinedPopulation):
         s['transit_ar'] = t['pl_ratdor']
         s['transit_b'] = t['pl_imppar']
 
-        #KLUDGE?
-        #rsovera = (3*np.pi/u.G/period**2/stellar_density/(1.0+mass_ratio))**(1.0/3.0)
-
-
-        '''
-        bad = (np.isfinite(s['transit_ar']) == False)+( s['transit_ar'].data == 0.0)
-        period = s['period']
-        stellar_radius = s['stellar_radius']
-        stellar_mass = s['stellar_mass']
-        otherestimate = (craftroom.units.G*(period*craftroom.units.day)**2*(stellar_mass*craftroom.units.Msun)/4/np.pi**2/(stellar_radius*craftroom.units.Rsun)**3)**(1./3.)
-
-        s['transit_ar'][bad] = otherestimate[bad]
-        '''
 
         #KLUDGE?
         s['rv_semiamplitude'] =  t['pl_rvamp'] #t.MaskedColumn(t['K'], mask=t['K']==0.0)
@@ -197,6 +191,10 @@ class TransitingExoplanets(Exoplanets):
 
         # does this planet transit?
         masks['transits'] = raw['pl_tranflag'] == 1
+
+        # is this a planetar-size object
+        masks['size'] = raw['pl_rade'] < 30
+
 
         # does this planet have a J magnitude?
         # masks['has_J'] = raw['st_j'] > 1.0

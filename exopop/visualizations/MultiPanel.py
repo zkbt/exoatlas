@@ -8,15 +8,15 @@ class MultiPanelPlot(Talker):
     Make and modify row or a column of connected exopop plot panels.
     '''
 
-    def __init__(self, pops,
-                       panels=[MassRadius, FluxRadius, StellarRadius, DistanceRadius],
+    def __init__(self, panels=[MassRadius, FluxRadius, StellarRadius, DistanceRadius],
                        horizontal=True,
                        figsize=(12,8),
                        gridspec_kw=dict(hspace=0.1,
                                         left=0.15,
                                         right=0.95,
                                         bottom=0.15,
-                                        wspace=0.05)):
+                                        wspace=0.05),
+                       **kw):
         '''
         Set up the plotting panels.
         Pause before plotting, in case we want to make any modifications.
@@ -24,8 +24,6 @@ class MultiPanelPlot(Talker):
         Parameters
         ----------
 
-        pops : dict
-            A dictionary full of populations to include.
         panels : list
             A list of Panel class definitions to include.
         horizontal : bool
@@ -36,16 +34,15 @@ class MultiPanelPlot(Talker):
         gridspec_kw : dict
             Dictionary of gridspec keywords to set up the relative
             widths, heights, margins, and spacing of the panels.
-        '''
+        **kw : dict
 
-        # store the populations associate with this multipanel plot
-        self.pops = pops
+        '''
 
         # store list of panel names
         self.panel_names = [p.__name__ for p in panels]
 
         # create a dictionary of panel objects
-        self.panels = {p.__name__:p(pops=pops) for p in panels}
+        self.panels = {p.__name__:p(**kw) for p in panels}
 
         # set up the geometry of the figure
         self.horizontal = horizontal
@@ -72,19 +69,28 @@ class MultiPanelPlot(Talker):
             else:
                 self.ax[k] = axgrid[i]
 
-    def build(self, **kw):
+    def build(self, pops={}, **kw):
         '''
         Actually make the plot by building up each panel.
 
         Parameters
         ----------
+        pops : dict
+            A dictionary of populations, with keys as labels values as
+            initialized populations. For example,
+                pops = {'solarsystem':SolarSystem(),
+                        'transiting':TransitingExoplanets()}
         **kw : dict
             Any extra keywords will be passed on to all panels' `build`
         '''
 
+        self.pops = pops
+
         # plot each population in each panel
         for i, k in enumerate(self.panel_names):
-            self.panels[k].build(ax=self.ax[k], **kw)
+            self.panels[k].build(pops=self.pops,
+                                 ax=self.ax[k],
+                                 **kw)
 
         # clean up unnecessary labels
         if self.horizontal:

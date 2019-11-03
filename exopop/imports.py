@@ -14,7 +14,7 @@ from astropy.visualization import quantity_support
 quantity_support()
 
 # some general custom utilities from Zach
-import craftroom.strings, craftroom.units, craftroom.utils, craftroom.color
+import craftroom.strings,  craftroom.utils, craftroom.color
 from .talker import Talker
 
 # units and constants from astropy
