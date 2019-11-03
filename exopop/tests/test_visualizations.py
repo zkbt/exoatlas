@@ -1,5 +1,12 @@
 import exopop as ex
 
+def test_():
+    pops = {}
+    pops['solarsystem'] = ex.SolarSystem()
+    f = ex.MultiPanelPlot(pops,
+                          panels=[ex.MassRadius, ex.FluxRadius])
+    f.build()
+
 def test_fourpanels():
     pops = {}
     pops['solarsystem'] = ex.SolarSystem()

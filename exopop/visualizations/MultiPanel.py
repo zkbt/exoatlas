@@ -2,6 +2,7 @@ from ..imports import *
 from .panels import *
 from .CommonPanels import *
 
+
 class MultiPanelPlot(Talker):
     '''
     Make and modify row or a column of connected exopop plot panels.

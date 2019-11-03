@@ -101,4 +101,5 @@ def ink_errorbar(x, y, yerr=None, xerr=None,
         assert(np.isfinite(y[i]))
         assert(np.isfinite(xerrtoplot).all())
         assert(np.isfinite(yerrtoplot).all())
+        
         plt.errorbar(x[i], y[i], xerr=xerrtoplot, yerr=yerrtoplot, **kw)

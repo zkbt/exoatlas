@@ -2,6 +2,8 @@ from .Panel import *
 
 __all__ = ['BubblePanel']
 
+default_size = plt.matplotlib.rcParams['lines.markersize']**2
+
 class BubblePanel(Panel):
     '''
     BubblePanel is a general wrapper for making scatter plots
@@ -9,15 +11,42 @@ class BubblePanel(Panel):
     informative sizes and/or colors.
     '''
 
-    def size(self):
+    def __init__(self, pops={}, size=None, normalization=1, **kw):
+        '''
+        Initialize a plotting panel.
+
+        Parameters
+        ----------
+        pops : dict
+            A dictionary of populations, with keys as labels values as
+            initialized populations. For example,
+
+                pops = {'solarsystem':SolarSystem(),
+                        'transiting':TransitingExoplanets()}
+        '''
+
+        Panel.__init__(self, pops=pops, **kw)
+
+        # keep track of how we should assign symbols
+        self.size = size
+        self.normalization = normalization
+
+    def get_sizes(self):
         '''
         The sizes of the bubbles.
         '''
-        return None
+        if type(self.size) == str:
+            x = self.pop.__getattr__(self.size)
+            return default_size*x/self.normalization
+        else:
+            return self.size
 
-    def color(self):
+    def get_colors(self):
         '''
         The colors of the bubbles.
+
+        FIXME -- we should tidy up the color interface,
+        for choosing between cmap and fixed colors
         '''
         return None
 
@@ -44,8 +73,8 @@ class BubblePanel(Panel):
         pop = self.pop
 
         # define some default keywords, which can be over-written
-        default = dict(s=self.size(),
-                       c=self.color(),
+        default = dict(s=self.get_sizes(),
+                       c=self.get_colors(),
                        cmap='plasma',
                        marker='o',
                        linewidth=1,

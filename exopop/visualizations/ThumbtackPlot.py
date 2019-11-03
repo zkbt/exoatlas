@@ -37,8 +37,7 @@ class ThumbtackPlot(BubblePanel):
             self.circlegrid = np.array([3,10,30,100,300,1000,3000])*craftroom.units.ly/craftroom.units.pc
 
 
-
-    def size(self):
+    def get_sizes(self):
         '''by default, all points are the same size'''
         return 50.0/1000.0
 

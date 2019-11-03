@@ -27,7 +27,7 @@ class DistanceRadius(BubblePanel):
         #return (self.pop.planet_radius/self.pop.stellar_radius)**2
         return self.pop.transit_depth
 
-    def size(self):
+    def get_sizes(self):
         return self.unnormalizedsize()/self.normalization
 
     @property
@@ -105,14 +105,14 @@ class PeriodRadius(DistanceRadius):
         return self.pop.period
 
 class MassRadius(ErrorPanel):
+    
     title = ''
     xlabel = 'Planet Mass (Earth masses)'
     ylabel = 'Planet Radius (Earth radii)'
     xscale = 'log'
     yscale = 'log'
-
-    xlim = [None, None]
-    ylim = [None, None]
+    xlim = [0.03, 3000]
+    ylim = [0.3, 25]
 
     @property
     def x(self):

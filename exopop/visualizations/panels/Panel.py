@@ -37,7 +37,7 @@ class Panel(Talker):
         # dictionaries to store access points to items that appear on the plot
         self.scattered = {}
         self.labeled = {}
-        
+
     def __repr__(self):
         '''
         How to represent this panel as a string?
