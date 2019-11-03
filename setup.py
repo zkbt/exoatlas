@@ -24,5 +24,6 @@ setup(name = "exopop",
       'Topic :: Scientific/Engineering :: Astronomy'
       ],
     install_requires=['numpy>=1.9'],
+    python_requires='>3',
     zip_safe=False
 )

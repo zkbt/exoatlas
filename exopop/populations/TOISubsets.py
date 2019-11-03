@@ -1,7 +1,10 @@
+from ..imports import *
 from .TOI import *
-
+from .ExoplanetSubsets import *
 from astropy.coordinates import SkyCoord
 from astropy import units as u
+
+__all__ = ['TOISubset', 'PreviouslyKnownTOI', 'BrandNewTOI']
 
 class TOISubset(TOI):
     def __init__(self, label, **kw):
@@ -70,7 +73,7 @@ class PreviouslyKnownTOI(TOISubset):
 
         # find only those planets that have periods close to each other
         dp = (matched_known.period - matched_toi.period)/matched_known.period
-        closeperiod = np.abs(dp) < 0.01
+        closeperiod = np.abs(dp) < 0.1
         matched_toi.standard['dp']  = dp
         matched_toi.standard['close']  = closeperiod
 
@@ -84,9 +87,8 @@ class PreviouslyKnownTOI(TOISubset):
         #print(matched_toi[weird].standard['name', 'period', 'planet_radius', 'dp', 'close'])
         #print(matched_known[weird].standard['name', 'period', 'planet_radius'])
 
-
         # return that array
-        return wasknown
+        return wasknown | self.is_knownplanet
 
 class BrandNewTOI(PreviouslyKnownTOI):
     def __init__(self, label="Brand New TOI", **kw):

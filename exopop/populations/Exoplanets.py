@@ -5,6 +5,8 @@ from .Population import PredefinedPopulation
 #from .curation.TransitingExoplanets import correct
 from .downloaders import merged_exoplanets
 
+__all__ = ['Exoplanets', 'TransitingExoplanets']
+
 class Exoplanets(PredefinedPopulation):
     def __init__(self, label='All Exoplanets', remake=False, **plotkw):
         '''
@@ -96,7 +98,7 @@ class Exoplanets(PredefinedPopulation):
         # what are the observed transit properties?
         s['transit_epoch'] = t['pl_tranmid']*u.day
         s['transit_duration'] = t['pl_trandur']*u.day
-        s['transit_depth'] = t['pl_trandep']
+        s['transit_depth'] = t['pl_trandep']/100.0
 
         # what are the basic stellar properties?
         s['stellar_teff'] = merge('st_teff')*u.K

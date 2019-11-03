@@ -1,15 +1,20 @@
 # imports that are need by many exopop subsections
-import os, sys, time, shutil
+import os, sys, time, shutil, warnings
 
 import numpy as np, matplotlib.pyplot as plt, matplotlib.animation as animation
+
+from astropy.utils.exceptions import AstropyDeprecationWarning
+warnings.simplefilter('ignore', category=AstropyDeprecationWarning)
 
 # this function downloads a file and returns its filepath
 from astropy.utils.data import download_file
 from astropy.io import ascii
 from astropy.table import Table, vstack, join
+from astropy.visualization import quantity_support
+quantity_support()
 
 # some general custom utilities from Zach
-import thistothat, craftroom.strings, craftroom.units, craftroom.utils, craftroom.color
+import craftroom.strings, craftroom.units, craftroom.utils, craftroom.color
 from .talker import Talker
 
 # units and constants from astropy

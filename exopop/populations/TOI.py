@@ -1,8 +1,9 @@
 # exoplanet population of all "confirmed" exoplanets from exoplanet archive
 from ..imports import *
 from .Population import PredefinedPopulation
-from .exofop_downloaders import toi_merged
+from .downloaders import toi_merged
 
+__all__ = ['TOI']
 
 #url = 'https://exofop.ipac.caltech.edu/tess/download_ctoi.php?sort=ctoi&output=pipe'
 #initial_filename = directories['data'] + 'TOI-from-exofop.psv'
@@ -20,7 +21,7 @@ class TOI(PredefinedPopulation):
         '''
         # set up the population
         PredefinedPopulation.__init__(self, label=label, remake=remake, **kw)
-
+        self.color = 'crimson'
 
     def load_raw(self, remake=False):
         '''
@@ -99,8 +100,8 @@ class TOI(PredefinedPopulation):
         s['transit_duration'] = t['Duration (hours)']*u.hour
         s['transit_duration_uncertainty'] = t['Duration (hours) err']*u.hour
 
-        s['transit_depth'] = t['Depth (ppm)']*1e6
-        s['transit_depth_uncertainty'] = t['Depth (ppm) err']*1e6
+        s['transit_depth'] = t['Depth (ppm)']/1e6
+        s['transit_depth_uncertainty'] = t['Depth (ppm) err']/1e6
 
         s['stellar_teff'] = t['Stellar Eff Temp (K)']*u.K
         s['stellar_teff_uncertainty'] = t['Stellar Eff Temp (K) err']*u.K
@@ -185,7 +186,9 @@ class TOI(PredefinedPopulation):
 
     @property
     def is_knownplanet(self):
-        return self.standard['TFOPWG Disposition'] == 'KP'
+        tess = self.standard['TESS Disposition'] == 'KP'
+        tfop = self.standard['TFOPWG Disposition'] == 'KP'
+        return tess | tfop
 
     @property
     def is_candidateplanet(self):
@@ -224,5 +227,5 @@ class TOI(PredefinedPopulation):
 
     def toRemove(self):
         isconfirmed = self.standard['disposition'] == 'CONFIRMED'
-        isjunk = self.distance == 10.0
+        isjunk = self.stellar_distance == 10.0
         return isconfirmed | isjunk"""

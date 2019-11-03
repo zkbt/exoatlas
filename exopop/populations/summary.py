@@ -1,3 +1,7 @@
+'''
+Tools to summarize a particular population.
+'''
+
 from ..imports import *
 from .Population import necessary_columns
 
@@ -13,9 +17,6 @@ def split_cols(pop):
         except TypeError:
             quant.append(x)
     return quant, qual
-
-
-
 
 
 def plot_histograms(pop):

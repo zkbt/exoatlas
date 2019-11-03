@@ -155,5 +155,5 @@ class ExoplanetSubsets(TOI):
 
     def toRemove(self):
         isconfirmed = self.standard['disposition'] == 'CONFIRMED'
-        isjunk = self.distance == 10.0
+        isjunk = self.stellar_distance == 10.0
         return isconfirmed | isjunk"""

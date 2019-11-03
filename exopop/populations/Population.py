@@ -37,7 +37,8 @@ desired_columns = [
 default_plotkw = dict(color='black',
                       alpha=1,
                       zorder=0,
-                      ink=True)
+                      ink=True,
+                      label_planets=False)
 
 # what keywords can we set for the population plotkw?
 allowed_plotkw = list(default_plotkw.keys())
@@ -190,18 +191,18 @@ class Population(Talker):
 
         # first try for an `uncertainty_{key}` column
         try:
-            return self.standard[f'{key}_uncertainty']
-        except KeyError:
+            return self.__getattr__(f'{key}_uncertainty')
+        except (KeyError, AssertionError):
             # this can be removed after debugging
             self.speak(f'no symmetric uncertainties found for "{key}"')
 
         # then try for crudely averaging asymmetric uncertainties
         try:
-            lower = self.standard[f'{key}_uncertainty_lower']
-            upper = self.standard[f'{key}_uncertainty_upper']
+            lower = self.__getattr__(f'{key}_uncertainty_lower')
+            upper = self.__getattr__(f'{key}_uncertainty_upper')
             avg = 0.5*(np.abs(lower) + np.abs(upper))
             return avg
-        except KeyError:
+        except (KeyError, AssertionError):
             # this can be removed after debugging
             self.speak(f'no asymmetric uncertainties found for "{key}"')
 
@@ -227,26 +228,24 @@ class Population(Talker):
 
         # first try for actual asymmetric uncertainties
         try:
-            lower = self.standard[f'{key}_uncertainty_lower']
-            upper = self.standard[f'{key}_uncertainty_upper']
+            lower = self.__getattr__(f'{key}_uncertainty_lower')
+            upper = self.__getattr__(f'{key}_uncertainty_upper')
             return np.abs(lower), np.abs(upper)
-        except KeyError:
+        except (KeyError, AssertionError):
             # this can be removed after debugging
             self.speak(f'no asymmetric uncertainties found for "{key}"')
 
-
         # first try for an `uncertainty_{key}` column
         try:
-            sym = self.standard[f'{key}_uncertainty']
+            sym = self.__getattr__(f'{key}_uncertainty')
             return np.abs(sym), np.abs(sym)
-        except KeyError:
+        except (KeyError, AssertionError):
             # this can be removed after debugging
             self.speak(f'no symmetric uncertainties found for "{key}"')
 
         # then give up and return nans
-        unc = np.nan*self.standard[key]
+        unc = np.nan*self.__getattr__(key)
         return unc, unc
-
 
     def single(self, name):
         '''
@@ -457,6 +456,8 @@ class Population(Talker):
 
         return b
 
+
+
     # the 1360 W/m^2 that Earth receives from the Sun
     earth_insolation = (1*u.Lsun/4/np.pi/u.AU**2).to(u.W/u.m**2)
 
@@ -479,6 +480,32 @@ class Population(Talker):
         sigma = con.sigma_sb
         A = 1
         return ((f*A/4/sigma)**(1/4)).to(u.K)
+
+    @property
+    def transit_depth(self):
+        '''
+        The depth of the transit
+        (FIXME, clarify if this is 1.5-3.5 or what)
+        '''
+
+        # pull out the actual values from the table
+        d = self.standard['transit_depth'].copy().quantity
+
+        # try to replace bad ones with NVK3L
+        bad = np.isfinite(d) == False
+        self.speak(f'{sum(bad)}/{self.n} transit depths are missing')
+
+        Rp = self.planet_radius[bad]
+        Rs = self.stellar_radius[bad]
+
+        d[bad] = (Rp/Rs).decompose()**2
+
+        # report those that are still bad
+        stillbad = np.isfinite(d) == False
+        self.speak(f'{sum(stillbad)}/{self.n} are still missing after Rp/Rs')
+
+        return d
+
 
     @property
     def transit_duration(self):
@@ -629,9 +656,6 @@ class Population(Talker):
         durationinminutes = self.transit_duration*24.0*60.0
         return cheopsnoiseperminute/np.sqrt(durationinminutes)
 
-    @property
-    def depth(self):
-        return (self.planet_radius*craftroom.units.Rearth/self.stellar_radius/craftroom.units.Rsun)**2
 
     def scatter(self, xname, yname, c=None, s=None, names=True, xlog=True, ylog=True, **kw):
         '''Plot one parameter against another.'''
@@ -660,7 +684,7 @@ class Population(Talker):
         '''Plot the planets as thumbtacks.'''
         def scale(d):
             return np.array(d)**1.5
-        r = scale(self.distance)
+        r = scale(self.stellar_distance)
         x, y = r*np.cos(self.ra*np.pi/180), r*np.sin(self.ra*np.pi/180)
         plt.ion()
         plt.figure('thumbtacks')
@@ -679,7 +703,7 @@ class Population(Talker):
             ax.text(radii*np.cos(angle), radii*np.sin(angle), '{0:.0f} pc'.format(originalradius), rotation=90+ angle*180/np.pi, va='bottom', ha='center', size=13, weight='extra bold', **gridkw)
 
         ax.plot(x, y, marker='o', alpha=0.5, color='gray', linewidth=0, markeredgewidth=0)
-        close = (self.name == 'WASP-94A b').nonzero()[0]#(self.distance < maxr).nonzero()[0]
+        close = (self.name == 'WASP-94A b').nonzero()[0]#(self.stellar_distance < maxr).nonzero()[0]
         if labels:
             for c in close:
                 plt.text(x[c], y[c], self.name[c])

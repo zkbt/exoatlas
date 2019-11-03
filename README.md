@@ -12,7 +12,7 @@ If you want to be able to modify the code youself, please also feel free to fork
 python setup.py install
 ```
 
-You probably also need [craftroom](https://github.com/zkbt/craftroom) and [thistothat](https://github.com/zkbt/thistothat).
+You probably also need [craftroom](https://github.com/zkbt/craftroom).
 
 ### Usage
 Here's a quick preview:
@@ -29,7 +29,7 @@ confirmed = TransitingExoplanets()
 print(confirmed.standard)
 
 # and there are quantities that can be derived from these
-print(confirmed.distance)
+print(confirmed.stellar_distance)
 
 # you can make your own plot
 plt.scatter(confirmed.planet_mass, confirmed.planet_radius)
@@ -40,7 +40,7 @@ plt.xscale('log')
 plt.show()
 
 # or rely on some prepackaged ones
-from exopop.PlotPanels import MassRadius
+from exopop.CommonPanels import MassRadius
 import matplotlib.pyplot as plt
 pops = dict(goodmass=confirmed)
 mr = MassRadius(pops=pops)

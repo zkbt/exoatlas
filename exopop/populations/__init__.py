@@ -1,6 +1,7 @@
 from .Population import Population, PredefinedPopulation, necessary_columns
-from .Exoplanets import Exoplanets, TransitingExoplanets
-from .TOI import TOI
-from .SolarSystem import SolarSystem
+from .Exoplanets import *
+from .TOI import *
+from .TOISubsets import *
+from .SolarSystem import *
 from .ExoplanetSubsets import *
 from .summary import *

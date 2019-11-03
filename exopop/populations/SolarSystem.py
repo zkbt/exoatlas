@@ -2,6 +2,8 @@ from ..imports import *
 from .Population import PredefinedPopulation
 import astropy.units as u
 
+__all__ = ['SolarSystem']
+
 initial_filename = directories['data'] + 'solarsystem.txt'
 
 class SolarSystem(PredefinedPopulation):
@@ -89,13 +91,9 @@ class SolarSystem(PredefinedPopulation):
         s['discoverer'] = 'humans'
         s['transit_epoch'] = np.nan*u.day
         s['transit_duration'] = np.nan*u.day
-        s['transit_depth'] = (s['planet_radius'].quantity/s['stellar_radius']).decompose()**2
+        s['transit_depth'] = (s['planet_radius'].quantity/s['stellar_radius'].quantity).decompose()**2
         s['transit_b'] = 0.0
         s['inclination'] = 90*u.deg
 
         self.standard = s
         return s
-
-    @property
-    def distance(self):
-        return np.nan*np.zeros_like(self.standard['stellar_distance'])

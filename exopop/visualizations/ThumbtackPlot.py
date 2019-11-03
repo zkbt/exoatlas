@@ -1,5 +1,5 @@
 from .imports import *
-from .BubblePlot import BubblePlot
+from .Panels import BubblePanel
 from .TransitingExoplanets import NonKepler, Kepler, TESS
 from .KOI import UnconfirmedKepler
 import datetime
@@ -16,7 +16,7 @@ angle = 30*np.pi/180#67.5
 
 
 
-class ThumbtackPlot(BubblePlot):
+class ThumbtackPlot(BubblePanel):
     '''Plot exoplanet populations on a (possibly animated) thumbtack plot.'''
 
     def __init__(self, pops, lightyears=False, **kwargs):
@@ -28,7 +28,7 @@ class ThumbtackPlot(BubblePlot):
         else:
             self.maxlabeldistance = 30.0
         self.planetfontsize=6
-        BubblePlot.__init__(self, pops=pops, **kwargs)
+        BubblePanel.__init__(self, pops=pops, **kwargs)
         self.title = 'Thumbtacks'
         self.xlabel = ''
         self.ylabel = ''
@@ -45,7 +45,7 @@ class ThumbtackPlot(BubblePlot):
     @property
     def r(self):
         '''convert the system's distance into a radial coordinate'''
-        return self.stretch(self.pop.distance)
+        return self.stretch(self.pop.stellar_distance)
 
     @property
     def theta(self):
@@ -55,12 +55,12 @@ class ThumbtackPlot(BubblePlot):
     @property
     def x(self):
         '''convert distance and RA to y'''
-        return self.stretch(self.pop.distance)*np.cos(self.theta)
+        return self.stretch(self.pop.stellar_distance)*np.cos(self.theta)
 
     @property
     def y(self):
         '''convert distance and RA to x'''
-        return self.stretch(self.pop.distance)*np.sin(self.theta)
+        return self.stretch(self.pop.stellar_distance)*np.sin(self.theta)
 
 
     def setup(self):
@@ -138,7 +138,7 @@ class ThumbtackPlot(BubblePlot):
                     size=13, weight='extra bold', **gridkw)
 
 
-    def build(self, keys=None, distances=[10,30,100,300,1000], interactive=False):
+    def build(self, keys=None, distances=[10,30,100,300,1000]):
         try:
             del self.ax
             del self.signature
@@ -155,13 +155,10 @@ class ThumbtackPlot(BubblePlot):
                 for thiskey in keys:
                     self.namestars(thiskey)
                 plt.draw()
-                plt.savefig(self.label(key))
-
-            if interactive:
-                self.input(key)
+                plt.savefig(self.fileprefix(key))
 
 
-    def movie(self, step=1.02, interactive=False, bitrate=20000, highlight='', keys=None, maxdistance=1500.0, fileprefix='exoplanetszoom'):
+    def movie(self, step=1.02, bitrate=20000, highlight='', keys=None, maxdistance=1500.0, fileprefix='exoplanetszoom'):
         metadata = dict(title='Exoplanets Zoom', artist='Zach Berta-Thompson (zkbt@mit.edu)')
         self.writer = animation.FFMpegWriter(fps=15, metadata=metadata, bitrate=bitrate)
 
@@ -204,7 +201,7 @@ class ThumbtackPlot(BubblePlot):
                 self.speak('zoomed to {0}'.format(z))
                 z *= step
                 #plt.draw()
-            #plt.savefig(self.label(key))
+            #plt.savefig(self.fileprefix(key))
 
 
     def zoom(self, distance):
@@ -233,14 +230,14 @@ class ThumbtackPlot(BubblePlot):
 
         if True:
             old = self.key + ''
-            self.set(key)
+            self.point_at(key)
 
             xlim = self.ax.get_xlim()
             ylim = self.ax.get_ylim()
             onplot = (self.x > np.min(xlim))*(self.x < np.max(xlim))* (self.y > np.min(ylim))*(self.y < np.max(ylim))
-            nottooclose = self.pop.distance > self.outer*0.2
+            nottooclose = self.pop.stellar_distance > self.outer*0.2
 
-            nottoofar = (self.pop.distance <= self.maxlabeldistance)
+            nottoofar = (self.pop.stellar_distance <= self.maxlabeldistance)
             #print np.sum(onplot*nottooclose*nottoofar)
 
             #KLUDGE!!!!!
@@ -253,40 +250,40 @@ class ThumbtackPlot(BubblePlot):
                 tolabel = tolabel[np.unique(self.x[tolabel], return_index=True)[1]]
 
             for c in tolabel:
-                #print(self.pop.name[c])
-                #self.named.append(plt.text(self.x[c], self.y[c],
-                #	self.pop.name[c].replace(' ', '') ,
-                #	color=self.pop.color, alpha=0.75, va='center',
-                #	ha='center', weight='bold', size=self.planetfontsize))
-				#- self.stretch(self.outer)*0.02
+
                 try:
                     assert(self.pop.alpha == 0)
                     downwardnudge = ''
                 except (AttributeError, AssertionError):
                     downwardnudge = '\n\n'
 
-                self.named.append(plt.text(self.x[c], self.y[c],
-                	downwardnudge + r'{}'.format(self.pop.name[c].replace(' ', '')),
-                	color=self.pop.color, alpha=self.pop.alpha, va='center',
-                	ha='center', weight='bold', size=self.planetfontsize,
-                    zorder=self.pop.zorder))
-            self.set(old)
+                text =  downwardnudge + r'{}'.format(self.pop.name[c].replace(' ', ''))
+                self.labeled[c] = plt.text(self.x[c], self.y[c], text,
+                	                     color=self.pop.color,
+                                         alpha=self.pop.alpha,
+                                         va='center',
+                	                     ha='center',
+                                         weight='bold',
+                                         size=self.planetfontsize,
+                                         zorder=self.pop.zorder)
+            self.point_at(old)
 
     def clearnames(self):
         '''Remove system names that have been added to the plot.'''
-        while(len(self.named) > 0):
+        for k in self.labeled:
             try:
-                self.named.pop().remove()
+                self.labeled[k].remove()
             except ValueError:
                 pass
+
     def plot(self, key, labels=False):
-        self.set(key)
+        self.point_at(key)
         try:
             self.ax
         except:
             self.setup()
             self.circles(self.circlegrid)
-        kw = self.kw(key)
+        kw = self.kw()
         kw['facecolors'] = self.pop.color
         kw['edgecolors'] = 'none'
         try:
@@ -306,7 +303,7 @@ class ThumbtackPlot(BubblePlot):
 
     def highlight(self, indices, label='special!'):
         print(self.pop.standard[indices])
-        kw = self.kw(self.key)
+        kw = self.kw()
         kw['marker'] = '*'
         kw['edgecolors'] = self.pop.color.replace('black', 'gray')
         kw['facecolors'] = 'white'
@@ -323,7 +320,7 @@ class ThumbtackPlot(BubblePlot):
         for i in range(len(t)):
             self.ax.text(self.x[indices][i], self.y[indices][i], r'{0:.0f}K, {1:.1f}R$_\oplus$'.format(t[i], r[i]) +'\n',
 			size=8, ha='center', va='bottom', color=self.pop.color.replace('black', 'gray'))
-            print(r[i], t[i])#, self.pop.distance[indices][i]
+            print(r[i], t[i])#, self.pop.stellar_distance[indices][i]
         #(self.name == 'WASP-94A b').nonzero()[0]
 
     def toclock(self, hour):
