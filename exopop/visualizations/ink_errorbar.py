@@ -1,7 +1,7 @@
 from ..imports import *
 from craftroom.cmaps import one2another
 from matplotlib.colors import Normalize
-from tqdm import tqdm
+
 __all__ = ['ink_errorbar']
 
 def ink_errorbar(x, y, yerr=None, xerr=None,
@@ -101,5 +101,5 @@ def ink_errorbar(x, y, yerr=None, xerr=None,
         assert(np.isfinite(y[i]))
         assert(np.isfinite(xerrtoplot).all())
         assert(np.isfinite(yerrtoplot).all())
-        
+
         plt.errorbar(x[i], y[i], xerr=xerrtoplot, yerr=yerrtoplot, **kw)

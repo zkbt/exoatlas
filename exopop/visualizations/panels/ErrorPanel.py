@@ -61,7 +61,7 @@ class ErrorPanel(Panel):
         dlny = self.y_unc/self.y
 
         # things with bigger errors should have lower weight
-        weight = (1 - np.sqrt(dlnx**2  + dlny**2)*4)
+        weight = (1 - np.sqrt(dlnx**2  + dlny**2)*1.5)
 
         # clip the weights above 1 (shouldn't exist?) or below zero
         # clipped = np.minimum(np.maximum(weight, 0), 1)

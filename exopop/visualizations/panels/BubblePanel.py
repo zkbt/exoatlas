@@ -11,9 +11,23 @@ class BubblePanel(Panel):
     informative sizes and/or colors.
     '''
 
-    def __init__(self,  size=None, normalization=1, **kw):
+    def __init__(self,  size=None, normalization=1,
+                color=None, vmin=None, vmax=None,
+                edges=False, **kw):
         '''
         Initialize a plotting panel.
+
+        Parameters
+        ----------
+        size : str, float, None
+            How should we encode the sizes of points?
+        normalization : float
+            If sizes depend on quantities, how should they be normalized?
+        edges : bool
+            True = paint bubbles as empty circles
+            False = paint bubbles as filled circles
+        **kw : dict
+            Other keywords will be passed on to Panel initialization.
         '''
 
         Panel.__init__(self, **kw)
@@ -21,16 +35,30 @@ class BubblePanel(Panel):
         # keep track of how we should assign symbols
         self.size = size
         self.normalization = normalization
+        self.edges = edges
+
+        self.color = color
+        self.vmin = vmin
+        self.vmax = vmax
+
+        # if keywords redefine any plotting parameters, store as attributes
+        for k in ['xsource', 'ysource',
+                  'xlabel', 'ylabel',
+                  'xscale', 'yscale',
+                  'xlim', 'ylim']:
+            if k in kw:
+                vars(self)[k] = kw[k]
 
     def get_sizes(self):
         '''
         The sizes of the bubbles.
         '''
         if type(self.size) == str:
+            # get that string from the pop
             x = getattr(self.pop, self.size)
             return default_size*x/self.normalization
         else:
-            return self.size
+            return self.pop.plotkw.get('s', self.size)
 
     def get_colors(self):
         '''
@@ -39,7 +67,14 @@ class BubblePanel(Panel):
         FIXME -- we should tidy up the color interface,
         for choosing between cmap and fixed colors
         '''
-        return None
+        if self.pop.ink == False:
+            return self.pop.color
+        elif type(self.color) == str:
+            # get that string from the pop
+            x = getattr(self.pop, self.color)
+            return x
+        else:
+            return self.pop.plotkw.get('color', self.color)
 
     def kw(self, key=None, **kwargs):
         '''
@@ -69,14 +104,22 @@ class BubblePanel(Panel):
                        cmap='plasma',
                        marker='o',
                        linewidth=1,
+                       vmin=self.vmin,
+                       vmax=self.vmax,
                        alpha=pop.alpha,
                        zorder=pop.zorder,
                        label=pop.label)
 
         # if not using the cmap, just draw point edges
         if default['c'] is None:
-            default['edgecolors']=pop.color,
-            default['facecolors']='none'
+            if self.edges:
+                default['edgecolors'] = pop.color
+                default['facecolors'] = 'none'
+            else:
+                default['edgecolors'] = 'none'
+                default['facecolors'] = pop.color
+        else:
+            default['edgecolors'] = 'none'
 
         # if any other keywords are provided, overwrite these defaults
         for k, v in kwargs.items():

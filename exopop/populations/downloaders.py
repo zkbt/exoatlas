@@ -6,7 +6,6 @@
 # [] implement filtering by the "where" keyword to the archive
 
 from ..imports import *
-from astroquery.mast import Catalogs
 
 class Downloader(Talker):
     expiration = np.inf
@@ -202,6 +201,10 @@ class MergedTOIDownloader(ExoFOPDownloader):
 
         # download the TIC entries for these stars
         self.speak(f'Searching for {len(t)} stars in the TIC on the MAST.')
+
+        # import Catalogs only when we need it
+        # (otherwise, we'll need the internet to ever run exopop)
+        from astroquery.mast import Catalogs
         tic_table = Catalogs.query_criteria(catalog="Tic", ID=np.unique(t['TIC ID']))
 
         # preface all the columns with TIC so we can keep them straight

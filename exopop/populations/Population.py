@@ -479,6 +479,10 @@ class Population(Talker):
         return self.insolation/self.earth_insolation
 
     @property
+    def log_relative_insolation(self):
+        return np.log10(self.relative_insolation)
+
+    @property
     def teq(self):
         '''
         The equilibrium temperature of the planet.
@@ -570,7 +574,7 @@ class Population(Talker):
         mass = self.pop.planet_mass
         volume = 4/3*np.pi*(self.pop.planet_radius)**3
         return (mass/volume).to('g/cm**3')
-        
+
     @property
     def mu(self):
         '''
@@ -601,7 +605,7 @@ class Population(Talker):
         G = con.G
         M = self.planet_mass
         R = self.planet_radius
-        return np.sqrt(2*G*M/R).to('m/s')
+        return np.sqrt(2*G*M/R).to('km/s')
 
 
     @property
@@ -632,6 +636,62 @@ class Population(Talker):
 
 
     @property
+    def transmissionsignal(self):
+        '''
+        What is the transit depth of 1 scale height of an H2-rich
+        atmosphere transiting in front of the star.
+        '''
+        H = self.scale_height
+        Rp = self.planet_radius
+        Rs = self.stellar_radius
+        depth = (2*H*Rp/Rs**2).decompose()
+
+        dlnm = self.uncertainty('planet_mass')/self.planet_mass
+        bad = dlnm > 0.5
+        depth[bad] = np.nan
+        return depth
+
+
+    @property
+    def reflectionsignal(self):
+        return (self.planet_radius/self.semimajoraxis).decompose()**2
+        #return self.transit_depth/self.transit_ar**2
+
+    ## PICK UP FROM HERE! ##
+
+    def emissionsignal(self, wavelength=5*u.micron):
+        import rainbowconnection as rc
+        star = rc.Thermal(teff=self.stellar_teff, radius=self.stellar_radius)
+        planet = rc.Thermal(teff=self.teq, radius=self.planet_radius)
+        depths = planet.spectrum(wavelength)/star.spectrum(wavelength)
+        return depths
+        #return (self.planet_radius/self.stellar_radius)**2*self.teq/self.stellar_teff
+
+    def stellar_brightness(self, wavelength=5*u.micron):
+        import rainbowconnection as rc
+        star = rc.Thermal(teff=self.stellar_teff,
+                          radius=self.stellar_radius).at(self.stellar_distance)
+        flux_in_energy = star.spectrum(wavelength)
+        photon_energy = con.h*con.c/wavelength/u.ph
+        flux_in_photons = flux_in_energy/photon_energy
+        return flux_in_photons.to('ph s^-1 m^-2 nm^-1')
+
+
+    def JWST_transit_unit(self, wavelength=5*u.micron):
+        R = 20
+        dt = 1*u.hr
+        dw = wavelength/R
+        dA = 25*u.m**2 #np.pi*(6.5*u.m)**2
+        return u.def_unit('JWST-hour-R=20', dt*dA*dw)
+
+    photon_unit = u.def_unit('Gigaphotons', 1e9*u.ph)
+
+    def stellar_brightness_JWST(self, wavelength=5*u.micron):
+        flux_in_photons = self.stellar_brightness(wavelength)
+        unit = self.photon_unit/self.JWST_transit_unit(wavelength)
+        return flux_in_photons.to(unit)
+
+    @property
     def photons(self):
         '''
         FIXME -- make this an actual flux?
@@ -640,7 +700,7 @@ class Population(Talker):
         return 10**(-0.4*self.Jmag)
 
     # PICK UP FROM HERE! THESE ARE ALL RELATIVE, SHOULD WE MAKE THEM ABSOLUTE?
-    # (e.g. define a R=10-JWST-hour as m**2*s)
+    # (e.g. define a R=20-JWST-hour as m**2*s)
     @property
     def noisepertransit(self):
         return 1.0/np.sqrt(self.photons*self.transit_duration)
@@ -652,22 +712,6 @@ class Population(Talker):
     @property
     def noise(self):
         return 1.0/np.sqrt(self.photons)
-
-
-    @property
-    def transmissionsignal(self):
-        H = self.scale_height
-        Rp = self.planet_radius
-        Rs = self.stellar_radius
-        return (2*H*Rp/Rs**2).decompose()
-
-    @property
-    def emissionsignal(self):
-        return (self.planet_radius/self.stellar_radius)**2*self.teq/self.stellar_teff
-
-    @property
-    def reflectionsignal(self):
-        return self.depth/self.transit_ar**2
 
 
     @property

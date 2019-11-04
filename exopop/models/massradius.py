@@ -30,10 +30,11 @@ def plot_seager(which='rock', **kw):
     mm = np.logspace(np.log10(min(m)), np.log10(max(m)), 1000)
     return plt.plot(mm, np.exp(fit(np.log(mm))), **kw)
 
-def plot_both_seager():
+def plot_both_seager(**kw):
     '''
     Plot both the rock and the cold H/He models from Seager et al. (2007)
     '''
     zkw = dict(linewidth=4, alpha=0.25, zorder=1.0)
+    zkw.update(**kw)
     plot_seager('hhe', label='cold H/He', color='darkorange', **zkw)
     plot_seager('rock', label='rock', color='black', **zkw)

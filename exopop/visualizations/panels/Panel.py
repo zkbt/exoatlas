@@ -37,17 +37,11 @@ class Panel(Talker):
 
     @property
     def x(self):
-        raise NotImplementedError(f"""
-        The 'x' quantity hasn't been defined for
-        {self}.
-        """)
+        return getattr(self.pop, self.xsource)
 
     @property
     def y(self):
-        raise NotImplementedError(f"""
-        The 'y' quantity hasn't been defined for
-        {self}.
-        """)
+        return getattr(self.pop, self.ysource)
 
     def setup(self, ax=None):
         '''
@@ -202,3 +196,18 @@ class Panel(Talker):
         '''
         plt.setp(self.ax.get_yticklabels(), visible=False)
         self.ax.set_ylabel('')
+
+    def ticks_simplify_exponents(self, which='xy'):
+        if 'x' in which:
+            self.ax.xaxis.set_major_formatter(FormatStrFormatter('%d'))
+        if 'y' in which:
+            self.ax.yaxis.set_major_formatter(FormatStrFormatter('%d'))
+
+    def ticks_enforce_multiple_oom(self, which='xy'):
+
+        if 'x' in which:
+            loc = LogLocator(base=10, numticks=3)
+            self.ax.xaxis.set_major_locator(loc)
+        if 'y' in which:
+            loc = LogLocator(base=10, numticks=3)
+            self.ax.yaxis.set_major_locator(loc)

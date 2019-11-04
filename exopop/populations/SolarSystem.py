@@ -19,6 +19,8 @@ class SolarSystem(PredefinedPopulation):
         PredefinedPopulation.__init__(self, label='Solar System', **kwargs)
         self.color = 'cornflowerblue'
         self.zorder = 1e10
+        self.s = 80
+        self.ink = False
 
     def load_raw(self):
         '''
