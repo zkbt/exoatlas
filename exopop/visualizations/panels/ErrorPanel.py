@@ -98,7 +98,7 @@ class ErrorPanel(Panel):
         y = remove_unit(self.y)
 
         # if the entire population is exact (Solar System), don't include errors
-        exact = (self.x_unc == 0).all() and (self.y_unc == 0).all()
+        exact = self.pop.exact #(self.x_unc == 0).all() and (self.y_unc == 0).all()
         if exact:
             plotkw = dict(color=self.pop.color,
                           edgecolor=self.pop.color,

@@ -38,6 +38,7 @@ default_plotkw = dict(color='black',
                       alpha=1,
                       zorder=0,
                       ink=True,
+                      exact=False,
                       label_planets=False)
 
 # what keywords can we set for the population plotkw?

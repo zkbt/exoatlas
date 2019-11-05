@@ -21,6 +21,7 @@ class SolarSystem(PredefinedPopulation):
         self.zorder = 1e10
         self.s = 80
         self.ink = False
+        self.exact = True
 
     def load_raw(self):
         '''
