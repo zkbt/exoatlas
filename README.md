@@ -12,8 +12,6 @@ If you want to be able to modify the code youself, please also feel free to fork
 python setup.py install
 ```
 
-You probably also need [craftroom](https://github.com/zkbt/craftroom).
-
 ### Usage
 Here's a quick preview:
 

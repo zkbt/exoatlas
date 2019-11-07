@@ -1,6 +1,5 @@
 from .Panel import *
 from ..ink_errorbar import *
-from craftroom.cmaps import one2another
 
 __all__ = ['ErrorPanel']
 
@@ -177,33 +176,3 @@ class ErrorPanel(Panel):
 
         # set the scales, limits, labels
         self.finish_plot(labelkw=labelkw)
-
-
-'''
-            r, g, b = craftroom.color.name2color(color.lower())
-            n = len(x)
-            rgba = np.zeros((n, 4))
-            rgba[:,0] = r
-            rgba[:,1] = g
-            rgba[:,2] = b
-
-            mass = x
-            radius = y
-            density = mass/radius**3
-            merr = 0.5*(mlower + mupper)[self.ok]
-            rerr = 0.5*(rlower + rupper)[self.ok]
-
-            #density_uncertainty = np.sqrt((merr/mass)**2 + 9*(rerr/radius)**2)
-            #density = mass/radius**3
-            even_uncertainty = np.sqrt((merr/mass)**2 + (rerr/radius)**2)#*density
-            density_uncertainty = np.sqrt((merr/mass)**2 + 3*(rerr/radius)**2)#*density
-            gravity_uncertainty = np.sqrt((merr/mass)**2 + 2*(rerr/radius)**2)
-
-            #assert(False)
-            weights = np.minimum(1.0/density_uncertainty**2, 50.0)/50
-
-                        #rgba[:,3] = 1.0*weights
-                        rgba[:,:3] = 1.0 - (1.0 - rgba[:,:3])*weights.reshape(len(weights), 1)
-                        rgba[:,3] = 1.0#*weights
-                        #print rgba
-'''

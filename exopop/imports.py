@@ -18,23 +18,40 @@ from astropy.visualization import quantity_support
 quantity_support()
 
 # some general custom utilities from Zach
-import craftroom.strings,  craftroom.utils, craftroom.color
 from .talker import Talker
 
 # units and constants from astropy
 import astropy.units as u, astropy.constants as con
 from astropy.time import Time
 
+
+def mkdir(path):
+	'''A mkdir that doesn't complain if it fails.'''
+	try:
+		os.mkdir(path)
+	except:
+		pass
+
+import matplotlib.colors as co
+def name2color(name):
+    """Return the 3-element RGB array of a given color name."""
+    if '#' in name:
+        h = name
+    else:
+        h = co.cnames[name].lower()
+    return co.hex2color(h)
+
 # create a directory structure in the user's home directory
 base = os.path.join(os.getenv('HOME'), '.exopop')
-craftroom.utils.mkdir(base)
+mkdir(base)
+
 directories = dict(
                     data=os.path.join(base, 'data/'),
                     plots=os.path.join(base, 'plots/'),
                     models=os.path.join(base, 'models/')
                     )
 for k in directories.keys():
-    craftroom.utils.mkdir(directories[k])
+    mkdir(directories[k])
 
 # some kludge for dealing with Python 3 vs 2?
 try:
@@ -86,3 +103,17 @@ def check_if_needs_updating(filename, maximum_age=1.0):
         old = 'y' in input('Should it be updated? [y/N]').lower()
 
     return old
+
+
+def one2another(bottom='white', top='red', alphabottom=1.0, alphatop=1.0, N=256):
+	'''
+	Create a cmap that goes smoothly (linearly in RGBA) from "bottom" to "top".
+	'''
+	rgb_bottom, rgb_top = name2color(bottom), name2color(top)
+	r = np.linspace(rgb_bottom[0],rgb_top[0],N)
+	g = np.linspace(rgb_bottom[1],rgb_top[1],N)
+	b = np.linspace(rgb_bottom[2],rgb_top[2],N)
+	a = np.linspace(alphabottom, alphatop,N)
+	colors = np.transpose(np.vstack([r,g,b,a]))
+	cmap = co.ListedColormap(colors, name='{bottom}2{top}'.format(**locals()))
+	return cmap

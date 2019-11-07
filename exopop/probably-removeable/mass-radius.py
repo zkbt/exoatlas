@@ -73,7 +73,7 @@ class MassRadius(BubblePanel):
             #    self.ax.errorbar(x, y, xerr=xerr, yerr=yerr, **kw)
 
             color = self.pop.color
-            r, g, b = craftroom.color.name2color(color.lower())
+            r, g, b = name2color(color.lower())
             n = len(x)
             rgba = np.zeros((n, 4))
             rgba[:,0] = r
