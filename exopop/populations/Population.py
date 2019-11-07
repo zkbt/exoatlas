@@ -655,20 +655,54 @@ class Population(Talker):
 
     @property
     def reflectionsignal(self):
-        return (self.planet_radius/self.semimajoraxis).decompose()**2
-        #return self.transit_depth/self.transit_ar**2
+        '''
+        What is the reflected light eclipse depth,
+        for an albedo of 100%?
+        '''
+        return 0.25*(self.planet_radius/self.semimajoraxis).decompose()**2
 
-    ## PICK UP FROM HERE! ##
 
     def emissionsignal(self, wavelength=5*u.micron):
+        '''
+        What is the thermal emission eclipse depth,
+        assuming Planck spectra for both star and planet?
+
+        This calculation assumes a Bond albedo of 0
+        and that heat is uniformly distributed over the planet.
+
+        Parameters
+        ----------
+        wavelength : astropy.unit.Quantity
+            The wavelength at which it should be calculated.
+        '''
+
+        # create thermal emission sources for both star and planet
         import rainbowconnection as rc
         star = rc.Thermal(teff=self.stellar_teff, radius=self.stellar_radius)
         planet = rc.Thermal(teff=self.teq, radius=self.planet_radius)
+
+        # calculate the depth as the luminosity ratio
         depths = planet.spectrum(wavelength)/star.spectrum(wavelength)
+
+
         return depths
-        #return (self.planet_radius/self.stellar_radius)**2*self.teq/self.stellar_teff
 
     def stellar_brightness(self, wavelength=5*u.micron):
+        '''
+        How many photons/s/m^2/nm do we receive from the star?
+
+        This is calculated from the distance, radius, and
+        stellar effective temperature of the stars.
+
+        (It could be potentially be improved with PHOENIX
+        model grids and/or cleverness with photometry.)
+
+        Parameters
+        ----------
+        wavelength : astropy.unit.Quantity
+            The wavelength at which it should be calculated.
+        '''
+
         import rainbowconnection as rc
         star = rc.Thermal(teff=self.stellar_teff,
                           radius=self.stellar_radius).at(self.stellar_distance)
@@ -679,6 +713,19 @@ class Population(Talker):
 
 
     def JWST_transit_unit(self, wavelength=5*u.micron):
+        '''
+        Create a custom astropy unit to represent
+        the collecting area of JWST
+        integrating over one hour
+        at a R=20 spectral resolution.
+
+        Parameters
+        ----------
+        wavelength : astropy.unit.Quantity
+            The wavelength at which it should be calculated.
+        '''
+
+
         R = 20
         dt = 1*u.hr
         dw = wavelength/R
@@ -688,26 +735,29 @@ class Population(Talker):
     photon_unit = u.def_unit('Gigaphotons', 1e9*u.ph)
 
     def stellar_brightness_JWST(self, wavelength=5*u.micron):
+        '''
+        The stellar brightness, converted to JWST units.
+
+        Parameters
+        ----------
+        wavelength : astropy.unit.Quantity
+            The wavelength at which it should be calculated.
+        '''
+
         flux_in_photons = self.stellar_brightness(wavelength)
         unit = self.photon_unit/self.JWST_transit_unit(wavelength)
         return flux_in_photons.to(unit)
-
-    @property
-    def photons(self):
-        '''
-        FIXME -- make this an actual flux?
-        should it be a function for photons/s/m2/nm
-        '''
-        return 10**(-0.4*self.Jmag)
 
     # PICK UP FROM HERE! THESE ARE ALL RELATIVE, SHOULD WE MAKE THEM ABSOLUTE?
     # (e.g. define a R=20-JWST-hour as m**2*s)
     @property
     def noisepertransit(self):
+        raise NotImplementedError('!')
         return 1.0/np.sqrt(self.photons*self.transit_duration)
 
     @property
     def noisepertime(self):
+        raise NotImplementedError('!')
         return 1.0/np.sqrt(self.photons/self.transit_ar)
 
     @property
@@ -717,6 +767,7 @@ class Population(Talker):
 
     @property
     def cheopsnoisepertransit(self):
+        raise NotImplementedError('!')
         #150 ppm/min for a 9th magnitude star (in V)
         cheopsnoiseperminute =  150.0/1e6/np.sqrt(10**(-0.4*(self.V - 9.0)))
         durationinminutes = self.transit_duration*24.0*60.0
