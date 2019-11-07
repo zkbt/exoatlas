@@ -1,6 +1,5 @@
 from ..imports import *
 from .panels import *
-from .CommonPanels import *
 
 
 class MultiPanelPlot(Talker):

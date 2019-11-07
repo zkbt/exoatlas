@@ -1,7 +1,7 @@
 import exopop as ex
 import matplotlib.pyplot as plt
 
-def test_():
+def test_somepanels():
     pops = {}
     pops['solarsystem'] = ex.SolarSystem()
     for p in [  ex.MassRadius,
@@ -11,6 +11,13 @@ def test_():
         plt.figure()
         p().build(pops=pops)
         plt.draw()
+
+def test_presets():
+    pops = {}
+    pops['solarsystem'] = ex.SolarSystem()
+    ex.physical_summary(pops)
+    ex.observable_summary(pops)
+
 
 def test_fourpanels():
     pops = {}

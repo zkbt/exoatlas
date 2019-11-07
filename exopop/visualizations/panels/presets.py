@@ -1,29 +1,11 @@
-from ..imports import *
-from .panels import BubblePanel, ErrorPanel
-from ..models import plot_both_seager
+from ...imports import *
+from ...models import plot_both_seager
+from .BubblePanel import BubblePanel
+from .ErrorPanel import ErrorPanel
 
-
-"""class Scatter(BubblePanel):
-    def __init__(self, **kw):
-
-        BubblePanel.__init__(self, **kw)
-
-        for k in ['xsource', 'ysource',
-                  'xlabel', 'ylabel',
-                  'xscale', 'yscale',
-                  'xlim', 'ylim']:
-            if k in kw:
-                vars(self)[k] = kw[k]
-
-    @property
-    def x(self):
-        return getattr(self.pop, self.xsource)
-
-    @property
-    def y(self):
-        return getattr(self.pop, self.ysource)
-"""
-Scatter = BubblePanel
+# FIXME - perhaps define some common x-axes and y-axes, so that we
+# can define new classes simply from inheriting from them in the
+# correct order. (We'll need to look up and practice multiple inherits.)
 
 class FluxRadius(BubblePanel):
     xsource='relative_insolation'
@@ -37,6 +19,11 @@ class FluxRadius(BubblePanel):
     ylim = [0.3, 30]
 
     def add_teq_axis(self):
+        '''
+        Add an extra axis along the bottom of this panel,
+        quoting the equilibrium temperature associated
+        with a particular bolometric flux received.
+        '''
 
         ax_temp = self.ax.twiny()
         mn, mx = self.ax.get_xlim()
@@ -55,6 +42,10 @@ class FluxRadius(BubblePanel):
         plt.sca(self.ax)
 
     def plot_hz(self, color='cornflowerblue', alpha=0.25, linewidth=0, **kw):
+        '''
+        Add a bar that indicates an approximate habitable zone.
+        (Estimated very roughly by eye from Kopparapu et al.)
+        '''
         plt.axvspan(1.4, 0.4, color=color, alpha=alpha, linewidth=linewidth, **kw)
 
 
@@ -285,6 +276,12 @@ class FluxEscape(ErrorPanel):
         '''
         Plot the escape velocity vs insolation for
         different constant values of the escape parameter.
+
+        This assumes the exosphere is at the planet's equilibrium
+        temperature, which is is *terrible* approximation. This
+        also represented the *current* escape parameter, saying
+        nothing about the history of XUV radiation the planet
+        may have received.
 
         Parameters
         ----------

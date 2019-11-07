@@ -40,7 +40,7 @@ plt.xscale('log')
 plt.show()
 
 # or rely on some prepackaged ones
-from exopop.CommonPanels import MassRadius
+from exopop.presets import MassRadius
 import matplotlib.pyplot as plt
 pops = dict(goodmass=confirmed)
 mr = MassRadius(pops=pops)
