@@ -151,7 +151,7 @@ class TOI(PredefinedPopulation):
 
         othercolumns = {'ACWG': 'ACWG',
              'Comments': 'Comments',
-             'Date TOI Created (UTC)': 'Date TOI Created (UTC)',
+             'Date TOI Edited (UTC)': 'Date TOI Edited (UTC)',
              'Master': 'Priority-Master',
              'Planet Num': 'Planet Number',
              'Planet SNR': 'Planet SNR',

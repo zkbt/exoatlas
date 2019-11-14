@@ -7,47 +7,24 @@ To install, this simplest way is probably simply to install it directly via `pip
 pip install git+https://github.com/zkbt/exopop
 ```
 
-If you want to be able to modify the code youself, please also feel free to fork/clone this repository and install it into you local Python library via the command (from the main `exopop/` repository directory):
+If you want to be able to modify the code yourself, please also feel free to fork/clone this repository onto your own computer and install directly from that editable package. For example, this might look like:
 ```
-python setup.py install
+git clone https://github.com/zkbt/exopop.git
+cd exopop
+pip install -e .
 ```
+This will link the installed version of the `exopop` package to your local repository. Changes you make to the code in the repository should be reflected in the version Python sees when it tries to `import exopop`.
 
 ### Usage
 Here's a quick preview:
 
 ```
-import matplotlib.pyplot as plt
-import numpy as np
-
-# pull the confirmed exoplanets from the NASA Exoplanet Archive
-from exopop.TransitingExoplanets import TransitingExoplanets
-confirmed = TransitingExoplanets()
-
-# there's a standardized table of properties
-print(confirmed.standard)
-
-# and there are quantities that can be derived from these
-print(confirmed.stellar_distance)
-
-# you can make your own plot
-plt.scatter(confirmed.planet_mass, confirmed.planet_radius)
-plt.ylim(0.5, 30)
-plt.xlim(0.5, 1000)
-plt.yscale('log')
-plt.xscale('log')
-plt.show()
-
-# or rely on some prepackaged ones
-from exopop.presets import MassRadius
-import matplotlib.pyplot as plt
-pops = dict(goodmass=confirmed)
-mr = MassRadius(pops=pops)
-mr.build()
-mr.ax.set_ylim(0.5, 30)
-mr.ax.set_xlim(0.5, 1000)
-mr.ax.set_yscale('log')
-mr.ax.set_xscale('log')
-plt.show()
+from exopop import *
+exo = TransitingExoplanets()
+solar = SolarSystem()
+pops = {'solar':solar,
+        'exo':exo}
+physical_summary(pops)
 ```
 
 ### Authors
