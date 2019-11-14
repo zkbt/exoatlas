@@ -4,7 +4,7 @@ from .Population import Population
 
 initial_filename = directories['data'] + 'TESSsimulations.tsv'
 
-class PredictedTESS(Population):
+class PredictedTESS(PredefinedPopulation):
     '''TESS population object contains a simulated TESS planet yield
         from 200,000 two-minute cadence postage stamps,
         as calculated by Peter Sullivan et al. (2015)'''
@@ -17,33 +17,33 @@ class PredictedTESS(Population):
 
     def loadFromScratch(self):
 
-        self.table = astropy.io.ascii.read(initial_filename)
+        self.table = ascii.read(initial_filename)
         self.speak('loaded TESS simulated population from {0}'.format(initial_filename))
 
-    def trimRaw(self):
+    def trim_raw(self):
         self.trimmed = self.table
 
-    def createStandard(self):
+    def create_standard(self):
         t = self.trimmed
-        s = astropy.table.Table()
+        s = Table()
         s['name'] = ['tess{0:04}i'.format(i) for i in range(len(t))]
         s['kepid'] = None
         s['period'] = t['P']
-        s['teff'] = t['Teff']
+        s['stellar_teff'] = t['stellar_teff']
         s['stellar_radius'] = t['Rstar']
-        s['J'] = t['Jmag']
-        s['V'] = t['Vmag']
+        s['Jmag'] = t['Jmag']
+        s['Vmag'] = t['Vmag']
 
         s['planet_radius'] = t['Rplanet']
-        s['planet_radius_lower'] = np.zeros_like(t['Rplanet']) + 0.0001
-        s['planet_radius_upper'] = np.zeros_like(t['Rplanet']) + 0.0001
+        s['planet_radius_uncertainty_lower'] = np.zeros_like(t['Rplanet']) + 0.0001
+        s['planet_radius_uncertainty_upper'] = np.zeros_like(t['Rplanet']) + 0.0001
 
         s['planet_mass'] = np.nan + np.zeros_like(t['Rplanet'])
-        s['planet_mass_lower'] = np.nan + np.zeros_like(t['Rplanet'])
-        s['planet_mass_upper'] = np.nan + np.zeros_like(t['Rplanet'])
+        s['planet_mass_uncertainty_lower'] = np.nan + np.zeros_like(t['Rplanet'])
+        s['planet_mass_uncertainty_upper'] = np.nan + np.zeros_like(t['Rplanet'])
 
         s['teq'] = 280.0*t['S/SEarth']**0.25
-        s['a_over_r'] = 0.5*(s['teff']/s['teq'])**2
+        s['transit_ar'] = 0.5*(s['stellar_teff']/s['teq'])**2
         s['rv_semiamplitude'] = t['K']
         s['radius_ratio'] = t['Rplanet']*craftroom.units.Rearth/(t['Rstar']*craftroom.units.Rsun)
         s['stellar_distance'] = 10*10**(0.2*t['Dist']) + np.nan

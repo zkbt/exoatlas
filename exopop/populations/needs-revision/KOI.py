@@ -11,14 +11,14 @@ def downloadLatest():
     print('downloading the latest list of confirmed exoplanets from the Exoplanet Archive')
     request.urlretrieve(url, initial_filename)
 
-class KOI(Population):
+class KOI(PredefinedPopulation):
     def __init__(self, label='KOI', **kwargs):
         '''Initialize a population of KOI's, from Exoplanet archive.'''
 
         # set up the population
         Population.__init__(self, label=label, **kwargs)
         correct(self)
-        self.saveStandard()
+        self.save_standard()
         # defing some plotting parameters
         self.color = 'gray'
         self.zorder = -1
@@ -28,17 +28,17 @@ class KOI(Population):
 
         # load from a NASA Exoplanet Archive csv file
         try:
-            self.table = astropy.io.ascii.read(initial_filename)
+            self.table = ascii.read(initial_filename)
         except IOError:
             downloadLatest()
-            self.table = astropy.io.ascii.read(initial_filename)
+            self.table = ascii.read(initial_filename)
 
         self.speak('loaded Exoplanet Archive KOIs from {0}'.format(initial_filename))
 
         # report original size
         self.speak('original table contains {0} elements'.format(len(self.table)))
 
-    def trimRaw(self):
+    def trim_raw(self):
         ok = (self.table['koi_jmag'] > 1.0)* \
                 (self.table['koi_srad'] > 0)* \
                 (self.table['koi_disposition'] != 'FALSE POSITIVE')* \
@@ -52,11 +52,11 @@ class KOI(Population):
 
 
 
-    def createStandard(self):
+    def create_standard(self):
         t = self.trimmed
         n = len(t)
 
-        s = astropy.table.Table()
+        s = Table()
         s['name'] = t['kepler_name']#[t['kepler_name'][i] + t['pl_letter'][i] for i in range(len(t))]
         for i in range(n):
             if t['kepler_name'][i] != '0':
@@ -67,25 +67,25 @@ class KOI(Population):
 
         s['transit_duration'] = t['koi_duration']/24.0
 
-        s['teff'] = t['koi_steff']
+        s['stellar_teff'] = t['koi_sstellar_teff']
         s['stellar_radius'] = t['koi_srad']
-        s['J'] = t['koi_jmag']
+        s['Jmag'] = t['koi_jmag']
 
         # planet radius
         s['planet_radius'] = t['koi_prad']
-        s['planet_radius_upper'] = t['koi_prad_err1']
-        s['planet_radius_lower'] = t['koi_prad_err2']
+        s['planet_radius_uncertainty_upper'] = t['koi_prad_err1']
+        s['planet_radius_uncertainty_lower'] = t['koi_prad_err2']
 
 
         #KLUDGE?
-        s['a_over_r'] = t['koi_dor']
+        s['transit_ar'] = t['koi_dor']
 
         #KLUDGE?
         #s['rv_semiamplitude'] =  t['pl_rvamp'] #t.MaskedColumn(t['K'], mask=t['K']==0.0)
 
         s['planet_mass'] = np.zeros(n) + np.nan
-        s['planet_mass_upper'] = np.zeros(n) + np.nan
-        s['planet_mass_lower'] = np.zeros(n) + np.nan
+        s['planet_mass_uncertainty_upper'] = np.zeros(n) + np.nan
+        s['planet_mass_uncertainty_lower'] = np.zeros(n) + np.nan
 
 
         s['radius_ratio'] = t['koi_ror']
@@ -94,23 +94,23 @@ class KOI(Population):
         s['ra'] = t.MaskedColumn(t['ra'], mask=badpos)
         s['dec'] = t.MaskedColumn(t['dec'], mask=badpos)
 
-        s['b'] = t['koi_impact']
+        s['transit_b'] = t['koi_impact']
 
 
         s['stellar_distance'] = np.zeros(n) + np.nan
-        s['stellar_distance_upper'] = np.zeros(n) + np.nan
-        s['stellar_distance_lower'] = np.zeros(n) + np.nan
+        s['stellar_distance_uncertainty_upper'] = np.zeros(n) + np.nan
+        s['stellar_distance_uncertainty_lower'] = np.zeros(n) + np.nan
 
         s['disposition'] = t['koi_disposition']
 
         # a little kludge
-        #s['teff'][s['name'] == 'GJ 436b'] = 3400.0
-        #s['teff'][s['name'] == 'Qatar-1b'] = 4860.0
+        #s['stellar_teff'][s['name'] == 'GJ 436b'] = 3400.0
+        #s['stellar_teff'][s['name'] == 'Qatar-1b'] = 4860.0
         #s['stellar_radius'][s['name'] == 'WASP-100b'] = 1.5#???
         s.sort('name')
         self.standard = s
 
-class Subset(KOI):
+class ExoplanetSubsets(KOI):
     def __init__(self, label, color='black', zorder=0):
 
         # set the label
@@ -120,7 +120,7 @@ class Subset(KOI):
         try:
             # first try to load this population
             Talker.__init__(self)
-            self.loadStandard()
+            self.load_standard()
         except IOError:
             # if that fails, recreate it from the confirmed population
             KOI.__init__(self)
@@ -133,14 +133,14 @@ class Subset(KOI):
         self.speak('removing {0} rows'.format(np.sum(tr)))
         self.removeRows(tr)
         self.speak('leaving {0} rows'.format(self.n))
-        self.saveStandard()
+        self.save_standard()
 
-class UnconfirmedKepler(Subset):
+class UnconfirmedKepler(ExoplanetSubsets):
     def __init__(self):
-        Subset.__init__(self, label="Kepler (candidates)", color='gray', zorder=-1e6)
+        ExoplanetSubsets.__init__(self, label="Kepler (candidates)", color='gray', zorder=-1e6)
         self.ink=True
 
     def toRemove(self):
         isconfirmed = self.standard['disposition'] == 'CONFIRMED'
-        isjunk = self.distance == 10.0
+        isjunk = self.stellar_distance == 10.0
         return isconfirmed | isjunk

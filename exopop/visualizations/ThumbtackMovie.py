@@ -1,5 +1,5 @@
 from exopop.ThumbtackPlot import ThumbtackPlot
-from exopop.Confirmed import GoodMass, BadMass, Kepler, NonKepler
+from exopop.TransitingExoplanets import GoodMass, BadMass, Kepler, NonKepler
 from exopop.KOI import UnconfirmedKepler
 from exopop.TESS import TESS
 

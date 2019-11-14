@@ -5,19 +5,11 @@ def readme():
     with open('README.md') as f:
         return f.read()
 
-# Hackishly inject a constant into builtins to enable importing of the
-# package before the library is built.
-import sys
-if sys.version_info[0] < 3:
-    import __builtin__ as builtins
-else:
-    import builtins
-builtins.__EXOPOP_SETUP__ = True
-import exopop
-version = exopop.__version__
+# a little kludge to get the version number from __version__
+exec(open('exopop/version.py').read())
 
 setup(name = "exopop",
-    version = version,
+    version = __version__,
     description = "Tools for compiling and plotting populations of transiting exoplanets.",
     long_description = readme(),
     author = "Zachory K. Berta-Thompson",
@@ -31,6 +23,12 @@ setup(name = "exopop",
       'Programming Language :: Python',
       'Topic :: Scientific/Engineering :: Astronomy'
       ],
-    install_requires=['numpy>=1.9'],
+    install_requires=['numpy>=1.13',
+                      'matplotlib',
+                      'astropy>=3.2',
+                      'astroquery>=0.3.9',
+                      'rainbow-connection>=0.0.1',
+                      'tqdm'],
+    python_requires='>3',
     zip_safe=False
 )
