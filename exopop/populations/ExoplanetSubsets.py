@@ -81,14 +81,17 @@ class Ground(ExoplanetSubsets):
 
 sigma = 2.5
 def mass_is_good(pop):
-    # the uncertainty must be greater than 0
-    exists = pop.uncertainty('planet_mass') > 0
 
-    # the uncertainty must be less than a maximum
-    fractional = (pop.uncertainty('planet_mass')/pop.planet_mass)
-    small = fractional < pop.maximum_uncertainty
+    with np.errstate(invalid='ignore'):
+        
+        # the uncertainty must be greater than 0
+        exists = pop.uncertainty('planet_mass') > 0
 
-    return small & exists
+        # the uncertainty must be less than a maximum
+        fractional = (pop.uncertainty('planet_mass')/pop.planet_mass)
+        small = fractional < pop.maximum_uncertainty
+
+        return small & exists
 
 class GoodMass(ExoplanetSubsets):
     def __init__(self, sigma=sigma, **kw):

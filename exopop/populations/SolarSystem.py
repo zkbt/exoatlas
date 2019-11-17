@@ -4,7 +4,8 @@ import astropy.units as u
 
 __all__ = ['SolarSystem']
 
-initial_filename = directories['data'] + 'solarsystem.txt'
+initial_filename = resource_filename(__name__,
+                                     'data/solarsystem/solarsystem.txt')
 
 class SolarSystem(PredefinedPopulation):
     '''The Solar System, very crudely.'''

@@ -17,7 +17,9 @@ def plot_seager(which='rock', **kw):
     assert((which.lower() == 'rock') or
            (which.lower() == 'hhe'))
 
-    file = os.path.join(directories['models'], f'gj1214mr_{which}.txt')
+
+    file = resource_filename(__name__,
+                             f'data/seager/gj1214mr_{which}.txt')
 
     # load the values
     m, r = np.transpose(np.loadtxt(file))

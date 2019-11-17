@@ -1,1 +1,2 @@
-from .massradius import *
+from .seager import *
+from .zeng import *

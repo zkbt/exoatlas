@@ -235,6 +235,20 @@ class MassRadius(ErrorPanel):
         plt.sca(self.ax)
         plot_both_seager(**kw)
 
+    def plot_constant_density(self, densities=10.0**np.arange(-4,7)*u.g/u.cm**3,
+                                    color='coral',
+                                    alpha=0.5,
+                                    zorder=-100,
+                                    **kw):
+        for density in densities:
+            mass = np.logspace(-2, 3)*u.Mearth
+            radius = (mass/density/4/np.pi*3)**(1/3)
+            plt.plot(mass, radius.to(u.Rearth),
+                             color=color, 
+                             alpha=alpha,
+                             zorder=zorder,
+                             **kw)
+
 class FluxEscape(ErrorPanel):
 
     ysource='escape_velocity'

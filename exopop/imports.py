@@ -26,6 +26,8 @@ import astropy.units as u, astropy.constants as con
 from astropy.time import Time
 
 
+
+
 def mkdir(path):
 	'''A mkdir that doesn't complain if it fails.'''
 	try:
@@ -53,6 +55,9 @@ directories = dict(
                     )
 for k in directories.keys():
     mkdir(directories[k])
+
+from pkg_resources import resource_filename
+
 
 # some kludge for dealing with Python 3 vs 2?
 try:

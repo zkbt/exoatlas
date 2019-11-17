@@ -121,7 +121,8 @@ def test_indexing():
     a = p[[]]
     b = p[5]
     c = p[0:10]
-    d = p[p.stellar_radius < 1.0*u.Rsun]
+    with np.errstate(invalid='ignore'):
+        d = p[p.stellar_radius < 1.0*u.Rsun]
     e = p['GJ 1214b']
     f = p[['GJ 1214b', 'LHS 1140b']] #'GJ 1132b',
     g = p[p.discoverer == 'Kepler']
