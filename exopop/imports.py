@@ -1,6 +1,8 @@
 # imports that are need by many exopop subsections
 import os, sys, time, shutil, warnings
+from unittest import mock
 from tqdm import tqdm
+
 
 import numpy as np, matplotlib.pyplot as plt, matplotlib.animation as animation
 from matplotlib.ticker import ScalarFormatter, FormatStrFormatter, LogLocator

@@ -23,7 +23,8 @@ def test_transitingexoplanets():
     '''
     Can we make a population of confirmed transiting exoplanets?
     '''
-    p = TransitingExoplanets(skip_update=True)
+    with mock.patch('builtins.input', return_value=""):
+        p = TransitingExoplanets()
     p.validate_columns()
     return p
 
@@ -31,7 +32,8 @@ def test_exoplanets():
     '''
     Can we make a population of confirmed exoplanets?
     '''
-    p = Exoplanets(skip_update=True)
+    with mock.patch('builtins.input', return_value=""):
+        p = Exoplanets()
     p.validate_columns()
     return p
 
@@ -39,7 +41,8 @@ def test_kepler():
     '''
     Can we make a population of confirmed Kepler planets?
     '''
-    p = Kepler(skip_update=True)
+    with mock.patch('builtins.input', return_value=""):
+        p = Kepler()
     p.validate_columns()
     return p
 
@@ -48,7 +51,8 @@ def test_nonkepler():
     '''
     Can we make a population of confirmed non-Kepler planets?
     '''
-    p = NonKepler(skip_update=True)
+    with mock.patch('builtins.input', return_value=""):
+        p = NonKepler()
     p.validate_columns()
     return p
 
@@ -56,7 +60,8 @@ def test_tess():
     '''
     Can we make a population of confirmed TESS planets?
     '''
-    p = TESS(skip_update=True)
+    with mock.patch('builtins.input', return_value=""):
+        p = TESS()
     p.validate_columns()
     return p
 
@@ -64,7 +69,8 @@ def test_nontess():
     '''
     Can we make a population of confirmed TESS planets?
     '''
-    p = NonTESS(skip_update=True)
+    with mock.patch('builtins.input', return_value=""):
+        p = NonTESS()
     p.validate_columns()
     return p
 
@@ -72,7 +78,8 @@ def test_space():
     '''
     Can we make a population of confirmed space-discovered planets?
     '''
-    p = Space(skip_update=True)
+    with mock.patch('builtins.input', return_value=""):
+        p = Space()
     p.validate_columns()
     return p
 
@@ -80,7 +87,8 @@ def test_ground():
     '''
     Can we make a population of confirmed ground-discovered planets?
     '''
-    p = Ground(skip_update=True)
+    with mock.patch('builtins.input', return_value=""):
+        p = Ground()
     p.validate_columns()
     return p
 
@@ -88,7 +96,8 @@ def test_goodmass():
     '''
     Can we make a population of confirmed planets with good masses?
     '''
-    p = GoodMass(skip_update=True)
+    with mock.patch('builtins.input', return_value=""):
+        p = GoodMass()
     p.validate_columns()
     return p
 
@@ -96,7 +105,8 @@ def test_badmass():
     '''
     Can we make a population of confirmed planets with bad masses?
     '''
-    p = BadMass(skip_update=True)
+    with mock.patch('builtins.input', return_value=""):
+        p = BadMass()
     p.validate_columns()
     return p
 
@@ -104,7 +114,8 @@ def test_indexing():
     '''
     Can we make a population of confirmed transiting exoplanets?
     '''
-    p = TransitingExoplanets(skip_update=True)
+    with mock.patch('builtins.input', return_value=""):
+        p = TransitingExoplanets()
 
     # try different subsets
     a = p[[]]

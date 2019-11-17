@@ -1,16 +1,17 @@
+from exopop.imports import *
 from exopop.populations.downloaders import *
 
 def test_exoplanets():
-    return exoplanets.get(skip_update=True)
+    with mock.patch('builtins.input', return_value=""):
+        return exoplanets.get()
 
 def test_composite():
-    return composite_exoplanets.get(skip_update=True)
-
-def test_composite():
-    return merged_exoplanets.get(skip_update=True)
+    with mock.patch('builtins.input', return_value=""):
+        return merged_exoplanets.get()
 
 def test_tess():
-    return toi_exofop.get(skip_update=True)
+    with mock.patch('builtins.input', return_value=""):
+        return toi_exofop.get()
 
 if __name__ == '__main__':
     a = test_exoplanets()
