@@ -1,0 +1,1 @@
+This directory contains models that we may want to be able to call from within the package. We should avoid putting anything too big or specific here, but small and common things like mass-radius relationships or habitable zones should be fine.

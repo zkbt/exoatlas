@@ -1,0 +1,1 @@
+This directory contains pre-defined populations that we may want to be able to call from within the package. This should probably only be the Solar System, but perhaps some reasonable simulated or calculated reference populations might make sense too.
