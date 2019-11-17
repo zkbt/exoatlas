@@ -1,5 +1,5 @@
-from exopop.imports import *
-from exopop.populations.downloaders import *
+from exoatlas.imports import *
+from exoatlas.populations.downloaders import *
 
 def test_exoplanets():
     with mock.patch('builtins.input', return_value=""):

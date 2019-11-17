@@ -1,5 +1,5 @@
-from exopop.imports import *
-from exopop.populations import *
+from exoatlas.imports import *
+from exoatlas.populations import *
 
 def test_population():
     '''

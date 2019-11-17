@@ -4,7 +4,7 @@ from .panels import *
 
 class MultiPanelPlot(Talker):
     '''
-    Make and modify row or a column of connected exopop plot panels.
+    Make and modify row or a column of connected exoatlas plot panels.
     '''
 
     def __init__(self, panels=[MassRadius, FluxRadius, StellarRadius, DistanceRadius],

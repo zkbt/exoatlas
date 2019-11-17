@@ -1,25 +1,25 @@
-# exopop
+# exoatlas
 Tools for compiling and plotting populations of transiting exoplanets. It's still a bit of a work in progress, but can be generally useful for downloading and working with exoplanet populations.
 
 ### Installation
 To install, this simplest way is probably simply to install it directly via `pip` from any UNIX prompt:
 ```
-pip install git+https://github.com/zkbt/exopop
+pip install git+https://github.com/zkbt/exoatlas
 ```
 
 If you want to be able to modify the code yourself, please also feel free to fork/clone this repository onto your own computer and install directly from that editable package. For example, this might look like:
 ```
-git clone https://github.com/zkbt/exopop.git
-cd exopop
+git clone https://github.com/zkbt/exoatlas.git
+cd exoatlas
 pip install -e .
 ```
-This will link the installed version of the `exopop` package to your local repository. Changes you make to the code in the repository should be reflected in the version Python sees when it tries to `import exopop`.
+This will link the installed version of the `exoatlas` package to your local repository. Changes you make to the code in the repository should be reflected in the version Python sees when it tries to `import exoatlas`.
 
 ### Usage
 Here's a quick preview:
 
 ```
-from exopop import *
+from exoatlas import *
 exo = TransitingExoplanets()
 solar = SolarSystem()
 pops = {'solar':solar,

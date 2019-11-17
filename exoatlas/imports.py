@@ -1,4 +1,4 @@
-# imports that are need by many exopop subsections
+# imports that are need by many exoatlas subsections
 import os, sys, time, shutil, warnings
 from unittest import mock
 from tqdm import tqdm
@@ -45,14 +45,10 @@ def name2color(name):
     return co.hex2color(h)
 
 # create a directory structure in the user's home directory
-base = os.path.join(os.getenv('HOME'), '.exopop')
+base = os.path.join(os.getenv('HOME'), '.exoatlas')
 mkdir(base)
 
-directories = dict(
-                    data=os.path.join(base, 'data/'),
-                    plots=os.path.join(base, 'plots/'),
-                    models=os.path.join(base, 'models/')
-                    )
+directories = dict(data=os.path.join(base, 'data/'))
 for k in directories.keys():
     mkdir(directories[k])
 

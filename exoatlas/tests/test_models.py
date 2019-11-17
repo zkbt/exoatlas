@@ -1,4 +1,4 @@
-from exopop.models import *
+from exoatlas.models import *
 
 def test_seager():
     plot_both_seager()

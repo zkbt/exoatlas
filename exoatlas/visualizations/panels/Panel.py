@@ -1,7 +1,7 @@
 # general class for plotting exoplanet populations
 # all other panels derive from this one
 
-from exopop.imports import *
+from exoatlas.imports import *
 
 # set the aspect ratios
 aspect = 768/1024.0

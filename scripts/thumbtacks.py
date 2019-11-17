@@ -6,8 +6,8 @@ other known transiting exoplanets.
 It still has some kludges in it.
 ''''
 
-from exopop.ThumbtackPlot import ThumbtackPlot
-from exopop.TransitingExoplanets import Kepler, TESS, Others
+from exoatlas.ThumbtackPlot import ThumbtackPlot
+from exoatlas.TransitingExoplanets import Kepler, TESS, Others
 import numpy as np, matplotlib.pyplot as plt
 
 

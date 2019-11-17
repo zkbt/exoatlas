@@ -1,4 +1,4 @@
-import exopop as ex
+import exoatlas as ex
 import matplotlib.pyplot as plt
 
 def test_somepanels():

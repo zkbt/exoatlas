@@ -6,17 +6,17 @@ def readme():
         return f.read()
 
 # a little kludge to get the version number from __version__
-exec(open('exopop/version.py').read())
+exec(open('exoatlas/version.py').read())
 
-setup(name = "exopop",
+setup(name = "exoatlas",
     version = __version__,
     description = "Tools for compiling and plotting populations of transiting exoplanets.",
     long_description = readme(),
     author = "Zachory K. Berta-Thompson",
     author_email = "zkbt@mit.edu",
-    url = "https://github.com/zkbt/exopop",
+    url = "https://github.com/zkbt/exoatlas",
     packages = find_packages(),
-    package_data = {'exopop':['populations/data/*.txt',
+    package_data = {'exoatlas':['populations/data/*.txt',
                               'models/data/*.txt',
                               'models/data/*.csv']},
     include_package_data=True,

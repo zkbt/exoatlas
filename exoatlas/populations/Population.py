@@ -947,7 +947,7 @@ class PredefinedPopulation(Population):
     def load_standard(self, skip_update=False):
         '''
         Load a standardized population table. Generally this
-        will be from a file like ~/.exopop/standardized-*.txt
+        will be from a file like ~/.exoatlas/standardized-*.txt
 
         Returns
         -------
@@ -979,7 +979,7 @@ class PredefinedPopulation(Population):
     def save_standard(self, standard):
         '''
         Save the standardized table out to a text file
-        like ~/exopop/standardized-*.txt
+        like ~/exoatlas/standardized-*.txt
         '''
 
         # save it as an ascii table for humans to read

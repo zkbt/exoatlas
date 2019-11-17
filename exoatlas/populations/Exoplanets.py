@@ -192,8 +192,10 @@ class TransitingExoplanets(Exoplanets):
         # does this planet transit?
         masks['transits'] = raw['pl_tranflag'] == 1
 
-        # is this a planetar-size object
-        masks['size'] = raw['pl_rade'] < 30
+        with np.errstate(invalid='ignore'):
+
+            # is this a planetar-size object
+            masks['size'] = raw['pl_rade'] < 30
 
 
         # does this planet have a J magnitude?
