@@ -50,7 +50,7 @@ exec(open('exoatlas/version.py').read())
 # run the setup function
 setup(
     # the name folks can use to search for this with pip
-    name = "exoatlas",
+    name = "exoplanet-atlas",
     # this package will only be installed if the current version doesn't exist
     version = __version__,
     # what's a short description of the package?
@@ -68,9 +68,9 @@ setup(
     # are there directories of data that should be accessible when installed?
     include_package_data=True,
     # where are those data directories?
-    package_data = {'exoatlas':['populations/data/*.txt',
-                              'models/data/*.txt',
-                              'models/data/*.csv']},
+    package_data = {'exoatlas':['populations/data/*/*.txt',
+                                'models/data/*/*.txt',
+                                'models/data/*/*.csv']},
     # any scripts will be copied into your $PATH, to run from the command line
     scripts = [],
     # some descriptions about this package (for searchability?)
