@@ -68,9 +68,7 @@ setup(
     # are there directories of data that should be accessible when installed?
     include_package_data=True,
     # where are those data directories?
-    package_data = {'exoatlas':['populations/data/*/*.txt',
-                                'models/data/*/*.txt',
-                                'models/data/*/*.csv']},
+    package_data = {},
     # any scripts will be copied into your $PATH, to run from the command line
     scripts = [],
     # some descriptions about this package (for searchability?)
