@@ -13,12 +13,12 @@ class FluxRadius(BubblePanel):
     xscale='log'
     xlim=[6e4, 2e-4]
 
-    ysource='planet_radius'
+    ysource='radius'
     ylabel='Planet Radius (Earth radii)'
     yscale='log'
     ylim = [0.3, 30]
 
-    def add_teq_axis(self):
+    def add_teqaxis(self):
         '''
         Add an extra axis along the bottom of this panel,
         quoting the equilibrium temperature associated
@@ -50,7 +50,7 @@ class FluxRadius(BubblePanel):
 
 
 class DistanceRadius(FluxRadius):
-    xsource = 'stellar_distance'
+    xsource = 'distance'
     xlabel = 'Distance\n(parsecs)'
     xlim = [5,1000]
 
@@ -62,7 +62,7 @@ class EscapeRadius(FluxRadius):
     xlim = [None, None]
 
 class PlanetDensityRadius(FluxRadius):
-    xsource = 'planet_density'
+    xsource = 'density'
     xlabel = 'Planet Density\n(g/cm$^3$)'
     xlim = [0.3, 12]
 
@@ -80,15 +80,15 @@ class DepthRadius(FluxRadius):
 
 
 class TransmissionRadius(DepthRadius):
-    xsource = 'transmissionsignal'
+    xsource = 'transmission_signal'
     xlabel = 'Transit Depth\nof 1 Scale Height\n of H$_2$-rich Planet'
 
 class ReflectionRadius(DepthRadius):
-    xsource = 'reflectionsignal'
+    xsource = 'reflection_signal'
     xlabel = 'Eclipse Depth\nin Reflected Light\n(100% albedo)'
 
 class EmissionRadius(DepthRadius):
-    xsource = 'emissionsignal'
+    xsource = 'emission_signal'
 
     def __init__(self, wavelength=5*u.micron, **kw):
         '''
@@ -102,7 +102,7 @@ class EmissionRadius(DepthRadius):
 
     @property
     def x(self):
-        return self.pop.emissionsignal(self.wavelength)
+        return self.pop.emission_signal(self.wavelength)
 
 
 class DistanceBrightness(DistanceRadius):
@@ -156,17 +156,17 @@ class DepthBrightness(DistanceBrightness):
         plt.plot(sigma, photons_in_unit, color=color, linewidth=linewidth, alpha=alpha, **kw)
 
 class TransmissionBrightness(DepthBrightness):
-    xsource = 'transmissionsignal'
+    xsource = 'transmission_signal'
     xlabel = 'Transit Depth\nof 1 Scale Height\n of H$_2$-rich Planet'
     xscale = 'log'
 
 class ReflectionBrightness(DepthBrightness):
-    xsource = 'reflectionsignal'
+    xsource = 'reflection_signal'
     xlabel = 'Eclipse Depth\nin Reflected Light\n(100% albedo)'
     xscale = 'log'
 
 class EmissionBrightness(DepthBrightness):
-    xsource = 'emissionsignal'
+    xsource = 'emission_signal'
     xscale = 'log'
 
     def __init__(self, wavelength=5*u.micron,
@@ -192,7 +192,7 @@ class EmissionBrightness(DepthBrightness):
 
     @property
     def x(self):
-        return self.pop.emissionsignal(self.wavelength)
+        return self.pop.emission_signal(self.wavelength)
 
 class JRadius(FluxRadius):
     xsource = 'Jmag'
@@ -217,19 +217,19 @@ class MassRadius(ErrorPanel):
 
     @property
     def x(self):
-        return self.pop.planet_mass
+        return self.pop.mass
 
     @property
     def y(self):
-        return self.pop.planet_radius
+        return self.pop.radius
 
     @property
     def x_lowerupper(self):
-        return self.pop.uncertainty_lowerupper('planet_mass')
+        return self.pop.uncertainty_lowerupper('mass')
 
     @property
     def y_lowerupper(self):
-        return self.pop.uncertainty_lowerupper('planet_radius')
+        return self.pop.uncertainty_lowerupper('radius')
 
     def plot_both_seager(self, **kw):
         plt.sca(self.ax)
@@ -277,8 +277,8 @@ class FluxEscape(ErrorPanel):
         and RV observables.
         '''
 
-        dlnm = self.pop.uncertainty('planet_mass')/self.pop.planet_mass
-        dlnr = self.pop.uncertainty('planet_radius')/self.pop.planet_radius
+        dlnm = self.pop.uncertainty('mass')/self.pop.mass
+        dlnr = self.pop.uncertainty('radius')/self.pop.radius
 
 
         dlne = np.sqrt((dlnm/2)**2 + (dlnr/2)**2)
@@ -307,9 +307,9 @@ class FluxEscape(ErrorPanel):
         plt.text(.005, 145, r'$E_{grav}/E_{thermal}$', rotation=-4.5, fontsize=8, color=color)
 
         teq = np.logspace(1, 4)*u.K
-        teq_earth = (5780*u.K/np.sqrt(2*u.AU/u.Rsun)).to(u.K)
+        earth_teq = (5780*u.K/np.sqrt(2*u.AU/u.Rsun)).to(u.K)
 
-        relative_insolation = (teq/teq_earth)**4
+        relative_insolation = (teq/earth_teq)**4
         m = 1*u.M_p
 
         def escape_velocity(T, lam=1):
@@ -319,7 +319,7 @@ class FluxEscape(ErrorPanel):
 
         plt.sca(self.ax)
         max_insolation = self.xlim[1]
-        max_teq = teq_earth*max_insolation**.25
+        max_teq = earth_teq*max_insolation**.25
 
         # loop over factors of 10 of lambda
         for lam in 10**np.arange(6):

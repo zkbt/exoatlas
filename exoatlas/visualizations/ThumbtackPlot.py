@@ -44,7 +44,7 @@ class ThumbtackPlot(BubblePanel):
     @property
     def r(self):
         '''convert the system's distance into a radial coordinate'''
-        return self.stretch(self.pop.stellar_distance)
+        return self.stretch(self.pop.distance)
 
     @property
     def theta(self):
@@ -54,12 +54,12 @@ class ThumbtackPlot(BubblePanel):
     @property
     def x(self):
         '''convert distance and RA to y'''
-        return self.stretch(self.pop.stellar_distance)*np.cos(self.theta)
+        return self.stretch(self.pop.distance)*np.cos(self.theta)
 
     @property
     def y(self):
         '''convert distance and RA to x'''
-        return self.stretch(self.pop.stellar_distance)*np.sin(self.theta)
+        return self.stretch(self.pop.distance)*np.sin(self.theta)
 
 
     def setup(self):
@@ -173,11 +173,11 @@ class ThumbtackPlot(BubblePanel):
         for key in keys:
             self.plot(key)
             if highlight == 'completeness':
-                self.highlight((self.pop.planet_radius > 2)*(self.pop.planet_radius < 4)*(self.pop.period < 10), '2-4 Earth radii\nP<10 days')
+                self.highlight((self.pop.radius > 2)*(self.pop.radius < 4)*(self.pop.period < 10), '2-4 Earth radii\nP<10 days')
             if highlight == 'small':
-                self.highlight((self.pop.planet_radius < 2), '<2 Earth radii')
+                self.highlight((self.pop.radius < 2), '<2 Earth radii')
             if highlight == 'habitable':
-                self.highlight((self.pop.planet_radius > 0.7)*(self.pop.planet_radius < 1.6)*(self.pop.teq < 310)*(self.pop.teq > 200), 'Potentially Habitable Planets')
+                self.highlight((self.pop.radius > 0.7)*(self.pop.radius < 1.6)*(self.pop.teq < 310)*(self.pop.teq > 200), 'Potentially Habitable Planets')
 
         f = plt.gcf()
         filename = '{}_{}{}.mp4'.format(fileprefix, '+'.join(keys), highlight)
@@ -234,9 +234,9 @@ class ThumbtackPlot(BubblePanel):
             xlim = self.ax.get_xlim()
             ylim = self.ax.get_ylim()
             onplot = (self.x > np.min(xlim))*(self.x < np.max(xlim))* (self.y > np.min(ylim))*(self.y < np.max(ylim))
-            nottooclose = self.pop.stellar_distance > self.outer*0.2
+            nottooclose = self.pop.distance > self.outer*0.2
 
-            nottoofar = (self.pop.stellar_distance <= self.maxlabeldistance)
+            nottoofar = (self.pop.distance <= self.maxlabeldistance)
             #print np.sum(onplot*nottooclose*nottoofar)
 
             #KLUDGE!!!!!
@@ -314,12 +314,12 @@ class ThumbtackPlot(BubblePanel):
         #self.highlightleg = plt.legend(label, fontsize=10, framealpha=0, markerscale=1.5)
         self.speak('highlighting {0} points'.format(len(self.x[indices])))
         t = self.pop.teq[indices]
-        r = self.pop.planet_radius[indices]
+        r = self.pop.radius[indices]
         #kic = self.pop.standard['kepid'][indices]
         for i in range(len(t)):
             self.ax.text(self.x[indices][i], self.y[indices][i], r'{0:.0f}K, {1:.1f}R$_\oplus$'.format(t[i], r[i]) +'\n',
 			size=8, ha='center', va='bottom', color=self.pop.color.replace('black', 'gray'))
-            print(r[i], t[i])#, self.pop.stellar_distance[indices][i]
+            print(r[i], t[i])#, self.pop.distance[indices][i]
         #(self.name == 'WASP-94A b').nonzero()[0]
 
     def toclock(self, hour):

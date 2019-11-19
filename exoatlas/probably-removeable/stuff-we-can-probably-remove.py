@@ -40,7 +40,7 @@ mamajek._pithy = True
     @property
     def distance(self):
 
-        distance = self.standard['stellar_distance'] + 0.0
+        distance = self.standard['distance'] + 0.0
 
         # SUUUUUUPER KLUDGE
         for i in range(2):

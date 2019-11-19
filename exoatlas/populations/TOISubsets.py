@@ -25,7 +25,7 @@ class PreviouslyKnownTOI(TOISubset):
         # create a reference population of transiting exoplanets
         self.all_known = NonTESS(remake=remake)
 
-        TOISubset.__init__(self, label=label, remake=remake, **kw)
+        TOISubset.__init__(self, label=label, remake=remake, color='black', **kw)
 
     def to_include(self):
         return self.previouslyknown()
@@ -65,7 +65,7 @@ class PreviouslyKnownTOI(TOISubset):
             plt.show()
 
             for x in [matched_known, matched_toi]:
-                plt.scatter(x.period, x.planet_radius, alpha=0.3, label=x.label)
+                plt.scatter(x.period, x.radius, alpha=0.3, label=x.label)
             plt.yscale('log');
             plt.legend()
             plt.xlabel('Period (days)'); plt.ylabel('Radius (Earth radii)')
@@ -84,15 +84,15 @@ class PreviouslyKnownTOI(TOISubset):
 
 
         #weird = (matched_toi.period > 13*u.day)*closeperiod
-        #print(matched_toi[weird].standard['name', 'period', 'planet_radius', 'dp', 'close'])
-        #print(matched_known[weird].standard['name', 'period', 'planet_radius'])
+        #print(matched_toi[weird].standard['name', 'period', 'radius', 'dp', 'close'])
+        #print(matched_known[weird].standard['name', 'period', 'radius'])
 
         # return that array
         return wasknown | self.is_knownplanet
 
 class BrandNewTOI(PreviouslyKnownTOI):
     def __init__(self, label="Brand New TOI", **kw):
-        PreviouslyKnownTOI.__init__(self, label=label, **kw)
+        PreviouslyKnownTOI.__init__(self, label=label, color='crimson', **kw)
 
     def to_include(self):
         return self.previouslyknown() == False

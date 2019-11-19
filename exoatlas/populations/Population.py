@@ -2,15 +2,15 @@
 from ..imports import *
 import string
 
-exoplanet_columns = [
+exocolumns = [
 'name',
 'ra', 'dec',
-'stellar_distance',
+'distance',
 'discoverer']
 
 transit_columns = [
 'period',
-'semimajoraxis', #pl_orbsmax
+'semimajoraxis',
 'e', 'omega', 'inclination',
 'transit_epoch',
 'transit_duration',
@@ -18,20 +18,20 @@ transit_columns = [
 'stellar_teff',
 'stellar_mass',
 'stellar_radius',
-'planet_radius',
-'planet_mass',
+'radius',
+'mass',
 'transit_ar',
 'transit_b']
 
-necessary_columns = exoplanet_columns + transit_columns
+necessary_columns = exocolumns + transit_columns
 
 desired_columns = [
-'planet_mass_uncertainty_upper',
-'planet_mass_uncertainty_lower',
-'planet_radius_uncertainty_upper',
-'planet_radius_uncertainty_lower',
-'stellar_distance_uncertainty_upper',
-'stellar_distance_uncertainty_lower']
+'mass_uncertainty_upper',
+'mass_uncertainty_lower',
+'radius_uncertainty_upper',
+'radius_uncertainty_lower',
+'distance_uncertainty_upper',
+'distance_uncertainty_lower']
 
 # these are keywords that can be set for
 default_plotkw = dict(color='black',
@@ -327,6 +327,12 @@ class Population(Talker):
         '''
         return len(self.standard)
 
+    def __len__(self):
+        '''
+        How many planets are in this population?
+        '''
+        return len(self.standard)
+
     @property
     def semimajoraxis(self):
         '''
@@ -507,7 +513,7 @@ class Population(Talker):
         bad = np.isfinite(d) == False
         self.speak(f'{sum(bad)}/{self.n} transit depths are missing')
 
-        Rp = self.planet_radius[bad]
+        Rp = self.radius[bad]
         Rs = self.stellar_radius[bad]
 
         d[bad] = (Rp/Rs).decompose()**2
@@ -561,19 +567,19 @@ class Population(Talker):
         '''
 
         G = con.G
-        M = self.planet_mass
-        R = self.planet_radius
+        M = self.mass
+        R = self.radius
 
         g = (G*M/R**2).to('m/s**2')
         return g
 
     @property
-    def planet_density(self):
+    def density(self):
         '''
         The density of the planet.
         '''
-        mass = self.pop.planet_mass
-        volume = 4/3*np.pi*(self.pop.planet_radius)**3
+        mass = self.pop.mass
+        volume = 4/3*np.pi*(self.pop.radius)**3
         return (mass/volume).to('g/cm**3')
 
     @property
@@ -604,8 +610,8 @@ class Population(Talker):
         The escape velocity of the planet.
         '''
         G = con.G
-        M = self.planet_mass
-        R = self.planet_radius
+        M = self.mass
+        R = self.radius
         return np.sqrt(2*G*M/R).to('km/s')
 
 
@@ -620,8 +626,8 @@ class Population(Talker):
         mu = 1
         m_p = con.m_p
         G = con.G
-        M = self.planet_mass
-        R = self.planet_radius
+        M = self.mass
+        R = self.radius
 
         e_thermal = k*T
         e_grav = G*M*m_p/R
@@ -632,37 +638,39 @@ class Population(Talker):
         '''
         The distance modulus to the system, in magnitudes.
         '''
-        mu = 5*np.log10(self.stellar_distance/(10*u.pc))
+        mu = 5*np.log10(self.distance/(10*u.pc))
         return mu
 
 
     @property
-    def transmissionsignal(self):
+    def transmission_signal(self):
         '''
         What is the transit depth of 1 scale height of an H2-rich
         atmosphere transiting in front of the star.
         '''
-        H = self.scale_height
-        Rp = self.planet_radius
-        Rs = self.stellar_radius
-        depth = (2*H*Rp/Rs**2).decompose()
+        with np.errstate(invalid='ignore'):
+            
+            H = self.scale_height
+            Rp = self.radius
+            Rs = self.stellar_radius
+            depth = (2*H*Rp/Rs**2).decompose()
 
-        dlnm = self.uncertainty('planet_mass')/self.planet_mass
-        bad = dlnm > 0.5
-        depth[bad] = np.nan
-        return depth
+            dlnm = self.uncertainty('mass')/self.mass
+            bad = dlnm > 0.5
+            depth[bad] = np.nan
+            return depth
 
 
     @property
-    def reflectionsignal(self):
+    def reflection_signal(self):
         '''
         What is the reflected light eclipse depth,
         for an albedo of 100%?
         '''
-        return 0.25*(self.planet_radius/self.semimajoraxis).decompose()**2
+        return 0.25*(self.radius/self.semimajoraxis).decompose()**2
 
 
-    def emissionsignal(self, wavelength=5*u.micron):
+    def emission_signal(self, wavelength=5*u.micron):
         '''
         What is the thermal emission eclipse depth,
         assuming Planck spectra for both star and planet?
@@ -679,7 +687,7 @@ class Population(Talker):
         # create thermal emission sources for both star and planet
         import rainbowconnection as rc
         star = rc.Thermal(teff=self.stellar_teff, radius=self.stellar_radius)
-        planet = rc.Thermal(teff=self.teq, radius=self.planet_radius)
+        planet = rc.Thermal(teff=self.teq, radius=self.radius)
 
         # calculate the depth as the luminosity ratio
         depths = planet.spectrum(wavelength)/star.spectrum(wavelength)
@@ -705,7 +713,7 @@ class Population(Talker):
 
         import rainbowconnection as rc
         star = rc.Thermal(teff=self.stellar_teff,
-                          radius=self.stellar_radius).at(self.stellar_distance)
+                          radius=self.stellar_radius).at(self.distance)
         flux_in_energy = star.spectrum(wavelength)
         photon_energy = con.h*con.c/wavelength/u.ph
         flux_in_photons = flux_in_energy/photon_energy
@@ -801,7 +809,7 @@ class Population(Talker):
         '''Plot the planets as thumbtacks.'''
         def scale(d):
             return np.array(d)**1.5
-        r = scale(self.stellar_distance)
+        r = scale(self.distance)
         x, y = r*np.cos(self.ra*np.pi/180), r*np.sin(self.ra*np.pi/180)
         plt.ion()
         plt.figure('thumbtacks')
@@ -820,7 +828,7 @@ class Population(Talker):
             ax.text(radii*np.cos(angle), radii*np.sin(angle), '{0:.0f} pc'.format(originalradius), rotation=90+ angle*180/np.pi, va='bottom', ha='center', size=13, weight='extra bold', **gridkw)
 
         ax.plot(x, y, marker='o', alpha=0.5, color='gray', linewidth=0, markeredgewidth=0)
-        close = (self.name == 'WASP-94A b').nonzero()[0]#(self.stellar_distance < maxr).nonzero()[0]
+        close = (self.name == 'WASP-94A b').nonzero()[0]#(self.distance < maxr).nonzero()[0]
         if labels:
             for c in close:
                 plt.text(x[c], y[c], self.name[c])

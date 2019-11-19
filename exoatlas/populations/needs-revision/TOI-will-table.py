@@ -84,9 +84,9 @@ class TOI(PredefinedPopulation):
         s['T'] = withtic['TIC Tmag']
 
         # planet radius
-        s['planet_radius'] = withtic['Radius (R_Earth)']
-        s['planet_radius_uncertainty_upper'] = withtic['Radius (R_Earth) Error']
-        s['planet_radius_uncertainty_lower'] = -withtic['Radius (R_Earth) Error']
+        s['radius'] = withtic['Radius (R_Earth)']
+        s['radius_uncertainty_upper'] = withtic['Radius (R_Earth) Error']
+        s['radius_uncertainty_lower'] = -withtic['Radius (R_Earth) Error']
 
 
         #KLUDGE?
@@ -95,9 +95,9 @@ class TOI(PredefinedPopulation):
         #KLUDGE?
         #s['rv_semiamplitude'] =  t['pl_rvamp'] #t.MaskedColumn(t['K'], mask=t['K']==0.0)
 
-        s['planet_mass'] = withtic['Mass (M_Earth)']
-        s['planet_mass_uncertainty_upper'] = withtic['Mass (M_Earth) Error']
-        s['planet_mass_uncertainty_lower'] = -withtic['Mass (M_Earth) Error']
+        s['mass'] = withtic['Mass (M_Earth)']
+        s['mass_uncertainty_upper'] = withtic['Mass (M_Earth) Error']
+        s['mass_uncertainty_lower'] = -withtic['Mass (M_Earth) Error']
 
 
 
@@ -109,9 +109,9 @@ class TOI(PredefinedPopulation):
         s['transit_b'] = withtic['Impact Param']
 
         # is this usually Gaia??
-        s['stellar_distance'] = withtic['Stellar Distance (pc)']
-        s['stellar_distance_uncertainty_upper'] = np.zeros(n) + np.nan
-        s['stellar_distance_uncertainty_lower'] = np.zeros(n) + np.nan
+        s['distance'] = withtic['Stellar Distance (pc)']
+        s['distance_uncertainty_upper'] = np.zeros(n) + np.nan
+        s['distance_uncertainty_lower'] = np.zeros(n) + np.nan
 
         s['disposition'] = withtic['User Disposition']
 
@@ -155,5 +155,5 @@ class ExoplanetSubsets(TOI):
 
     def toRemove(self):
         isconfirmed = self.standard['disposition'] == 'CONFIRMED'
-        isjunk = self.stellar_distance == 10.0
+        isjunk = self.distance == 10.0
         return isconfirmed | isjunk"""

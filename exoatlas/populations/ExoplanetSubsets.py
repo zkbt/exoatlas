@@ -48,7 +48,7 @@ class TESS(ExoplanetSubsets):
 
 class NonTESS(ExoplanetSubsets):
     def __init__(self, **kw):
-        ExoplanetSubsets.__init__(self, label="TESS", color='orchid', zorder=0, **kw)
+        ExoplanetSubsets.__init__(self, label="TESS", color='black', zorder=0, **kw)
 
     def to_include(self):
         foundbytess = (self.discoverer == 'Transiting Exoplanet Survey Satellite (TESS)')
@@ -61,7 +61,7 @@ space_telescopes = ['Transiting Exoplanet Survey Satellite (TESS)',
                     'Hubble Space Telescope']
 class Space(ExoplanetSubsets):
     def __init__(self, **kw):
-        ExoplanetSubsets.__init__(self, label="Space-based", color='orangered', zorder=0, **kw)
+        ExoplanetSubsets.__init__(self, label="Space-based", color='orchid', zorder=0, **kw)
 
     def to_include(self):
         foundfromspace = np.zeros(self.n).astype(np.bool)
@@ -71,7 +71,7 @@ class Space(ExoplanetSubsets):
 
 class Ground(ExoplanetSubsets):
     def __init__(self, **kw):
-        ExoplanetSubsets.__init__(self, label="Ground-based", color='orangered', zorder=0, **kw)
+        ExoplanetSubsets.__init__(self, label="Ground-based", color='black', zorder=0, **kw)
 
     def to_include(self):
         foundfromspace = np.zeros(self.n).astype(np.bool)
@@ -83,12 +83,12 @@ sigma = 2.5
 def mass_is_good(pop):
 
     with np.errstate(invalid='ignore'):
-        
+
         # the uncertainty must be greater than 0
-        exists = pop.uncertainty('planet_mass') > 0
+        exists = pop.uncertainty('mass') > 0
 
         # the uncertainty must be less than a maximum
-        fractional = (pop.uncertainty('planet_mass')/pop.planet_mass)
+        fractional = (pop.uncertainty('mass')/pop.mass)
         small = fractional < pop.maximum_uncertainty
 
         return small & exists
@@ -103,7 +103,7 @@ class GoodMass(ExoplanetSubsets):
 class BadMass(ExoplanetSubsets):
     def __init__(self, sigma=sigma, **kw):
         self.maximum_uncertainty = 1/sigma
-        ExoplanetSubsets.__init__(self, label="Bad Mass", **kw)
+        ExoplanetSubsets.__init__(self, label="Bad Mass", color='gray', **kw)
     def to_include(self):
         return mass_is_good(self) == False
 

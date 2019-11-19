@@ -23,6 +23,9 @@ class BuildablePlot(Talker):
         self.stepbystep = stepbystep
         self.name = 'exoplanets'
 
+        if type(pops) != dict:
+            pops = dict(planets=pops)
+            
         self.plot(pops)
 
     def create_gridspec(self, *args, figsize=(10, 5), **kwargs):
@@ -68,7 +71,7 @@ class physical_summary(BuildablePlot):
                  ax=plt.subplot(gs[1,1]))
         fr.plot_hz()
         fr.ticks_simplify_exponents('y')
-        fr.add_teq_axis()
+        fr.add_teqaxis()
 
         fr.remove_ylabel()
 
@@ -107,7 +110,7 @@ class observable_summary(BuildablePlot):
 
         if note == 'trim':
             for k, p in pops.items():
-                pops[k] = p[p.planet_radius < 2*u.Rearth]
+                pops[k] = p[p.radius < 2*u.Rearth]
 
         kw = dict()
         if note != 'bw':

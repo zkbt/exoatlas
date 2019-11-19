@@ -143,9 +143,10 @@ class Panel(Talker):
             # skip over the planets that aren't within limits
             if restrictlimits:
                 try:
-                    if x < np.min(self.xlim) or x > np.max(self.xlim):
-                        if y < np.min(self.ylim) or y > np.max(self.ylim):
-                            continue
+                    with np.errstate(invalid='ignore'):
+                        if x < np.min(self.xlim) or x > np.max(self.xlim):
+                            if y < np.min(self.ylim) or y > np.max(self.ylim):
+                                continue
                 except TypeError: # (are there other errors we need to add?)
                     pass
 

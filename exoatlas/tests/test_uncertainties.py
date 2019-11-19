@@ -8,14 +8,14 @@ def test_uncertainties():
 
     p = SolarSystem()
 
-    uncertainty = p.uncertainty('planet_radius')
+    uncertainty = p.uncertainty('radius')
     assert(np.all(uncertainty == 0*u.Rearth))
 
-    upper, lower = p.uncertainty_lowerupper('planet_radius')
+    upper, lower = p.uncertainty_lowerupper('radius')
     assert(np.all(lower == 0*u.Rearth))
     assert(np.all(upper == 0*u.Rearth))
 
-    bad = p.uncertainty('stellar_distance')
+    bad = p.uncertainty('distance')
     assert(np.all(np.isnan(bad)))
     return p
 

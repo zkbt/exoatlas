@@ -10,11 +10,11 @@ class MassRadius(BubblePanel):
 
     @property
     def x(self):
-        return self.pop.planet_mass
+        return self.pop.mass
 
     @property
     def y(self):
-        return self.pop.planet_radius
+        return self.pop.radius
 
     def plot(self, key, labels=False, ax=None, **kw):
         self.point_at(key)
@@ -27,37 +27,39 @@ class MassRadius(BubblePanel):
         self.ax.set_xscale(self.xscale)
         self.ax.set_yscale(self.yscale)
 
-        rlower = np.abs(self.pop.planet_radius_uncertainty_lower)
-        rupper = np.abs(self.pop.planet_radius_uncertainty_upper)
-        rissmallenough = 0.5*(rlower+rupper)/self.pop.planet_radius < 1.0/1.0#2.5#/2.5
-        risntzero = 0.5*(rlower+rupper) > 0.0
+        with np.errstate(invalid='ignore'):
 
-        mlower = np.abs( self.pop.planet_mass_uncertainty_lower)
-        mupper = np.abs(self.pop.planet_mass_uncertainty_upper)
-        missmallenough = 0.5*(mlower+mupper)/self.pop.planet_mass < 1.0/1.0#2.5#/2.5
-        misntzero = 0.5*(mlower+mupper) > 0.0
+            rlower = np.abs(self.pop.radius_uncertainty_lower)
+            rupper = np.abs(self.pop.radius_uncertainty_upper)
+            rissmallenough = 0.5*(rlower+rupper)/self.pop.radius < 1.0/1.0#2.5#/2.5
+            risntzero = 0.5*(rlower+rupper) > 0.0
+
+            mlower = np.abs( self.pop.mass_uncertainty_lower)
+            mupper = np.abs(self.pop.mass_uncertainty_upper)
+            missmallenough = 0.5*(mlower+mupper)/self.pop.mass < 1.0/1.0#2.5#/2.5
+            misntzero = 0.5*(mlower+mupper) > 0.0
 
         # solar system kludge!
         exact = (risntzero == False).all() and (misntzero == False).all()
         if exact:
-            self.ok = np.arange(len(self.pop.planet_radius))
+            self.ok = np.arange(len(self.pop.radius))
         else:
             self.ok = (rissmallenough*risntzero*missmallenough*misntzero)
         #assert(len(self.ok) ==1)
         #self.ok = ok.nonzero()
 
-        #self.ok = np.arange(len(self.pop.planet_mass))
-        x = self.pop.planet_mass[self.ok]
+        #self.ok = np.arange(len(self.pop.mass))
+        x = self.pop.mass[self.ok]
         try:
-            xerr = np.vstack([-self.pop.planet_mass_uncertainty_lower[self.ok].filled(), self.pop.planet_mass_uncertainty_upper[self.ok].filled()])
+            xerr = np.vstack([-self.pop.mass_uncertainty_lower[self.ok].filled(), self.pop.mass_uncertainty_upper[self.ok].filled()])
         except:
-            xerr = np.vstack([-self.pop.planet_mass_uncertainty_lower[self.ok], self.pop.planet_mass_uncertainty_upper[self.ok]])
+            xerr = np.vstack([-self.pop.mass_uncertainty_lower[self.ok], self.pop.mass_uncertainty_upper[self.ok]])
 
-        y = self.pop.planet_radius[self.ok]
+        y = self.pop.radius[self.ok]
         try:
-            yerr = np.vstack([-self.pop.planet_radius_uncertainty_lower[self.ok].filled(), self.pop.planet_radius_uncertainty_upper[self.ok].filled()])
+            yerr = np.vstack([-self.pop.radius_uncertainty_lower[self.ok].filled(), self.pop.radius_uncertainty_upper[self.ok].filled()])
         except:
-            yerr = np.vstack([-self.pop.planet_radius_uncertainty_lower[self.ok], self.pop.planet_radius_uncertainty_upper[self.ok]])
+            yerr = np.vstack([-self.pop.radius_uncertainty_lower[self.ok], self.pop.radius_uncertainty_upper[self.ok]])
 
 
         #print self.ok

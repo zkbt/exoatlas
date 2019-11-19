@@ -52,6 +52,13 @@ directories = dict(data=os.path.join(base, 'data/'))
 for k in directories.keys():
     mkdir(directories[k])
 
+def reset_local_data():
+	if 'y' in input('Are you sure you want to wipe all'
+					'local exoplanet-atlas data files? [y/N]'):
+		shutil.rmtree(directories['data'])
+		mkdir(directories['data'])
+		print(f"Removed all local data from {directories['data']}")
+
 from pkg_resources import resource_filename
 
 

@@ -120,7 +120,7 @@ class Exoplanets(PredefinedPopulation):
             s[f'{b}mag'] = t[f'st_{b.lower()}']
 
         # what is the planet radius?
-        s['planet_radius'] = t['pl_rade']*u.Rearth
+        s['radius'] = t['pl_rade']*u.Rearth
 
         # pull out the radius uncertainties
         upper = t['pl_radeerr1'].data
@@ -128,8 +128,8 @@ class Exoplanets(PredefinedPopulation):
         bad = upper.mask | lower.mask
         upper[bad] = np.inf
         lower[bad] = np.inf
-        s['planet_radius_uncertainty_upper'] = upper*u.Rearth
-        s['planet_radius_uncertainty_lower'] = lower*u.Rearth
+        s['radius_uncertainty_upper'] = upper*u.Rearth
+        s['radius_uncertainty_lower'] = lower*u.Rearth
 
         # what are the (often) transit-derived properties?
         s['transit_ar'] = t['pl_ratdor']
@@ -139,7 +139,7 @@ class Exoplanets(PredefinedPopulation):
         #KLUDGE?
         s['rv_semiamplitude'] =  t['pl_rvamp'] #t.MaskedColumn(t['K'], mask=t['K']==0.0)
 
-        s['planet_mass'] = t['pl_masse']*u.Mearth
+        s['mass'] = t['pl_masse']*u.Mearth
 
         # pull out the mass uncertainties
         upper = t['pl_masseerr1'].data
@@ -147,14 +147,14 @@ class Exoplanets(PredefinedPopulation):
         bad = upper.mask | lower.mask
         upper[bad] = np.inf
         lower[bad] = np.inf
-        s['planet_mass_uncertainty_upper'] = upper*u.Mearth
-        s['planet_mass_uncertainty_lower'] = lower*u.Mearth
+        s['mass_uncertainty_upper'] = upper*u.Mearth
+        s['mass_uncertainty_lower'] = lower*u.Mearth
 
 
         # how far away is the star?
-        s['stellar_distance'] = merge('st_dist')*u.pc
-        s['stellar_distance_uncertainty_upper'] = merge('st_disterr1')*u.pc
-        s['stellar_distance_uncertainty_lower'] = merge('st_disterr2')*u.pc
+        s['distance'] = merge('st_dist')*u.pc
+        s['distance_uncertainty_upper'] = merge('st_disterr1')*u.pc
+        s['distance_uncertainty_lower'] = merge('st_disterr2')*u.pc
 
         # what facility discovered the planet?
         s['discoverer'] = t['pl_facility']

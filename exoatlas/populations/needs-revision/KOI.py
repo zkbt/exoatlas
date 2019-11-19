@@ -72,9 +72,9 @@ class KOI(PredefinedPopulation):
         s['Jmag'] = t['koi_jmag']
 
         # planet radius
-        s['planet_radius'] = t['koi_prad']
-        s['planet_radius_uncertainty_upper'] = t['koi_prad_err1']
-        s['planet_radius_uncertainty_lower'] = t['koi_prad_err2']
+        s['radius'] = t['koi_prad']
+        s['radius_uncertainty_upper'] = t['koi_prad_err1']
+        s['radius_uncertainty_lower'] = t['koi_prad_err2']
 
 
         #KLUDGE?
@@ -83,9 +83,9 @@ class KOI(PredefinedPopulation):
         #KLUDGE?
         #s['rv_semiamplitude'] =  t['pl_rvamp'] #t.MaskedColumn(t['K'], mask=t['K']==0.0)
 
-        s['planet_mass'] = np.zeros(n) + np.nan
-        s['planet_mass_uncertainty_upper'] = np.zeros(n) + np.nan
-        s['planet_mass_uncertainty_lower'] = np.zeros(n) + np.nan
+        s['mass'] = np.zeros(n) + np.nan
+        s['mass_uncertainty_upper'] = np.zeros(n) + np.nan
+        s['mass_uncertainty_lower'] = np.zeros(n) + np.nan
 
 
         s['radius_ratio'] = t['koi_ror']
@@ -97,9 +97,9 @@ class KOI(PredefinedPopulation):
         s['transit_b'] = t['koi_impact']
 
 
-        s['stellar_distance'] = np.zeros(n) + np.nan
-        s['stellar_distance_uncertainty_upper'] = np.zeros(n) + np.nan
-        s['stellar_distance_uncertainty_lower'] = np.zeros(n) + np.nan
+        s['distance'] = np.zeros(n) + np.nan
+        s['distance_uncertainty_upper'] = np.zeros(n) + np.nan
+        s['distance_uncertainty_lower'] = np.zeros(n) + np.nan
 
         s['disposition'] = t['koi_disposition']
 
@@ -142,5 +142,5 @@ class UnconfirmedKepler(ExoplanetSubsets):
 
     def toRemove(self):
         isconfirmed = self.standard['disposition'] == 'CONFIRMED'
-        isjunk = self.stellar_distance == 10.0
+        isjunk = self.distance == 10.0
         return isconfirmed | isjunk

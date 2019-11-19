@@ -43,11 +43,13 @@ class TOI(PredefinedPopulation):
 
         masks = {}
 
-        # is this a relatively cool star?
-        masks['cool'] = raw['Stellar Eff Temp (K)'] < 20000
+        with np.errstate(invalid='ignore'):
 
-        # is this not a single-transit candidate (without period)?
-        masks['notsingle'] = raw['Period (days)'] > 0
+            # is this a relatively cool star?
+            masks['cool'] = raw['Stellar Eff Temp (K)'] < 20000
+
+            # is this not a single-transit candidate (without period)?
+            masks['notsingle'] = raw['Period (days)'] > 0
 
         ok = np.ones(len(raw)).astype(np.bool)
         for k in masks:
@@ -83,8 +85,8 @@ class TOI(PredefinedPopulation):
         s['name'] = [f'TOI{toi:.2f}' for toi in t['TOI']]
         s['TIC ID'] = t['TIC ID']
 
-        s['stellar_distance'] = t['Stellar Distance (pc)']*u.pc
-        s['stellar_distance_uncertainty'] = t['Stellar Distance (pc) err']*u.pc
+        s['distance'] = t['Stellar Distance (pc)']*u.pc
+        s['distance_uncertainty'] = t['Stellar Distance (pc) err']*u.pc
         s['discoverer'] = 'TESS'
 
         s['period'] = t['Period (days)']*u.day
@@ -110,11 +112,11 @@ class TOI(PredefinedPopulation):
         s['stellar_radius_uncertainty'] = t['Stellar Radius (R_Sun) err']*u.Rsun
 
 
-        s['planet_radius'] = t['Planet Radius (R_Earth)']*u.Rearth
-        s['planet_radius_uncertainty'] = t['Planet Radius (R_Earth) err']*u.Rearth
+        s['radius'] = t['Planet Radius (R_Earth)']*u.Rearth
+        s['radius_uncertainty'] = t['Planet Radius (R_Earth) err']*u.Rearth
 
-        s['planet_mass'] = np.nan*u.Mearth
-        s['planet_mass_uncertainty'] = np.nan*u.Mearth
+        s['mass'] = np.nan*u.Mearth
+        s['mass_uncertainty'] = np.nan*u.Mearth
 
 
         s['semimajoraxis'] = np.nan*u.AU
@@ -227,5 +229,5 @@ class TOI(PredefinedPopulation):
 
     def toRemove(self):
         isconfirmed = self.standard['disposition'] == 'CONFIRMED'
-        isjunk = self.stellar_distance == 10.0
+        isjunk = self.distance == 10.0
         return isconfirmed | isjunk"""

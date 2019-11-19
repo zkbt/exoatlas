@@ -70,13 +70,13 @@ class SolarSystem(PredefinedPopulation):
         s['Vmag'] = np.nan
 
         # pull out the radius and mass
-        s['planet_radius'] = (t['radius']*u.km).to(u.Rearth)
-        s['planet_radius_uncertainty_lower'] = 0.0*u.Rearth
-        s['planet_radius_uncertainty_upper'] = 0.0*u.Rearth
-        assert((s['planet_radius'] < 20*u.Rearth).all())
-        s['planet_mass'] = (t['mass']*u.kg).to(u.Mearth)
-        s['planet_mass_uncertainty_lower'] = 0.0*u.Mearth
-        s['planet_mass_uncertainty_upper'] = 0.0*u.Mearth
+        s['radius'] = (t['radius']*u.km).to(u.Rearth)
+        s['radius_uncertainty_lower'] = 0.0*u.Rearth
+        s['radius_uncertainty_upper'] = 0.0*u.Rearth
+        assert((s['radius'] < 20*u.Rearth).all())
+        s['mass'] = (t['mass']*u.kg).to(u.Mearth)
+        s['mass_uncertainty_lower'] = 0.0*u.Mearth
+        s['mass_uncertainty_upper'] = 0.0*u.Mearth
 
         # use Kepler's (actual) 3rd Law to get semimajor axis
         semimajoraxis = (s['period'].to(u.year).value)**(2.0/3.0)*u.AU
@@ -88,14 +88,14 @@ class SolarSystem(PredefinedPopulation):
 
         # some other planet parameters we might not need for the solar system
         s['rv_semiamplitude'] = np.nan*u.m/u.s
-        s['radius_ratio'] = (s['planet_radius'].quantity/s['stellar_radius'].quantity).decompose().value
-        s['stellar_distance'] = np.nan*u.pc
+        s['radius_ratio'] = (s['radius'].quantity/s['stellar_radius'].quantity).decompose().value
+        s['distance'] = np.nan*u.pc
         s['ra'] = 0.0*u.deg
         s['dec'] = 0.0*u.deg
         s['discoverer'] = 'humans'
         s['transit_epoch'] = np.nan*u.day
         s['transit_duration'] = np.nan*u.day
-        s['transit_depth'] = (s['planet_radius'].quantity/s['stellar_radius'].quantity).decompose()**2
+        s['transit_depth'] = (s['radius'].quantity/s['stellar_radius'].quantity).decompose()**2
         s['transit_b'] = 0.0
         s['inclination'] = 90*u.deg
 

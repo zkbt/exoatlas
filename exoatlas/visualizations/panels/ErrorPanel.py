@@ -151,14 +151,16 @@ class ErrorPanel(Panel):
 
             # kludge to remove those that cross-zero
 
-            ok *= (self.x - xl) > 0
-            ok *= (self.y - yl) > 0
+            with np.errstate(invalid='ignore'):
+                ok *= (self.x - xl) > 0
+                ok *= (self.y - yl) > 0
 
             n_consistentwithzero = sum(ok == False) - n_nouncertainty
             self.speak(f'skipping {n_consistentwithzero} planets that are consistent with zero')
 
             if (len(x) > 1) & (self.pop.plotkw.get('ink', True)):
 
+                self.speak('plotting inked errorbars, this may take a while')
                 # FIXME -- make the "invisible" color more flexible than white,
                 # in case we're plotting on a dark background
                 self.scattered[key] = ink_errorbar(x[ok], y[ok],
