@@ -333,6 +333,9 @@ class Population(Talker):
         '''
         return len(self.standard)
 
+
+
+
     @property
     def semimajoraxis(self):
         '''
@@ -559,6 +562,34 @@ class Population(Talker):
 
         return d
 
+    @property
+    def kludge_mass(self):
+        '''
+        Have a safe way to calculate the mass of planets,
+        that fills in gaps as necessary. Basic strategy:
+
+            First from table.
+            Then from msini.
+        '''
+
+        # pull out the actual values from the table
+        M = self.standard['mass'].copy().quantity
+
+        # try to replace bad ones with NVK3L
+        bad = np.isfinite(M) == False
+        self.speak(f'{sum(bad)}/{self.n} masses are missing')
+
+        # estimate from the msini
+        try:
+            M[bad] = self.msini[bad]
+        except (KeyError, AssertionError):
+            pass
+
+        # replace those that are still bad with the a/R*
+        stillbad = np.isfinite(M) == False
+        self.speak(f'{sum(stillbad)}/{self.n} are still missing after msini')
+
+        return M
 
     @property
     def surface_gravity(self):
@@ -649,7 +680,7 @@ class Population(Talker):
         atmosphere transiting in front of the star.
         '''
         with np.errstate(invalid='ignore'):
-            
+
             H = self.scale_height
             Rp = self.radius
             Rs = self.stellar_radius

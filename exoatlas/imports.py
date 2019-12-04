@@ -44,8 +44,15 @@ def name2color(name):
         h = co.cnames[name].lower()
     return co.hex2color(h)
 
-# create a directory structure in the user's home directory
-base = os.path.join(os.getenv('HOME'), '.exoatlas')
+# create a directory structure ()
+try:
+	# search for an environment variable
+	base = os.getenv('EXOATLAS_DATA')
+	assert(base is not None)
+except AssertionError:
+	# otherwise put it in the local directory
+	cwd = os.getcwd()
+	base = os.path.join(cwd, 'exoatlas-downloads')
 mkdir(base)
 
 directories = dict(data=os.path.join(base, 'data/'))
