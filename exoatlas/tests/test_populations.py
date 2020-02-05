@@ -134,6 +134,7 @@ def test_attributes():
     Can we make a population of Solar System planets?
     '''
     p = SolarSystem()
+    #for p in [SolarSystem(), TransitingExoplanets()]:
 
 
     print(p.color)
@@ -155,6 +156,7 @@ def test_attributes():
     p.escape_velocity
     p.escape_parameter
     p.scale_height
+    p.density
     return p
 
 if __name__ == '__main__':

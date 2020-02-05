@@ -54,6 +54,9 @@ allowed_plotkw += ['s',
                    'edgecolors',
                    'facecolors']
 
+class AtlasError(ValueError):
+    pass
+
 class Population(Talker):
     '''
     Create a population from a standardized table.
@@ -145,12 +148,15 @@ class Population(Talker):
                 # columns without units don't have quantities
                 return self.standard[key].data
         except KeyError:
-            # try to get a plotkw from this pop, from the default, then None
+            # try to get a plotkw from this pop, from the plotting defaults, from None
             try:
                 assert(key in allowed_plotkw)
                 return self.plotkw.get(key, default_plotkw[key])
-            except KeyError:
-                return None
+            except (AssertionError, KeyError):
+                raise AtlasError(f"""
+                Alas, there seems to be no way to find `.{key}`
+                as an attribute or propetry of {self}.
+                """)
 
     def __setattr__(self, key, value):
         '''
@@ -193,7 +199,7 @@ class Population(Talker):
         # first try for an `uncertainty_{key}` column
         try:
             return self.__getattr__(f'{key}_uncertainty')
-        except (KeyError, AssertionError):
+        except (KeyError, AssertionError, AtlasError):
             # this can be removed after debugging
             self.speak(f'no symmetric uncertainties found for "{key}"')
 
@@ -203,7 +209,7 @@ class Population(Talker):
             upper = self.__getattr__(f'{key}_uncertainty_upper')
             avg = 0.5*(np.abs(lower) + np.abs(upper))
             return avg
-        except (KeyError, AssertionError):
+        except (KeyError, AssertionError, AtlasError):
             # this can be removed after debugging
             self.speak(f'no asymmetric uncertainties found for "{key}"')
 
@@ -232,7 +238,7 @@ class Population(Talker):
             lower = self.__getattr__(f'{key}_uncertainty_lower')
             upper = self.__getattr__(f'{key}_uncertainty_upper')
             return np.abs(lower), np.abs(upper)
-        except (KeyError, AssertionError):
+        except (KeyError, AssertionError, AttributeError):
             # this can be removed after debugging
             self.speak(f'no asymmetric uncertainties found for "{key}"')
 
@@ -240,7 +246,7 @@ class Population(Talker):
         try:
             sym = self.__getattr__(f'{key}_uncertainty')
             return np.abs(sym), np.abs(sym)
-        except (KeyError, AssertionError):
+        except (KeyError, AssertionError, AttributeError):
             # this can be removed after debugging
             self.speak(f'no symmetric uncertainties found for "{key}"')
 
@@ -609,8 +615,8 @@ class Population(Talker):
         '''
         The density of the planet.
         '''
-        mass = self.pop.mass
-        volume = 4/3*np.pi*(self.pop.radius)**3
+        mass = self.mass
+        volume = 4/3*np.pi*(self.radius)**3
         return (mass/volume).to('g/cm**3')
 
     @property
