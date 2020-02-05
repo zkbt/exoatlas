@@ -48,6 +48,12 @@ class FluxRadius(BubblePanel):
         '''
         plt.axvspan(1.4, 0.4, color=color, alpha=alpha, linewidth=linewidth, **kw)
 
+class FluxTeff(FluxRadius):
+    ysource = 'stellar_teff'
+    ylabel = 'Stellar Effective Temperature (K)'
+    yscale = 'linear'
+    ylim = [2000, 7000]
+
 
 class DistanceRadius(FluxRadius):
     xsource = 'distance'
@@ -206,6 +212,7 @@ class PeriodRadius(FluxRadius):
     xscale = 'log'
     xlim = [0.15, 365]
 
+
 class MassRadius(ErrorPanel):
     title = ''
     xlabel = 'Planet Mass\n(Earth masses)'
@@ -244,7 +251,7 @@ class MassRadius(ErrorPanel):
             mass = np.logspace(-2, 3)*u.Mearth
             radius = (mass/density/4/np.pi*3)**(1/3)
             plt.plot(mass, radius.to(u.Rearth),
-                             color=color, 
+                             color=color,
                              alpha=alpha,
                              zorder=zorder,
                              **kw)
@@ -327,3 +334,16 @@ class FluxEscape(ErrorPanel):
             plt.plot(relative_insolation,
                      escape_velocity(teq, lam=lam),
                      color=color, alpha=alpha, **kw)
+
+
+class SemimajorRadius(FluxRadius):
+    xsource = 'semimajoraxis'
+    xlabel = 'Semimajor Axis (AU)\n'
+    xscale = 'log'
+    xlim = [0.001, 1000]
+
+class SemimajorMass(SemimajorRadius):
+    ysource = 'kludge_mass'
+    ylabel = 'Planet Mass\n(Earth masses)'
+    yscale = 'log'
+    ylim = [0.03, 4000]

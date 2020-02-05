@@ -6,6 +6,7 @@ scratch/
 notebooks/
 .pytest_cache/
 *.xls
+*.pickled
 
 .DS_Store
 

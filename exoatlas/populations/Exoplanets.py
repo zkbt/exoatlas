@@ -150,6 +150,9 @@ class Exoplanets(PredefinedPopulation):
         s['mass_uncertainty_upper'] = upper*u.Mearth
         s['mass_uncertainty_lower'] = lower*u.Mearth
 
+        # keep track of msini (for non-transiting planets)
+        s['msini'] = t['pl_msinie']*u.Mearth
+
 
         # how far away is the star?
         s['distance'] = merge('st_dist')*u.pc
@@ -158,6 +161,7 @@ class Exoplanets(PredefinedPopulation):
 
         # what facility discovered the planet?
         s['discoverer'] = t['pl_facility']
+        s['method'] = t['pl_discmethod']
 
         # sort these planets by their names
         s.sort('name')
@@ -172,6 +176,7 @@ class Exoplanets(PredefinedPopulation):
 
         # return that standardized table
         return standard
+
 
 class TransitingExoplanets(Exoplanets):
     def __init__(self, label='Transiting Exoplanets', remake=False, **plotkw):

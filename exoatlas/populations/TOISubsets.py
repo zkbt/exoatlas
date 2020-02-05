@@ -21,11 +21,11 @@ class TOISubset(TOI):
         raise NotImplementedError('!')
 
 class PreviouslyKnownTOI(TOISubset):
-    def __init__(self, label="Previously Known TOI", remake=False, **kw):
+    def __init__(self, label="Previously Known TOI", remake=False, color='black', **kw):
         # create a reference population of transiting exoplanets
         self.all_known = NonTESS(remake=remake)
 
-        TOISubset.__init__(self, label=label, remake=remake, color='black', **kw)
+        TOISubset.__init__(self, label=label, remake=remake, color=color, **kw)
 
     def to_include(self):
         return self.previouslyknown()
@@ -73,7 +73,7 @@ class PreviouslyKnownTOI(TOISubset):
 
         # find only those planets that have periods close to each other
         dp = (matched_known.period - matched_toi.period)/matched_known.period
-        closeperiod = np.abs(dp) < 0.1
+        closeperiod = np.abs(dp) < np.inf# FIXME -- kludge!0.1
         matched_toi.standard['dp']  = dp
         matched_toi.standard['close']  = closeperiod
 

@@ -54,6 +54,9 @@ allowed_plotkw += ['s',
                    'edgecolors',
                    'facecolors']
 
+class AtlasError(ValueError):
+    pass
+
 class Population(Talker):
     '''
     Create a population from a standardized table.
@@ -145,12 +148,15 @@ class Population(Talker):
                 # columns without units don't have quantities
                 return self.standard[key].data
         except KeyError:
-            # try to get a plotkw from this pop, from the default, then None
+            # try to get a plotkw from this pop, from the plotting defaults, from None
             try:
                 assert(key in allowed_plotkw)
                 return self.plotkw.get(key, default_plotkw[key])
-            except KeyError:
-                return None
+            except (AssertionError, KeyError):
+                raise AtlasError(f"""
+                Alas, there seems to be no way to find `.{key}`
+                as an attribute or propetry of {self}.
+                """)
 
     def __setattr__(self, key, value):
         '''
@@ -193,7 +199,7 @@ class Population(Talker):
         # first try for an `uncertainty_{key}` column
         try:
             return self.__getattr__(f'{key}_uncertainty')
-        except (KeyError, AssertionError):
+        except (KeyError, AssertionError, AtlasError):
             # this can be removed after debugging
             self.speak(f'no symmetric uncertainties found for "{key}"')
 
@@ -203,7 +209,7 @@ class Population(Talker):
             upper = self.__getattr__(f'{key}_uncertainty_upper')
             avg = 0.5*(np.abs(lower) + np.abs(upper))
             return avg
-        except (KeyError, AssertionError):
+        except (KeyError, AssertionError, AtlasError):
             # this can be removed after debugging
             self.speak(f'no asymmetric uncertainties found for "{key}"')
 
@@ -232,7 +238,7 @@ class Population(Talker):
             lower = self.__getattr__(f'{key}_uncertainty_lower')
             upper = self.__getattr__(f'{key}_uncertainty_upper')
             return np.abs(lower), np.abs(upper)
-        except (KeyError, AssertionError):
+        except (KeyError, AssertionError, AttributeError):
             # this can be removed after debugging
             self.speak(f'no asymmetric uncertainties found for "{key}"')
 
@@ -240,7 +246,7 @@ class Population(Talker):
         try:
             sym = self.__getattr__(f'{key}_uncertainty')
             return np.abs(sym), np.abs(sym)
-        except (KeyError, AssertionError):
+        except (KeyError, AssertionError, AttributeError):
             # this can be removed after debugging
             self.speak(f'no symmetric uncertainties found for "{key}"')
 
@@ -332,6 +338,9 @@ class Population(Talker):
         How many planets are in this population?
         '''
         return len(self.standard)
+
+
+
 
     @property
     def semimajoraxis(self):
@@ -559,6 +568,34 @@ class Population(Talker):
 
         return d
 
+    @property
+    def kludge_mass(self):
+        '''
+        Have a safe way to calculate the mass of planets,
+        that fills in gaps as necessary. Basic strategy:
+
+            First from table.
+            Then from msini.
+        '''
+
+        # pull out the actual values from the table
+        M = self.standard['mass'].copy().quantity
+
+        # try to replace bad ones with NVK3L
+        bad = np.isfinite(M) == False
+        self.speak(f'{sum(bad)}/{self.n} masses are missing')
+
+        # estimate from the msini
+        try:
+            M[bad] = self.msini[bad]
+        except (KeyError, AssertionError):
+            pass
+
+        # replace those that are still bad with the a/R*
+        stillbad = np.isfinite(M) == False
+        self.speak(f'{sum(stillbad)}/{self.n} are still missing after msini')
+
+        return M
 
     @property
     def surface_gravity(self):
@@ -578,8 +615,8 @@ class Population(Talker):
         '''
         The density of the planet.
         '''
-        mass = self.pop.mass
-        volume = 4/3*np.pi*(self.pop.radius)**3
+        mass = self.mass
+        volume = 4/3*np.pi*(self.radius)**3
         return (mass/volume).to('g/cm**3')
 
     @property
@@ -641,22 +678,28 @@ class Population(Talker):
         mu = 5*np.log10(self.distance/(10*u.pc))
         return mu
 
-
+    # FIXME -- how do we make it possible to change the threshold for inclusion?
     @property
-    def transmission_signal(self):
+    def transmission_signal(self, threshold=2):
         '''
         What is the transit depth of 1 scale height of an H2-rich
         atmosphere transiting in front of the star.
+
+        Parameters
+        ----------
+        threshold : float
+            By how many sigma must the planet mass be detected?
+
         '''
         with np.errstate(invalid='ignore'):
-            
+
             H = self.scale_height
             Rp = self.radius
             Rs = self.stellar_radius
             depth = (2*H*Rp/Rs**2).decompose()
 
             dlnm = self.uncertainty('mass')/self.mass
-            bad = dlnm > 0.5
+            bad = dlnm > 1/threshold
             depth[bad] = np.nan
             return depth
 

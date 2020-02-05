@@ -7,6 +7,33 @@ from exoatlas.imports import *
 aspect = 768/1024.0
 figwidth = 7
 
+
+def clean_pops(initial):
+    '''
+    Make sure the populations are stored as a dictionary,
+    with reasonable labels for each as the keys.
+
+    Parameters
+    ----------
+    initial : dict, list, Population
+        A dictionary containing zero or more populations.
+        Or, a list of one or more populations.
+        O
+
+    Returns
+    -------
+    pops : dict
+        A dictionary containing one or more populations.
+    '''
+
+    if type(initial) == dict:
+        return initial
+    elif type(initial) == list:
+        return {p.label:p for p in initial}
+    else:
+        # (otherwise, assume it's already a single population)
+        {initial.label:initial}
+
 class Panel(Talker):
     # define some defaults
     title = ''
@@ -106,7 +133,7 @@ class Panel(Talker):
         '''
 
         #
-        self.pops = pops
+        self.pops = clean_pops(pops)
 
         # loop over all the populations
         for key in self.pops.keys():
