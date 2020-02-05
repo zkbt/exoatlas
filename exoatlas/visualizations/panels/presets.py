@@ -48,6 +48,12 @@ class FluxRadius(BubblePanel):
         '''
         plt.axvspan(1.4, 0.4, color=color, alpha=alpha, linewidth=linewidth, **kw)
 
+class FluxTeff(FluxRadius):
+    ysource = 'stellar_teff'
+    ylabel = 'Stellar Effective Temperature (K)'
+    yscale = 'linear'
+    ylim = [2000, 7000]
+
 
 class DistanceRadius(FluxRadius):
     xsource = 'distance'

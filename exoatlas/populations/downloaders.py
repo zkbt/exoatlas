@@ -8,7 +8,7 @@
 from ..imports import *
 
 class Downloader(Talker):
-    expiration = np.inf
+    expiration = 1.0
 
     # anything special to know about reading this file format?
     readkw =  dict(delimiter='|',

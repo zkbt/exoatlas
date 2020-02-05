@@ -672,12 +672,18 @@ class Population(Talker):
         mu = 5*np.log10(self.distance/(10*u.pc))
         return mu
 
-
+    # FIXME -- how do we make it possible to change the threshold for inclusion?
     @property
-    def transmission_signal(self):
+    def transmission_signal(self, threshold=2):
         '''
         What is the transit depth of 1 scale height of an H2-rich
         atmosphere transiting in front of the star.
+
+        Parameters
+        ----------
+        threshold : float
+            By how many sigma must the planet mass be detected?
+
         '''
         with np.errstate(invalid='ignore'):
 
@@ -687,7 +693,7 @@ class Population(Talker):
             depth = (2*H*Rp/Rs**2).decompose()
 
             dlnm = self.uncertainty('mass')/self.mass
-            bad = dlnm > 0.5
+            bad = dlnm > 1/threshold
             depth[bad] = np.nan
             return depth
 

@@ -83,7 +83,7 @@ class MultiPanelPlot(Talker):
             Any extra keywords will be passed on to all panels' `build`
         '''
 
-        self.pops = pops
+        self.pops = clean_pops(pops)
 
         # plot each population in each panel
         for i, k in enumerate(self.panel_names):
