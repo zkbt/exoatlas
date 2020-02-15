@@ -54,8 +54,7 @@ allowed_plotkw += ['s',
                    'edgecolors',
                    'facecolors']
 
-class AtlasError(ValueError):
-    pass
+
 
 class Population(Talker):
     '''
@@ -588,7 +587,7 @@ class Population(Talker):
         # estimate from the msini
         try:
             M[bad] = self.msini[bad]
-        except (KeyError, AssertionError):
+        except (KeyError, AssertionError, AtlasError):
             pass
 
         # replace those that are still bad with the a/R*
@@ -781,7 +780,26 @@ class Population(Talker):
         dt = 1*u.hr
         dw = wavelength/R
         dA = 25*u.m**2 #np.pi*(6.5*u.m)**2
-        return u.def_unit('JWST-hour-R=20', dt*dA*dw)
+        return u.def_unit('(JWST-hour at R=20)', dt*dA*dw)
+
+    def HST_orbit_unit(self, wavelength=1.4*u.micron):
+        '''
+        Create a custom astropy unit to represent
+        the collecting area of Hubble
+        integrating over one 45 minute orbit
+        at a R=20 spectral resolution.
+
+        Parameters
+        ----------
+        wavelength : astropy.unit.Quantity
+            The wavelength at which it should be calculated.
+        '''
+
+        R = 20
+        dt = 0.75*u.hr
+        dw = wavelength/R
+        dA = 4.5*u.m**2 #np.pi*(6.5*u.m)**2
+        return u.def_unit('(HST-orbit at R=20)', dt*dA*dw)
 
     photon_unit = u.def_unit('Gigaphotons', 1e9*u.ph)
 
@@ -797,6 +815,20 @@ class Population(Talker):
 
         flux_in_photons = self.stellar_brightness(wavelength)
         unit = self.photon_unit/self.JWST_transit_unit(wavelength)
+        return flux_in_photons.to(unit)
+
+    def stellar_brightness_HST(self, wavelength=1.4*u.micron):
+        '''
+        The stellar brightness, converted to HST units.
+
+        Parameters
+        ----------
+        wavelength : astropy.unit.Quantity
+            The wavelength at which it should be calculated.
+        '''
+
+        flux_in_photons = self.stellar_brightness(wavelength)
+        unit = self.photon_unit/self.HST_orbit_unit(wavelength)
         return flux_in_photons.to(unit)
 
     # PICK UP FROM HERE! THESE ARE ALL RELATIVE, SHOULD WE MAKE THEM ABSOLUTE?

@@ -11,9 +11,12 @@ class BubblePanel(Panel):
     informative sizes and/or colors.
     '''
 
-    def __init__(self,  size=None, normalization=1,
-                color=None, vmin=None, vmax=None,
-                edges=False, **kw):
+    def __init__(self,
+                 xaxis=None,
+                 yaxis=None,
+                 size=None, normalization=1,
+                 color=None, vmin=None, vmax=None,
+                 edges=False, **kw):
         '''
         Initialize a plotting panel.
 
@@ -30,7 +33,8 @@ class BubblePanel(Panel):
             Other keywords will be passed on to Panel initialization.
         '''
 
-        Panel.__init__(self, **kw)
+        # initialize the basics of the panel with the plottable axes
+        Panel.__init__(self, xaxis=xaxis, yaxis=yaxis, **kw)
 
         # keep track of how we should assign symbols
         self.size = size

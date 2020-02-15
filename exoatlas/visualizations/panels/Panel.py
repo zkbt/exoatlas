@@ -2,11 +2,11 @@
 # all other panels derive from this one
 
 from exoatlas.imports import *
+from .axes import *
 
 # set the aspect ratios
 aspect = 768/1024.0
 figwidth = 7
-
 
 def clean_pops(initial):
     '''
@@ -44,7 +44,7 @@ class Panel(Talker):
     xlim = [None, None]
     ylim = [None, None]
 
-    def __init__(self, **kw):
+    def __init__(self, xaxis=None, yaxis=None, **kw):
         '''
         Initialize a plotting panel.
 
@@ -55,20 +55,54 @@ class Panel(Talker):
         # dictionaries to store access points to items that appear on the plot
         self.scattered = {}
         self.labeled = {}
+        self.plottable = {}
+
+        # set up the x and y axes
+        xaxis = clean_axis(xaxis) or self.xaxis
+        self.plottable['x'] = xaxis(panel=self,
+                                    orientation='horizontal',
+                                    **kw)
+
+        yaxis = clean_axis(yaxis) or self.yaxis
+        self.plottable['y'] = yaxis(panel=self,
+                                    orientation='vertical',
+                                    **kw)
+
+        # apply axis labels, scales, limits appropriately
+        for axis in 'xy':
+            for attribute in ['label', 'scale', 'lim']:
+                setattr(self,
+                        f'{axis}{attribute}',
+                        getattr(self.plottable[axis],
+                                attribute))
 
     def __repr__(self):
         '''
         How to represent this panel as a string?
         '''
-        return f'<{self.__class__.__name__} panel | {len(self.pops)} populations>'
+        x = self.plottable['x']
+        y = self.plottable['y']
+        return f"""
+        <Panel | {self.__class__.__name__}>
+            x = {x}
+            y = {y}"""
+
 
     @property
     def x(self):
-        return getattr(self.pop, self.xsource)
+        return self.plottable['x'].value()
 
     @property
     def y(self):
-        return getattr(self.pop, self.ysource)
+        return self.plottable['y'].value()
+
+    @property
+    def x_lowerupper(self):
+        return self.plottable['x'].value_lowerupper()
+
+    @property
+    def y_lowerupper(self):
+        return self.plottable['y'].value_lowerupper()
 
     def setup(self, ax=None):
         '''

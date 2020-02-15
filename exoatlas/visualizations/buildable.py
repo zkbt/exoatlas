@@ -23,9 +23,8 @@ class BuildablePlot(Talker):
         self.stepbystep = stepbystep
         self.name = 'exoplanets'
 
-        if type(pops) != dict:
-            pops = dict(planets=pops)
-            
+        pops = clean_pops(pops)
+
         self.plot(pops)
 
     def create_gridspec(self, *args, figsize=(10, 5), **kwargs):
@@ -91,7 +90,7 @@ class physical_summary(BuildablePlot):
 
 
         # plot the
-        sr = StellarRadius()
+        sr = StellarRadiusPlanetRadius()
         sr.build(pops=pops,
                  ax=plt.subplot(gs[1,2], sharey=fr.ax))
         sr.remove_ylabel()
