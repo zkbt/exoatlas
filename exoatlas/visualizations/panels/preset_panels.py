@@ -1,6 +1,6 @@
 from ...imports import *
 from ...models import plot_both_seager
-from .preset_axes import *
+from ..axes.preset_plottables import *
 from .Panel import *
 from .BubblePanel import *
 from .ErrorPanel import *

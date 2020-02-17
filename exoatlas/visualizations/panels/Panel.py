@@ -2,7 +2,7 @@
 # all other panels derive from this one
 
 from exoatlas.imports import *
-from .axes import *
+from ..axes.plottable import *
 
 # set the aspect ratios
 aspect = 768/1024.0

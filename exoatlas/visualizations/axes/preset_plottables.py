@@ -1,5 +1,5 @@
 from ...imports import *
-from .axes import *
+from .plottable import *
 
 class Flux(PlottableAxis):
     source = 'relative_insolation'
