@@ -1,13 +1,13 @@
 from ...imports import *
-from .axes import *
+from .plottable import *
 
-class Flux(PlottableAxis):
+class Flux(Plottable):
     source = 'relative_insolation'
     label = 'Bolometric Flux Received (relative to Earth)'
     scale = 'log'
     lim = [6e4, 2e-4]
 
-class Radius(PlottableAxis):
+class Radius(Plottable):
     source = 'radius'
     label = 'Planet Radius (Earth radii)'
     scale = 'log'
@@ -16,7 +16,7 @@ class Radius(PlottableAxis):
     def value_lowerupper(self):
         return self.panel.pop.uncertainty_lowerupper('radius')
 
-class Mass(PlottableAxis):
+class Mass(Plottable):
     source = 'mass'
     label = 'Planet Mass\n(Earth masses)'
     scale = 'log'
@@ -25,37 +25,37 @@ class Mass(PlottableAxis):
     def value_lowerupper(self):
         return self.panel.pop.uncertainty_lowerupper('mass')
 
-class SemimajorAxis(PlottableAxis):
+class SemimajorAxis(Plottable):
     source = 'semimajoraxis'
     label = 'Semimajor Axis (AU)\n'
     scale = 'log'
     lim = [0.001, 1000]
 
-class KludgedMass(PlottableAxis):
+class KludgedMass(Plottable):
     source = 'kludge_mass'
     label = 'Planet Mass or msini\n(Earth masses)'
     scale = 'log'
     lim = [0.03, 4000]
 
-class StellarTeff(PlottableAxis):
+class StellarTeff(Plottable):
     source = 'stellar_teff'
     label = 'Stellar Effective Temperature (K)'
     scale = 'linear'
     lim = [2000, 7000]
 
-class Distance(PlottableAxis):
+class Distance(Plottable):
     source = 'distance'
     label = 'Distance\n(parsecs)'
     scale = 'log'
     lim = [5,1000]
 
-class EscapeVelocity(PlottableAxis):
+class EscapeVelocity(Plottable):
     source='escape_velocity'
     label='Escape\nVelocity\n(km/s)'
     scale = 'log'
     lim=[2, 500]
 
-class Escape(PlottableAxis):
+class Escape(Plottable):
     source = 'escape_parameter'
     label = '$\lambda = E_{grav}/E_{thermal}$'
     scale = 'log'
@@ -86,32 +86,32 @@ class Escape(PlottableAxis):
         return sigma, sigma
 
 
-class Density(PlottableAxis):
+class Density(Plottable):
     source = 'density'
     label = 'Planet Density\n(g/cm$^3$)'
     scale = 'log'
     lim = [0.3, 12]
 
-class StellarRadius(PlottableAxis):
+class StellarRadius(Plottable):
     source = 'stellar_radius'
     label = 'Stellar Radius\n(solar radii)'
     scale = 'linear'
     lim = [0.0, 2.0]
 
 
-class Period(PlottableAxis):
+class Period(Plottable):
     source = 'period'
     label = 'Period (days)\n'
     scale = 'log'
     lim = [0.15, 365]
 
-class Jmag(PlottableAxis):
+class Jmag(Plottable):
     source = 'Jmag'
     label = 'J (magnitude)\n'
     scale = 'linear'
     lim = [3.5, 14.5]
 
-class Depth(PlottableAxis):
+class Depth(Plottable):
     source = 'transit_depth'
     label = 'Transit Depth\nof Planet'
     scale = 'log'
@@ -134,14 +134,14 @@ class Emission(Depth):
         eclipse depth will depend on the thermal emission
         spectrum of the planet and star.
         '''
-        PlottableAxis.__init__(self, **kw)
+        Plottable.__init__(self, **kw)
         self.wavelength = wavelength
         self.label = f'Eclipse Depth\nin Thermal Emission\nat $\lambda={self.wavelength.to(u.micron).value}\mu m$'
 
     def value(self):
         return self.panel.pop.emission_signal(self.wavelength)
 
-class StellarBrightness(PlottableAxis):
+class StellarBrightness(Plottable):
     source='stellar_brightness'
     label='Stellar Brightness at Earth\n(photons/s/m$^2$/nm)'
     scale='log'
@@ -153,7 +153,7 @@ class StellarBrightness(PlottableAxis):
         '''
         Initialize for a particular wavelength.
         '''
-        PlottableAxis.__init__(self, **kw)
+        Plottable.__init__(self, **kw)
         self.wavelength = wavelength
         w = self.wavelength.to(u.micron).value
 

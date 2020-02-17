@@ -1,8 +1,8 @@
 # general class for plotting exoplanet populations
 # all other panels derive from this one
 
-from exoatlas.imports import *
-from .axes import *
+from ...imports import *
+from ..plottables.plottable import *
 
 # set the aspect ratios
 aspect = 768/1024.0

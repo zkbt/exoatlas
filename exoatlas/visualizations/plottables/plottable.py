@@ -1,6 +1,6 @@
 from ...imports import *
 
-class PlottableAxis:
+class Plottable:
     scale = 'log'
     lim = [None, None]
 
@@ -46,7 +46,8 @@ class PlottableAxis:
         self.orientation = orientation
 
     def __repr__(self):
-        return f"<Plottable | {self.label}>".replace('\n', ' ')
+        x = f'{self.label}'.replace('\n', ' ')
+        return f"<Plottable | {x}>"
 
     def value(self):
         '''
@@ -70,43 +71,55 @@ class PlottableAxis:
         '''
 
         try:
+            # try to grab the uncertainties by name
             ul = self.panel.pop.uncertainty_lowerupper(self.source)
             return ul
         except AtlasError:
+            # if they don't exist, set them to 0
             sigma = self.value()*0.0
             return sigma, sigma
 
+    def plot_histogram(self, **kw):
+        '''
+        Plot a histogram of the values in this Plottable.
+        '''
+        x = self.value()
+
+        plt.hist(x, **kw)
+        plt.xlabel(self.label)
+        plt.ylabel('# of planets')
+
 def clean_axis(initial):
     '''
-    Make sure the axis initializer is a PlottableAxis
+    Make sure the axis initializer is a Plottable
     class definition.
 
     Parameters
     ----------
-    initial : PlottableAxis class definition, string
+    initial : Plottable class definition, string
 
     Returns
     -------
-    axis : PlottableAxis class definition
+    axis : Plottable class definition
     '''
 
     if initial is None:
         # pass through None so panel can use its own axis
         return None
     elif type(initial) is type:
-        # pass through an actual PlottableAxis definition
+        # pass through an actual Plottable definition
         return initial
     elif type(initial) is str:
-        # create a temporary PlottableAxis from this string
-        class GenericPlottableAxis(PlottableAxis):
+        # create a temporary Plottable from this string
+        class GenericPlottable(Plottable):
             source = initial
             label = initial
             scale = 'log'
             lim = [None, None]
-        return GenericPlottableAxis
+        return GenericPlottable
     else:
         # complain otherwise
         raise ValueError(f'''
         It' not clear how to turn {initial} into
-        a definition for a PlottableAxis.
+        a definition for a Plottable.
         ''')
