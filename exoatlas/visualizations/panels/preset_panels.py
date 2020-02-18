@@ -92,8 +92,17 @@ class DepthBrightness(BubblePanel):
         w = self.plottable['y'].wavelength
         photons = np.logspace(0, 14)*u.ph
         sigma = 1/np.sqrt(photons).decompose().value
-        # FIXME (we should porbably move the unit handling to the plot panels?)
-        photons_in_unit = photons.to(self.pop.photon_unit)/self.pop.JWST_transit_unit(w)
+
+        # what is "1" (e.g. JWST for one hour at R=20)?
+        telescope_unit = self.plottable['y'].telescope_unit
+
+        # how many photons do we collect with that one?
+        photons_collected = photons/telescope_unit
+
+        unit = self.plottable['y'].unit
+        photons_in_unit = photons_collected.to(unit)
+
+
         plt.plot(sigma, photons_in_unit, color=color, linewidth=linewidth, alpha=alpha, **kw)
 
 class TransmissionBrightness(DepthBrightness):

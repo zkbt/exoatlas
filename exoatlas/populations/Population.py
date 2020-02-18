@@ -1,5 +1,7 @@
 # general class for exoplanet populations
 from ..imports import *
+from ..telescopes import *
+
 import string
 
 exocolumns = [
@@ -739,7 +741,7 @@ class Population(Talker):
 
     def stellar_brightness(self, wavelength=5*u.micron):
         '''
-        How many photons/s/m^2/nm do we receive from the star?
+        How many photons/s/m^2/micron do we receive from the star?
 
         This is calculated from the distance, radius, and
         stellar effective temperature of the stars.
@@ -753,55 +755,24 @@ class Population(Talker):
             The wavelength at which it should be calculated.
         '''
 
+        # import some tools for easy cartoon spectra
         import rainbowconnection as rc
-        star = rc.Thermal(teff=self.stellar_teff,
-                          radius=self.stellar_radius).at(self.distance)
+
+        # create source with right temperature, size, distance
+        teff, radius = self.stellar_teff, self.stellar_radius
+        star = rc.Thermal(teff=teff,
+                          radius=radius).at(self.distance)
+
+        # calculate the energy flux
         flux_in_energy = star.spectrum(wavelength)
+
+        # convert to photon flux
         photon_energy = con.h*con.c/wavelength/u.ph
         flux_in_photons = flux_in_energy/photon_energy
-        return flux_in_photons.to('ph s^-1 m^-2 nm^-1')
 
+        # return the
+        return flux_in_photons.to('ph s^-1 m^-2 micron^-1')
 
-    def JWST_transit_unit(self, wavelength=5*u.micron):
-        '''
-        Create a custom astropy unit to represent
-        the collecting area of JWST
-        integrating over one hour
-        at a R=20 spectral resolution.
-
-        Parameters
-        ----------
-        wavelength : astropy.unit.Quantity
-            The wavelength at which it should be calculated.
-        '''
-
-
-        R = 20
-        dt = 1*u.hr
-        dw = wavelength/R
-        dA = 25*u.m**2 #np.pi*(6.5*u.m)**2
-        return u.def_unit('(JWST-hour at R=20)', dt*dA*dw)
-
-    def HST_orbit_unit(self, wavelength=1.4*u.micron):
-        '''
-        Create a custom astropy unit to represent
-        the collecting area of Hubble
-        integrating over one 45 minute orbit
-        at a R=20 spectral resolution.
-
-        Parameters
-        ----------
-        wavelength : astropy.unit.Quantity
-            The wavelength at which it should be calculated.
-        '''
-
-        R = 20
-        dt = 0.75*u.hr
-        dw = wavelength/R
-        dA = 4.5*u.m**2 #np.pi*(6.5*u.m)**2
-        return u.def_unit('(HST-orbit at R=20)', dt*dA*dw)
-
-    photon_unit = u.def_unit('Gigaphotons', 1e9*u.ph)
 
     def stellar_brightness_JWST(self, wavelength=5*u.micron):
         '''
@@ -814,7 +785,7 @@ class Population(Talker):
         '''
 
         flux_in_photons = self.stellar_brightness(wavelength)
-        unit = self.photon_unit/self.JWST_transit_unit(wavelength)
+        unit = photon_unit/JWST_transit_unit(wavelength)
         return flux_in_photons.to(unit)
 
     def stellar_brightness_HST(self, wavelength=1.4*u.micron):
@@ -828,7 +799,7 @@ class Population(Talker):
         '''
 
         flux_in_photons = self.stellar_brightness(wavelength)
-        unit = self.photon_unit/self.HST_orbit_unit(wavelength)
+        unit = photon_unit/HST_orbit_unit(wavelength)
         return flux_in_photons.to(unit)
 
     # PICK UP FROM HERE! THESE ARE ALL RELATIVE, SHOULD WE MAKE THEM ABSOLUTE?

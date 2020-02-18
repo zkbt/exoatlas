@@ -34,7 +34,7 @@ class PlottableAxis:
                  limits for the plot.
 
     '''
-    def __init__(self, panel,
+    def __init__(self, panel=None,
                        orientation=None,
                        **kw):
         '''
@@ -44,6 +44,18 @@ class PlottableAxis:
         '''
         self.panel = panel
         self.orientation = orientation
+
+    def __call__(self, panel=None, orientation=None, **kw):
+        '''
+        As a backup, in case we call something that
+        looks like initializing this PlottableAxis,
+        make sure that we connect to the appropriate
+        panel.
+        '''
+        self.panel = panel
+        self.orientation = orientation
+
+        return self
 
     def __repr__(self):
         return f"<Plottable | {self.label}>".replace('\n', ' ')
@@ -95,6 +107,9 @@ def clean_axis(initial):
         return None
     elif type(initial) is type:
         # pass through an actual PlottableAxis definition
+        return initial
+    elif isinstance(initial, PlottableAxis):
+        # pass through an actual PlottableAxis object
         return initial
     elif type(initial) is str:
         # create a temporary PlottableAxis from this string

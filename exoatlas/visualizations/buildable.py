@@ -173,20 +173,20 @@ class observable_summary(BuildablePlot):
                  ax=plt.subplot(gs[1, 4]))
         pr.remove_ylabel()
 
-        db = DistanceBrightness(JWST=True, **kw)
+        db = DistanceBrightness(telescope='JWST', **kw)
         db.build(pops=pops,
                  ax=plt.subplot(gs[0, 4]))
         db.remove_xlabel()
 
         db.remove_ylabel()
-        x = DepthBrightness(JWST=True, **kw)
+        x = DepthBrightness(telescope='JWST', **kw)
         x.build(pops=pops,
                  ax=plt.subplot(gs[0, 1]))
         x.plot_sigma()
         x.remove_xlabel()
 
 
-        x = EmissionBrightness(JWST=True, **kw)
+        x = EmissionBrightness(telescope='JWST', **kw)
         x.build(pops=pops,
                  ax=plt.subplot(gs[0, 2]))
         x.plot_sigma()
@@ -195,7 +195,7 @@ class observable_summary(BuildablePlot):
 
 
 
-        x = TransmissionBrightness(JWST=True, **kw)
+        x = TransmissionBrightness(telescope='JWST', **kw)
         x.build(pops=pops,
                  ax=plt.subplot(gs[0, 3]))
         x.plot_sigma()

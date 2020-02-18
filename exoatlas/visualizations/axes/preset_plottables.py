@@ -1,5 +1,6 @@
 from ...imports import *
 from .plottable import *
+from ...telescopes import *
 
 class Flux(PlottableAxis):
     source = 'relative_insolation'
@@ -147,26 +148,73 @@ class StellarBrightness(PlottableAxis):
     scale='log'
     lim=[1, 1e5]
 
-    def __init__(self, wavelength=5*u.micron,
-                       JWST=False,
+    def __init__(self, panel=None,
+                       orientation=None,
+                       wavelength=None,
+                       telescope=None,
+                       R=20,
+                       dt=1*u.hr,
                        **kw):
         '''
-        Initialize for a particular wavelength.
-        '''
-        PlottableAxis.__init__(self, **kw)
-        self.wavelength = wavelength
-        w = self.wavelength.to(u.micron).value
+        Initialize the StellarBrightness plottable.
+        It depends on wavelength, due to the thermal
+        emission Planck spectrum.
 
-        self.JWST = JWST
-        if JWST:
-            unit = 'Gigaphotons/JWST/hr/R=20'
-            self.lim = [.5e-1, 5e3]
+        Parameters
+        ----------
+        wavelength : astropy.units.quantity.Quantity
+            The wavelength at which we want the
+            stellar brightness to be computed.
+
+        telescope : None, str
+            The telescope unit in which to express the
+            stellar brightness. Options include:
+                'JWST'
+                'Hubble'
+
+        R : float
+            The spectral resolution at which the
+            telescope will be binned.
+            (Ignored if telescope is None.)
+
+        dt : astropy.units.quantity.Quantity
+            The time over which the telescope exposes.
+            (Ignored if telescope is None.)
+        '''
+
+        # initialize the basic plottable axis
+        PlottableAxis.__init__(self, panel=panel, orientation=orientation, **kw)
+
+        # keep track of the telescope (if any)
+        self.telescope = telescope
+
+        # select the appropriate photon unit
+        if self.telescope is None:
+            if wavelength is None:
+                wavelength = 1.0*u.micron
+            self.wavelength = wavelength
+            self.telescope_unit = u.s*u.m**2*u.micron
+            self.unit = u.Unit(('ph s^-1 m^-2 micron^-1'))
+            unit_string = 'photons/s/m$^2$/$\mu$m'
+            self.lim = [1e2, 1e8]
         else:
-            unit = 'photons/s/m$^2$/nm'
-        self.label = f'Stellar Brightness\nat Earth at $\lambda={w}\mu m$\n({unit})'
+            self.telescope_unit = define_telescope_unit_by_name(self.telescope,
+                                wavelength=wavelength, R=R, dt=dt, **kw)
+            self.unit = photon_unit/self.telescope_unit
+            self.wavelength = self.telescope_unit.wavelength
+            # if self.telescope == 'JWST':
+            #     self.unit = photon_unit/define_JWST_unit(wavelength=wavelength,
+            #                                              R=R, dt=dt)
+            # if self.telescope == 'HST':
+            #     self.unit = photon_unit/define_HST_unit(wavelength=wavelength,
+            #                                             R=R, dt=dt)
+            # unit_string = f'{photon_unit}/{self.telescope}/{dt}/R={R}'
+            unit_string = self.unit.to_string()
+            self.lim = [1e-3, 1e3]
+
+
+        w = self.wavelength.to(u.micron).value
+        self.label = f'Stellar Brightness\nat Earth at $\lambda={w}\mu$m\n({unit_string})'
 
     def value(self):
-        if self.JWST:
-            return self.panel.pop.stellar_brightness_JWST(self.wavelength)
-        else:
-            return self.panel.pop.stellar_brightness(self.wavelength)
+        return self.panel.pop.stellar_brightness(self.wavelength).to(self.unit)
