@@ -1,5 +1,7 @@
 # general class for exoplanet populations
 from ..imports import *
+from ..telescopes import *
+
 import string
 
 exocolumns = [
@@ -54,14 +56,15 @@ allowed_plotkw += ['s',
                    'edgecolors',
                    'facecolors']
 
-class AtlasError(ValueError):
-    pass
+
 
 class Population(Talker):
     '''
     Create a population from a standardized table.
     '''
 
+    #kludge?
+    _pithy = True
     def __init__(self, standard, label='unknown', **plotkw):
         '''
         Initialize a Population of exoplanets from a standardized table.
@@ -95,6 +98,7 @@ class Population(Talker):
         try:
             # if the key is an index/slice/mask, return it
             subset = self.standard[key]
+            label = f'Subset of {self.label}'
 
             # if the key is a column, raise an error
             if type(key) in self.standard.colnames:
@@ -113,15 +117,17 @@ class Population(Talker):
             if type(key) == str:
                 # remove spaces, to match the cleaned "name" index column
                 key = key.replace(' ', '')
+                label = key
             elif type(key[0]) == str:
                 # remove spaces, to match the cleaned "name" index column
                 key = [k.replace(' ', '') for k in key]
+                label = '+'.join(key)
+
             # pull out rows by planet name
             subset = self.standard.loc[key]
-
         # create a new population out of this subset
         return Population(standard=subset,
-                          label=f'ExoplanetSubsets of {self.label}',
+                          label=label,
                           **self.plotkw)
 
     def __getattr__(self, key):
@@ -588,7 +594,7 @@ class Population(Talker):
         # estimate from the msini
         try:
             M[bad] = self.msini[bad]
-        except (KeyError, AssertionError):
+        except (KeyError, AssertionError, AtlasError):
             pass
 
         # replace those that are still bad with the a/R*
@@ -639,7 +645,7 @@ class Population(Talker):
         mu = self.mu
         m_p = con.m_p
         g = self.surface_gravity
-        return k*T/mu/m_p/g
+        return (k*T/mu/m_p/g).to('km')
 
     @property
     def escape_velocity(self):
@@ -740,7 +746,7 @@ class Population(Talker):
 
     def stellar_brightness(self, wavelength=5*u.micron):
         '''
-        How many photons/s/m^2/nm do we receive from the star?
+        How many photons/s/m^2/micron do we receive from the star?
 
         This is calculated from the distance, radius, and
         stellar effective temperature of the stars.
@@ -754,36 +760,79 @@ class Population(Talker):
             The wavelength at which it should be calculated.
         '''
 
+        # import some tools for easy cartoon spectra
         import rainbowconnection as rc
-        star = rc.Thermal(teff=self.stellar_teff,
-                          radius=self.stellar_radius).at(self.distance)
+
+        # create source with right temperature, size, distance
+        teff, radius = self.stellar_teff, self.stellar_radius
+        star = rc.Thermal(teff=teff,
+                          radius=radius).at(self.distance)
+
+        # calculate the energy flux
         flux_in_energy = star.spectrum(wavelength)
+
+        # convert to photon flux
         photon_energy = con.h*con.c/wavelength/u.ph
         flux_in_photons = flux_in_energy/photon_energy
-        return flux_in_photons.to('ph s^-1 m^-2 nm^-1')
+
+        # return the
+        return flux_in_photons.to('ph s^-1 m^-2 micron^-1')
 
 
-    def JWST_transit_unit(self, wavelength=5*u.micron):
+    def photons_in_one_HST_orbit(self, wavelength=1.4*u.micron,
+                                       R=20):
         '''
-        Create a custom astropy unit to represent
-        the collecting area of JWST
-        integrating over one hour
-        at a R=20 spectral resolution.
-
-        Parameters
-        ----------
-        wavelength : astropy.unit.Quantity
-            The wavelength at which it should be calculated.
+        The number of photons that hit the Hubble Space
+        Telescope mirror, over the course of 1 HST orbit,
+        accounting for 50% loss due to Earth occultations.
         '''
 
 
-        R = 20
-        dt = 1*u.hr
-        dw = wavelength/R
-        dA = 25*u.m**2 #np.pi*(6.5*u.m)**2
-        return u.def_unit('JWST-hour-R=20', dt*dA*dw)
+        duty_cycle=0.5
+        dt = 1*u.def_unit('orbit',
+                          96*u.minute,
+                          doc=f'''
+                          This custom unit represents the
+                          the time of one HST orbit.
+                          ''')
 
-    photon_unit = u.def_unit('Gigaphotons', 1e9*u.ph)
+        telescope_unit = define_telescope_unit_by_name('HST',
+                                      wavelength=wavelength,
+                                      R=R,
+                                      dt=dt)
+
+        collecting_power = telescope_unit*duty_cycle
+
+        b = self.stellar_brightness(wavelength=wavelength)
+
+        return (b*collecting_power).decompose()
+
+    def photons_in_one_WFC3_orbit(self, **kw):
+        N = self.photons_in_one_HST_orbit(**kw)
+        throughput = 0.4
+        duty_cycle = 0.8
+        return N*throughput*duty_cycle
+
+    def depth_uncertainty_in_one_WFC3_orbit(self, **kw):
+        N = self.photons_in_one_WFC3_orbit(**kw)/u.ph
+        sigma_D = 1/np.sqrt(N)
+        oot = np.sqrt(2)
+        return sigma_D*oot
+
+    def radius_uncertainty_in_one_WFC3_orbit(self, **kw):
+        Rs = self.stellar_radius
+        D = self.transit_depth
+        sigma_D = self.depth_uncertainty_in_one_WFC3_orbit(**kw)
+        sigma_Rp = (Rs*sigma_D/2/np.sqrt(D)).to(u.Rearth)
+        return sigma_Rp
+
+    def radius_uncertainty_in_one_WFC3_transit(self, **kw):
+        N_orbits = (self.transit_duration/(96*u.minute)).decompose()
+        per_orbit = self.radius_uncertainty_in_one_WFC3_orbit(**kw)
+        return per_orbit/np.sqrt(N_orbits)
+
+
+
 
     def stellar_brightness_JWST(self, wavelength=5*u.micron):
         '''
@@ -796,7 +845,21 @@ class Population(Talker):
         '''
 
         flux_in_photons = self.stellar_brightness(wavelength)
-        unit = self.photon_unit/self.JWST_transit_unit(wavelength)
+        unit = photon_unit/JWST_transit_unit(wavelength)
+        return flux_in_photons.to(unit)
+
+    def stellar_brightness_HST(self, wavelength=1.4*u.micron):
+        '''
+        The stellar brightness, converted to HST units.
+
+        Parameters
+        ----------
+        wavelength : astropy.unit.Quantity
+            The wavelength at which it should be calculated.
+        '''
+
+        flux_in_photons = self.stellar_brightness(wavelength)
+        unit = photon_unit/HST_orbit_unit(wavelength)
         return flux_in_photons.to(unit)
 
     # PICK UP FROM HERE! THESE ARE ALL RELATIVE, SHOULD WE MAKE THEM ABSOLUTE?

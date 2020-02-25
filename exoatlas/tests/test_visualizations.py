@@ -1,23 +1,37 @@
+from exoatlas.imports import *
+
 import exoatlas as ex
 import matplotlib.pyplot as plt
+from exoatlas.visualizations.panels.preset_panels import predefined_panels
 
-def test_somepanels():
+def test_panels():
     pops = {}
     pops['solarsystem'] = ex.SolarSystem()
-    for p in [  ex.MassRadius,
-                ex.FluxRadius,
-                ex.StellarRadius,
-                ex.DistanceRadius]:
+    for p in predefined_panels:
         plt.figure()
         p().build(pops=pops)
-        plt.draw()
+        plt.close()
 
-def test_presets():
+def test_panel_types():
     pops = {}
     pops['solarsystem'] = ex.SolarSystem()
-    ex.physical_summary(pops)
-    ex.observable_summary(pops)
 
+    fr = ex.FluxRadius()
+    fr.build(pops=pops)
+
+    fr = ex.BubblePanel('insolation', 'radius')
+    fr.build(pops=pops)
+
+    fr = ex.ErrorPanel('insolation', 'radius')
+    fr.build(pops=pops)
+
+def test_multipanel_presets():
+    with mock.patch('builtins.input', return_value=""):
+        t = ex.TransitingExoplanets()
+        s = ex.SolarSystem()
+
+    ex.observable_summary([t,s])
+    ex.physical_summary([t,s])
 
 def test_fourpanels():
     pops = {}
