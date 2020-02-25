@@ -11,9 +11,12 @@ class BubblePanel(Panel):
     informative sizes and/or colors.
     '''
 
-    def __init__(self,  size=None, normalization=1,
-                color=None, vmin=None, vmax=None,
-                edges=False, **kw):
+    def __init__(self,
+                 xaxis=None,
+                 yaxis=None,
+                 size=None, normalization=None,
+                 color=None, vmin=None, vmax=None,
+                 edges=False, **kw):
         '''
         Initialize a plotting panel.
 
@@ -30,51 +33,78 @@ class BubblePanel(Panel):
             Other keywords will be passed on to Panel initialization.
         '''
 
-        Panel.__init__(self, **kw)
+        # initialize the basics of the panel with the plottable axes
+        Panel.__init__(self, xaxis=xaxis, yaxis=yaxis, **kw)
 
-        # keep track of how we should assign symbols
-        self.size = size
-        self.normalization = normalization
+        # set up how we should scale the sizes of points
+        size = clean_axis(size)
+        try:
+            # try to make a responsive size axis
+            self.plottable['size'] = size(panel=self, **kw)
+            default_norm = self.plottable['size'].normalization
+        except TypeError:
+            # otherwise, treat the size as a static thing
+            self.plottable['size'] = size
+            default_norm = 1
+
+        # make sure a size normalization has been defined
+        self.normalization = normalization or default_norm
+
+        # set up how we should set the colors of points
+        color = clean_axis(color)
+        try:
+            self.plottable['color'] = color(panel=self, **kw)
+            default_lim = self.plottable['color'].lim
+        except TypeError:
+            self.plottable['color'] = color
+            default_lim = [None, None]
+
+        # make sure the color map limits are set
+        self.vmin = vmin or default_lim[0]
+        self.vmax = vmax or default_lim[1]
         self.edges = edges
 
-        self.color = color
-        self.vmin = vmin
-        self.vmax = vmax
+        # apply axis labels, scales, limits appropriately
+        for axis in 'xy':
+            for attribute in ['label', 'scale', 'lim']:
+                setattr(self,
+                        f'{axis}{attribute}',
+                        getattr(self.plottable[axis],
+                                attribute))
 
-        # if keywords redefine any plotting parameters, store as attributes
-        for k in ['xsource', 'ysource',
-                  'xlabel', 'ylabel',
-                  'xscale', 'yscale',
-                  'xlim', 'ylim']:
-            if k in kw:
-                vars(self)[k] = kw[k]
+
+        # # if keywords redefine any plotting parameters, store as attributes
+        # for k in ['xsource', 'ysource',
+        #           'xlabel', 'ylabel',
+        #           'xscale', 'yscale',
+        #           'xlim', 'ylim']:
+        #     if k in kw:
+        #         vars(self)[k] = kw[k]
 
     def get_sizes(self):
         '''
         The sizes of the bubbles.
         '''
-        if type(self.size) == str:
+        if isinstance(self.plottable['size'], PlottableAxis):
             # get that string from the pop
-            x = getattr(self.pop, self.size)
+            x = self.plottable['size'].value()
             return default_size*x/self.normalization
         else:
-            return self.pop.plotkw.get('s', self.size)
+            return self.pop.plotkw.get('s', self.plottable['size'])
 
     def get_colors(self):
         '''
         The colors of the bubbles.
 
-        FIXME -- we should tidy up the color interface,
-        for choosing between cmap and fixed colors
         '''
         if self.pop.ink == False:
             return self.pop.color
-        elif type(self.color) == str:
+        elif isinstance(self.plottable['color'], PlottableAxis):
             # get that string from the pop
-            x = getattr(self.pop, self.color)
+            x = self.plottable['color'].value()
             return x
         else:
-            return self.pop.plotkw.get('color', self.color)
+            return self.pop.plotkw.get('color', self.plottable['color'])
 
     def kw(self, key=None, **kwargs):
         '''

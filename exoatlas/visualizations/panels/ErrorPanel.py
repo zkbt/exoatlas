@@ -16,19 +16,19 @@ class ErrorPanel(Panel):
     their intensity scaled to some overall visual weight.
     '''
 
-    @property
-    def x_lowerupper(self):
-        raise NotImplementedError(f"""
-        The 'x_lowerupper' quantity hasn't been defined for
-        {self}.
-        """)
+    #@property
+    #def x_lowerupper(self):
+    #    raise NotImplementedError(f"""
+    #    The 'x_lowerupper' quantity hasn't been defined for
+    #    {self}.
+    #    """)
 
-    @property
-    def y_lowerupper(self):
-        raise NotImplementedError(f"""
-        The 'x_lowerupper' quantity hasn't been defined for
-        {self}.
-        """)
+    #@property
+    #def y_lowerupper(self):
+    #    raise NotImplementedError(f"""
+    #    The 'x_lowerupper' quantity hasn't been defined for
+    #    {self}.
+    #    """)
 
     @property
     def x_unc(self):

@@ -7,7 +7,10 @@ class MultiPanelPlot(Talker):
     Make and modify row or a column of connected exoatlas plot panels.
     '''
 
-    def __init__(self, panels=[MassRadius, FluxRadius, StellarRadius, DistanceRadius],
+    def __init__(self, panels=[MassRadius,
+                               FluxRadius,
+                               StellarRadiusPlanetRadius,
+                               DistanceRadius],
                        horizontal=True,
                        figsize=(12,8),
                        gridspec_kw=dict(hspace=0.1,

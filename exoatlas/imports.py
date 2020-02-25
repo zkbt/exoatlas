@@ -133,3 +133,7 @@ def one2another(bottom='white', top='red', alphabottom=1.0, alphatop=1.0, N=256)
 	colors = np.transpose(np.vstack([r,g,b,a]))
 	cmap = co.ListedColormap(colors, name='{bottom}2{top}'.format(**locals()))
 	return cmap
+
+
+class AtlasError(ValueError):
+    pass
