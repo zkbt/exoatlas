@@ -63,6 +63,8 @@ class Population(Talker):
     Create a population from a standardized table.
     '''
 
+    #kludge?
+    _pithy = True
     def __init__(self, standard, label='unknown', **plotkw):
         '''
         Initialize a Population of exoplanets from a standardized table.
@@ -96,6 +98,7 @@ class Population(Talker):
         try:
             # if the key is an index/slice/mask, return it
             subset = self.standard[key]
+            label = f'Subset of {self.label}'
 
             # if the key is a column, raise an error
             if type(key) in self.standard.colnames:
@@ -114,15 +117,17 @@ class Population(Talker):
             if type(key) == str:
                 # remove spaces, to match the cleaned "name" index column
                 key = key.replace(' ', '')
+                label = key
             elif type(key[0]) == str:
                 # remove spaces, to match the cleaned "name" index column
                 key = [k.replace(' ', '') for k in key]
+                label = '+'.join(key)
+
             # pull out rows by planet name
             subset = self.standard.loc[key]
-
         # create a new population out of this subset
         return Population(standard=subset,
-                          label=f'ExoplanetSubsets of {self.label}',
+                          label=label,
                           **self.plotkw)
 
     def __getattr__(self, key):
@@ -640,7 +645,7 @@ class Population(Talker):
         mu = self.mu
         m_p = con.m_p
         g = self.surface_gravity
-        return k*T/mu/m_p/g
+        return (k*T/mu/m_p/g).to('km')
 
     @property
     def escape_velocity(self):
@@ -772,6 +777,61 @@ class Population(Talker):
 
         # return the
         return flux_in_photons.to('ph s^-1 m^-2 micron^-1')
+
+
+    def photons_in_one_HST_orbit(self, wavelength=1.4*u.micron,
+                                       R=20):
+        '''
+        The number of photons that hit the Hubble Space
+        Telescope mirror, over the course of 1 HST orbit,
+        accounting for 50% loss due to Earth occultations.
+        '''
+
+
+        duty_cycle=0.5
+        dt = 1*u.def_unit('orbit',
+                          96*u.minute,
+                          doc=f'''
+                          This custom unit represents the
+                          the time of one HST orbit.
+                          ''')
+
+        telescope_unit = define_telescope_unit_by_name('HST',
+                                      wavelength=wavelength,
+                                      R=R,
+                                      dt=dt)
+
+        collecting_power = telescope_unit*duty_cycle
+
+        b = self.stellar_brightness(wavelength=wavelength)
+
+        return (b*collecting_power).decompose()
+
+    def photons_in_one_WFC3_orbit(self, **kw):
+        N = self.photons_in_one_HST_orbit(**kw)
+        throughput = 0.4
+        duty_cycle = 0.8
+        return N*throughput*duty_cycle
+
+    def depth_uncertainty_in_one_WFC3_orbit(self, **kw):
+        N = self.photons_in_one_WFC3_orbit(**kw)/u.ph
+        sigma_D = 1/np.sqrt(N)
+        oot = np.sqrt(2)
+        return sigma_D*oot
+
+    def radius_uncertainty_in_one_WFC3_orbit(self, **kw):
+        Rs = self.stellar_radius
+        D = self.transit_depth
+        sigma_D = self.depth_uncertainty_in_one_WFC3_orbit(**kw)
+        sigma_Rp = (Rs*sigma_D/2/np.sqrt(D)).to(u.Rearth)
+        return sigma_Rp
+
+    def radius_uncertainty_in_one_WFC3_transit(self, **kw):
+        N_orbits = (self.transit_duration/(96*u.minute)).decompose()
+        per_orbit = self.radius_uncertainty_in_one_WFC3_orbit(**kw)
+        return per_orbit/np.sqrt(N_orbits)
+
+
 
 
     def stellar_brightness_JWST(self, wavelength=5*u.micron):

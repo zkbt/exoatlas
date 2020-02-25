@@ -2,7 +2,7 @@
 # all other panels derive from this one
 
 from ...imports import *
-from ..plottables.plottable import *
+from ..axes.plottable import *
 
 # set the aspect ratios
 aspect = 768/1024.0
@@ -32,7 +32,7 @@ def clean_pops(initial):
         return {p.label:p for p in initial}
     else:
         # (otherwise, assume it's already a single population)
-        {initial.label:initial}
+        return {initial.label:initial}
 
 class Panel(Talker):
     # define some defaults
@@ -242,6 +242,8 @@ class Panel(Talker):
         self.ax.set_ylabel(self.ylabel)
 
         # if requested, label the individual planets in the plot
+        #for p in self.pops:
+        #    self.point_at(p)
         if self.pop.label_planets:
             self.label_planets(**labelkw)
 

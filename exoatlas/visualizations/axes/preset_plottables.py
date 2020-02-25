@@ -91,7 +91,7 @@ class Density(PlottableAxis):
     source = 'density'
     label = 'Planet Density\n(g/cm$^3$)'
     scale = 'log'
-    lim = [0.3, 12]
+    lim = [0.01, 100]
 
 class StellarRadius(PlottableAxis):
     source = 'stellar_radius'
