@@ -3,6 +3,7 @@ from ...imports import *
 class PlottableAxis:
     scale = 'log'
     lim = [None, None]
+    normalization = 1
 
     '''
     General class definition for a plottable axis,
@@ -31,7 +32,15 @@ class PlottableAxis:
                  used for this axis.
 
         lim    = Tuple to indicate (lower, upper)
-                 limits for the plot.
+                 limits for the plot. These might
+                 also be used to set the vmin and
+                 vmax of a color map, if this
+                 plottable is being used to color
+                 points in a BubblePanel.
+
+        normalization = (optional) What to multiply
+                 the values by to convert them
+                 into sizes for a scatter plot.
 
     '''
     def __init__(self, panel=None,
