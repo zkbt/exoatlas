@@ -29,7 +29,8 @@ def clean_pops(initial):
     if type(initial) == dict:
         return initial
     elif type(initial) == list:
-        return {p.label:p for p in initial}
+
+        return {i:p for i, p in enumerate(initial)}
     else:
         # (otherwise, assume it's already a single population)
         return {initial.label:initial}
@@ -175,6 +176,8 @@ class Panel(Talker):
             # plot each population, passing plotting keywords to it
             self.plot(key, **kw)
 
+        return self
+        
     def label_planets(self, before='\n', after='', restrictlimits=False, **kwargs):
         '''
         Label the planets in whatever population we're pointed at.

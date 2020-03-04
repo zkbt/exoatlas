@@ -1,5 +1,5 @@
 from ...imports import *
-from ...models import plot_both_seager
+from ...models import plot_both_seager, make_hz
 from ..axes.preset_plottables import *
 from .Panel import *
 from .BubblePanel import *
@@ -33,20 +33,71 @@ class FluxRadius(BubblePanel):
         ax_temp.xaxis.set_major_formatter(FormatStrFormatter('%dK'))
         plt.sca(self.ax)
 
-    def plot_hz(self, color='cornflowerblue', alpha=0.25, linewidth=0, **kw):
+    def plot_hz(self, Teff=[2600, 6000], inner='moist-greenhouse', outer='maximum-greenhouse', color='cornflowerblue', alpha=0.25, linewidth=0, **kw):
         '''
         Add a bar that indicates an approximate habitable zone.
         (Estimated very roughly by eye from Kopparapu et al.)
+
+        Pa
         '''
-        plt.axvspan(1.4, 0.4, color=color, alpha=alpha, linewidth=linewidth, **kw)
+
+
+        # define the functions
+        S_inner = make_hz(inner)
+        S_outer = make_hz(outer)
+
+        if np.atleast_1d(Teff).size == 1:
+            plt.axvspan(S_inner(Teff), S_outer(Teff),
+                        color=color,
+                        alpha=alpha,
+                        linewidth=linewidth,
+                        **kw)
+        elif np.atleast_1d(Teff).size == 2:
+            N = 10
+            for Teff in np.linspace(Teff[0], Teff[1], N):
+                plt.axvspan(S_inner(Teff), S_outer(Teff),
+                            color=color,
+                            alpha=alpha/N,
+                            linewidth=0,
+                            **kw)
+
+
+
+        #Teff_inner = 5780
+        #Teff_outer = 2600
+
+
+class FluxMass(FluxRadius):
+    yaxis = KludgedMass
 
 class FluxTeff(BubblePanel):
     xaxis = Flux
     yaxis = StellarTeff
 
+    def plot_hz(self, inner='moist-greenhouse', outer='maximum-greenhouse', color='cornflowerblue', alpha=0.25, linewidth=0, **kw):
+        '''
+        Add a bar that indicates an approximate habitable zone.
+        (Estimated very roughly by eye from Kopparapu et al.)
+        '''
+
+        # define the functions
+        S_inner = make_hz(inner)
+        S_outer = make_hz(outer)
+
+        # define the temperature grid
+        Teff = np.linspace(2000, 7500)
+
+        # plot the swath
+        plt.fill_betweenx(Teff, S_inner(Teff), S_outer(Teff),
+                          color=color, alpha=alpha, linewidth=linewidth, **kw)
+
 class DistanceRadius(BubblePanel):
     xaxis = Distance
     yaxis = Radius
+
+class DistanceTeff(BubblePanel):
+    xaxis = Distance
+    yaxis = StellarTeff
 
 class EscapeRadius(BubblePanel):
     xaxis = Escape
@@ -152,7 +203,8 @@ class MassRadius(ErrorPanel):
                              zorder=zorder,
                              **kw)
 
-class FluxEscape(ErrorPanel):
+#class FluxEscape(ErrorPanel):
+class FluxEscape(BubblePanel):
     xaxis = Flux
     yaxis = EscapeVelocity
 

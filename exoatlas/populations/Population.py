@@ -114,11 +114,11 @@ class Population(Talker):
                 ''')
         except KeyError:
             # use a string or a list of strings to index the population by name
-            if type(key) == str:
+            if isinstance(key, str):
                 # remove spaces, to match the cleaned "name" index column
                 key = key.replace(' ', '')
                 label = key
-            elif type(key[0]) == str:
+            elif isinstance(key[0], str):
                 # remove spaces, to match the cleaned "name" index column
                 key = [k.replace(' ', '') for k in key]
                 label = '+'.join(key)
@@ -159,10 +159,10 @@ class Population(Talker):
                 assert(key in allowed_plotkw)
                 return self.plotkw.get(key, default_plotkw[key])
             except (AssertionError, KeyError):
-                raise AtlasError(f"""
+                raise AttributeError(f"""
                 Alas, there seems to be no way to find `.{key}`
                 as an attribute or propetry of {self}.
-                """)
+                """) #AtlasError
 
     def __setattr__(self, key, value):
         '''
@@ -205,7 +205,7 @@ class Population(Talker):
         # first try for an `uncertainty_{key}` column
         try:
             return self.__getattr__(f'{key}_uncertainty')
-        except (KeyError, AssertionError, AtlasError):
+        except (KeyError, AssertionError, AtlasError, AttributeError): # is including AttributeError a kludge?
             # this can be removed after debugging
             self.speak(f'no symmetric uncertainties found for "{key}"')
 
@@ -215,7 +215,7 @@ class Population(Talker):
             upper = self.__getattr__(f'{key}_uncertainty_upper')
             avg = 0.5*(np.abs(lower) + np.abs(upper))
             return avg
-        except (KeyError, AssertionError, AtlasError):
+        except (KeyError, AssertionError, AtlasError, AttributeError):
             # this can be removed after debugging
             self.speak(f'no asymmetric uncertainties found for "{key}"')
 
@@ -594,7 +594,7 @@ class Population(Talker):
         # estimate from the msini
         try:
             M[bad] = self.msini[bad]
-        except (KeyError, AssertionError, AtlasError):
+        except (KeyError, AssertionError, AtlasError, AttributeError):
             pass
 
         # replace those that are still bad with the a/R*

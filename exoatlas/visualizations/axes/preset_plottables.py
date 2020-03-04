@@ -36,11 +36,11 @@ class KludgedMass(PlottableAxis):
     source = 'kludge_mass'
     label = 'Planet Mass or msini\n(Earth masses)'
     scale = 'log'
-    lim = [0.03, 4000]
+    lim = [0.03, 4131]
 
 class StellarTeff(PlottableAxis):
     source = 'stellar_teff'
-    label = 'Stellar Effective Temperature (K)'
+    label = 'Stellar Temperature (K)'
     scale = 'linear'
     lim = [2000, 7000]
 
