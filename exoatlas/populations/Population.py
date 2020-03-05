@@ -6,6 +6,7 @@ import string
 
 exocolumns = [
 'name',
+'hostname',
 'ra', 'dec',
 'distance',
 'discoverer']
