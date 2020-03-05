@@ -51,6 +51,7 @@ class SolarSystem(PredefinedPopulation):
         # create an empty standardized table
         s = Table()
         s['name'] = t['name']
+        s['hostname'] = 'Sun'
 
         # set up the Sun
         s['stellar_teff'] = 5780*u.K

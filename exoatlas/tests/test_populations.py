@@ -126,8 +126,10 @@ def test_indexing():
     e = p['GJ 1214b']
     f = p[['GJ 1214b', 'LHS 1140b']] #'GJ 1132b',
     g = p[p.discoverer == 'Kepler']
+    h = p['TRAPPIST-1b']
+    i = p['TRAPPIST-1']
 
-    return a, b, c, d, e
+    return a, b, c, d, e, f, g, h, i
 
 def test_attributes():
     '''

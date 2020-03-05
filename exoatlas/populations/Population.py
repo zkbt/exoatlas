@@ -88,7 +88,36 @@ class Population(Talker):
 
         # make sure it's searchable via planet name
         self.standard.add_index('name')
+        self.standard.add_index('hostname')
 
+    def sort(self, x, reverse=False):
+        '''
+        Sort this population by some key or attribute.
+        '''
+
+        to_sort = getattr(self, x)
+        i = np.argsort(to_sort)
+        if reverse:
+            i = i[::-1]
+
+        self.standard = self.standard[i]
+        return self
+
+    def __add__(self, other):
+        '''
+        Create a new population by adding two together:
+
+            big = one + another
+
+        Parameters
+        ----------
+        other : Population
+            The population to be tacked onto this one.
+        '''
+
+        table = join(self.standard, other.standard, join_type='outer')
+        label = f'{self.label} + {other.label}'
+        return Population(table, label=label)
 
     def __getitem__(self, key):
         '''
@@ -113,22 +142,65 @@ class Population(Talker):
                 1D array of the entries in that column.
                 ''')
         except KeyError:
-            # use a string or a list of strings to index the population by name
-            if isinstance(key, str):
-                # remove spaces, to match the cleaned "name" index column
-                key = key.replace(' ', '')
-                label = key
-            elif isinstance(key[0], str):
-                # remove spaces, to match the cleaned "name" index column
-                key = [k.replace(' ', '') for k in key]
-                label = '+'.join(key)
 
-            # pull out rows by planet name
-            subset = self.standard.loc[key]
-        # create a new population out of this subset
+            # use a string or a list of strings make a subset by planet name
+            # FIXME - maybe we should make this say more when it's making a sneaky choice for us?
+            try:
+                subset = self.create_subset_by_name(key)
+            except KeyError:
+                subset = self.create_subset_by_hostname(key)
+
+            return subset
+
+    def create_subset_by_name(self, key):
+        '''
+        Pull out a subset of this population,
+        based on one or more planet names.
+        '''
+
+        # use a string or a list of strings to index the population by name
+        if isinstance(key, str):
+            # is it just one name?
+            key = key.replace(' ', '')
+            label = key
+        elif isinstance(key[0], str):
+            # is it a list of names?
+            key = [k.replace(' ', '') for k in key]
+            label = '+'.join(key)
+
+        # pull out rows by planet name
+        subset = self.standard.loc['name', key]
+
+        # create that new sub-population
         return Population(standard=subset,
                           label=label,
                           **self.plotkw)
+
+
+    def create_subset_by_hostname(self, key):
+        '''
+        Pull out a subset of this population,
+        based on one or more planet names.
+        '''
+
+        # use a string or a list of strings to index the population by name
+        if isinstance(key, str):
+            # is it just one name?
+            key = key.replace(' ', '')
+            label = key
+        elif isinstance(key[0], str):
+            # is it a list of names?
+            key = [k.replace(' ', '') for k in key]
+            label = '+'.join(key)
+
+        # pull out rows by planet name
+        subset = self.standard.loc['hostname', key]
+
+        # create that new sub-population
+        return Population(standard=subset,
+                          label=label,
+                          **self.plotkw)
+
 
     def __getattr__(self, key):
         '''
