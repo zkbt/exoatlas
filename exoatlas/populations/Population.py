@@ -116,19 +116,24 @@ class Population(Talker):
             The population to be tacked onto this one.
         '''
 
-        table = join(self.standard, other.standard, join_type='outer')
-        label = f'{self.label} + {other.label}'
+        with warnings.catch_warnings():
+            warnings.simplefilter('ignore')
+            table = join(self.standard, other.standard, join_type='outer')
+            label = f'{self.label} + {other.label}'
+
         return Population(table, label=label)
 
     def __getitem__(self, key):
         '''
         Create a subpopulation of planets by indexing, slicing, or masking.
         '''
+        # FIXME -- maybe make it easier to pull out intermediate masks?
 
         try:
             # if the key is an index/slice/mask, return it
-            subset = self.standard[key]
-            label = f'Subset of {self.label}'
+            subset = Population(standard=self.standard[key],
+                                label=f'Subset of {self.label}',
+                                **self.plotkw)
 
             # if the key is a column, raise an error
             if type(key) in self.standard.colnames:
@@ -151,7 +156,8 @@ class Population(Talker):
             except KeyError:
                 subset = self.create_subset_by_hostname(key)
 
-            return subset
+        return subset
+
 
     def create_subset_by_name(self, key):
         '''
@@ -620,32 +626,36 @@ class Population(Talker):
         (FIXME, clarify if this is 1.5-3.5 or what)
         '''
 
-        # pull out the actual values from the table
-        d = self.standard['transit_duration'].copy().quantity
+        with warnings.catch_warnings():
+            warnings.simplefilter('ignore')
 
-        # try to replace bad ones with NVK3L
-        bad = np.isfinite(d) == False
-        self.speak(f'{sum(bad)}/{self.n} transit durations are missing')
+            # pull out the actual values from the table
+            d = self.standard['transit_duration'].copy().quantity
+
+            # try to replace bad ones with NVK3L
+            bad = np.isfinite(d) == False
+            self.speak(f'{sum(bad)}/{self.n} transit durations are missing')
 
 
-        P = self.period[bad]
-        a_over_rs = self.a_over_rs[bad]
-        b = self.b[bad]
 
-        T0 = P/np.pi/a_over_rs
-        T = T0*np.sqrt(1-b**2)
+            P = self.period[bad]
+            a_over_rs = self.a_over_rs[bad]
+            b = self.b[bad]
 
-        e = self.e[bad]
-        omega = self.omega[bad]
-        factor = np.sqrt(1 - e**2)/(1 + e*np.sin(omega))
+            T0 = P/np.pi/a_over_rs
+            T = T0*np.sqrt(1-b**2)
 
-        d[bad] = (T*factor).to(u.day)
+            e = self.e[bad]
+            omega = self.omega[bad]
+            factor = np.sqrt(1 - e**2)/(1 + e*np.sin(omega))
 
-        # report those that are still bad
-        stillbad = np.isfinite(d) == False
-        self.speak(f'{sum(stillbad)}/{self.n} are still missing after P, a/R*, b')
+            d[bad] = (T*factor).to(u.day)
 
-        return d
+            # report those that are still bad
+            stillbad = np.isfinite(d) == False
+            self.speak(f'{sum(stillbad)}/{self.n} are still missing after P, a/R*, b')
+
+            return d
 
     @property
     def kludge_mass(self):

@@ -16,6 +16,8 @@ from astropy.utils.data import download_file
 from astropy.io import ascii
 from astropy.table import Table, vstack, join
 from astropy.visualization import quantity_support
+from astropy.coordinates import SkyCoord
+
 quantity_support()
 
 # some general custom utilities from Zach
