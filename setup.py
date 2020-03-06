@@ -85,7 +85,8 @@ setup(
                       'astroquery>=0.3.9',
                       'rainbow-connection>=0.0.1',
                       'PyYAML',
-                      'tqdm'],
+                      'tqdm',
+                      'pytz'],
     # what version of Python is required?
     python_requires='>=3.6',
     # packages in `key` will be installed with `pip install pkg-name[key]`

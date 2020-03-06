@@ -29,7 +29,8 @@ def clean_pops(initial):
     if type(initial) == dict:
         return initial
     elif type(initial) == list:
-        return {p.label:p for p in initial}
+
+        return {i:p for i, p in enumerate(initial)}
     else:
         # (otherwise, assume it's already a single population)
         return {initial.label:initial}
@@ -145,6 +146,7 @@ class Panel(Talker):
         # record the name of the current population
         self.key = key
 
+        return self
 
     def fileprefix(self, key):
         '''
@@ -174,6 +176,8 @@ class Panel(Talker):
 
             # plot each population, passing plotting keywords to it
             self.plot(key, **kw)
+
+        return self
 
     def label_planets(self, before='\n', after='', restrictlimits=False, **kwargs):
         '''
@@ -228,6 +232,103 @@ class Panel(Talker):
                                               **textkw)
             except AssertionError: # (do we need to add other errors?)
                 pass
+
+    def label_hosts(self, before='\n', after='', restrictlimits=False, once=False, **kwargs):
+        '''
+        Label the planet hosts in whatever population we're pointed at.
+
+        Parameters
+        ----------
+        before : str
+            Add the string at the start of each name.
+        after : str
+            Add the string at the end of each name.
+        restrictlimits : bool
+            Should we plot names only for those planets that fall within
+            the panel's x and y limits?
+        **kwargs : dict
+            Any additional keywords will be passed to the `text` command.
+        '''
+
+        # make sure we're set to the current axes
+        plt.sca(self.ax)
+
+
+        # loop over the elements in the population
+        for i in range(len(self.x)):
+
+            # pull out the positions and the name
+            x, y, name = self.x[i], self.y[i], self.pop.hostname[i]
+
+            if once:
+                if name in self.labeled:
+                    continue
+
+            # skip over the planets that aren't within limits
+            if restrictlimits:
+                try:
+                    with np.errstate(invalid='ignore'):
+                        if x < np.min(self.xlim) or x > np.max(self.xlim):
+                            if y < np.min(self.ylim) or y > np.max(self.ylim):
+                                continue
+                except TypeError: # (are there other errors we need to add?)
+                    pass
+
+            # define some defaults for the text
+            textkw = dict(ha='center', va='top',
+                          fontsize=6,
+                          color=self.pop.color,
+                          alpha=self.pop.alpha)
+
+            # think this is just as Python 3 thing
+            textkw.update(**kwargs)
+
+            # store the text plot, so it can be modified
+            try:
+                assert(np.isfinite(x*y))
+                self.labeled[name] = plt.text(x, y,
+                                              before + name + after,
+                                              **textkw)
+
+            except AssertionError: # (do we need to add other errors?)
+                pass
+
+    def connect_planets(self, **kwargs):
+        '''
+        Identify all the multiplanet systems,
+        and draw lines connecting the planets
+        within each individual system.
+
+        Parameters
+        ----------
+        **kwargs : dict
+            Any keywords will overwrite the defaults
+            going into the `.plot()` function call.
+        '''
+
+        # make sure we're set to the current axes
+        plt.sca(self.ax)
+
+        # define some defaults for the lines
+        linekw = dict(color=self.pop.color,
+                      alpha=self.pop.alpha*0.5,
+                      zorder=-100)
+
+        # overwrite those defaults if kwargs are provided
+        linekw.update(**kwargs)
+
+
+        original_pop = self.pop
+        for hostname in np.unique(self.pop.hostname):
+
+            friends = self.pop[hostname]
+            self.pop = friends
+            x, y = self.x, self.y
+            i = np.argsort(x)
+            plt.plot(x[i], y[i], **linekw)
+            self.pop = original_pop
+
+
 
     def finish_plot(self, labelkw={}):
         '''

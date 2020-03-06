@@ -6,6 +6,7 @@ import string
 
 exocolumns = [
 'name',
+'hostname',
 'ra', 'dec',
 'distance',
 'discoverer']
@@ -88,17 +89,51 @@ class Population(Talker):
 
         # make sure it's searchable via planet name
         self.standard.add_index('name')
+        self.standard.add_index('hostname')
 
+    def sort(self, x, reverse=False):
+        '''
+        Sort this population by some key or attribute.
+        '''
+
+        to_sort = getattr(self, x)
+        i = np.argsort(to_sort)
+        if reverse:
+            i = i[::-1]
+
+        self.standard = self.standard[i]
+        return self
+
+    def __add__(self, other):
+        '''
+        Create a new population by adding two together:
+
+            big = one + another
+
+        Parameters
+        ----------
+        other : Population
+            The population to be tacked onto this one.
+        '''
+
+        with warnings.catch_warnings():
+            warnings.simplefilter('ignore')
+            table = join(self.standard, other.standard, join_type='outer')
+            label = f'{self.label} + {other.label}'
+
+        return Population(table, label=label)
 
     def __getitem__(self, key):
         '''
         Create a subpopulation of planets by indexing, slicing, or masking.
         '''
+        # FIXME -- maybe make it easier to pull out intermediate masks?
 
         try:
             # if the key is an index/slice/mask, return it
-            subset = self.standard[key]
-            label = f'Subset of {self.label}'
+            subset = Population(standard=self.standard[key],
+                                label=f'Subset of {self.label}',
+                                **self.plotkw)
 
             # if the key is a column, raise an error
             if type(key) in self.standard.colnames:
@@ -113,22 +148,66 @@ class Population(Talker):
                 1D array of the entries in that column.
                 ''')
         except KeyError:
-            # use a string or a list of strings to index the population by name
-            if type(key) == str:
-                # remove spaces, to match the cleaned "name" index column
-                key = key.replace(' ', '')
-                label = key
-            elif type(key[0]) == str:
-                # remove spaces, to match the cleaned "name" index column
-                key = [k.replace(' ', '') for k in key]
-                label = '+'.join(key)
 
-            # pull out rows by planet name
-            subset = self.standard.loc[key]
-        # create a new population out of this subset
+            # use a string or a list of strings make a subset by planet name
+            # FIXME - maybe we should make this say more when it's making a sneaky choice for us?
+            try:
+                subset = self.create_subset_by_name(key)
+            except KeyError:
+                subset = self.create_subset_by_hostname(key)
+
+        return subset
+
+
+    def create_subset_by_name(self, key):
+        '''
+        Pull out a subset of this population,
+        based on one or more planet names.
+        '''
+
+        # use a string or a list of strings to index the population by name
+        if isinstance(key, str):
+            # is it just one name?
+            key = key.replace(' ', '')
+            label = key
+        elif isinstance(key[0], str):
+            # is it a list of names?
+            key = [k.replace(' ', '') for k in key]
+            label = '+'.join(key)
+
+        # pull out rows by planet name
+        subset = self.standard.loc['name', key]
+
+        # create that new sub-population
         return Population(standard=subset,
                           label=label,
                           **self.plotkw)
+
+
+    def create_subset_by_hostname(self, key):
+        '''
+        Pull out a subset of this population,
+        based on one or more planet names.
+        '''
+
+        # use a string or a list of strings to index the population by name
+        if isinstance(key, str):
+            # is it just one name?
+            key = key.replace(' ', '')
+            label = key
+        elif isinstance(key[0], str):
+            # is it a list of names?
+            key = [k.replace(' ', '') for k in key]
+            label = '+'.join(key)
+
+        # pull out rows by planet name
+        subset = self.standard.loc['hostname', key]
+
+        # create that new sub-population
+        return Population(standard=subset,
+                          label=label,
+                          **self.plotkw)
+
 
     def __getattr__(self, key):
         '''
@@ -159,10 +238,10 @@ class Population(Talker):
                 assert(key in allowed_plotkw)
                 return self.plotkw.get(key, default_plotkw[key])
             except (AssertionError, KeyError):
-                raise AtlasError(f"""
+                raise AttributeError(f"""
                 Alas, there seems to be no way to find `.{key}`
                 as an attribute or propetry of {self}.
-                """)
+                """) #AtlasError
 
     def __setattr__(self, key, value):
         '''
@@ -205,7 +284,7 @@ class Population(Talker):
         # first try for an `uncertainty_{key}` column
         try:
             return self.__getattr__(f'{key}_uncertainty')
-        except (KeyError, AssertionError, AtlasError):
+        except (KeyError, AssertionError, AtlasError, AttributeError): # is including AttributeError a kludge?
             # this can be removed after debugging
             self.speak(f'no symmetric uncertainties found for "{key}"')
 
@@ -215,7 +294,7 @@ class Population(Talker):
             upper = self.__getattr__(f'{key}_uncertainty_upper')
             avg = 0.5*(np.abs(lower) + np.abs(upper))
             return avg
-        except (KeyError, AssertionError, AtlasError):
+        except (KeyError, AssertionError, AtlasError, AttributeError):
             # this can be removed after debugging
             self.speak(f'no asymmetric uncertainties found for "{key}"')
 
@@ -547,32 +626,36 @@ class Population(Talker):
         (FIXME, clarify if this is 1.5-3.5 or what)
         '''
 
-        # pull out the actual values from the table
-        d = self.standard['transit_duration'].copy().quantity
+        with warnings.catch_warnings():
+            warnings.simplefilter('ignore')
 
-        # try to replace bad ones with NVK3L
-        bad = np.isfinite(d) == False
-        self.speak(f'{sum(bad)}/{self.n} transit durations are missing')
+            # pull out the actual values from the table
+            d = self.standard['transit_duration'].copy().quantity
+
+            # try to replace bad ones with NVK3L
+            bad = np.isfinite(d) == False
+            self.speak(f'{sum(bad)}/{self.n} transit durations are missing')
 
 
-        P = self.period[bad]
-        a_over_rs = self.a_over_rs[bad]
-        b = self.b[bad]
 
-        T0 = P/np.pi/a_over_rs
-        T = T0*np.sqrt(1-b**2)
+            P = self.period[bad]
+            a_over_rs = self.a_over_rs[bad]
+            b = self.b[bad]
 
-        e = self.e[bad]
-        omega = self.omega[bad]
-        factor = np.sqrt(1 - e**2)/(1 + e*np.sin(omega))
+            T0 = P/np.pi/a_over_rs
+            T = T0*np.sqrt(1-b**2)
 
-        d[bad] = (T*factor).to(u.day)
+            e = self.e[bad]
+            omega = self.omega[bad]
+            factor = np.sqrt(1 - e**2)/(1 + e*np.sin(omega))
 
-        # report those that are still bad
-        stillbad = np.isfinite(d) == False
-        self.speak(f'{sum(stillbad)}/{self.n} are still missing after P, a/R*, b')
+            d[bad] = (T*factor).to(u.day)
 
-        return d
+            # report those that are still bad
+            stillbad = np.isfinite(d) == False
+            self.speak(f'{sum(stillbad)}/{self.n} are still missing after P, a/R*, b')
+
+            return d
 
     @property
     def kludge_mass(self):
@@ -594,7 +677,7 @@ class Population(Talker):
         # estimate from the msini
         try:
             M[bad] = self.msini[bad]
-        except (KeyError, AssertionError, AtlasError):
+        except (KeyError, AssertionError, AtlasError, AttributeError):
             pass
 
         # replace those that are still bad with the a/R*

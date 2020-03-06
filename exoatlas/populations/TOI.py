@@ -83,6 +83,8 @@ class TOI(PredefinedPopulation):
 
         # use the TOI as the name
         s['name'] = [f'TOI{toi:.2f}' for toi in t['TOI']]
+        s['hostname'] = [f'TOI{toi:.0f}' for toi in t['TOI']]
+
         s['TIC ID'] = t['TIC ID']
 
         s['distance'] = t['Stellar Distance (pc)']*u.pc

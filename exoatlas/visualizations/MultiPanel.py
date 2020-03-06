@@ -41,10 +41,15 @@ class MultiPanelPlot(Talker):
         '''
 
         # store list of panel names
-        self.panel_names = [p.__name__ for p in panels]
+        def get_name(x):
+            try:
+                return x.__name__
+            except AttributeError:
+                return x.__class__.__name__
+        self.panel_names = [get_name(p) for p in panels]
 
         # create a dictionary of panel objects
-        self.panels = {p.__name__:p(**kw) for p in panels}
+        self.panels = {get_name(p):p(**kw) for p in panels}
 
         # set up the geometry of the figure
         self.horizontal = horizontal
@@ -104,4 +109,5 @@ class MultiPanelPlot(Talker):
                 plt.setp(self.ax[k].get_xticklabels(), visible=False)
                 self.ax[k].set_xlabel('')
 
+        return self
 FourPanels = MultiPanelPlot

@@ -155,7 +155,7 @@ class ThumbtackPlot(BubblePanel):
                     self.namestars(thiskey)
                 plt.draw()
                 plt.savefig(self.fileprefix(key))
-
+        return self
 
     def movie(self, step=1.02, bitrate=20000, highlight='', keys=None, maxdistance=1500.0, fileprefix='exoplanetszoom'):
         metadata = dict(title='Exoplanets Zoom', artist='Zach Berta-Thompson (zkbt@mit.edu)')

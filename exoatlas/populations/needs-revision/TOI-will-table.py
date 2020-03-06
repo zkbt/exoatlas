@@ -55,7 +55,9 @@ class TOI(PredefinedPopulation):
         # PICK UP FROM HERE!!!!!!!!!!!!!
 
         # pull out the name as the CTOI
-        s['name'] = ['CTOI{:.2f}'.format(c) for c in t['CTOI']]
+        s['name'] = ['TOI{:.2f}'.format(c) for c in t['CTOI']]
+        s['hostname'] = ['TOI{:.0f}'.format(c) for c in t['CTOI']]
+        
         s['period'] = t['Period (days)']
         s['transit_duration'] = t['Duration (hrs)']/24
 

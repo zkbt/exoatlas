@@ -69,7 +69,8 @@ class Exoplanets(PredefinedPopulation):
 
         # what's the name of the planet?
         s['name'] = [x.replace(' ', '') for x in t['pl_name']]
-
+        s['hostname'] = [x.replace(' ', '') for x in t['fpl_hostname']]
+        
         #badpos = (t['ra'] ==0.0)*(t['dec'] == 0.0)
         s['ra'] = t['ra']*u.deg#t.MaskedColumn(t['ra'], mask=badpos)
         s['dec'] = t['dec']*u.deg#t.MaskedColumn(t['dec'], mask=badpos)
@@ -163,6 +164,9 @@ class Exoplanets(PredefinedPopulation):
         s['discoverer'] = t['pl_facility']
         s['method'] = t['pl_discmethod']
 
+        s['has_transit'] = t['pl_tranflag']
+        s['has_RV'] = t['pl_rvflag']
+
         # sort these planets by their names
         s.sort('name')
 
@@ -177,53 +181,21 @@ class Exoplanets(PredefinedPopulation):
         # return that standardized table
         return standard
 
-
 class TransitingExoplanets(Exoplanets):
-    def __init__(self, label='Transiting Exoplanets', remake=False, **plotkw):
-        '''
-        Initialize a population of all known transiting exoplanets,
-        from a table downloaded from the NASA Exoplanet Archive.
-        '''
-        # set up the population
-        Exoplanets.__init__(self, label=label, remake=remake, **plotkw)
+    def __init__(self, **kw):
 
-    def trim_raw(self, raw):
-        '''
-        Trim the raw table down to ones with reasonable values.
-        '''
+        Exoplanets.__init__(self, **kw)
 
-        masks = {}
+        # set the label
+        self.label = 'Transiting Exoplanets'
 
-        # does this planet transit?
-        masks['transits'] = raw['pl_tranflag'] == 1
-
-        with np.errstate(invalid='ignore'):
-
-            # is this a planetar-size object
-            masks['size'] = raw['pl_rade'] < 30
+        # trim to just the data we want
 
 
-        # does this planet have a J magnitude?
-        # masks['has_J'] = raw['st_j'] > 1.0
-
-        # does this planet have a stellar radius?
-        # masks['has_radius'] = raw['st_rad'] > 0.0
-
-
-        ok = np.ones(len(raw)).astype(np.bool)
-        for k in masks:
-            ok *= masks[k]
-            N = sum(ok == True)
-            self.speak(f'{N} planets pass the `{k}` filter')
-
-        # trim down the table to just those that are OK
-        trimmed = raw[ok]
-
-        # for debugging, hang onto the trimmed table as a hidden attribute
-        self._trimmed = trimmed
-
-        ntotal = len(raw)
-        ntrimmed = len(trimmed)
-        self.speak(f'trimmed down to {ntrimmed}/{ntotal} rows')
-
-        return trimmed
+        with warnings.catch_warnings():
+            warnings.simplefilter('ignore', category=RuntimeWarning)
+            ok_transit = (self.has_transit == 1)
+            has_no_radius = np.isnan(self.radius)
+            ok_radius = (self.radius < 30*u.Rearth) | has_no_radius
+            ok = ok_transit & ok_radius
+        self.standard = self.standard[ok]
