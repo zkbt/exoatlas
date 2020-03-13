@@ -657,6 +657,8 @@ class Population(Talker):
 
             return d
 
+
+
     @property
     def kludge_mass(self):
         '''
@@ -685,6 +687,36 @@ class Population(Talker):
         self.speak(f'{sum(stillbad)}/{self.n} are still missing after msini')
 
         return M
+
+    @property
+    def kludge_age(self):
+        '''
+        Have a safe way to calculate the age of planets,
+        that fills in gaps as necessary. Basic strategy:
+
+            First from table.
+            Then assume 5 Gyr.
+        '''
+
+        # pull out the actual values from the table
+        age = self.standard['stellar_age'].copy().quantity
+
+        # try to replace bad ones with NVK3L
+        bad = np.isfinite(age) == False
+        self.speak(f'{sum(bad)}/{self.n} ages are missing')
+
+        # estimate from the msini
+        try:
+            age[bad] = 5*u.Gyr
+        except (KeyError, AssertionError, AtlasError, AttributeError):
+            pass
+
+        # replace those that are still bad with the a/R*
+        stillbad = np.isfinite(age) == False
+        self.speak(f'{sum(stillbad)}/{self.n} are still missing after blindly assuming 5Gyr for missing ages')
+
+        return age
+
 
     @property
     def surface_gravity(self):

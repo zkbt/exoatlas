@@ -58,7 +58,8 @@ class SolarSystem(PredefinedPopulation):
 
         s['stellar_radius'] = 1.0*u.Rsun
         s['stellar_mass'] = 1.0*u.Msun
-
+        s['stellar_age'] = 4.5*u.Gyr
+        
         # store the period, by default, in day
         s['period'] = (t['period']*u.year).to(u.day)
 
