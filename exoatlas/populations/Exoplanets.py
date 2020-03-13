@@ -70,7 +70,7 @@ class Exoplanets(PredefinedPopulation):
         # what's the name of the planet?
         s['name'] = [x.replace(' ', '') for x in t['pl_name']]
         s['hostname'] = [x.replace(' ', '') for x in t['fpl_hostname']]
-        
+
         #badpos = (t['ra'] ==0.0)*(t['dec'] == 0.0)
         s['ra'] = t['ra']*u.deg#t.MaskedColumn(t['ra'], mask=badpos)
         s['dec'] = t['dec']*u.deg#t.MaskedColumn(t['dec'], mask=badpos)
@@ -112,6 +112,16 @@ class Exoplanets(PredefinedPopulation):
         s['stellar_teff'] = merge('st_teff')*u.K
         s['stellar_radius'] = merge('st_rad')*u.Rsun
         s['stellar_mass'] = merge('st_mass')*u.Msun
+
+        # add stellar age
+        s['stellar_age'] = merge('st_age')*u.Gyr
+        upper = t['st_ageerr1'].data
+        lower = t['st_ageerr2'].data
+        bad = upper.mask | lower.mask
+        upper[bad] = np.inf
+        lower[bad] = np.inf
+        s['stellar_age_uncertainty_upper'] = upper*u.Gyr
+        s['stellar_age_uncertainty_lower'] = lower*u.Gyr
 
         # what are the stellar magnitudes?
         bands = ['UJ', 'VJ', 'BJ', 'RC', 'IC',
