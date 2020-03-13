@@ -41,6 +41,7 @@ class Plan(Talker):
                     maxairmass=2.5,
                     maxsun=-12.0,
                     buffer=1.0,
+                    allow_partial=True,
                     directory='upcoming-transits/',
                     name='default'):
 
@@ -52,6 +53,7 @@ class Plan(Talker):
         # set the maximum airmass and the maximum sun altitude
         self.maxairmass = maxairmass
         self.maxsun = maxsun
+        self.allow_partial = allow_partial
         self.buffer = buffer
 
         # set up a directory to store results in
@@ -137,13 +139,14 @@ class Plan(Talker):
         coords_happening = coords[is_happening_tonight]
 
         # figure out if the targets are up
-        min_alt = 30*u.deg
+        min_alt = 90*u.deg - np.arccos(1/self.maxairmass)*180/np.pi*u.deg#30*u.deg
         up_happening = self.observatory.altaz(coords_happening, times_happening).alt > min_alt
-        up_happening *= self.observatory.altaz(coords_happening, times_happening + buffer).alt > min_alt
-        up_happening *= self.observatory.altaz(coords_happening, times_happening - buffer).alt > min_alt
+        if self.allow_partial == False:
+            up_happening *= self.observatory.altaz(coords_happening, times_happening + buffer).alt > min_alt
+            up_happening *= self.observatory.altaz(coords_happening, times_happening - buffer).alt > min_alt
 
         # figure out if the sun is down
-        max_sun = -12*u.deg
+        max_sun = self.maxsun*u.deg#-12*u.deg
         dark_happening = self.observatory.sun(times_happening).alt < max_sun
         dark_happening *= self.observatory.sun(times_happening+buffer).alt < max_sun
         dark_happening *= self.observatory.sun(times_happening-buffer).alt < max_sun
