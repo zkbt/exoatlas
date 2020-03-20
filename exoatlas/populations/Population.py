@@ -1,6 +1,7 @@
 # general class for exoplanet populations
 from ..imports import *
 from ..telescopes import *
+from ..models import *
 
 import string
 
@@ -428,7 +429,7 @@ class Population(Talker):
 
 
     @property
-    def semimajoraxis(self):
+    def semimajor_axis(self):
         '''
         Have a safe way to calculate the semimajor axis of planets,
         that fills in gaps as necessary. Basic strategy:
@@ -463,6 +464,33 @@ class Population(Talker):
         return a
 
     @property
+    def angular_separation(self):
+        '''
+        Calculate the angular separation,
+        simply as theta = a/D
+        '''
+
+        a = self.semimajor_axis
+        D = self.distance
+
+        theta = np.arctan(a/D).to(u.arcsec)
+
+        return theta
+
+
+    @property
+    def imaging_contrast(self):
+        '''
+        What is the reflected light eclipse depth,
+        for an albedo of 100%?
+
+        But use a kludged radius
+        '''
+        return 0.25*(self.kludge_radius/self.semimajor_axis).decompose()**2
+
+
+
+    @property
     def a_over_rs(self):
         '''
         Have a safe way to calculate the scaled semimajor axis of planets,
@@ -479,7 +507,7 @@ class Population(Talker):
         bad = np.isfinite(a_over_rs) == False
         self.speak(f'{sum(bad)}/{self.n} values for a/R* are missing')
 
-        a = self.semimajoraxis[bad]
+        a = self.semimajor_axis[bad]
         R = self.stellar_radius[bad]
         a_over_rs[bad] = a/R
 
@@ -569,7 +597,7 @@ class Population(Talker):
         '''
 
         # calculate the average insolation the planet receives
-        insolation = self.stellar_luminosity/4/np.pi/self.semimajoraxis**2
+        insolation = self.stellar_luminosity/4/np.pi/self.semimajor_axis**2
         return insolation.to(u.W/u.m**2)
 
     @property
@@ -687,6 +715,36 @@ class Population(Talker):
         self.speak(f'{sum(stillbad)}/{self.n} are still missing after msini')
 
         return M
+
+    @property
+    def kludge_radius(self):
+        '''
+        Have a safe way to calculate the radii of planets,
+        that fills in gaps as necessary. Basic strategy:
+
+            First from table.
+            Then from mass, via Chen & Kipping (2017).
+        '''
+
+        # pull out the actual values from the table
+        R = self.standard['radius'].copy().quantity
+
+        # try to replace bad ones with NVK3L
+        bad = np.isfinite(R) == False
+        self.speak(f'{sum(bad)}/{self.n} radii are missing')
+
+        # estimate from Chen and Kipping
+        try:
+            M = self.kludge_mass
+            R[bad] = estimate_radius(M[bad])
+        except (KeyError, AssertionError, AtlasError, AttributeError):
+            pass
+
+        # replace those that are still bad with the a/R*
+        stillbad = np.isfinite(R) == False
+        self.speak(f'{sum(stillbad)}/{self.n} are still missing after Chen & Kipping (2017)')
+
+        return R
 
     @property
     def kludge_age(self):
@@ -831,7 +889,7 @@ class Population(Talker):
         What is the reflected light eclipse depth,
         for an albedo of 100%?
         '''
-        return 0.25*(self.radius/self.semimajoraxis).decompose()**2
+        return 0.25*(self.radius/self.semimajor_axis).decompose()**2
 
 
     def emission_signal(self, wavelength=5*u.micron):

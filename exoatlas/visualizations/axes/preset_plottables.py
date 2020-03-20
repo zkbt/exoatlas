@@ -32,6 +32,18 @@ class SemimajorAxis(PlottableAxis):
     scale = 'log'
     lim = [0.001, 1000]
 
+class AngularSeparation(PlottableAxis):
+    source = 'angular_separation'
+    label = 'Angular Separation (arcsec)\n'
+    scale = 'log'
+    lim = [0.001, 10]
+
+class Contrast(PlottableAxis):
+    source = 'imaging_contrast'
+    label = 'Planet-to-Star Contrast Ratio\n'
+    scale = 'log'
+    lim = [1e-10, 1e-3]
+
 class KludgedMass(PlottableAxis):
     source = 'kludge_mass'
     label = 'Planet Mass or msini\n(Earth masses)'
