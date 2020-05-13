@@ -40,9 +40,23 @@ class AngularSeparation(PlottableAxis):
 
 class Contrast(PlottableAxis):
     source = 'imaging_contrast'
-    label = 'Planet-to-Star Contrast Ratio\n'
+    label = 'Planet-to-Star Contrast'
     scale = 'log'
     lim = [1e-10, 1e-3]
+
+    def __init__(self, phase_function=0.25, albedo=0.25, **kw):
+        '''
+        Initialize for a particular wavelength, because the
+        eclipse depth will depend on the thermal emission
+        spectrum of the planet and star.
+        '''
+        PlottableAxis.__init__(self, **kw)
+        self.phase_function = phase_function
+        self.albedo = albedo
+        self.label = f'Reflected Light Planet-to-Star Contrast\n(albedo = {albedo:.0%}, phase function = {phase_function:.0%})'
+
+    def value(self):
+        return self.panel.pop.imaging_contrast*self.albedo*self.phase_function
 
 class KludgedMass(PlottableAxis):
     source = 'kludge_mass'
@@ -149,7 +163,7 @@ class Emission(Depth):
         '''
         PlottableAxis.__init__(self, **kw)
         self.wavelength = wavelength
-        self.label = f'Eclipse Depth\nin Thermal Emission\nat $\lambda={self.wavelength.to(u.micron).value}\mu m$'
+        self.label = f'Thermal Emission Eclipse Depth at $\lambda={self.wavelength.to(u.micron).value}\mu m$'
 
     def value(self):
         return self.panel.pop.emission_signal(self.wavelength)
@@ -226,7 +240,7 @@ class StellarBrightness(PlottableAxis):
 
 
         w = self.wavelength.to(u.micron).value
-        self.label = f'Stellar Brightness\nat Earth at $\lambda={w}\mu$m\n({unit_string})'
+        self.label = f'Stellar Brightness at Earth at $\lambda={w}\mu$m\n({unit_string})'
 
     def value(self):
         return self.panel.pop.stellar_brightness(self.wavelength).to(self.unit)

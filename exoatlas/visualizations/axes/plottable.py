@@ -3,7 +3,7 @@ from ...imports import *
 class PlottableAxis:
     scale = 'log'
     lim = [None, None]
-    normalization = 1
+    size_normalization = 1
 
     '''
     General class definition for a plottable axis,
@@ -38,7 +38,7 @@ class PlottableAxis:
                  plottable is being used to color
                  points in a BubblePanel.
 
-        normalization = (optional) What to multiply
+        size_normalization = (optional) What to multiply
                  the values by to convert them
                  into sizes for a scatter plot.
 

@@ -37,26 +37,28 @@ desired_columns = [
 'distance_uncertainty_upper',
 'distance_uncertainty_lower']
 
-# these are keywords that can be set for
+# these are keywords that can be set for a population
 default_plotkw = dict(color='black',
                       alpha=1,
                       zorder=0,
+                      marker='o',
+                      linewidth=1,
                       ink=True,
                       exact=False,
-                      label_planets=False)
+                      label_planets=False,
+                      filled=True,
+                      outlined=False)
 
 # what keywords can we set for the population plotkw?
 allowed_plotkw = list(default_plotkw.keys())
 allowed_plotkw += ['s',
                    'c',
-                   'marker',
                    'cmap',
                    'norm',
                    'vmin',
                    'vmax'
-                   'linewidths',
-                   'edgecolors',
-                   'facecolors']
+                   'outlined',
+                   'filled']
 
 
 
@@ -132,8 +134,12 @@ class Population(Talker):
 
         try:
             # if the key is an index/slice/mask, return it
+            if self.label is None:
+                label = None
+            else:
+                label = f'Subset of {self.label}'
             subset = Population(standard=self.standard[key],
-                                label=f'Subset of {self.label}',
+                                label=label,
                                 **self.plotkw)
 
             # if the key is a column, raise an error

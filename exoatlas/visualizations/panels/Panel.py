@@ -219,7 +219,8 @@ class Panel(Talker):
             textkw = dict(ha='center', va='top',
                           fontsize=6,
                           color=self.pop.color,
-                          alpha=self.pop.alpha)
+                          alpha=self.pop.alpha,
+                          clip_on=True)
 
             # think this is just as Python 3 thing
             textkw.update(**kwargs)
@@ -278,7 +279,8 @@ class Panel(Talker):
             textkw = dict(ha='center', va='top',
                           fontsize=6,
                           color=self.pop.color,
-                          alpha=self.pop.alpha)
+                          alpha=self.pop.alpha,
+                          clip_on=True)
 
             # think this is just as Python 3 thing
             textkw.update(**kwargs)
