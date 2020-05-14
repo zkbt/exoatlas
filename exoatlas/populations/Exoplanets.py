@@ -68,8 +68,8 @@ class Exoplanets(PredefinedPopulation):
         s = Table()
 
         # what's the name of the planet?
-        s['name'] = [x.replace(' ', '') for x in t['pl_name']]
-        s['hostname'] = [x.replace(' ', '') for x in t['fpl_hostname']]
+        s['name'] = [x.strip() for x in t['pl_name']]
+        s['hostname'] = [x.strip() for x in t['fpl_hostname']]
 
         #badpos = (t['ra'] ==0.0)*(t['dec'] == 0.0)
         s['ra'] = t['ra']*u.deg#t.MaskedColumn(t['ra'], mask=badpos)

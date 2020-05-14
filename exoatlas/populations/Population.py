@@ -90,9 +90,20 @@ class Population(Talker):
         # keywords to use for plotting
         self.plotkw = plotkw
 
-        # make sure it's searchable via planet name
-        self.standard.add_index('name')
-        self.standard.add_index('hostname')
+        # define some cleaned names and hostnames, for indexing
+        try:
+            self.standard['tidyname']
+        except KeyError:
+            self.standard['tidyname'] = [clean(x).lower() for x in self.standard['name']]
+
+        try:
+            self.standard['tidyhostname']
+        except KeyError:
+            self.standard['tidyhostname'] = [clean(x).lower() for x in self.standard['hostname']]
+
+        # make sure the table is searchable via names
+        self.standard.add_index('tidyname')
+        self.standard.add_index('tidyhostname')
 
     def sort(self, x, reverse=False):
         '''
@@ -175,15 +186,19 @@ class Population(Talker):
         # use a string or a list of strings to index the population by name
         if isinstance(key, str):
             # is it just one name?
-            key = key.replace(' ', '')
-            label = key
+            key = clean(key).lower()
         elif isinstance(key[0], str):
             # is it a list of names?
-            key = [k.replace(' ', '') for k in key]
-            label = '+'.join(key)
+            key = [clean(k).lower() for k in key]
 
         # pull out rows by planet name
-        subset = self.standard.loc['name', key]
+        subset = self.standard.loc['tidyname', key]
+
+        # create a useful label for the population
+        if isinstance(key, str):
+            label = key
+        elif isinstance(key[0], str):
+            label = '+'.join(key)
 
         # create that new sub-population
         return Population(standard=subset,
@@ -200,15 +215,19 @@ class Population(Talker):
         # use a string or a list of strings to index the population by name
         if isinstance(key, str):
             # is it just one name?
-            key = key.replace(' ', '')
-            label = key
+            key = clean(key).lower()
         elif isinstance(key[0], str):
             # is it a list of names?
-            key = [k.replace(' ', '') for k in key]
-            label = '+'.join(key)
+            key = [clean(k).lower() for k in key]
 
         # pull out rows by planet name
-        subset = self.standard.loc['hostname', key]
+        subset = self.standard.loc['tidyhostname', key]
+
+        # create a useful label for the population
+        if isinstance(key, str):
+            label = key
+        elif isinstance(key[0], str):
+            label = '+'.join(key)
 
         # create that new sub-population
         return Population(standard=subset,
@@ -1178,6 +1197,7 @@ class PredefinedPopulation(Population):
                             standard=standard,
                             label=label,
                             **plotkw)
+
 
     @property
     def fileprefix(self):
