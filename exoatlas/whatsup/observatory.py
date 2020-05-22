@@ -155,7 +155,7 @@ class Observatory(Talker):
     def plot_empty_night(self, midnight, threshold=-12.0, ax=None):
         astropy_midnight = Time(midnight, format='jd')
 
-        plt.figure(figsize=(8, 3))
+        plt.figure(figsize=(8, 3), dpi=400)
         times = Time(np.arange(midnight.value-1.0,
                                   midnight.value+1.0,
                                   5.0/60/24),

@@ -43,7 +43,8 @@ class Plan(Talker):
                     buffer=1.0,
                     allow_partial=True,
                     directory='upcoming-transits/',
-                    name='default'):
+                    name='default',
+                    file_format='png'):
 
         '''initialize, setting the observatory, block, and population'''
 
@@ -56,6 +57,7 @@ class Plan(Talker):
         self.allow_partial = allow_partial
         self.buffer = buffer
 
+        self.file_format = file_format
         # set up a directory to store results in
         self.directory = directory
         mkdir(self.directory)
@@ -186,7 +188,7 @@ class Plan(Talker):
             plt.title(f'Transits Observable from {self.observatory.name} on {date}')
 
             filename = os.path.join(self.directory,
-                                    f'{date}.pdf')
+                                    f'{date}.{self.file_format}')
             plt.savefig(filename)
             plt.clf()
 

@@ -139,3 +139,9 @@ def one2another(bottom='white', top='red', alphabottom=1.0, alphatop=1.0, N=256)
 
 class AtlasError(ValueError):
     pass
+
+# KLUDGE
+
+import warnings
+warnings.catch_warnings()
+warnings.simplefilter("ignore")
