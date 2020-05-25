@@ -96,6 +96,8 @@ class physical_summary(BuildablePlot):
         sr.remove_ylabel()
         mr.ticks_simplify_exponents('y')
 
+        self.panels = {p.nametag:p for p in [fr, mr, er, sr]}
+
 class observable_summary(BuildablePlot):
     def plot(self, pops, note='', telescope='HST', **wavelengthkw):
         gs = self.create_gridspec(2, 5,

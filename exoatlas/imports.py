@@ -39,12 +39,12 @@ def mkdir(path):
 
 import matplotlib.colors as co
 def name2color(name):
-    """Return the 3-element RGB array of a given color name."""
-    if '#' in name:
-        h = name
-    else:
-        h = co.cnames[name].lower()
-    return co.hex2color(h)
+	"""Return the 3-element RGB array of a given color name."""
+	if '#' in name:
+		h = name
+	else:
+		h = co.cnames[name].lower()
+	return co.hex2color(h)
 
 # create a directory structure ()
 try:
@@ -59,7 +59,7 @@ mkdir(base)
 
 directories = dict(data=os.path.join(base, 'data/'))
 for k in directories.keys():
-    mkdir(directories[k])
+	mkdir(directories[k])
 
 def reset_local_data():
 	if 'y' in input('Are you sure you want to wipe all '
@@ -73,61 +73,69 @@ from pkg_resources import resource_filename
 
 # some kludge for dealing with Python 3 vs 2?
 try:
-    FileNotFoundError
+	FileNotFoundError
 except NameError:
-    FileNotFoundError = IOError
+	FileNotFoundError = IOError
 
 def clean(s):
-    '''
-    A wrapper function to clean up complicated strings.
-    '''
-    bad = """ !@#$%^&*()-'",./<>?"""
-    cleaned = str(s) + ''
-    for c in bad:
-        cleaned = cleaned.replace(c, '')
-    return cleaned
+	'''
+	A wrapper function to clean up complicated strings.
+	'''
+	bad = """ !@#$%^&*()-'",./<>?"""
+	cleaned = str(s) + ''
+	for c in bad:
+		cleaned = cleaned.replace(c, '')
+	return cleaned
 
 def time_from_modified(filename):
-    '''
-    How long ago was this file last modified?
-    '''
-    try:
-        dt = Time.now().unix - os.path.getmtime(filename)
-        return dt/60/60/24
-    except FileNotFoundError:
-        return np.inf
+	'''
+	How long ago was this file last modified?
+	'''
+	try:
+		dt = Time.now().unix - os.path.getmtime(filename)
+		return dt/60/60/24
+	except FileNotFoundError:
+		return np.inf
 
 
 def check_if_needs_updating(filename, maximum_age=1.0):
-    '''
-    Do a (possibly interactive) check to see if this file
-    is so old that it needs to be updated.
+	'''
+	Do a (possibly interactive) check to see if this file
+	is so old that it needs to be updated.
 
-    Returns
-    -------
-    old : bool
-        True if the file is so old it needs updating
-        False if the file doesn't need updating
-    '''
+	Returns
+	-------
+	old : bool
+		True if the file is so old it needs updating
+		False if the file doesn't need updating
+	'''
 
-    # how long ago was the data updated?
-    dt = time_from_modified(filename)
+	# how long ago was the data updated?
+	dt = time_from_modified(filename)
 
-    old = False
-    if dt == np.inf:
-        old = True
-    elif dt > maximum_age:
-        print(f'{filename} is {dt:.3f} days old.')
-        old = 'y' in input('Should it be updated? [y/N]').lower()
+	old = False
+	if dt == np.inf:
+		old = True
+	elif dt > maximum_age:
+		print(f'{filename} is {dt:.3f} days old.')
+		old = 'y' in input('Should it be updated? [y/N]').lower()
 
-    return old
+	return old
 
 
 def one2another(bottom='white', top='red', alphabottom=1.0, alphatop=1.0, N=256):
 	'''
 	Create a cmap that goes smoothly (linearly in RGBA) from "bottom" to "top".
 	'''
-	rgb_bottom, rgb_top = name2color(bottom or 'white'), name2color(top or 'black')
+	try:
+		rgb_bottom = bottom[0:3] + 0
+	except:
+		rgb_bottom = name2color(bottom or 'white')
+	try:
+		rgb_top = top[0:3] + 0
+	except:
+		rgb_top = name2color(top or 'black')
+
 	r = np.linspace(rgb_bottom[0],rgb_top[0],N)
 	g = np.linspace(rgb_bottom[1],rgb_top[1],N)
 	b = np.linspace(rgb_bottom[2],rgb_top[2],N)
@@ -138,7 +146,7 @@ def one2another(bottom='white', top='red', alphabottom=1.0, alphatop=1.0, N=256)
 
 
 class AtlasError(ValueError):
-    pass
+	pass
 
 # KLUDGE
 
