@@ -122,20 +122,73 @@ class Population(Talker):
         '''
         Create a new population by adding two together:
 
-            big = one + another
+            `bigger = this + other`
 
         Parameters
         ----------
         other : Population
             The population to be tacked onto this one.
+
+        Returns
+        -------
+        bigger : Population
+            A new population, consisting of all the planets
+            in `this` population and some extra ones added
+            from `other`.
+
         '''
 
+        # skip any warnings that pop up
         with warnings.catch_warnings():
             warnings.simplefilter('ignore')
-            table = join(self.standard, other.standard, join_type='outer')
+
+            #  create a new table, joining both together
+            table = join(self.standard,
+                         other.standard,
+                         join_type='outer')
+
+            # create an informative label
             label = f'{self.label} + {other.label}'
 
+        # create and return the new population
         return Population(table, label=label)
+
+
+
+    def __sub__(self, other):
+        '''
+        Create a new population by removing some rows from here:
+
+            `smaller = this - other`
+
+        Parameters
+        ----------
+        other : Population
+            The population of planets to be removed from
+            `this` population to create a new `smaller` one.
+
+        Returns
+        -------
+        smaller : Population
+            A subset of `this` population, where some rows
+            have been removed.
+        '''
+
+        # skip any warnings that pop up
+        with warnings.catch_warnings():
+            warnings.simplefilter('ignore')
+
+            #  create a new table, joining both together
+            table = setdiff(self.standard,
+                            other.standard,
+                            keys='tidyname')
+
+            # create an informative label
+            label = f'{self.label} - {other.label}'
+
+        # create and return the new population
+        return Population(table, label=label)
+
 
     def __getitem__(self, key):
         '''
@@ -179,11 +232,27 @@ class Population(Talker):
 
     def create_subset_by_name(self, key):
         '''
-        Pull out a subset of this population,
+        Extract a subset of this population,
         based on one or more planet names.
+
+        Parameters
+        ----------
+        key : strings, list of strings
+            The name of a planet ("GJ1132b")
+            or a list of planet names.
+
+            (All names will be stripped of
+            special characters and converted
+            to lower case before indexing.)
+
+        Returns
+        -------
+        subset : Population
+            A new population containing
+            some subset of the original.
         '''
 
-        # use a string or a list of strings to index the population by name
+        # use a (list of) string(s) to index population by name
         if isinstance(key, str):
             # is it just one name?
             key = clean(key).lower()
@@ -208,9 +277,26 @@ class Population(Talker):
 
     def create_subset_by_hostname(self, key):
         '''
-        Pull out a subset of this population,
-        based on one or more planet names.
+        Extract a subset of this population,
+        based on one or more planet hostnames.
+
+        Parameters
+        ----------
+        key : strings, list of strings
+            The hostname of a planet ("GJ1132")
+            or a list of planet hostnames.
+
+            (All names will be stripped of
+            special characters and converted
+            to lower case before indexing.)
+
+        Returns
+        -------
+        subset : Population
+            A new population containing
+            some subset of the original.
         '''
+
 
         # use a string or a list of strings to index the population by name
         if isinstance(key, str):
@@ -228,6 +314,73 @@ class Population(Talker):
             label = key
         elif isinstance(key[0], str):
             label = '+'.join(key)
+
+        # create that new sub-population
+        return Population(standard=subset,
+                          label=label,
+                          **self.plotkw)
+
+    def create_subset_by_position(self,
+                                  coordinates,
+                                  radius=1*u.arcmin,
+                                  use_proper_motions=False):
+        '''
+        Extract a subset of this population,
+        by performing a spatial cross-match by
+        RA and Dec. This will return all plannets
+        from this population that fall within
+        the specified radius of at least one of
+        the specified coordinates.
+
+        Parameters
+        ----------
+        coordinates : astropy.coordinates.SkyCoord
+            The sky coordinate (RA, Dec) or list
+            of coordinates we want to search for
+            nearby objects.
+
+        radius : astropy.units.Quantity
+            The angular radius around each position
+            that we should include in each search.
+
+        use_proper_motions : bool
+            Should we use available proper motions,
+            embedded in the skycoords, to propagate
+            positions to a shared epoch before
+            cross-matching? Alas, this ability
+            is *not yet implemented*. FIXME!
+
+        Returns
+        -------
+        subset : Population
+            A new population containing a subset
+            of the original, including *all* planets
+            that fall within the 2D sky search space.
+
+        '''
+
+        if use_proper_motions:
+            raise NotImplementedError('No cross-matching with proper motions yet :-(')
+
+
+        # create astropy coordinates for this population
+        population_coords = SkyCoord(ra=self.ra, dec=self.dec)
+
+        # do a spatial cross match on the sky
+        #  (idx gives the index into coordinates,
+        #   corresponding to every entry in population_coords)
+        idx, d2d, d3d = population_coords.match_to_catalog_sky(coordinates)
+
+        # identify which systems are actually close on the sky
+        match = d2d < radius
+
+        # create new populations that are linked by spatial position
+        i_match = match.nonzero()[0]
+        matched_coordinates = coordinates[idx[i_match]]
+        subset = self.standard[i_match]
+
+        # define a meaningful label
+        label = f'Spatial Cross-Match ({len(coordinates)} positions, {radius} radius)'
 
         # create that new sub-population
         return Population(standard=subset,

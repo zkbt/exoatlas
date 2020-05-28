@@ -74,7 +74,7 @@ class FluxTeff(BubblePanel):
     xaxis = Flux
     yaxis = StellarTeff
 
-    def plot_hz(self, inner='moist-greenhouse', outer='maximum-greenhouse', color='cornflowerblue', alpha=0.25, linewidth=0, **kw):
+    def plot_hz(self, inner='moist-greenhouse', outer='maximum-greenhouse', color='cornflowerblue', alpha=0.25, linewidth=0, zorder=-100, **kw):
         '''
         Add a bar that indicates an approximate habitable zone.
         (Estimated very roughly by eye from Kopparapu et al.)
@@ -89,7 +89,8 @@ class FluxTeff(BubblePanel):
 
         # plot the swath
         plt.fill_betweenx(Teff, S_inner(Teff), S_outer(Teff),
-                          color=color, alpha=alpha, linewidth=linewidth, **kw)
+                          color=color, alpha=alpha, linewidth=linewidth,
+                          zorder=zorder, **kw)
 
 class DistanceRadius(BubblePanel):
     xaxis = Distance

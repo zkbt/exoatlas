@@ -14,7 +14,7 @@ warnings.simplefilter('ignore', category=AstropyDeprecationWarning)
 # this function downloads a file and returns its filepath
 from astropy.utils.data import download_file
 from astropy.io import ascii
-from astropy.table import Table, vstack, join
+from astropy.table import Table, vstack, join, setdiff
 from astropy.visualization import quantity_support
 from astropy.coordinates import SkyCoord
 
@@ -81,7 +81,7 @@ def clean(s):
 	'''
 	A wrapper function to clean up complicated strings.
 	'''
-	bad = """ !@#$%^&*()-'",./<>?"""
+	bad = """ !@#$%^&*()+-_'",./<>?"""
 	cleaned = str(s) + ''
 	for c in bad:
 		cleaned = cleaned.replace(c, '')

@@ -128,8 +128,15 @@ def test_indexing():
     g = p[p.discoverer == 'Kepler']
     h = p['TRAPPIST-1b']
     i = p['TRAPPIST-1']
+    j = e + h
+    k = f - e
+    l = p.create_subset_by_name('GJ1214b')
+    m = p.create_subset_by_hostname('GJ1214')
+    coordinates = SkyCoord(e.ra, e.dec)
+    n = p.create_subset_by_position(coordinates)
+    return a, b, c, d, e, f, g, h, i, j, k, l, m, n
 
-    return a, b, c, d, e, f, g, h, i
+
 
 def test_attributes():
     '''
