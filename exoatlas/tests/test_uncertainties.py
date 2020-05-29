@@ -19,7 +19,7 @@ def test_uncertainties():
     assert(np.all(np.isnan(bad)))
     return p
 
-if __name__ == '__main__':
+if __name__ == '__main__': # pragma: no cover
     outputs = {k.split('_')[-1]:v()
                for k, v in locals().items()
                if 'test_' in k}

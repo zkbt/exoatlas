@@ -2,7 +2,7 @@
 import os, sys, time, shutil, warnings
 from unittest import mock
 from tqdm import tqdm
-
+import pytest
 
 import numpy as np, matplotlib.pyplot as plt, matplotlib.animation as animation
 from matplotlib.ticker import ScalarFormatter, FormatStrFormatter, LogLocator
@@ -39,7 +39,21 @@ def mkdir(path):
 
 import matplotlib.colors as co
 def name2color(name):
-	"""Return the 3-element RGB array of a given color name."""
+	"""
+	Return the 3-element RGB array of a given color name.
+
+	Parameters
+	----------
+	name : str
+		The name ('black') or hex ('#000000')
+		for a particular color.
+
+	Returns
+	-------
+	rgb : tuple
+		Three-elements array of floats,
+		expressing brightness in RGB. 
+	"""
 	if '#' in name:
 		h = name
 	else:

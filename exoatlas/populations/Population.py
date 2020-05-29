@@ -323,7 +323,8 @@ class Population(Talker):
     def create_subset_by_position(self,
                                   coordinates,
                                   radius=1*u.arcmin,
-                                  use_proper_motions=False):
+                                  use_proper_motions=False,
+                                  return_indices=False):
         '''
         Extract a subset of this population,
         by performing a spatial cross-match by
@@ -350,6 +351,11 @@ class Population(Talker):
             cross-matching? Alas, this ability
             is *not yet implemented*. FIXME!
 
+        return_indices : bool
+            Should we also return the indices
+            of the original coordinates that
+            were matched to existing positions?
+
         Returns
         -------
         subset : Population
@@ -362,13 +368,12 @@ class Population(Talker):
         if use_proper_motions:
             raise NotImplementedError('No cross-matching with proper motions yet :-(')
 
-
         # create astropy coordinates for this population
         population_coords = SkyCoord(ra=self.ra, dec=self.dec)
 
         # do a spatial cross match on the sky
         #  (idx gives the index into coordinates,
-        #   corresponding to every entry in population_coords)
+        #   each corresponding to an entry in population_coords)
         idx, d2d, d3d = population_coords.match_to_catalog_sky(coordinates)
 
         # identify which systems are actually close on the sky
@@ -376,17 +381,23 @@ class Population(Talker):
 
         # create new populations that are linked by spatial position
         i_match = match.nonzero()[0]
-        matched_coordinates = coordinates[idx[i_match]]
+        #matched_coordinates = coordinates[idx[i_match]]
         subset = self.standard[i_match]
 
         # define a meaningful label
         label = f'Spatial Cross-Match ({len(coordinates)} positions, {radius} radius)'
 
         # create that new sub-population
-        return Population(standard=subset,
-                          label=label,
-                          **self.plotkw)
+        new_population = Population(standard=subset,
+                                    label=label,
+                                    **self.plotkw)
 
+        # choose what to return
+        if return_indices:
+            i_from_original_coordinates = idx[i_match]
+            return new_population, i_from_original_coordinates
+        else:
+            return new_population
 
     def __getattr__(self, key):
         '''

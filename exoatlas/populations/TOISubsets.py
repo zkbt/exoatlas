@@ -1,6 +1,6 @@
 from ..imports import *
 from .TOI import *
-from .ExoplanetSubsets import *
+from .ExoplanetsSubset import *
 from astropy.coordinates import SkyCoord
 from astropy import units as u
 

@@ -13,7 +13,7 @@ def test_tess():
     with mock.patch('builtins.input', return_value=""):
         return toi_exofop.get()
 
-if __name__ == '__main__':
+if __name__ == '__main__': # pragma: no cover
     a = test_exoplanets()
     c = test_composite()
     t = test_tess()

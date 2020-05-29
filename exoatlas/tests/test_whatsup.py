@@ -12,7 +12,7 @@ def test_whatsup():
              observatory='SBO', # what observatory are starting from?
              directory='upcoming-transits') # where should we
 
-if __name__ == '__main__':
+if __name__ == '__main__': # pragma: no cover
     outputs = {k.split('_')[-1]:v()
                for k, v in locals().items()
                if 'test_' in k}

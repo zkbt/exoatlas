@@ -41,6 +41,8 @@ class FluxRadius(BubblePanel):
         Pa
         '''
 
+        # make sure the plotting happens in this panel
+        plt.sca(self.ax)
 
         # define the functions
         S_inner = make_hz(inner)
@@ -79,6 +81,9 @@ class FluxTeff(BubblePanel):
         Add a bar that indicates an approximate habitable zone.
         (Estimated very roughly by eye from Kopparapu et al.)
         '''
+
+        # make sure the plotting happens in this panel
+        plt.sca(self.ax)
 
         # define the functions
         S_inner = make_hz(inner)

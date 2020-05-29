@@ -1,6 +1,11 @@
 from exoatlas.imports import *
 from exoatlas import *
 
+def test_telescope_units():
+    for t in ['Kepler', 'TESS', 'JWST', 'HST']:
+        define_telescope_unit_by_name(t)
+        define_telescope_unit_by_name(t, wavelength=0.7*u.micron)
+
 def test_buckets():
     '''
     Make sure that our photon-counting tools plottables work,
@@ -16,7 +21,7 @@ def test_buckets():
     for k in telescope_units:
         BubblePanel(StellarBrightness(telescope=k), Depth).build([t])
 
-if __name__ == '__main__':
+if __name__ == '__main__': # pragma: no cover
     outputs = {k.split('_')[-1]:v()
                for k, v in locals().items()
                if 'test_' in k}

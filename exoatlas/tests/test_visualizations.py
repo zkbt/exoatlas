@@ -49,7 +49,7 @@ def test_fourpanels():
     f = ex.FourPanels()
     f.build(pops)
 
-if __name__ == '__main__':
+if __name__ == '__main__': # pragma: no cover
     outputs = {k.split('_')[-1]:v()
                for k, v in locals().items()
                if 'test_' in k}
