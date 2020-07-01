@@ -1484,3 +1484,35 @@ class PredefinedPopulation(Population):
                             format='ascii.ecsv',
                             overwrite=True )
         self.speak(f'Saved a standardized text table to {self.standard_path}')
+
+    def create_table(self, desired_columns=['name',
+                                            'radius', 'relative_insolation',
+                                            'stellar_radius', 'stellar_teff',
+                                            'ra', 'dec', 'distance']):
+        '''
+        Create an astropy table based on this population,
+        using a subset of columns, which may include ones
+        that have been calculated as Population properties.
+
+        Parameters
+        ----------
+        desired_columns : list
+            The columns you want to include. Anything that
+            can be accessed via Population.??? can be provided
+            here as a string.
+
+        Returns
+        -------
+        table : astropy.table.Table
+            A table, with those columns, in the same order
+            as the Population itself.
+        '''
+        # FIXME! need to add method support for arguments
+
+        # create a dictionary with the desired columns
+        d = {c:getattr(self, c) for c in desired_columns}
+
+        # turn that into an astropy Table
+        t = Table(d)
+
+        return t

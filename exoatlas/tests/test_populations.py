@@ -93,7 +93,13 @@ def test_indexing():
     n = p.create_subset_by_position(coordinates)
     return a, b, c, d, e, f, g, h, i, j, k, l, m, n
 
+def test_table():
+    '''
+    Can we make a custom astropy table out of a Population?
+    '''
 
+    p = SolarSystem()
+    p.create_table()
 
 def test_attributes():
     '''
