@@ -153,9 +153,7 @@ class Population(Talker):
         # create and return the new population
         return Population(table, label=label)
 
-
-
-    def __sub__(self, other):
+    def remove_by_key(self, other, key='tidyname'):
         '''
         Create a new population by removing some rows from here:
 
@@ -181,13 +179,35 @@ class Population(Talker):
             #  create a new table, joining both together
             table = setdiff(self.standard,
                             other.standard,
-                            keys='tidyname')
+                            keys=key)
 
             # create an informative label
             label = f'{self.label} - {other.label}'
 
         # create and return the new population
         return Population(table, label=label)
+
+
+
+    def __sub__(self, other):
+        '''
+        Create a new population by removing some rows from here:
+
+            `smaller = this - other`
+
+        Parameters
+        ----------
+        other : Population
+            The population of planets to be removed from
+            `this` population to create a new `smaller` one.
+
+        Returns
+        -------
+        smaller : Population
+            A subset of `this` population, where some rows
+            have been removed.
+        '''
+        return self.remove_by_key(other)
 
 
     def __getitem__(self, key):
