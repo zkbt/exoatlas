@@ -171,8 +171,9 @@ class BubblePanel(Panel):
         # finally, should we just use a default color?
         else:
             # get default, first from pop and then from panel
-            color = self.pop.plotkw.get('color',
-                                        self.plottable['color'])
+            color = self.pop.color
+            if color is None:
+                color = self.plottable['color']
 
         # return a valid input to any one of the following:
         #   plt.scatter(c=...)
@@ -220,7 +221,7 @@ class BubblePanel(Panel):
             default['edgecolors'] = c
         else:
             default['edgecolors'] = 'none'
-            
+
         # if any other keywords are provided, overwrite these defaults
         for k, v in kwargs.items():
             default[k] = v

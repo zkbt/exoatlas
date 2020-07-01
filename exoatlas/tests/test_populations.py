@@ -37,24 +37,24 @@ def test_exoplanets():
     p.validate_columns()
     return p
 
-def test_kepler():
+def test_subsets():
     '''
     Can we make a population of confirmed Kepler planets?
     '''
     with mock.patch('builtins.input', return_value=""):
-        p = Kepler()
-    p.validate_columns()
-    return p
+        for x in [Kepler,
+                  NonKepler,
+                  TESS,
+                  NonTESS,
+                  Space,
+                  Ground,
+                  GoodMass,
+                  BadMass]:
+            p = x()
+            p.validate_columns()
 
-
-def test_nonkepler():
-    '''
-    Can we make a population of confirmed non-Kepler planets?
-    '''
-    with mock.patch('builtins.input', return_value=""):
-        p = NonKepler()
-    p.validate_columns()
-    return p
+        with pytest.raises(NotImplementedError):
+            q = ExoplanetsSubset()
 
 def test_tess():
     '''
@@ -65,50 +65,7 @@ def test_tess():
     p.validate_columns()
     return p
 
-def test_nontess():
-    '''
-    Can we make a population of confirmed TESS planets?
-    '''
-    with mock.patch('builtins.input', return_value=""):
-        p = NonTESS()
-    p.validate_columns()
-    return p
 
-def test_space():
-    '''
-    Can we make a population of confirmed space-discovered planets?
-    '''
-    with mock.patch('builtins.input', return_value=""):
-        p = Space()
-    p.validate_columns()
-    return p
-
-def test_ground():
-    '''
-    Can we make a population of confirmed ground-discovered planets?
-    '''
-    with mock.patch('builtins.input', return_value=""):
-        p = Ground()
-    p.validate_columns()
-    return p
-
-def test_goodmass():
-    '''
-    Can we make a population of confirmed planets with good masses?
-    '''
-    with mock.patch('builtins.input', return_value=""):
-        p = GoodMass()
-    p.validate_columns()
-    return p
-
-def test_badmass():
-    '''
-    Can we make a population of confirmed planets with bad masses?
-    '''
-    with mock.patch('builtins.input', return_value=""):
-        p = BadMass()
-    p.validate_columns()
-    return p
 
 def test_indexing():
     '''
@@ -128,8 +85,15 @@ def test_indexing():
     g = p[p.discoverer == 'Kepler']
     h = p['TRAPPIST-1b']
     i = p['TRAPPIST-1']
+    j = e + h
+    k = f - e
+    l = p.create_subset_by_name('GJ1214b')
+    m = p.create_subset_by_hostname('GJ1214')
+    coordinates = SkyCoord(e.ra, e.dec)
+    n = p.create_subset_by_position(coordinates)
+    return a, b, c, d, e, f, g, h, i, j, k, l, m, n
 
-    return a, b, c, d, e, f, g, h, i
+
 
 def test_attributes():
     '''
@@ -161,7 +125,7 @@ def test_attributes():
     p.density
     return p
 
-if __name__ == '__main__':
+if __name__ == '__main__': # pragma: no cover
     outputs = {k.split('_')[-1]:v()
                for k, v in locals().items()
                if 'test_' in k}

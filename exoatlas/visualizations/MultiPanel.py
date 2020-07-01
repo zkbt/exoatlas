@@ -12,12 +12,7 @@ class MultiPanelPlot(Talker):
                                StellarRadiusPlanetRadius,
                                DistanceRadius],
                        horizontal=True,
-                       figsize=(12,8),
-                       gridspec_kw=dict(hspace=0.1,
-                                        left=0.15,
-                                        right=0.95,
-                                        bottom=0.15,
-                                        wspace=0.05),
+                       figsize=(8,6),
                        **kw):
         '''
         Set up the plotting panels.
@@ -33,11 +28,14 @@ class MultiPanelPlot(Talker):
             False = make a column of panels on top of each other
         figsize : tuple
             What's the (width, height) of the figure to make.
-        gridspec_kw : dict
-            Dictionary of gridspec keywords to set up the relative
-            widths, heights, margins, and spacing of the panels.
         **kw : dict
+            Other keywords will be passed to gridspec to set the
+            widths, heights, margins, and spacing of the panels.
+            These keywords commonly include:
 
+                left, bottom, right, top,
+                wspace, hspace,
+                width_ratios, height_ratios
         '''
 
         # store list of panel names
@@ -62,7 +60,15 @@ class MultiPanelPlot(Talker):
             nrows, ncols = len(self.panels), 1
             sharex, sharey = True, False
 
-        # set up the plotting axes, and store in dictionary
+        # set some default gridspec options, but allow updating
+        gridspec_kw = dict(hspace=0.1,
+                           left=0.15,
+                           right=0.95,
+                           bottom=0.15,
+                           wspace=0.05)
+        gridspec_kw.update(**kw)
+
+        # set up the plotting figure and axes
         self.figure, axgrid = plt.subplots(nrows, ncols,
                                            sharex=sharex, sharey=sharey,
                                            figsize=figsize,

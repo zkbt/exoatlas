@@ -378,3 +378,12 @@ class Panel(Talker):
         if 'y' in which:
             loc = LogLocator(base=10, numticks=3)
             self.ax.yaxis.set_major_locator(loc)
+
+    def add_legend(self, outside=True, frameon=False, **kw):
+        legendkw = dict()
+        legendkw['frameon'] = frameon
+        if outside:
+            legendkw['bbox_to_anchor'] = (1,1)
+            legendkw['loc'] = 'upper left'
+        legendkw.update(**kw)
+        plt.legend(**legendkw)

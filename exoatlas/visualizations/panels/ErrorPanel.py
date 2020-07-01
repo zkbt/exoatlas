@@ -4,6 +4,12 @@ from ..ink_errorbar import *
 __all__ = ['ErrorPanel']
 
 def remove_unit(x):
+    '''
+    A simple wrapper to help make sure that we're dealing
+    just with numerical values, instead of astropy Quantitys
+    with units.
+    '''
+
     if type(x) == u.quantity.Quantity:
         return x.value
     else:
@@ -15,20 +21,6 @@ class ErrorPanel(Panel):
     where planets are represented with 2D error bars, with
     their intensity scaled to some overall visual weight.
     '''
-
-    #@property
-    #def x_lowerupper(self):
-    #    raise NotImplementedError(f"""
-    #    The 'x_lowerupper' quantity hasn't been defined for
-    #    {self}.
-    #    """)
-
-    #@property
-    #def y_lowerupper(self):
-    #    raise NotImplementedError(f"""
-    #    The 'x_lowerupper' quantity hasn't been defined for
-    #    {self}.
-    #    """)
 
     @property
     def x_unc(self):
@@ -42,28 +34,52 @@ class ErrorPanel(Panel):
         #return np.sqrt(l*u)
         return 0.5*(l + u)
 
-    def intensity(self):
+    def intensity(self, invisible_fraction=0.8,
+                        x_power=1,
+                        y_power=1):
         '''
         What visual intensity should each datapoint have?
 
-        By default, this will be the product of the fractional uncertainties
-        on both x and y.
+        By default, this will be set by the product of the
+        fractional uncertainties on both x and y.
+
+        Parameters
+        ----------
+        invisible_fraction : float
+            The aproximate 2D fractional uncertainty at which
+            a point will fade to invisible. For example, if
+            set to 0.7, then points will disappear when
+              (sigma_x/x)**2 + (sigma_y/y)**2 > 0.7**2
+
+        x_power : float
+            The power to which x is raised in the quantity
+            used to define the visual weight. For example,
+            if we want visual weight to scale with the
+            fractional uncertainty on density (mass/radius**3)
+            for x showing mass and y showing radius, we'd
+            choose x_power=1 and y_power=3.
+
+        y_power : float
+            (see `x_power` above)
 
         Returns
         -------
         intensity : np.array
-            The intensity of the points for the current population,
-            as a numeric value between 0 and 1.
+            The intensity of the points for the current
+            population, as a numeric value between 0 and 1.
+            By default,
         '''
 
-        dlnx = self.x_unc/self.x
-        dlny = self.y_unc/self.y
+        dlnx = self.x_unc/self.x*np.abs(x_power)
+        dlny = self.y_unc/self.y*np.abs(y_power)
 
         # things with bigger errors should have lower weight
-        weight = (1 - np.sqrt(dlnx**2  + dlny**2)*1.5)
+        weight = (1 - np.sqrt(dlnx**2  + dlny**2)/invisible_fraction)
 
         # clip the weights above 1 (shouldn't exist?) or below zero
         # clipped = np.minimum(np.maximum(weight, 0), 1)
+
+        # return the visual weight
         return remove_unit(weight)
 
     def plot(self, key, ax=None, labelkw={}, **kw):
@@ -73,7 +89,7 @@ class ErrorPanel(Panel):
         Parameters
         ----------
         key : str
-            The population (as an item in the self.pops dictionary) to add.
+            The item in the self.pops dictionary to add.
         ax :
             Into what ax should we place this plot?
             If None, use default.
@@ -96,27 +112,33 @@ class ErrorPanel(Panel):
         x = remove_unit(self.x)
         y = remove_unit(self.y)
 
-        # if the entire population is exact (Solar System), don't include errors
-        exact = self.pop.exact #(self.x_unc == 0).all() and (self.y_unc == 0).all()
-        if exact:
-            plotkw = dict(color=self.pop.color,
-                          edgecolor=self.pop.color,
+        # set the base color to use throughout
+        default_color = plt.scatter([],[]).get_facecolor()[0]
+        color = self.pop.color or default_color
+
+        # if the entire population is exact (e.g., Solar System),
+        # then don't include any errors when plotting
+        if self.pop.exact:
+            # define plotting keywords without errorbars
+            plotkw = dict(color=color,
+                          edgecolor=color,
                           **kw)
             plotkw['alpha'] = 1
             plotkw['zorder'] = 1e9
             self.scattered[key] = plt.scatter(x, y, **plotkw)
+            # FIXME, 5/25/20: I think BubblePanel is doing
+            # something a little more clever with being able
+            # to manage face and edge colors separately.
+            # Perhaps we should set things up so that we might
+            # inherit some of this skills here in ErrorPanel
         else:
 
             # define the error bars to be plotting
             xl, xu = self.x_lowerupper
-            x_unc = remove_unit(np.vstack([xl, xu])) # the vstack strips the units?
+            x_unc = remove_unit(np.vstack([xl, xu]))
 
             yl, yu = self.y_lowerupper
-            y_unc = remove_unit(np.vstack([yl, yu])) # the vstack strips the units?
-
-            #y_unc = np.empty((2, len(xl)))*yl.unit
-            #y_unc[0, :] = yl
-            #y_unc[1, :] = yu
+            y_unc = remove_unit(np.vstack([yl, yu]))
 
             width=1
             kw = dict(#marker='o',
@@ -129,10 +151,6 @@ class ErrorPanel(Panel):
                       #color=self.pop.color,
                       #markeredgecolor=self.pop.color,
                       )
-
-            # pull out the default color of this population
-            color = self.pop.color
-
 
             # define an Nx4 array of RGBA colors for the N points
             weights = self.intensity()
@@ -149,11 +167,16 @@ class ErrorPanel(Panel):
             n_nouncertainty = sum(ok == False)
             self.speak(f'skipping {n_nouncertainty} planets that are missing data or uncertainties')
 
-            # kludge to remove those that cross-zero
-
+            # kludge to remove those that cross zero
             with np.errstate(invalid='ignore'):
                 ok *= (self.x - xl) > 0
                 ok *= (self.y - yl) > 0
+            # FIXME, 5/25/2020: This kludge always useful on
+            # logarithmic axes (which are the only that have
+            # been defined so far), but at some point we
+            # might want to use linear axes too, where we might
+            # not want to throw out values that might go
+            # negative.
 
             n_consistentwithzero = sum(ok == False) - n_nouncertainty
             self.speak(f'skipping {n_consistentwithzero} planets that are consistent with zero')
@@ -161,10 +184,16 @@ class ErrorPanel(Panel):
             if (len(x) > 1) & (self.pop.plotkw.get('ink', True)):
 
                 self.speak('plotting inked errorbars, this may take a while')
-                # FIXME -- make the "invisible" color more flexible than white,
-                # in case we're plotting on a dark background
+                # FIXME, 5/25/2020: We should make the
+                # "invisible" color be something more flexible
+                # than white, in case we're plotting on a dark
+                # background. Remember, things look messy if
+                # we use alpha to do the visual weighting for
+                # these errorbars, because it introduces many
+                # more intersecting lines.
                 self.scattered[key] = ink_errorbar(x[ok], y[ok],
-                                                   yerr=y_unc[:, ok], xerr=x_unc[:, ok],
+                                                   yerr=y_unc[:, ok],
+                                                   xerr=x_unc[:, ok],
                                                    c=weights[ok],
                                                    cmap=one2another(bottom='white',
                                                                     top=color,
@@ -173,7 +202,8 @@ class ErrorPanel(Panel):
                                                    **kw)
             else:
                 self.scattered[key] = self.ax.errorbar(x[ok], y[ok],
-                                                       yerr=y_unc[:, ok], xerr=x_unc[:, ok],
+                                                       yerr=y_unc[:, ok],
+                                                       xerr=x_unc[:, ok],
                                                        **kw)
 
         # set the scales, limits, labels

@@ -124,7 +124,7 @@ class TOI(PredefinedPopulation):
         s.sort('name')
         self.standard = s
 
-class ExoplanetSubsets(TOI):
+class ExoplanetsSubset(TOI):
     def __init__(self, label, color='black', zorder=0):
 
         # set the label
@@ -150,9 +150,9 @@ class ExoplanetSubsets(TOI):
         self.save_standard()
 
 
-"""class UnconfirmedKepler(ExoplanetSubsets):
+"""class UnconfirmedKepler(ExoplanetsSubset):
     def __init__(self):
-        ExoplanetSubsets.__init__(self, label="Kepler (candidates)", color='gray', zorder=-1e6)
+        ExoplanetsSubset.__init__(self, label="Kepler (candidates)", color='gray', zorder=-1e6)
         self.ink=True
 
     def toRemove(self):

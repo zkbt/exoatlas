@@ -33,13 +33,23 @@ def test_multipanel_presets():
     ex.observable_summary([t,s])
     ex.physical_summary([t,s])
 
+def test_colors():
+    with mock.patch('builtins.input', return_value=""):
+        t = ex.TransitingExoplanets()
+        s = ex.SolarSystem()
+
+    ex.physical_summary([t,s])
+    t.color = None
+    s.color = None
+    ex.physical_summary([t,s])
+
 def test_fourpanels():
     pops = {}
     pops['solarsystem'] = ex.SolarSystem()
     f = ex.FourPanels()
     f.build(pops)
 
-if __name__ == '__main__':
+if __name__ == '__main__': # pragma: no cover
     outputs = {k.split('_')[-1]:v()
                for k, v in locals().items()
                if 'test_' in k}
