@@ -85,7 +85,8 @@ class TOI(PredefinedPopulation):
         s['name'] = [f'TOI{toi:.2f}' for toi in t['TOI']]
         s['hostname'] = [f'TOI{toi:.0f}' for toi in t['TOI']]
 
-        s['TIC ID'] = t['TIC ID']
+        s['TIC ID'] = t['TIC ID'] # maybe remove, carefully?
+        s['tic'] = s['TIC ID']
 
         s['distance'] = t['Stellar Distance (pc)']*u.pc
         s['distance_uncertainty'] = t['Stellar Distance (pc) err']*u.pc
@@ -157,8 +158,8 @@ class TOI(PredefinedPopulation):
              'Comments': 'Comments',
              #'Date TOI Edited (UTC)': 'Date TOI Edited (UTC)',
              'Master': 'Priority-Master',
-             'Planet Num': 'Planet Number',
-             'Planet SNR': 'Planet SNR',
+             #'Planet Num': 'Planet Number',
+             #'Planet SNR': 'Planet SNR',
              'SG1A': 'Priority-SG1A',
              'SG1B': 'Priority-SG1B',
              'SG2': 'Priority-SG2',
