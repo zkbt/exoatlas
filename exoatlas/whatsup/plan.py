@@ -182,15 +182,18 @@ class Plan(Talker):
 
         for midnight in tqdm(self.block.midnights):
 
-            self.plot_transits_on_night(midnight)
-            date = Time(midnight - self.observatory.standardzone -0.5*u.day,
-                        format='jd').iso[:10]
-            plt.title(f'Transits Observable from {self.observatory.name} on {date}')
+            try:
+                self.plot_transits_on_night(midnight)
+                date = Time(midnight - self.observatory.standardzone -0.5*u.day,
+                            format='jd').iso[:10]
+                plt.title(f'Transits Observable from {self.observatory.name} on {date}')
 
-            filename = os.path.join(self.directory,
-                                    f'{date}.{self.file_format}')
-            plt.savefig(filename)
-            plt.clf()
+                filename = os.path.join(self.directory,
+                                        f'{date}.{self.file_format}')
+                plt.savefig(filename)
+                plt.clf()
+            except ValueError:
+                print(f'Something went wrong on {midnight}!')
 
     def print_transits(self, filename='upcoming_transits.txt'):
         '''print all the observable transits'''
