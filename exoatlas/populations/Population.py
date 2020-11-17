@@ -1214,8 +1214,27 @@ class Population(Talker):
         return per_orbit/np.sqrt(N_orbits)
 
 
+    def stellar_brightness_telescope(self, name='JWST', wavelength=5*u.micron, **kw):
+        '''
+        The stellar brightness, converted to telescope units.
 
+        Parameters
+        ----------
+        name : str
+            The name of the telescope.
 
+        wavelength : astropy.unit.Quantity
+            The wavelength at which it should be calculated.
+        '''
+
+        flux_in_photons = self.stellar_brightness(wavelength)
+        telescope_unit = define_telescope_unit_by_name(name,
+                                                       wavelength=wavelength,
+                                                       **kw)
+        unit = photon_unit/telescope_unit
+        return flux_in_photons.to(unit)
+
+    """
     def stellar_brightness_JWST(self, wavelength=5*u.micron):
         '''
         The stellar brightness, converted to JWST units.
@@ -1243,7 +1262,7 @@ class Population(Talker):
         flux_in_photons = self.stellar_brightness(wavelength)
         unit = photon_unit/HST_orbit_unit(wavelength)
         return flux_in_photons.to(unit)
-
+        """
     # PICK UP FROM HERE! THESE ARE ALL RELATIVE, SHOULD WE MAKE THEM ABSOLUTE?
     # (e.g. define a R=20-JWST-hour as m**2*s)
     @property
