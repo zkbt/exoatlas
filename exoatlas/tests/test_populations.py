@@ -118,15 +118,9 @@ def test_transiting(planet='GJ1214b'):
 
     with mock.patch('builtins.input', return_value=""):
         t = TransitingExoplanets()
+        p = t[planet]
 
-    p = t[planet]
-    print(f'{planet}:')
-    for k in attribute_columns:
-        print(f'{k:>20} = {getattr(p, k)}')
-
-    for k in method_columns:
-        print(f'{k:>20} = {getattr(p, k)()}')
-
+    summarize_planet(p)
 
     p.transmission_signal(mu=5, threshold=3)
     p.transmission_snr(mu=5, threshold=3,

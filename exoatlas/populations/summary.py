@@ -3,9 +3,9 @@ Tools to summarize a particular population.
 '''
 
 from ..imports import *
-from .Population import attribute_columns
+from .Population import attribute_columns, method_columns
 
-__all__ = ['plot_histograms']
+__all__ = ['plot_histograms', 'summarize_planet']
 
 def split_cols(pop):
     # find the columns that aren't strings
@@ -59,3 +59,16 @@ def plot_histograms(pop):
 
 
     plt.tight_layout()
+
+
+def summarize_planet(planets):
+    '''
+    Quick tool to print out everything we need about a planet.
+    '''
+    for p in planets:
+        for k in attribute_columns:
+            print(f'{k:>20} = {getattr(p, k)}')
+
+        for k in method_columns:
+            print(f'{k:>20} = {getattr(p, k)()}')
+        print()

@@ -25,7 +25,13 @@ transit_columns = [
 'radius',
 'mass',
 'transit_ar',
-'transit_b']
+'transit_b',
+'density',
+'surface_gravity',
+'distance_modulus',
+'escape_velocity',
+'escape_parameter'
+]
 
 
 attribute_columns = basic_columns + transit_columns
@@ -1017,7 +1023,6 @@ class Population(Talker):
         volume = 4/3*np.pi*(self.radius)**3
         return (mass/volume).to('g/cm**3')
 
-
     @property
     def escape_velocity(self):
         '''
@@ -1045,7 +1050,7 @@ class Population(Talker):
 
         e_thermal = k*T
         e_grav = G*M*m_p/R
-        return e_grav/e_thermal
+        return (e_grav/e_thermal).decompose()
 
     @property
     def distance_modulus(self):
