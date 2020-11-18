@@ -146,7 +146,7 @@ class Depth(PlottableAxis):
 
 # FIXME, add variable mu!
 class Transmission(Depth):
-    def __init__(self, mu=2.2, threshold=2, **kw):
+    def __init__(self, mu=2.32, threshold=2, **kw):
         '''
         Initialize for a particular mean molecular weight.
 
@@ -159,7 +159,7 @@ class Transmission(Depth):
         '''
         PlottableAxis.__init__(self, **kw)
         self.mu = mu
-        self.threshold=threshold
+        self.threshold = threshold
         self.label = f'Transit Depth\nof 1 Scale Height\n for $\mu$={mu} Atmosphere'
 
     def value(self):

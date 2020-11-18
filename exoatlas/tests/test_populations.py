@@ -6,7 +6,7 @@ def test_population():
     Can we make a population from scratch from a table?
     '''
 
-    fake = Table({x:[0]*3 for x in necessary_columns}, masked=True)
+    fake = Table({x:[0]*3 for x in attribute_columns}, masked=True)
     p = Population(standard=fake, label='fake')
     p.validate_columns()
     return p
@@ -103,36 +103,45 @@ def test_table():
 
 def test_attributes():
     '''
-    Can we make a population of Solar System planets?
+    Test the interaction with attributes.
     '''
     p = SolarSystem()
-    #for p in [SolarSystem(), TransitingExoplanets()]:
-
 
     print(p.color)
     p.alpha = 0.5
     assert(p.plotkw['alpha'] == 0.5)
 
-
-    for k in necessary_columns:
+    for k in attribute_columns:
         getattr(p, k)
 
-    p.b
-    p.transit_duration
-    p.insolation
-    p.stellar_luminosity
-    p.a_over_rs
-    p.teq
-    p.mu
-    p.surface_gravity
-    p.escape_velocity
-    p.escape_parameter
-    p.scale_height
-    p.density
+def test_transiting(planet='GJ1214b'):
 
-    p.emission_snr()
-    p.reflection_snr()
-    p.transmission_snr()
+    with mock.patch('builtins.input', return_value=""):
+        t = TransitingExoplanets()
+
+    p = t[planet]
+    print(f'{planet}:')
+    for k in attribute_columns:
+        print(f'{k:>20} = {getattr(p, k)}')
+
+    for k in method_columns:
+        print(f'{k:>20} = {getattr(p, k)()}')
+
+
+    p.transmission_signal(mu=5, threshold=3)
+    p.transmission_snr(mu=5, threshold=3,
+                       telescope_name='JWST',
+                       wavelength=3*u.micron)
+
+    p.emission_signal(wavelength=5*u.micron)
+    p.emission_snr(wavelength=5*u.micron,
+                   telescope_name='JWST')
+
+    p.reflection_signal(albedo=0.5)
+    p.reflection_snr(albedo=0.5,
+                     wavelength=5*u.micron,
+                     telescope_name='JWST')
+
     return p
 
 if __name__ == '__main__': # pragma: no cover

@@ -42,7 +42,7 @@ class SolarSystem(PredefinedPopulation):
         '''
         Create a standardized table of planet properties.
         It must at least contain the columns in
-        `necessary_columns`.
+        `attribute_columns`.
         '''
 
         # start from the trimmed table

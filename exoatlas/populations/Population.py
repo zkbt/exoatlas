@@ -5,7 +5,7 @@ from ..models import *
 
 import string
 
-exocolumns = [
+basic_columns = [
 'name',
 'hostname',
 'ra', 'dec',
@@ -27,7 +27,17 @@ transit_columns = [
 'transit_ar',
 'transit_b']
 
-necessary_columns = exocolumns + transit_columns
+
+attribute_columns = basic_columns + transit_columns
+
+
+method_columns = ['scale_height',
+                  'transmission_signal', 'transmission_snr',
+                  'emission_signal', 'emission_snr',
+                  'reflection_signal', 'reflection_snr',
+                  'stellar_brightness',
+                  'stellar_brightness_in_telescope_units',
+                  'depth_uncertainty']
 
 desired_columns = [
 'mass_uncertainty_upper',
@@ -567,7 +577,7 @@ class Population(Talker):
         '''
 
         N = len(self.standard)
-        for k in necessary_columns:
+        for k in attribute_columns:
             try:
                 n = sum(self.standard[k].mask == False)
             except AttributeError:
@@ -1007,27 +1017,6 @@ class Population(Talker):
         volume = 4/3*np.pi*(self.radius)**3
         return (mass/volume).to('g/cm**3')
 
-    @property
-    def mu(self):
-        '''
-        The mean molecular weight of an atmosphere.
-        Here, assumed to be H/He-dominated at reasonable temperature.
-        '''
-
-        # for comparing planets of different compositions
-        return 2.32
-
-    @property
-    def scale_height(self):
-        '''
-        The scale height of the atmosphere, at equilibrium temperature.
-        '''
-        k = con.k_B
-        T = self.teq
-        mu = self.mu
-        m_p = con.m_p
-        g = self.surface_gravity
-        return (k*T/mu/m_p/g).to('km')
 
     @property
     def escape_velocity(self):
@@ -1066,7 +1055,18 @@ class Population(Talker):
         mu = 5*np.log10(self.distance/(10*u.pc))
         return mu
 
-    def transmission_signal(self, mu=2.2, threshold=2):
+    def scale_height(self, mu=2.32):
+        '''
+        The scale height of the atmosphere, at equilibrium temperature.
+        '''
+        k = con.k_B
+        T = self.teq
+        m_p = con.m_p
+        g = self.surface_gravity
+        return (k*T/mu/m_p/g).to('km')
+
+
+    def transmission_signal(self, mu=2.32, threshold=2):
         '''
         What is the transit depth of 1 scale height of an
         atmosphere transiting in front of the star.
@@ -1081,7 +1081,7 @@ class Population(Talker):
         '''
         with np.errstate(invalid='ignore'):
 
-            H = self.scale_height
+            H = self.scale_height(mu)
             Rp = self.radius
             Rs = self.stellar_radius
             depth = (2*H*Rp/Rs**2).decompose()
@@ -1285,24 +1285,24 @@ class Population(Talker):
         signal = self.emission_signal(wavelength=telescope_unit.wavelength)
         return signal/noise
 
-    def reflection_snr(self, telescope_name='JWST', **kw):
+    def reflection_snr(self, telescope_name='JWST', albedo=1, **kw):
         '''
         What's the approximate S/N for the detection of the
         reflected light eclipse of a planet?
         '''
 
         noise, telescope_unit = self._get_noise_and_unit(telescope_name=telescope_name, **kw)
-        signal = self.reflection_signal()
+        signal = self.reflection_signal(albedo=albedo)
         return signal/noise
 
-    def transmission_snr(self, telescope_name='JWST', threshold=2, **kw):
+    def transmission_snr(self, telescope_name='JWST', mu=2.32, threshold=2, **kw):
         '''
         What's the approximate S/N for the detection of the
         reflected light eclipse of a planet?
         '''
 
         noise, telescope_unit = self._get_noise_and_unit(telescope_name=telescope_name, **kw)
-        signal = self.transmission_signal(threshold=threshold)
+        signal = self.transmission_signal(mu=mu, threshold=threshold)
         return signal/noise
 
     def scatter(self, xname, yname, c=None, s=None, names=True, xlog=True, ylog=True, **kw):

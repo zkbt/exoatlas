@@ -1,4 +1,4 @@
-from .Population import Population, PredefinedPopulation, necessary_columns
+from .Population import Population, PredefinedPopulation, attribute_columns, method_columns
 from .Exoplanets import *
 from .TOI import *
 from .TOISubsets import *

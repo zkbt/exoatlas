@@ -3,14 +3,14 @@ Tools to summarize a particular population.
 '''
 
 from ..imports import *
-from .Population import necessary_columns
+from .Population import attribute_columns
 
 __all__ = ['plot_histograms']
 
 def split_cols(pop):
     # find the columns that aren't strings
     quant, qual = [], []
-    for x in necessary_columns:
+    for x in attribute_columns:
         try:
             pop.standard[x][0] + 'a'
             qual.append(x)
