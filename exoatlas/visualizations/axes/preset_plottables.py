@@ -144,13 +144,45 @@ class Depth(PlottableAxis):
     scale = 'log'
     lim = [2e-6, 2e-1]
 
+# FIXME, add variable mu!
 class Transmission(Depth):
-    source = 'transmission_signal'
-    label = 'Transit Depth\nof 1 Scale Height\n of H$_2$-rich Planet'
+    def __init__(self, mu=2.2, threshold=2, **kw):
+        '''
+        Initialize for a particular mean molecular weight.
+
+        Parameters
+        ----------
+        mu : float
+            Mean molecular weight (default 2.2 for H/He)
+        threshold : float
+            By how many sigma must the planet mass be detected?
+        '''
+        PlottableAxis.__init__(self, **kw)
+        self.mu = mu
+        self.threshold=threshold
+        self.label = f'Transit Depth\nof 1 Scale Height\n for $\mu$={mu} Atmosphere'
+
+    def value(self):
+        return self.panel.pop.transmission_signal(mu=self.mu, threshold=self.threshold)
 
 class Reflection(Depth):
-    source = 'reflection_signal'
-    label = 'Eclipse Depth\nin Reflected Light\n(100% albedo)'
+    def __init__(self, albedo=1, **kw):
+        '''
+        Initialize for a particular albedo.
+
+        Parameters
+        ----------
+        mu : float
+            Mean molecular weight (default 2.2 for H/He)
+        threshold : float
+            By how many sigma must the planet mass be detected?
+        '''
+        PlottableAxis.__init__(self, **kw)
+        self.albedo = albedo
+        self.label = f'Eclipse Depth\nin Reflected Light\n({albedo:.0%} albedo)'
+
+    def value(self):
+        return self.panel.pop.reflection_signal(self.albedo)
 
 class Emission(Depth):
     source = 'emission_signal'
@@ -163,23 +195,47 @@ class Emission(Depth):
         '''
         PlottableAxis.__init__(self, **kw)
         self.wavelength = wavelength
-        self.label = f'Thermal Emission Eclipse Depth at $\lambda={self.wavelength.to(u.micron).value}\mu m$'
+        self.label = f'Thermal Emission\nEclipse Depth\nat $\lambda={self.wavelength.to(u.micron).value}\mu m$'
 
     def value(self):
         return self.panel.pop.emission_signal(self.wavelength)
 
 class StellarBrightness(PlottableAxis):
-    source='stellar_brightness'
-    label='Stellar Brightness at Earth\n(photons/s/m$^2$/nm)'
+    #source='stellar_brightness'
     scale='log'
-    lim=[1, 1e5]
+    lim=[None, None]#[1e2, 1e8]
+
+    def __init__(self, wavelength=1*u.micron, **kw):
+        '''
+        Initialize for a particular wavelength, because the
+        eclipse depth will depend on the thermal emission
+        spectrum of the planet and star.
+        '''
+        PlottableAxis.__init__(self, **kw)
+        self.wavelength = wavelength
+
+        # set up the units
+        self.unit = u.Unit(('ph s^-1 m^-2 micron^-1'))
+        self.unit_string = 'photons/s/m$^2$/$\mu$m'
+
+        # set the label
+        self.label = f'Stellar Brightness at Earth at $\lambda={self.wavelength.to("micron").value:.1f}\mu$m\n({self.unit_string})'
+
+    def value(self):
+        '''
+        What data value to plot?
+        '''
+        return self.panel.pop.stellar_brightness(self.wavelength).to(self.unit)
+
+
+class StellarBrightnessTelescope(PlottableAxis):
+    scale='log'
+    lim = [None, None]#[1e-3, 1e3]
 
     def __init__(self, panel=None,
                        orientation=None,
+                       telescope_name='JWST',
                        wavelength=None,
-                       telescope=None,
-                       R=20,
-                       dt=1*u.hr,
                        **kw):
         '''
         Initialize the StellarBrightness plottable.
@@ -188,19 +244,18 @@ class StellarBrightness(PlottableAxis):
 
         Parameters
         ----------
+        telescope_name : None, str
+            The telescope unit in which to express the
+            stellar brightness. Options include:
+            'JWST', 'Hubble', 'Kepler', 'TESS'
+
         wavelength : astropy.units.quantity.Quantity
             The wavelength at which we want the
             stellar brightness to be computed.
 
-        telescope : None, str
-            The telescope unit in which to express the
-            stellar brightness. Options include:
-                'JWST'
-                'Hubble'
-
         R : float
             The spectral resolution at which the
-            telescope will be binned.
+            telescope will bin wavelengths..
             (Ignored if telescope is None.)
 
         dt : astropy.units.quantity.Quantity
@@ -211,36 +266,46 @@ class StellarBrightness(PlottableAxis):
         # initialize the basic plottable axis
         PlottableAxis.__init__(self, panel=panel, orientation=orientation, **kw)
 
+        # do all the basic telescope + wavelength setup
+        self.setup_telescope(telescope_name=telescope_name,
+                             wavelength=wavelength,
+                             **kw)
+
+        # reset the label, because it depends on the telescope inputs
+        self.setup_label()
+
+
+
+    def setup_telescope(self, telescope_name=None, wavelength=None, **kw):
+        '''
+        Setup the basics of the telescope, wavelength, and units.
+        '''
+
+        # break if there's not telescope
+        assert(telescope_name is not None)
+
         # keep track of the telescope (if any)
-        self.telescope = telescope
+        self.telescope_name = telescope_name
 
-        # select the appropriate photon unit
-        if self.telescope is None:
-            if wavelength is None:
-                wavelength = 1.0*u.micron
-            self.wavelength = wavelength
-            self.telescope_unit = u.s*u.m**2*u.micron
-            self.unit = u.Unit(('ph s^-1 m^-2 micron^-1'))
-            unit_string = 'photons/s/m$^2$/$\mu$m'
-            self.lim = [1e2, 1e8]
-        else:
-            self.telescope_unit = define_telescope_unit_by_name(self.telescope,
-                                wavelength=wavelength, R=R, dt=dt, **kw)
-            self.unit = photon_unit/self.telescope_unit
-            self.wavelength = self.telescope_unit.wavelength
-            # if self.telescope == 'JWST':
-            #     self.unit = photon_unit/define_JWST_unit(wavelength=wavelength,
-            #                                              R=R, dt=dt)
-            # if self.telescope == 'HST':
-            #     self.unit = photon_unit/define_HST_unit(wavelength=wavelength,
-            #                                             R=R, dt=dt)
-            # unit_string = f'{photon_unit}/{self.telescope}/{dt}/R={R}'
-            unit_string = self.unit.to_string()
-            self.lim = [1e-3, 1e3]
+        # define a unit of collecting power for the telescope
+        self.telescope_unit = define_telescope_unit_by_name(self.telescope_name,
+                                                            wavelength=wavelength, **kw)
+        self.unit = lotsofphotons_unit/self.telescope_unit
+        self.wavelength = self.telescope_unit.wavelength
 
+        self.unit_string = self.unit.to_string()
+        #self.lim = [1e-3, 1e3]
 
+    def setup_label(self):
+        '''
+        How should this plottable be labled on an axis?
+        '''
+        # define the label, based on the wavelength and telescope
         w = self.wavelength.to(u.micron).value
-        self.label = f'Stellar Brightness at Earth at $\lambda={w}\mu$m\n({unit_string})'
+        self.label = f'Stellar Brightness at Earth at $\lambda={w}\mu$m\n({self.unit_string})'
 
     def value(self):
+        '''
+        What data value to plot?
+        '''
         return self.panel.pop.stellar_brightness(self.wavelength).to(self.unit)

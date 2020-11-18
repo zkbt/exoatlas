@@ -129,6 +129,10 @@ def test_attributes():
     p.escape_parameter
     p.scale_height
     p.density
+
+    p.emission_snr()
+    p.reflection_snr()
+    p.transmission_snr()
     return p
 
 if __name__ == '__main__': # pragma: no cover

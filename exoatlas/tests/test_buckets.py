@@ -17,9 +17,11 @@ def test_buckets():
     DepthBrightness().build([t])
     BubblePanel(StellarBrightness, Depth).build([t]);
     BubblePanel(StellarBrightness(5*u.micron), Depth).build([t]);
-    BubblePanel(StellarBrightness(5*u.micron, telescope='JWST'), Depth).build([t])
     for k in telescope_units:
-        BubblePanel(StellarBrightness(telescope=k), Depth).build([t])
+        BubblePanel(StellarBrightnessTelescope(telescope_name=k), Depth).build([t])
+    BubblePanel(StellarBrightnessTelescope(telescope_name='JWST', wavelength=10*u.micron, R=10), Depth).build([t])
+
+
 
 if __name__ == '__main__': # pragma: no cover
     outputs = {k.split('_')[-1]:v()

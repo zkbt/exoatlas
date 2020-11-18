@@ -1066,15 +1066,15 @@ class Population(Talker):
         mu = 5*np.log10(self.distance/(10*u.pc))
         return mu
 
-    # FIXME -- how do we make it possible to change the threshold for inclusion?
-    @property
-    def transmission_signal(self, threshold=2):
+    def transmission_signal(self, mu=2.2, threshold=2):
         '''
-        What is the transit depth of 1 scale height of an H2-rich
+        What is the transit depth of 1 scale height of an
         atmosphere transiting in front of the star.
 
         Parameters
         ----------
+        mu : float
+            Mean molecular weight (default 2.2 for H/He)
         threshold : float
             By how many sigma must the planet mass be detected?
 
@@ -1092,13 +1092,12 @@ class Population(Talker):
             return depth
 
 
-    @property
-    def reflection_signal(self):
+    def reflection_signal(self, albedo=1.0):
         '''
         What is the reflected light eclipse depth,
         for an albedo of 100%?
         '''
-        return 0.25*(self.radius/self.semimajor_axis).decompose()**2
+        return albedo*0.25*(self.radius/self.semimajor_axis).decompose()**2
 
 
     def emission_signal(self, wavelength=5*u.micron):
@@ -1160,137 +1159,156 @@ class Population(Talker):
         # return the
         return flux_in_photons.to('ph s^-1 m^-2 micron^-1')
 
-
-    def photons_in_one_HST_orbit(self, wavelength=1.4*u.micron,
-                                       R=20):
-        '''
-        The number of photons that hit the Hubble Space
-        Telescope mirror, over the course of 1 HST orbit,
-        accounting for 50% loss due to Earth occultations.
-        '''
-
-
-        duty_cycle=0.5
-        dt = 1*u.def_unit('orbit',
-                          96*u.minute,
-                          doc=f'''
-                          This custom unit represents the
-                          the time of one HST orbit.
-                          ''')
-
-        telescope_unit = define_telescope_unit_by_name('HST',
-                                      wavelength=wavelength,
-                                      R=R,
-                                      dt=dt)
-
-        collecting_power = telescope_unit*duty_cycle
-
-        b = self.stellar_brightness(wavelength=wavelength)
-
-        return (b*collecting_power).decompose()
-
-    def photons_in_one_WFC3_orbit(self, **kw):
-        N = self.photons_in_one_HST_orbit(**kw)
-        throughput = 0.4
-        duty_cycle = 0.8
-        return N*throughput*duty_cycle
-
-    def depth_uncertainty_in_one_WFC3_orbit(self, **kw):
-        N = self.photons_in_one_WFC3_orbit(**kw)/u.ph
-        sigma_D = 1/np.sqrt(N)
-        oot = np.sqrt(2)
-        return sigma_D*oot
-
-    def radius_uncertainty_in_one_WFC3_orbit(self, **kw):
-        Rs = self.stellar_radius
-        D = self.transit_depth
-        sigma_D = self.depth_uncertainty_in_one_WFC3_orbit(**kw)
-        sigma_Rp = (Rs*sigma_D/2/np.sqrt(D)).to(u.Rearth)
-        return sigma_Rp
-
-    def radius_uncertainty_in_one_WFC3_transit(self, **kw):
-        N_orbits = (self.transit_duration/(96*u.minute)).decompose()
-        per_orbit = self.radius_uncertainty_in_one_WFC3_orbit(**kw)
-        return per_orbit/np.sqrt(N_orbits)
-
-
-    def stellar_brightness_telescope(self, name='JWST', wavelength=5*u.micron, **kw):
+    def stellar_brightness_in_telescope_units(self, telescope_name='JWST', **kw):
         '''
         The stellar brightness, converted to telescope units.
 
         Parameters
         ----------
-        name : str
+        telescope_name : str
             The name of the telescope.
 
         wavelength : astropy.unit.Quantity
             The wavelength at which it should be calculated.
+
+        R : float
+            The spectral resolution at which the
+            telescope will bin wavelengths.
+
+        dt : astropy.units.quantity.Quantity
+            The time over which the telescope exposes.
         '''
 
-        flux_in_photons = self.stellar_brightness(wavelength)
-        telescope_unit = define_telescope_unit_by_name(name,
-                                                       wavelength=wavelength,
+        # what counts as 1 "telescope unit" (e.g. JWST at R=20 at 5 microns for 1 hour)
+        telescope_unit = define_telescope_unit_by_name(telescope_name, **kw)
+
+        # what's the photon flux (photons/m**2/s)
+        flux_in_photons = self.stellar_brightness(telescope_unit.wavelength)
+
+        # quote the brightness as (for example) gigaphotons/JWST at R=20 at 5 microns in 1 hour
+        unit = lotsofphotons_unit/telescope_unit
+        return flux_in_photons.to(unit)
+
+    def depth_uncertainty(self, telescope_name='JWST',
+                                per_transit=True,
+                                dt=1*u.hour,
+                                **kw):
+        '''
+        What is the transit/eclipse depth uncertainty
+        with a particular telescope
+        at a particular wavelength
+        at a particular resolution?
+
+        By default, this will be calculated for one transit.
+        Optionally, it can be calculated for a given amount of time instead.
+
+        Parameters
+        ----------
+        telescope_name : str
+            The name of the telescope.
+
+        per_transit : bool
+            If True, calculate the depth uncertainty for one transit.
+            If False, calculate the depth uncertainty for a certain amount
+            of in-transit time. You likely want to specify `dt` as a
+            keyword argument to set that amount of in-transit time.
+            In either case, an out-of-transit baseline equal to the
+            total in-transit time will be assumed. This means the actual
+            time cost will be twice the transit duration or `dt` chosen,
+            and the depth uncertainty will be a factor sqrt(2) larger
+            than the pure photon noise binned to the relevant timescale.
+
+        wavelength : astropy.unit.Quantity
+            The wavelength at which it should be calculated.
+
+        R : float
+            The spectral resolution at which the
+            telescope will bin wavelengths.
+
+        dt : astropy.units.quantity.Quantity
+            The time over which the telescope exposes. If `per_transit=True`,
+            this will be ignored. Otherwise, it will set the total amount
+            of in-transit time observed, assuming that an equal amount of
+            time will *also* be observed out of transit.
+        '''
+
+        # what counts as 1 "telescope unit" (e.g. JWST at R=20 at 5 microns for 1 hour)
+        telescope_unit = define_telescope_unit_by_name(telescope_name,
+                                                       dt=dt,
                                                        **kw)
-        unit = photon_unit/telescope_unit
-        return flux_in_photons.to(unit)
 
-    """
-    def stellar_brightness_JWST(self, wavelength=5*u.micron):
+        # what's the photon flux (photons/m**2/s)
+        flux_in_photons = self.stellar_brightness(telescope_unit.wavelength)
+
+        # what's the total collecting power?
+        if per_transit:
+            ratio_of_collecting_time = self.transit_duration/dt
+        else:
+            ratio_of_collecting_time = 1
+        collecting_power = 1*telescope_unit*ratio_of_collecting_time
+
+        # what's the total number of photons collected during transit
+        N = (flux_in_photons*collecting_power).to(u.ph).value
+
+        # what's the flux uncertainty on the time scale of one transit?
+        sigma = 1/np.sqrt(N)
+
+        # inflate by a factor of sqrt(2) for equal out-of-transit
+        oot = np.sqrt(2)
+        sigma_depth = sigma*oot
+
+        return sigma_depth
+
+    def _get_noise_and_unit(self, telescope_name='JWST',
+                            per_transit=True,
+                            **kw):
         '''
-        The stellar brightness, converted to JWST units.
-
-        Parameters
-        ----------
-        wavelength : astropy.unit.Quantity
-            The wavelength at which it should be calculated.
+        Tiny helper to get the noise and the telescope_unit
+        for a telescope observation of a planet.
         '''
 
-        flux_in_photons = self.stellar_brightness(wavelength)
-        unit = photon_unit/JWST_transit_unit(wavelength)
-        return flux_in_photons.to(unit)
+        # figure out the noise
+        noise = self.depth_uncertainty(telescope_name, **kw)
 
-    def stellar_brightness_HST(self, wavelength=1.4*u.micron):
+        # create a telescope unit (mostly to get a default wavelength)
+        telescope_unit = define_telescope_unit_by_name(telescope_name, **kw)
+
+        return noise, telescope_unit
+
+    def emission_snr(self, telescope_name='JWST', **kw):
         '''
-        The stellar brightness, converted to HST units.
-
-        Parameters
-        ----------
-        wavelength : astropy.unit.Quantity
-            The wavelength at which it should be calculated.
+        What's the approximate S/N for the detection of the
+        thermal emission eclipse of a planet?
         '''
 
-        flux_in_photons = self.stellar_brightness(wavelength)
-        unit = photon_unit/HST_orbit_unit(wavelength)
-        return flux_in_photons.to(unit)
-        """
-    # PICK UP FROM HERE! THESE ARE ALL RELATIVE, SHOULD WE MAKE THEM ABSOLUTE?
-    # (e.g. define a R=20-JWST-hour as m**2*s)
-    @property
-    def noisepertransit(self):
-        raise NotImplementedError('!')
-        return 1.0/np.sqrt(self.photons*self.transit_duration)
+        noise, telescope_unit = self._get_noise_and_unit(telescope_name=telescope_name, **kw)
+        signal = self.emission_signal(wavelength=telescope_unit.wavelength)
+        return signal/noise
 
-    @property
-    def noisepertime(self):
-        raise NotImplementedError('!')
-        return 1.0/np.sqrt(self.photons/self.transit_ar)
+    def reflection_snr(self, telescope_name='JWST', **kw):
+        '''
+        What's the approximate S/N for the detection of the
+        reflected light eclipse of a planet?
+        '''
 
-    @property
-    def noise(self):
-        return 1.0/np.sqrt(self.photons)
+        noise, telescope_unit = self._get_noise_and_unit(telescope_name=telescope_name, **kw)
+        signal = self.reflection_signal()
+        return signal/noise
 
+    def transmission_snr(self, telescope_name='JWST', threshold=2, **kw):
+        '''
+        What's the approximate S/N for the detection of the
+        reflected light eclipse of a planet?
+        '''
 
-    @property
-    def cheopsnoisepertransit(self):
-        raise NotImplementedError('!')
-        #150 ppm/min for a 9th magnitude star (in V)
-        cheopsnoiseperminute =  150.0/1e6/np.sqrt(10**(-0.4*(self.V - 9.0)))
-        durationinminutes = self.transit_duration*24.0*60.0
-        return cheopsnoiseperminute/np.sqrt(durationinminutes)
-
+        noise, telescope_unit = self._get_noise_and_unit(telescope_name=telescope_name, **kw)
+        signal = self.transmission_signal(threshold=threshold)
+        return signal/noise
 
     def scatter(self, xname, yname, c=None, s=None, names=True, xlog=True, ylog=True, **kw):
-        '''Plot one parameter against another.'''
+        '''
+        Quick tool to plot one parameter against another.
+        '''
         plt.ion()
         x, y = self.__getattr__(xname), self.__getattr__(yname)
         try:

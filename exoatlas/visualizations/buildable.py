@@ -99,7 +99,7 @@ class physical_summary(BuildablePlot):
         self.panels = {p.nametag:p for p in [fr, mr, er, sr]}
 
 class observable_summary(BuildablePlot):
-    def plot(self, pops, note='', telescope='HST', **wavelengthkw):
+    def plot(self, pops, note='', telescope_name='JWST', **wavelengthkw):
         gs = self.create_gridspec(2, 5,
                                   wspace=0.05,
                                   hspace=0.05,
@@ -175,20 +175,20 @@ class observable_summary(BuildablePlot):
                  ax=plt.subplot(gs[1, 4]))
         pr.remove_ylabel()
 
-        db = DistanceBrightness(telescope=telescope, **wavelengthkw)
+        db = DistanceBrightness(telescope_name=telescope_name, **wavelengthkw)
         db.build(pops=pops,
                  ax=plt.subplot(gs[0, 4]))
         db.remove_xlabel()
 
         db.remove_ylabel()
-        x = DepthBrightness(telescope=telescope, **wavelengthkw)
+        x = DepthBrightness(telescope_name=telescope_name, **wavelengthkw)
         x.build(pops=pops,
                  ax=plt.subplot(gs[0, 1]))
         x.plot_sigma()
         x.remove_xlabel()
 
 
-        x = EmissionBrightness(telescope=telescope, **wavelengthkw)
+        x = EmissionBrightness(telescope_name=telescope_name, **wavelengthkw)
         x.build(pops=pops,
                  ax=plt.subplot(gs[0, 2]))
         x.plot_sigma()
@@ -197,7 +197,7 @@ class observable_summary(BuildablePlot):
 
 
 
-        x = TransmissionBrightness(telescope=telescope, **wavelengthkw)
+        x = TransmissionBrightness(telescope_name=telescope_name, **wavelengthkw)
         x.build(pops=pops,
                  ax=plt.subplot(gs[0, 3]))
         x.plot_sigma()

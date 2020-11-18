@@ -135,15 +135,21 @@ class EmissionRadius(BubblePanel):
 
 class DistanceBrightness(BubblePanel):
     xaxis = Distance
-    yaxis = StellarBrightness
+    yaxis = StellarBrightnessTelescope
 
 class DepthBrightness(BubblePanel):
     xaxis = Depth
-    yaxis = StellarBrightness
+    yaxis = StellarBrightnessTelescope
 
     def plot_sigma(self, color='black', linewidth=3, alpha=0.5, **kw):
         '''
-        Plot the 1-sigma uncertainty from photon noise.
+        Plot the 1-sigma uncertainty from photon noise,
+        with sigma on the x axis and number of photons on y-axis,
+        in the telescope units associated with the panel.
+
+        Parameters
+        ----------
+        All keywords will be passed to plt.plot
         '''
 
         w = self.plottable['y'].wavelength
@@ -158,7 +164,6 @@ class DepthBrightness(BubblePanel):
 
         unit = self.plottable['y'].unit
         photons_in_unit = photons_collected.to(unit)
-
 
         plt.plot(sigma, photons_in_unit, color=color, linewidth=linewidth, alpha=alpha, **kw)
 
