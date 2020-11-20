@@ -54,7 +54,7 @@ def test_subsets():
             p.validate_columns()
 
         with pytest.raises(NotImplementedError):
-            q = ExoplanetsSubset()
+            q = TransitingExoplanetsSubset()
 
 def test_tess():
     '''

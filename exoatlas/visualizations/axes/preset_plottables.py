@@ -144,61 +144,7 @@ class Depth(PlottableAxis):
     scale = 'log'
     lim = [2e-6, 2e-1]
 
-# FIXME, add variable mu!
-class Transmission(Depth):
-    def __init__(self, mu=2.32, threshold=2, **kw):
-        '''
-        Initialize for a particular mean molecular weight.
 
-        Parameters
-        ----------
-        mu : float
-            Mean molecular weight (default 2.2 for H/He)
-        threshold : float
-            By how many sigma must the planet mass be detected?
-        '''
-        PlottableAxis.__init__(self, **kw)
-        self.mu = mu
-        self.threshold = threshold
-        self.label = f'Transit Depth\nof 1 Scale Height\n for $\mu$={mu} Atmosphere'
-
-    def value(self):
-        return self.panel.pop.transmission_signal(mu=self.mu, threshold=self.threshold)
-
-class Reflection(Depth):
-    def __init__(self, albedo=1, **kw):
-        '''
-        Initialize for a particular albedo.
-
-        Parameters
-        ----------
-        mu : float
-            Mean molecular weight (default 2.2 for H/He)
-        threshold : float
-            By how many sigma must the planet mass be detected?
-        '''
-        PlottableAxis.__init__(self, **kw)
-        self.albedo = albedo
-        self.label = f'Eclipse Depth\nin Reflected Light\n({albedo:.0%} albedo)'
-
-    def value(self):
-        return self.panel.pop.reflection_signal(self.albedo)
-
-class Emission(Depth):
-    source = 'emission_signal'
-
-    def __init__(self, wavelength=5*u.micron, **kw):
-        '''
-        Initialize for a particular wavelength, because the
-        eclipse depth will depend on the thermal emission
-        spectrum of the planet and star.
-        '''
-        PlottableAxis.__init__(self, **kw)
-        self.wavelength = wavelength
-        self.label = f'Thermal Emission\nEclipse Depth\nat $\lambda={self.wavelength.to(u.micron).value}\mu m$'
-
-    def value(self):
-        return self.panel.pop.emission_signal(self.wavelength)
 
 class StellarBrightness(PlottableAxis):
     #source='stellar_brightness'
@@ -271,9 +217,11 @@ class StellarBrightnessTelescope(PlottableAxis):
                              wavelength=wavelength,
                              **kw)
 
+        # specify the unit to be used for plotting
+        self.setup_unit()
+
         # reset the label, because it depends on the telescope inputs
         self.setup_label()
-
 
 
     def setup_telescope(self, telescope_name=None, wavelength=None, **kw):
@@ -290,11 +238,20 @@ class StellarBrightnessTelescope(PlottableAxis):
         # define a unit of collecting power for the telescope
         self.telescope_unit = define_telescope_unit_by_name(self.telescope_name,
                                                             wavelength=wavelength, **kw)
-        self.unit = lotsofphotons_unit/self.telescope_unit
-        self.wavelength = self.telescope_unit.wavelength
 
+        # note the wavelength the telescope is set at
+        self.wavelength = self.telescope_unit.wavelength
+        self.R = self.telescope_unit.R
+
+    def setup_unit(self):
+        '''
+        Define the unit for plotting.
+        '''
+        # what's the astropy unit associated with the axis?
+        self.unit = lotsofphotons_unit/self.telescope_unit
+
+        # what should go in the () in the axis label?
         self.unit_string = self.unit.to_string()
-        #self.lim = [1e-3, 1e3]
 
     def setup_label(self):
         '''
@@ -309,3 +266,149 @@ class StellarBrightnessTelescope(PlottableAxis):
         What data value to plot?
         '''
         return self.panel.pop.stellar_brightness(self.wavelength).to(self.unit)
+
+class Transmission(Depth):
+    def __init__(self, mu=2.32, threshold=2, **kw):
+        '''
+        Initialize for a particular mean molecular weight.
+
+        Parameters
+        ----------
+        mu : float
+            Mean molecular weight (default 2.2 for H/He)
+        threshold : float
+            By how many sigma must the planet mass be detected?
+        '''
+        PlottableAxis.__init__(self, **kw)
+        self.mu = mu
+        self.threshold = threshold
+        self.label = f'Transit Depth\nof 1 Scale Height\n for $\mu$={mu} Atmosphere'
+
+    def value(self):
+        return self.panel.pop.transmission_signal(mu=self.mu, threshold=self.threshold)
+
+class TransmissionSNR(StellarBrightnessTelescope):
+    scale = 'log'
+
+    def __init__(self, mu=2.32, threshold=2, **kw):
+        '''
+        Initialize for a particular mean molecular weight.
+
+        Parameters
+        ----------
+        mu : float
+            Mean molecular weight (default 2.2 for H/He)
+        threshold : float
+            By how many sigma must the planet mass be detected?
+        '''
+        self.mu = mu
+        self.threshold = threshold
+        StellarBrightnessTelescope.__init__(self, **kw)
+
+    def setup_label(self):
+        '''
+        How should this plottable be labled on an axis?
+        '''
+        # define the label, based on the wavelength and telescope
+        w = self.wavelength.to(u.micron).value
+        self.label = f'S/N for Transit Depth\nof 1 Scale Height\n for $\mu$={self.mu} Atmosphere\nat $\lambda={w}\mu$m (R={self.R})'
+
+    def value(self):
+        '''
+        What data value to plot?
+        '''
+        return self.panel.pop.transmission_snr(mu=self.mu, threshold=self.threshold, **self.kw)
+
+class Reflection(Depth):
+    def __init__(self, albedo=1, **kw):
+        '''
+        Initialize for a particular albedo.
+
+        Parameters
+        ----------
+        albedo : float
+            What fraction of starlight does the planet reflect?
+        '''
+        PlottableAxis.__init__(self, **kw)
+        self.albedo = albedo
+        self.label = f'Eclipse Depth\nin Reflected Light\n({albedo:.0%} albedo)'
+
+    def value(self):
+        return self.panel.pop.reflection_signal(self.albedo)
+
+class ReflectionSNR(StellarBrightnessTelescope):
+    scale = 'log'
+
+    def __init__(self, albedo=1, **kw):
+        '''
+        Initialize for a particular albedo.
+
+        Parameters
+        ----------
+        albedo : float
+            What fraction of starlight does the planet reflect?
+        '''
+        self.albedo = albedo
+        StellarBrightnessTelescope.__init__(self, **kw)
+
+    def setup_label(self):
+        '''
+        How should this plottable be labled on an axis?
+        '''
+        # define the label, based on the wavelength and telescope
+        w = self.wavelength.to(u.micron).value
+        self.label = f'S/N for Eclipse Depth\nin Reflected Light\n({self.albedo:.0%} albedo)\nat $\lambda={w}\mu$m (R={self.R})'
+
+    def value(self):
+        '''
+        What data value to plot?
+        '''
+        return self.panel.pop.reflection_snr(albedo=self.albedo, **self.kw)
+
+class Emission(Depth):
+    source = 'emission_signal'
+
+    def __init__(self, wavelength=5*u.micron, **kw):
+        '''
+        Initialize for a particular wavelength, because the
+        eclipse depth will depend on the thermal emission
+        spectrum of the planet and star.
+        '''
+        PlottableAxis.__init__(self, **kw)
+        self.wavelength = wavelength
+        self.label = f'Thermal Emission\nEclipse Depth\nat $\lambda={self.wavelength.to(u.micron).value}\mu m$'
+
+    def value(self):
+        return self.panel.pop.emission_signal(self.wavelength)
+
+class EmissionSNR(StellarBrightnessTelescope):
+    scale = 'log'
+
+    def __init__(self, **kw):
+        '''
+        Initialize for a particular albedo.
+
+        Parameters
+        ----------
+        wavelength : astropy.units.quantity.Quantity
+            The wavelength at which we want the
+            eclipse depth to be computed.
+        '''
+        StellarBrightnessTelescope.__init__(self, **kw)
+
+    def setup_label(self):
+        '''
+        How should this plottable be labled on an axis?
+        '''
+        # define the label, based on the wavelength and telescope
+        w = self.wavelength.to(u.micron).value
+        self.label = f'S/N for Thermal Emission\nEclipse Depth\nat $\lambda={self.wavelength.to(u.micron).value}\mu m$\n(R={self.R})'
+
+    def value(self):
+        '''
+        What data value to plot?
+        '''
+        return self.panel.pop.emission_snr(**self.kw)
+
+# FIXME
+# -have a clearer way of tracking the

@@ -25,16 +25,28 @@ transit_columns = [
 'radius',
 'mass',
 'transit_ar',
-'transit_b',
+'transit_b']
+
+calculated_columns = [
+'a_over_rs',
+'b',
+'insolation',
+'relative_insolation',
+'log_relative_insolation',
+'teq',
 'density',
 'surface_gravity',
 'distance_modulus',
 'escape_velocity',
-'escape_parameter'
+'escape_parameter',
+'angular_separation',
+'imaging_contrast',
+'stellar_luminosity',
 ]
 
 
-attribute_columns = basic_columns + transit_columns
+table_columns = basic_columns + transit_columns
+attribute_columns = table_columns + calculated_columns
 
 
 method_columns = ['scale_height',
@@ -85,7 +97,7 @@ class Population(Talker):
 
     #kludge?
     _pithy = True
-    def __init__(self, standard, label='unknown', **plotkw):
+    def __init__(self, standard, label='unknown', verbose=False, **plotkw):
         '''
         Initialize a Population of exoplanets from a standardized table.
 
@@ -106,6 +118,7 @@ class Population(Talker):
         # keywords to use for plotting
         self.plotkw = plotkw
 
+        self._pithy = verbose == False
         # define some cleaned names and hostnames, for indexing
         try:
             self.standard['tidyname']
@@ -583,7 +596,7 @@ class Population(Talker):
         '''
 
         N = len(self.standard)
-        for k in attribute_columns:
+        for k in table_columns:
             try:
                 n = sum(self.standard[k].mask == False)
             except AttributeError:
@@ -602,7 +615,7 @@ class Population(Talker):
 
         return np.array([clean(name) in clean(x) for x in self.name]).nonzero()[0]
 
-    def correct(self, name, **kwargs):
+    def update_planet(self, name, **kwargs):
         '''
         Correct the properties of a particular planet,
         modifying its values in the standardized table.
@@ -1273,7 +1286,7 @@ class Population(Talker):
         '''
 
         # figure out the noise
-        noise = self.depth_uncertainty(telescope_name, **kw)
+        noise = self.depth_uncertainty(telescope_name=telescope_name, per_transit=per_transit, **kw)
 
         # create a telescope unit (mostly to get a default wavelength)
         telescope_unit = define_telescope_unit_by_name(telescope_name, **kw)

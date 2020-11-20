@@ -83,10 +83,14 @@ class Panel(Talker):
         '''
         x = self.plottable['x']
         y = self.plottable['y']
+        s = self.plottable['size']
+        c = self.plottable['color']
         return f"""
         <Panel | {self.__class__.__name__}>
             x = {x}
-            y = {y}"""
+            y = {y}
+            s = {s}
+            c = {c}"""
 
 
     @property

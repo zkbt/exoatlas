@@ -1,7 +1,6 @@
 # exoplanet population of all "confirmed" exoplanets from exoplanet archive
 from .imports import *
 from .Population import Population
-from .curation.KOI import correct
 
 
 url ='http://exoplanetarchive.ipac.caltech.edu/cgi-bin/nstedAPI/nph-nstedAPI?table=cumulative&format=bar-delimited&select=*'
@@ -17,7 +16,6 @@ class KOI(PredefinedPopulation):
 
         # set up the population
         Population.__init__(self, label=label, **kwargs)
-        correct(self)
         self.save_standard()
         # defing some plotting parameters
         self.color = 'gray'
@@ -110,7 +108,7 @@ class KOI(PredefinedPopulation):
         s.sort('name')
         self.standard = s
 
-class ExoplanetsSubset(KOI):
+class TransitingExoplanetsSubset(KOI):
     def __init__(self, label, color='black', zorder=0):
 
         # set the label
@@ -135,9 +133,9 @@ class ExoplanetsSubset(KOI):
         self.speak('leaving {0} rows'.format(self.n))
         self.save_standard()
 
-class UnconfirmedKepler(ExoplanetsSubset):
+class UnconfirmedKepler(TransitingExoplanetsSubset):
     def __init__(self):
-        ExoplanetsSubset.__init__(self, label="Kepler (candidates)", color='gray', zorder=-1e6)
+        TransitingExoplanetsSubset.__init__(self, label="Kepler (candidates)", color='gray', zorder=-1e6)
         self.ink=True
 
     def toRemove(self):

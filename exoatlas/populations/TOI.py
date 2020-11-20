@@ -199,7 +199,7 @@ class TOI(PredefinedPopulation):
     def is_candidateplanet(self):
         return self.standard['TFOPWG Disposition'] == 'CP'
 
-'''class ExoplanetsSubset(TOI):
+'''class TransitingExoplanetsSubset(TOI):
     def __init__(self, label, color='black', zorder=0):
 
         # set the label
@@ -225,9 +225,9 @@ class TOI(PredefinedPopulation):
         self.save_standard()
 
 '''
-"""class UnconfirmedKepler(ExoplanetsSubset):
+"""class UnconfirmedKepler(TransitingExoplanetsSubset):
     def __init__(self):
-        ExoplanetsSubset.__init__(self, label="Kepler (candidates)", color='gray', zorder=-1e6)
+        TransitingExoplanetsSubset.__init__(self, label="Kepler (candidates)", color='gray', zorder=-1e6)
         self.ink=True
 
     def toRemove(self):

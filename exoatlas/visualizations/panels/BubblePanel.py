@@ -60,7 +60,7 @@ class BubblePanel(Panel):
         try:
             # try to make a variable size axis
             self.plottable['size'] = size(panel=self, **kw)
-            default_size_normalization = self.plottable['size'].normalization
+            default_size_normalization = self.plottable['size'].size_normalization
         except TypeError:
             # otherwise, use a single size for all points
             self.plottable['size'] = size
