@@ -215,7 +215,7 @@ class TOI(PredefinedPopulation):
             KOI.__init__(self)
             self.label=label
             self.selectSubsample()
-        self.ink=True
+        self.respond_to_color=True
 
     def selectSubsample(self):
         tr = self.toRemove()
@@ -228,7 +228,7 @@ class TOI(PredefinedPopulation):
 """class UnconfirmedKepler(TransitingExoplanetsSubset):
     def __init__(self):
         TransitingExoplanetsSubset.__init__(self, label="Kepler (candidates)", color='gray', zorder=-1e6)
-        self.ink=True
+        self.respond_to_color=True
 
     def toRemove(self):
         isconfirmed = self.standard['disposition'] == 'CONFIRMED'

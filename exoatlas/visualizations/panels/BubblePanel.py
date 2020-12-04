@@ -118,8 +118,11 @@ class BubblePanel(Panel):
             sizes for each bubble according to some quantity.
         '''
 
+        # should we ignore any variable size instructions?
+        if self.pop.respond_to_size == False:
+            size = self.pop.plotkw.get('s', None)
         # if desired, set variable sizes
-        if isinstance(self.plottable['size'], PlottableAxis):
+        elif isinstance(self.plottable['size'], PlottableAxis):
             # get the raw values for the sizes
             x = self.plottable['size'].value()
             # calculate the normalized size
@@ -144,7 +147,7 @@ class BubblePanel(Panel):
         '''
 
         # should we ignore any variable color instructions?
-        if self.pop.ink == False:
+        if self.pop.respond_to_color == False:
             color = self.pop.color
         # should we use a variable color?
         elif isinstance(self.plottable['color'], PlottableAxis):

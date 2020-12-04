@@ -34,6 +34,7 @@ calculated_columns = [
 'relative_insolation',
 'log_relative_insolation',
 'teq',
+'planet_luminosity',
 'density',
 'surface_gravity',
 'distance_modulus',
@@ -71,7 +72,8 @@ default_plotkw = dict(color='black',
                       zorder=0,
                       marker='o',
                       linewidth=1,
-                      ink=True,
+                      respond_to_color=True,
+                      respond_to_size=True,
                       exact=False,
                       label_planets=False,
                       filled=True,
@@ -850,6 +852,11 @@ class Population(Talker):
         return np.log10(self.relative_insolation)
 
     @property
+    def relative_cumulative_xuv(self):
+        xuv_proxy = (self.stellar_luminosity/u.Lsun)**-0.6
+        return self.relative_insolation*xuv_proxy
+
+    @property
     def teq(self):
         '''
         The equilibrium temperature of the planet.
@@ -858,6 +865,13 @@ class Population(Talker):
         sigma = con.sigma_sb
         A = 1
         return ((f*A/4/sigma)**(1/4)).to(u.K)
+
+    @property
+    def planet_luminosity(self):
+        '''
+        The bolometric luminosity of the planet (assuming zero albedo).
+        '''
+        return (self.teq**4*con.sigma_sb*4*np.pi*self.radius**2).to(u.W)
 
     @property
     def transit_depth(self):
@@ -1208,7 +1222,7 @@ class Population(Talker):
         return flux_in_photons.to(unit)
 
     def depth_uncertainty(self, telescope_name='JWST',
-                                per_transit=True,
+                                per_transit=False,
                                 dt=1*u.hour,
                                 **kw):
         '''
@@ -1278,7 +1292,7 @@ class Population(Talker):
         return sigma_depth
 
     def _get_noise_and_unit(self, telescope_name='JWST',
-                            per_transit=True,
+                            per_transit=False,
                             **kw):
         '''
         Tiny helper to get the noise and the telescope_unit

@@ -289,6 +289,7 @@ class Transmission(Depth):
 
 class TransmissionSNR(StellarBrightnessTelescope):
     scale = 'log'
+    size_normalization = 10
 
     def __init__(self, mu=2.32, threshold=2, **kw):
         '''
@@ -304,6 +305,7 @@ class TransmissionSNR(StellarBrightnessTelescope):
         self.mu = mu
         self.threshold = threshold
         StellarBrightnessTelescope.__init__(self, **kw)
+        self.kw = kw
 
     def setup_label(self):
         '''
@@ -338,6 +340,7 @@ class Reflection(Depth):
 
 class ReflectionSNR(StellarBrightnessTelescope):
     scale = 'log'
+    size_normalization = 10
 
     def __init__(self, albedo=1, **kw):
         '''
@@ -350,6 +353,7 @@ class ReflectionSNR(StellarBrightnessTelescope):
         '''
         self.albedo = albedo
         StellarBrightnessTelescope.__init__(self, **kw)
+        self.kw = kw
 
     def setup_label(self):
         '''
@@ -383,7 +387,7 @@ class Emission(Depth):
 
 class EmissionSNR(StellarBrightnessTelescope):
     scale = 'log'
-
+    size_normalization = 10
     def __init__(self, **kw):
         '''
         Initialize for a particular albedo.
@@ -395,6 +399,7 @@ class EmissionSNR(StellarBrightnessTelescope):
             eclipse depth to be computed.
         '''
         StellarBrightnessTelescope.__init__(self, **kw)
+        self.kw = kw
 
     def setup_label(self):
         '''

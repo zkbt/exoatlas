@@ -219,7 +219,7 @@ class FluxEscape(BubblePanel):
     xaxis = Flux
     yaxis = EscapeVelocity
 
-    def plot_constant_lambda(self, alpha=0.5, color='gray', **kw):
+    def plot_constant_lambda(self, alpha=0.5, color='gray', nudge=1, rotation=-4.5, **kw):
         '''
         Plot the escape velocity vs insolation for
         different constant values of the escape parameter.
@@ -237,7 +237,7 @@ class FluxEscape(BubblePanel):
         '''
 
         # label one of the lines
-        plt.text(.005, 145, r'$E_{grav}/E_{thermal}$', rotation=-4.5, fontsize=8, color=color)
+        plt.text(.005, 145*nudge, r'$E_{grav}/E_{thermal}$', rotation=rotation, fontsize=8, color=color)
 
         teq = np.logspace(1, 4)*u.K
         earth_teq = (5780*u.K/np.sqrt(2*u.AU/u.Rsun)).to(u.K)
