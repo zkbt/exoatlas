@@ -4,7 +4,8 @@ def define_telescope_unit(telescope_name='telescope',
                           area=1*u.m**2,
                           wavelength=5*u.micron,
                           R=20,
-                          dt=1*u.hr):
+                          dt=1*u.hr,
+                          **kw):
     '''
     Create a custom astropy unit to represent
     the collecting area of a generic telscope

@@ -53,6 +53,7 @@ class PlottableAxis:
         '''
         self.panel = panel
         self.orientation = orientation
+        self.kw = kw
 
     def __call__(self, panel=None, orientation=None, **kw):
         '''

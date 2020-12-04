@@ -1,12 +1,11 @@
 # exoplanet population of all "confirmed" exoplanets from exoplanet archive
 from ..imports import *
 from .Population import PredefinedPopulation
-
-#from .curation.TransitingExoplanets import correct
 from .downloaders import merged_exoplanets
 
-__all__ = ['Exoplanets', 'TransitingExoplanets']
+__all__ = ['Exoplanets']
 
+# apply some kludges to correct bad planet properties
 class Exoplanets(PredefinedPopulation):
     def __init__(self, label='All Exoplanets', remake=False, **plotkw):
         '''
@@ -190,22 +189,3 @@ class Exoplanets(PredefinedPopulation):
 
         # return that standardized table
         return standard
-
-class TransitingExoplanets(Exoplanets):
-    def __init__(self, **kw):
-
-        Exoplanets.__init__(self, **kw)
-
-        # set the label
-        self.label = 'Transiting Exoplanets'
-
-        # trim to just the data we want
-
-
-        with warnings.catch_warnings():
-            warnings.simplefilter('ignore', category=RuntimeWarning)
-            ok_transit = (self.has_transit == 1)
-            has_no_radius = np.isnan(self.radius)
-            ok_radius = (self.radius < 30*u.Rearth) | has_no_radius
-            ok = ok_transit & ok_radius
-        self.standard = self.standard[ok]

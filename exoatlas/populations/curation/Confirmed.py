@@ -1,39 +1,39 @@
 import numpy as np
 import astropy.units as u
 
-def correct(pop):
+def update_planet(pop):
 
 
     # Grimm et al. masses
-    pop.correct('TRAPPIST-1b',      mass=  1.017,
+    pop.update_planet('TRAPPIST-1b',      mass=  1.017,
                                     mass_uncertainty_upper=0.154,
                                     mass_uncertainty_lower= -0.143)
 
-    pop.correct('TRAPPIST-1c',      mass= 1.156,
+    pop.update_planet('TRAPPIST-1c',      mass= 1.156,
                                     mass_uncertainty_upper=0.142,
                                     mass_uncertainty_lower= -0.131)
 
-    pop.correct('TRAPPIST-1d',      mass= 0.297,
+    pop.update_planet('TRAPPIST-1d',      mass= 0.297,
                                     mass_uncertainty_upper=0.039,
                                     mass_uncertainty_lower= -0.035)
 
 
-    pop.correct('TRAPPIST-1e',      mass= 0.772,
+    pop.update_planet('TRAPPIST-1e',      mass= 0.772,
                                     mass_uncertainty_upper=0.079,
                                     mass_uncertainty_lower= -0.075)
 
 
-    pop.correct('TRAPPIST-1f',      mass= 0.934,
+    pop.update_planet('TRAPPIST-1f',      mass= 0.934,
                                     mass_uncertainty_upper=0.080,
                                     mass_uncertainty_lower=-0.078)
-    pop.correct('TRAPPIST-1g',      mass=1.148,
+    pop.update_planet('TRAPPIST-1g',      mass=1.148,
                                     mass_uncertainty_upper=0.098,
                                     mass_uncertainty_lower=-0.095)
-    pop.correct('TRAPPIST-1h',      mass=0.331,
+    pop.update_planet('TRAPPIST-1h',      mass=0.331,
                                     mass_uncertainty_upper=0.056,
                                     mass_uncertainty_lower=-0.049)
 
-    pop.correct('GJ 1132b',
+    pop.update_planet('GJ 1132b',
             a_over_r=16.54,
             mass=1.62,
             mass_uncertainty_upper=0.55,
@@ -46,73 +46,73 @@ def correct(pop):
 			stellar_mass=0.181,
             transit_epoch=2457184.55786)
 
-    pop.correct('30 Ari Bb',
+    pop.update_planet('30 Ari Bb',
             radius=np.nan)
 
 
-    pop.correct('HD 17156b',
+    pop.update_planet('HD 17156b',
             transit_duration=0.1338, a_over_r=23.2, b=0.4)
 
-    pop.correct('HD 17156b',
+    pop.update_planet('HD 17156b',
             transit_duration=0.1338, a_over_r=23.2, b=0.477)
 
-    pop.correct('HD 80606b',
+    pop.update_planet('HD 80606b',
             transit_duration=0.4958, a_over_r=94, b=0.75)
 
-    pop.correct('GJ 1132b',
+    pop.update_planet('GJ 1132b',
                 transit_duration=47.0/60.0/24.0)
 
-    pop.correct('GJ 1214b',
+    pop.update_planet('GJ 1214b',
                 transit_duration=0.03620)
 
-    pop.correct('GJ 436b',
+    pop.update_planet('GJ 436b',
                 transit_duration=0.04227)
 
-    pop.correct('HD 219134b',
+    pop.update_planet('HD 219134b',
             a_over_r=1/(0.03876*u.au/0.778/u.Rsun).decompose().value,
             mass=4.74,
             mass_uncertainty_upper=0.19,
             mass_uncertainty_lower=-0.19)
 
-    pop.correct('HD 219134c',
+    pop.update_planet('HD 219134c',
             a_over_r=1/(0.06530*u.au/0.778/u.Rsun).decompose().value,
             mass=4.36,
             mass_uncertainty_upper=0.22,
             mass_uncertainty_lower=-0.22)
 
-    pop.correct('LHS 1140b',
+    pop.update_planet('LHS 1140b',
             transit_duration=2.0/24.0,
             a_over_r=101.0,
             b=0.16)
 
-    pop.correct('GJ 3470b',
+    pop.update_planet('GJ 3470b',
             transit_duration=0.07992)
 
-    pop.correct('Kepler-51b',
+    pop.update_planet('Kepler-51b',
             transit_duration=0.24154)
 
-    pop.correct('Kepler-51c',
+    pop.update_planet('Kepler-51c',
             transit_duration=0.1171)
 
-    pop.correct('Kepler-51d',
+    pop.update_planet('Kepler-51d',
             transit_duration=0.351992)
 
-    pop.correct('Kepler-42b',
+    pop.update_planet('Kepler-42b',
             transit_duration=0.022329)
 
-    pop.correct('Kepler-42c',
+    pop.update_planet('Kepler-42c',
             transit_duration=0.02)
 
-    pop.correct('Kepler-42d',
+    pop.update_planet('Kepler-42d',
             transit_duration=0.016554)
 
-    pop.correct('WASP-43b',
+    pop.update_planet('WASP-43b',
             transit_duration=0.0483, a_over_r=4.8, b=0.66)
 
-    pop.correct('K2-18b', transit_duration=0.1117)
+    pop.update_planet('K2-18b', transit_duration=0.1117)
 
     """I corrected the famous ones, which have weird choices in the archive."""
-    pop.correct('HD 209458b',
+    pop.update_planet('HD 209458b',
                 mass=235.0,
                 mass_uncertainty_upper=19.0,
                 mass_uncertainty_lower=-19.0,
@@ -121,7 +121,7 @@ def correct(pop):
                 b=0.5)
 
 
-    pop.correct('HD 189733b',
+    pop.update_planet('HD 189733b',
                 a_over_r=8.9,
                 radius=13.630,
                 radius_uncertainty_upper=0.269,
@@ -136,7 +136,7 @@ def correct(pop):
         NASA Exoplanet Archive."""
 
     # parameters taken from the updates in Demory et al. (2015, *submitted*)
-    '''pop.correct('55 Cnce',
+    '''pop.update_planet('55 Cnce',
                 radius=1.92,
                 radius_uncertainty_upper=0.08,
                 radius_uncertainty_lower=-0.08,
@@ -149,7 +149,7 @@ def correct(pop):
 
 
     # from Gillon et al. (2012) (and some from Demory et al.)
-    pop.correct('55 Cnce',
+    pop.update_planet('55 Cnce',
                 radius=2.17,
                 radius_uncertainty_upper=0.1,
                 radius_uncertainty_lower=-0.1,
@@ -160,11 +160,11 @@ def correct(pop):
                 b=0.459)
 
     # from von Braun et al. (2012)
-    pop.correct('GJ 436b',
+    pop.update_planet('GJ 436b',
                 stellar_teff=3416.0)
 
     # from the updates in Anglada-Escude et al. (2013)
-    pop.correct('GJ 1214b',
+    pop.update_planet('GJ 1214b',
                 stellar_teff=3252.0,
                 stellar_radius=0.211,
                 radius=2.72,
@@ -181,18 +181,18 @@ def correct(pop):
                 distance_uncertainty_lower=-0.13)
 
     # from Knutson et al. (2014)
-    pop.correct('HD 97658b',
+    pop.update_planet('HD 97658b',
                 a_over_r=26.24)
 
     # from Haywood et al. (2014), allowing eccentricity as they do in abstract
-    pop.correct('CoRoT-7b',
+    pop.update_planet('CoRoT-7b',
                 rv_semiamplitude=3.42,
                 mass=4.73,
                 mass_uncertainty_upper=0.95,
                 mass_uncertainty_lower=-0.95)
 
     # from Carter et al.
-    pop.correct('Kepler-36b',
+    pop.update_planet('Kepler-36b',
                 a_over_r = 15.24)
 
     # the archive parameters look reasonable for
@@ -207,66 +207,66 @@ def correct(pop):
 
 
     # Kepler-11's radius was listed as 0.07!
-    pop.correct('Kepler-11b',
+    pop.update_planet('Kepler-11b',
                 stellar_radius=1.053)
-    pop.correct('Kepler-11c',
+    pop.update_planet('Kepler-11c',
                 stellar_radius=1.053)
-    pop.correct('Kepler-11d',
+    pop.update_planet('Kepler-11d',
                 stellar_radius=1.053)
-    pop.correct('Kepler-11e',
+    pop.update_planet('Kepler-11e',
                 stellar_radius=1.053)
-    pop.correct('Kepler-11f',
+    pop.update_planet('Kepler-11f',
                 stellar_radius=1.053)
-    pop.correct('Kepler-11g',
+    pop.update_planet('Kepler-11g',
                 stellar_radius=1.053)
 
     # googling the ones that have messed up stellar_teffs
-    pop.correct('Qatar-1b',
+    pop.update_planet('Qatar-1b',
                 stellar_teff=4861.)
-    pop.correct('Kepler-450b',
+    pop.update_planet('Kepler-450b',
                 stellar_teff=6215.0)
-    pop.correct('Kepler-450c',
+    pop.update_planet('Kepler-450c',
                 stellar_teff=6215.0)
-    pop.correct('Kepler-450d',
+    pop.update_planet('Kepler-450d',
                 stellar_teff=6215.0)
 
-    pop.correct('Kepler-449b',
+    pop.update_planet('Kepler-449b',
                 stellar_teff=5588.0)
-    pop.correct('Kepler-449c',
+    pop.update_planet('Kepler-449c',
                 stellar_teff=5588.0)
 
-    pop.correct('Kepler-414b',
+    pop.update_planet('Kepler-414b',
                 stellar_teff=5523.0)
-    pop.correct('Kepler-414c',
+    pop.update_planet('Kepler-414c',
                 stellar_teff=5523.0)
 
-    pop.correct('Kepler-415b',
+    pop.update_planet('Kepler-415b',
                 stellar_teff=4523.0)
-    pop.correct('Kepler-415c',
+    pop.update_planet('Kepler-415c',
                 stellar_teff=4523.0)
 
-    pop.correct('Kepler-416b',
+    pop.update_planet('Kepler-416b',
                 stellar_teff=5670.0)
-    pop.correct('Kepler-416c',
+    pop.update_planet('Kepler-416c',
                 stellar_teff=5670.0)
 
-    pop.correct('Kepler-417b',
+    pop.update_planet('Kepler-417b',
                 stellar_teff=5376.0)
-    pop.correct('Kepler-417c',
+    pop.update_planet('Kepler-417c',
                 stellar_teff=5376.0)
 
     # from discovery paper
-    pop.correct('WASP-100b',
+    pop.update_planet('WASP-100b',
                 stellar_radius=2.0)
 
     # supposedly HIPPARCOS, via exoplanets.org
-    pop.correct('HD80606b',
+    pop.update_planet('HD80606b',
                 distance=58,
                 distance_uncertainty_upper=30,
                 distance_uncertainty_lower=-14.8)
 
     # from discovery paper
-    pop.correct('Kepler-128b',
+    pop.update_planet('Kepler-128b',
                 mass=np.nan)
-    pop.correct('Kepler-128c',
+    pop.update_planet('Kepler-128c',
                 mass=np.nan)

@@ -115,6 +115,7 @@ class ErrorPanel(Panel):
         # set the base color to use throughout
         default_color = plt.scatter([],[]).get_facecolor()[0]
         color = self.pop.color or default_color
+        marker = self.pop.marker or 'o'
 
         # if the entire population is exact (e.g., Solar System),
         # then don't include any errors when plotting
@@ -122,6 +123,7 @@ class ErrorPanel(Panel):
             # define plotting keywords without errorbars
             plotkw = dict(color=color,
                           edgecolor=color,
+                          marker=marker,
                           **kw)
             plotkw['alpha'] = 1
             plotkw['zorder'] = 1e9
@@ -204,6 +206,7 @@ class ErrorPanel(Panel):
                 self.scattered[key] = self.ax.errorbar(x[ok], y[ok],
                                                        yerr=y_unc[:, ok],
                                                        xerr=x_unc[:, ok],
+                                                       color=self.pop.color,
                                                        **kw)
 
         # set the scales, limits, labels

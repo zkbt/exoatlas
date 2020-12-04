@@ -1,0 +1,3 @@
+
+def curate(pop):
+    pass

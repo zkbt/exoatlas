@@ -6,3 +6,4 @@ from .test_populations import *
 from .test_uncertainties import *
 from .test_visualizations import *
 from .test_whatsup import *
+from .test_snr import *

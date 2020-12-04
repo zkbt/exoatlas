@@ -124,7 +124,7 @@ class TOI(PredefinedPopulation):
         s.sort('name')
         self.standard = s
 
-class ExoplanetsSubset(TOI):
+class TransitingExoplanetsSubset(TOI):
     def __init__(self, label, color='black', zorder=0):
 
         # set the label
@@ -140,7 +140,7 @@ class ExoplanetsSubset(TOI):
             KOI.__init__(self)
             self.label=label
             self.selectSubsample()
-        self.ink=True
+        self.respond_to_color=True
 
     def selectSubsample(self):
         tr = self.toRemove()
@@ -150,10 +150,10 @@ class ExoplanetsSubset(TOI):
         self.save_standard()
 
 
-"""class UnconfirmedKepler(ExoplanetsSubset):
+"""class UnconfirmedKepler(TransitingExoplanetsSubset):
     def __init__(self):
-        ExoplanetsSubset.__init__(self, label="Kepler (candidates)", color='gray', zorder=-1e6)
-        self.ink=True
+        TransitingExoplanetsSubset.__init__(self, label="Kepler (candidates)", color='gray', zorder=-1e6)
+        self.respond_to_color=True
 
     def toRemove(self):
         isconfirmed = self.standard['disposition'] == 'CONFIRMED'

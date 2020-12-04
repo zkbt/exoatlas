@@ -21,7 +21,7 @@ class SolarSystem(PredefinedPopulation):
         self.color = 'cornflowerblue'
         self.zorder = 1e10
         self.s = 80
-        self.ink = False
+        self.respond_to_color = False
         self.exact = True
 
     def load_raw(self):

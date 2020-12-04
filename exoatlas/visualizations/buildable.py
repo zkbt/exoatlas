@@ -16,7 +16,10 @@ class BuildablePlot(Talker):
         subplot : matplotlib.gridspec.SubplotSpec
             A gridspec specifier to plot into.
         stepbystep : bool
-            Should this
+            Should this plot be saved out in stages
+            of each panel being added one by one?
+        **kw : dictionary
+            All other keywords will be passed to the buildable plot function.
         '''
 
         self.subplot = subplot
@@ -30,7 +33,7 @@ class BuildablePlot(Talker):
     def create_gridspec(self, *args, figsize=(10, 5), **kwargs):
         '''
         Wrapper for gridspec, so we can make this plot either on its own
-        or
+        or inside a panel of another gridspec location.
         '''
         if self.subplot is None:
             self.figure = plt.figure(figsize=figsize)
@@ -53,7 +56,7 @@ class BuildablePlot(Talker):
 
 class physical_summary(BuildablePlot):
 
-    def plot(self, pops):
+    def plot(self, pops, nudge=1):
         gs = self.create_gridspec(2, 3,
                                   width_ratios=[1, 4, 1],
                                   height_ratios=[1, 3],
@@ -86,7 +89,7 @@ class physical_summary(BuildablePlot):
         er.build(pops=pops,
                  ax=plt.subplot(gs[0,1], sharex=fr.ax))
         er.remove_xlabel()
-        er.plot_constant_lambda()
+        er.plot_constant_lambda(nudge=nudge)
 
 
         # plot the
@@ -99,7 +102,7 @@ class physical_summary(BuildablePlot):
         self.panels = {p.nametag:p for p in [fr, mr, er, sr]}
 
 class observable_summary(BuildablePlot):
-    def plot(self, pops, note='', telescope_name='JWST', **wavelengthkw):
+    def plot(self, pops, note='', telescope_name='JWST', per_transit=False, **wavelengthkw):
         gs = self.create_gridspec(2, 5,
                                   wspace=0.05,
                                   hspace=0.05,
@@ -119,10 +122,10 @@ class observable_summary(BuildablePlot):
             kw['vmin'] = -1
             kw['vmax'] = 5
             for k, x in pops.items():
-                if k != 'solarsystem':
-                    x.alpha=0.5
-                else:
+                if k == 'solarsystem':
                     x.alpha = 1
+                else:
+                    x.alpha = 0.5
 
         hidealpha = 0.05
         showalpha = 1.0
@@ -175,20 +178,20 @@ class observable_summary(BuildablePlot):
                  ax=plt.subplot(gs[1, 4]))
         pr.remove_ylabel()
 
-        db = DistanceBrightness(telescope_name=telescope_name, **wavelengthkw)
+        db = DistanceBrightness(telescope_name=telescope_name, **kw, **wavelengthkw)
         db.build(pops=pops,
                  ax=plt.subplot(gs[0, 4]))
         db.remove_xlabel()
 
         db.remove_ylabel()
-        x = DepthBrightness(telescope_name=telescope_name, **wavelengthkw)
+        x = DepthBrightness(telescope_name=telescope_name, **kw,**wavelengthkw)
         x.build(pops=pops,
                  ax=plt.subplot(gs[0, 1]))
         x.plot_sigma()
         x.remove_xlabel()
 
 
-        x = EmissionBrightness(telescope_name=telescope_name, **wavelengthkw)
+        x = EmissionBrightness(telescope_name=telescope_name, size=EmissionSNR(per_transit=per_transit), **kw, **wavelengthkw)
         x.build(pops=pops,
                  ax=plt.subplot(gs[0, 2]))
         x.plot_sigma()
@@ -197,7 +200,7 @@ class observable_summary(BuildablePlot):
 
 
 
-        x = TransmissionBrightness(telescope_name=telescope_name, **wavelengthkw)
+        x = TransmissionBrightness(telescope_name=telescope_name, size=TransmissionSNR(per_transit=per_transit), **kw, **wavelengthkw)
         x.build(pops=pops,
                  ax=plt.subplot(gs[0, 3]))
         x.plot_sigma()
