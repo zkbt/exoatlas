@@ -617,14 +617,14 @@ class Population(Talker):
 
         return np.array([clean(name) in clean(x) for x in self.name]).nonzero()[0]
 
-    def update_planet(self, name, **kwargs):
+    def update_planet(self, planet_name, **kwargs):
         '''
         Correct the properties of a particular planet,
         modifying its values in the standardized table.
 
         Parameters
         ----------
-        name : str
+        planet_name : str
             The name of the planet to fix.
         **kwargs : dict
             Keyword arguments will go into modifying
@@ -632,17 +632,23 @@ class Population(Talker):
         '''
 
         # find the entry to replace
-        match = self.find(name)
+        match = self.find(planet_name)
         if len(match) != 1:
-            self.speak(f'failed when trying to modify parameters for {name}')
+            self.speak(f'failed when trying to modify parameters for {planet_name}')
             return
-
+        else:
+            match = match[0]
+            
         # loop over the keys, modifying each
-        self.speak(f'for planet "{name}"')
+        self.speak(f'for planet "{planet_name}"')
         for k, new in kwargs.items():
             old = self.standard[k][match]
             self.speak(f' {k} changed from {old} to {new}')
             self.standard[k][match] = new
+            if k == 'name':
+                self.standard['tidyname'][match] = clean(new).lower()
+            if k == 'hostname':
+                self.standard['tidyhostname'][match] = clean(new).lower()
 
     def removeRows(self, indices):
 

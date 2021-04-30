@@ -1,6 +1,11 @@
 from ..imports import *
 from .panels import *
 
+def make_sure_panel_is_iniated(x, **kw):
+    if isinstance(x, Panel):
+        return x
+    else:
+        return x(**kw)
 
 class MultiPanelPlot(Talker):
     '''
@@ -38,16 +43,27 @@ class MultiPanelPlot(Talker):
                 width_ratios, height_ratios
         '''
 
+        self.panels = {}
+
         # store list of panel names
         def get_name(x):
             try:
-                return x.__name__
-            except AttributeError:
-                return x.__class__.__name__
-        self.panel_names = [get_name(p) for p in panels]
+                return x.name
+            except:
+                try:
+                    return x.__name__
+                except AttributeError:
+                    return x.__class__.__name__
+
 
         # create a dictionary of panel objects
-        self.panels = {get_name(p):p(**kw) for p in panels}
+        for p in panels:
+            this_panel = make_sure_panel_is_iniated(p,**kw)
+            key = get_name(this_panel)
+            if key in self.panels:
+                key += "+"
+            self.panels[key] = this_panel
+        self.panel_names = list(self.panels.keys())
 
         # set up the geometry of the figure
         self.horizontal = horizontal

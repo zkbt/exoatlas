@@ -97,6 +97,33 @@ class FluxTeff(BubblePanel):
                           color=color, alpha=alpha, linewidth=linewidth,
                           zorder=zorder, **kw)
 
+class FluxSemi(BubblePanel):
+    xaxis = SemimajorAxis
+    yaxis = StellarLuminosity
+
+    def plot_hz(self, inner='moist-greenhouse', outer='maximum-greenhouse', color='cornflowerblue', alpha=0.25, linewidth=0, zorder=-100, **kw):
+        '''
+        Add a bar that indicates an approximate habitable zone.
+        (Estimated very roughly by eye from Kopparapu et al.)
+        '''
+
+        # make sure the plotting happens in this panel
+        plt.sca(self.ax)
+
+        # define the functions
+        S_inner = make_hz(inner)
+        S_outer = make_hz(outer)
+
+        # define the temperature grid
+        Teff = np.linspace(2000, 7500)
+
+
+        # plot the swath
+        plt.fill_betweenx(Teff, S_inner(Teff), S_outer(Teff),
+                          color=color, alpha=alpha, linewidth=linewidth,
+                          zorder=zorder, **kw)
+
+
 class DistanceRadius(BubblePanel):
     xaxis = Distance
     yaxis = Radius

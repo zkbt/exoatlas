@@ -55,16 +55,21 @@ class BubblePanel(Panel):
         # initialize the basics of the panel with the plottable axes
         Panel.__init__(self, xaxis=xaxis, yaxis=yaxis, **kw)
 
+
         # set up how we should scale the sizes of points
         size = clean_axis(size)
         try:
             # try to make a variable size axis
             self.plottable['size'] = size(panel=self, **kw)
             default_size_normalization = self.plottable['size'].size_normalization
+
         except TypeError:
             # otherwise, use a single size for all points
             self.plottable['size'] = size
             default_size_normalization = 1
+
+        #self.plottable['x'].panel = self
+        #self.plottable['y'].panel = self
 
         # make sure a size normalization has been defined
         self.size_normalization = size_normalization or default_size_normalization
@@ -106,6 +111,9 @@ class BubblePanel(Panel):
                         f'{axis}{attribute}',
                         getattr(self.plottable[axis],
                                 attribute))
+
+        #DEBUG
+        self.summarize()
 
     def get_sizes(self):
         '''
@@ -203,8 +211,8 @@ class BubblePanel(Panel):
         # identify the population we're working with
         if key is None:
             key = self.key
-        else:
-            self.point_at(key)
+        #else:
+        self.point_at(key)
 
         # define some default keywords, which can be over-written
         default = dict(s=self.get_sizes(),

@@ -1,5 +1,5 @@
 # imports that are need by many exoatlas subsections
-import os, sys, time, shutil, warnings
+import os, sys, time, shutil, warnings, copy
 from unittest import mock
 from tqdm import tqdm
 import pytest
@@ -52,7 +52,7 @@ def name2color(name):
 	-------
 	rgb : tuple
 		Three-elements array of floats,
-		expressing brightness in RGB. 
+		expressing brightness in RGB.
 	"""
 	if '#' in name:
 		h = name

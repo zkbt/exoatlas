@@ -62,10 +62,12 @@ class PlottableAxis:
         make sure that we connect to the appropriate
         panel.
         '''
-        self.panel = panel
-        self.orientation = orientation
 
-        return self
+        new_instance = copy.deepcopy(self)
+        new_instance.panel = panel
+        new_instance.orientation = orientation
+
+        return new_instance
 
     def __repr__(self):
         return f"<Plottable | {self.label}>".replace('\n', ' ')

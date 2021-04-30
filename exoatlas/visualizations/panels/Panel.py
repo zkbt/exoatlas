@@ -45,13 +45,16 @@ class Panel(Talker):
     xlim = [None, None]
     ylim = [None, None]
 
-    def __init__(self, xaxis=None, yaxis=None, **kw):
+    def __init__(self, xaxis=None, yaxis=None, name='?', **kw):
         '''
         Initialize a plotting panel.
 
         Parameters
         ----------
         '''
+
+        # store the name of this panel
+        self.name = name
 
         # dictionaries to store access points to items that appear on the plot
         self.scattered = {}
@@ -77,7 +80,7 @@ class Panel(Talker):
                         getattr(self.plottable[axis],
                                 attribute))
 
-    def __repr__(self):
+    def summarize(self):
         '''
         How to represent this panel as a string?
         '''
@@ -86,11 +89,18 @@ class Panel(Talker):
         s = self.plottable['size']
         c = self.plottable['color']
         return f"""
-        <Panel | {self.__class__.__name__}>
+        <Panel '{self.name}' | {self.__class__.__name__}>
             x = {x}
             y = {y}
             s = {s}
             c = {c}"""
+
+
+    def __repr__(self):
+        '''
+        How to represent this panel as a string?
+        '''
+        return f"""<Panel '{self.name}'={id(self)}>"""
 
 
     @property

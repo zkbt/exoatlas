@@ -8,6 +8,12 @@ class Flux(PlottableAxis):
     scale = 'log'
     lim = [6e4, 2e-4]
 
+class LogFlux(PlottableAxis):
+    source = 'relative_insolation'
+    label = 'Bolometric Flux Received (relative to Earth)'
+    scale = 'log'
+    lim = [6e4, 2e-4]
+
 class Radius(PlottableAxis):
     source = 'radius'
     label = 'Planet Radius (Earth radii)'
@@ -69,6 +75,12 @@ class StellarTeff(PlottableAxis):
     label = 'Stellar Temperature (K)'
     scale = 'linear'
     lim = [2000, 7000]
+
+class StellarLuminosity(PlottableAxis):
+    source = 'stellar_luminosity'
+    label = 'Stellar Luminosity (L_$\odot$)'
+    scale = 'log'
+    lim = [None, None]
 
 class Distance(PlottableAxis):
     source = 'distance'
