@@ -64,8 +64,8 @@ class Downloader(Talker):
         self.speak(f"Download successful! Saved file to {self.path}")
 
 
-columns_directory = resource_filename(__name__, "data/exoplanet-archive-columns/")
-"exoacrhive-columns-with-errors-and-limits.txt"
+# columns_directory = resource_filename(__name__, "data/exoplanet-archive-columns/")
+# "exoacrhive-columns-with-errors-and-limits.txt"
 
 
 class ExoplanetArchiveDownloader(Downloader):
@@ -97,7 +97,9 @@ class ExoplanetArchiveDownloader(Downloader):
 
         # add columns
         column_names = np.genfromtxt(
-            "exoarchive-columns-without-errors.txt", str, comments="#"
+            os.path.join(columns_directory, "exoarchive-columns-without-errors.txt"),
+            str,
+            comments="#",
         )
         columns_to_include += ",".join(column_names)
 
