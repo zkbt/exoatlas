@@ -1,4 +1,9 @@
-from .Population import Population, PredefinedPopulation, attribute_columns, method_columns
+from .Population import (
+    Population,
+    PredefinedPopulation,
+    attribute_columns,
+    method_columns,
+)
 from .Exoplanets import *
 from .TransitingExoplanets import *
 from .TOI import *

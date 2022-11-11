@@ -1,12 +1,15 @@
 from ..imports import *
 
-def define_telescope_unit(telescope_name='telescope',
-                          area=1*u.m**2,
-                          wavelength=5*u.micron,
-                          R=20,
-                          dt=1*u.hr,
-                          **kw):
-    '''
+
+def define_telescope_unit(
+    telescope_name="telescope",
+    area=1 * u.m**2,
+    wavelength=5 * u.micron,
+    R=20,
+    dt=1 * u.hr,
+    **kw,
+):
+    """
     Create a custom astropy unit to represent
     the collecting area of a generic telscope
     with a particular collecting area
@@ -33,28 +36,30 @@ def define_telescope_unit(telescope_name='telescope',
     dt : astropy.units.quantity.Quantity
         The time over which the telescope exposes.
         (Ignored if telescope is None.)
-    '''
+    """
 
-
-    dw = wavelength/R
-    unit = u.def_unit(f'[{telescope_name} | {dt} | R={R}]', #@{wavelength}
-                      dt*area*dw,
-                      doc=f'''
+    dw = wavelength / R
+    unit = u.def_unit(
+        f"[{telescope_name} | {dt} | R={R}]",  # @{wavelength}
+        dt * area * dw,
+        doc=f"""
                       This custom unit represents the
                       photon-collecting power of the
                       {telescope_name} telescope, when integrating
                       for a time of {dt}, at a spectral
                       resolution of R={R} (evaluated
                       at {wavelength}).
-                      ''')
+                      """,
+    )
     unit.telescope_name = telescope_name
     unit.wavelength = wavelength
     unit.dt = dt
     unit.R = R
     return unit
 
-def define_JWST_unit(wavelength=5*u.micron, **kw):
-    '''
+
+def define_JWST_unit(wavelength=5 * u.micron, **kw):
+    """
     Create a JWST telescope unit.
 
     Parameters
@@ -70,14 +75,14 @@ def define_JWST_unit(wavelength=5*u.micron, **kw):
     dt : astropy.units.quantity.Quantity
         The time over which the telescope exposes.
         (Ignored if telescope is None.)
-    '''
-    return define_telescope_unit(telescope_name='JWST',
-                                 wavelength=wavelength,
-                                 area=25*u.m**2,
-                                 **kw)
+    """
+    return define_telescope_unit(
+        telescope_name="JWST", wavelength=wavelength, area=25 * u.m**2, **kw
+    )
 
-def define_HST_unit(wavelength=1.4*u.micron, **kw):
-    '''
+
+def define_HST_unit(wavelength=1.4 * u.micron, **kw):
+    """
     Create a HST telescope unit.
 
     Parameters
@@ -93,14 +98,14 @@ def define_HST_unit(wavelength=1.4*u.micron, **kw):
     dt : astropy.units.quantity.Quantity
         The time over which the telescope exposes.
         (Ignored if telescope is None.)
-    '''
-    return define_telescope_unit(telescope_name='HST',
-                                 wavelength=wavelength,
-                                 area=4.5*u.m**2,
-                                 **kw)
+    """
+    return define_telescope_unit(
+        telescope_name="HST", wavelength=wavelength, area=4.5 * u.m**2, **kw
+    )
 
-def define_TESS_unit(wavelength=0.8*u.micron, R=2, **kw):
-    '''
+
+def define_TESS_unit(wavelength=0.8 * u.micron, R=2, **kw):
+    """
     Create a TESS telescope unit.
 
     Parameters
@@ -116,15 +121,14 @@ def define_TESS_unit(wavelength=0.8*u.micron, R=2, **kw):
     dt : astropy.units.quantity.Quantity
         The time over which the telescope exposes.
         (Ignored if telescope is None.)
-    '''
-    return define_telescope_unit(telescope_name='TESS',
-                                 wavelength=wavelength,
-                                 area=0.0086*u.m**2,
-                                 R=R,
-                                 **kw)
+    """
+    return define_telescope_unit(
+        telescope_name="TESS", wavelength=wavelength, area=0.0086 * u.m**2, R=R, **kw
+    )
 
-def define_Kepler_unit(wavelength=0.65*u.micron, R=2, **kw):
-    '''
+
+def define_Kepler_unit(wavelength=0.65 * u.micron, R=2, **kw):
+    """
     Create a Kepler telescope unit.
 
     Parameters
@@ -140,21 +144,23 @@ def define_Kepler_unit(wavelength=0.65*u.micron, R=2, **kw):
     dt : astropy.units.quantity.Quantity
         The time over which the telescope exposes.
         (Ignored if telescope is None.)
-    '''
-    return define_telescope_unit(telescope_name='Kepler',
-                                 wavelength=wavelength,
-                                 area=0.708*u.m**2,
-                                 R=R,
-                                 **kw)
+    """
+    return define_telescope_unit(
+        telescope_name="Kepler", wavelength=wavelength, area=0.708 * u.m**2, R=R, **kw
+    )
+
 
 # create a dictionary of unit factories
-telescope_units = dict(Kepler=define_Kepler_unit,
-                       TESS=define_TESS_unit,
-                       HST=define_HST_unit,
-                       JWST=define_JWST_unit)
+telescope_units = dict(
+    Kepler=define_Kepler_unit,
+    TESS=define_TESS_unit,
+    HST=define_HST_unit,
+    JWST=define_JWST_unit,
+)
+
 
 def define_telescope_unit_by_name(telescope_name, wavelength=None, **kw):
-    '''
+    """
     Wrapper to create a telescope unit
     by passing the telescope name.
 
@@ -174,11 +180,12 @@ def define_telescope_unit_by_name(telescope_name, wavelength=None, **kw):
     dt : astropy.units.quantity.Quantity
         The time over which the telescope exposes.
         (Ignored if telescope is None.)
-    '''
+    """
     if wavelength is None:
         return telescope_units[telescope_name](**kw)
     else:
         return telescope_units[telescope_name](wavelength=wavelength, **kw)
 
+
 # define a useful big number of photons (=30ppm)
-lotsofphotons_unit = u.def_unit('Gigaphotons', 1e9*u.ph)
+lotsofphotons_unit = u.def_unit("Gigaphotons", 1e9 * u.ph)
