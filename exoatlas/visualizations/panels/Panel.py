@@ -30,7 +30,6 @@ def clean_pops(initial):
     if type(initial) == dict:
         return initial
     elif type(initial) == list:
-
         return {i: p for i, p in enumerate(initial)}
     else:
         # (otherwise, assume it's already a single population)
@@ -182,7 +181,6 @@ class Panel(Talker):
 
         # loop over all the populations
         for key in self.pops.keys():
-
             # plot each population, passing plotting keywords to it
             self.plot(key, **kw)
 
@@ -210,7 +208,6 @@ class Panel(Talker):
 
         # loop over the elements in the population
         for i in range(len(self.x)):
-
             # pull out the positions and the name
             x, y, name = self.x[i], self.y[i], self.pop.name[i]
 
@@ -268,7 +265,6 @@ class Panel(Talker):
 
         # loop over the elements in the population
         for i in range(len(self.x)):
-
             # pull out the positions and the name
             x, y, name = self.x[i], self.y[i], self.pop.hostname[i]
 
@@ -331,7 +327,6 @@ class Panel(Talker):
 
         original_pop = self.pop
         for hostname in np.unique(self.pop.hostname):
-
             friends = self.pop[hostname]
             self.pop = friends
             x, y = self.x, self.y
@@ -378,7 +373,6 @@ class Panel(Talker):
             self.ax.yaxis.set_major_formatter(FormatStrFormatter("%d"))
 
     def ticks_enforce_multiple_oom(self, which="xy"):
-
         if "x" in which:
             loc = LogLocator(base=10, numticks=3)
             self.ax.xaxis.set_major_locator(loc)

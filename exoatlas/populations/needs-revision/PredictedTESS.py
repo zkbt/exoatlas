@@ -17,7 +17,6 @@ class PredictedTESS(PredefinedPopulation):
         self.zorder = 1
 
     def loadFromScratch(self):
-
         self.table = ascii.read(initial_filename)
         self.speak("loaded TESS simulated population from {0}".format(initial_filename))
 

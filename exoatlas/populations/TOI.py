@@ -44,7 +44,6 @@ class TOI(PredefinedPopulation):
         masks = {}
 
         with np.errstate(invalid="ignore"):
-
             # is this a relatively cool star?
             masks["cool"] = raw["Stellar Eff Temp (K)"] < 20000
 

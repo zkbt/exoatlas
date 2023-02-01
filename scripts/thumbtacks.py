@@ -13,7 +13,6 @@ import numpy as np, matplotlib.pyplot as plt
 
 # make versions with different planets labeled out to different radii (in pc)
 for label in [0, 20, 30, 50, np.inf]:
-
     # construct a dictionary of populations of confirmed planets
     pops = dict(kepler=Kepler(), tess=TESS(), others=Others())
 

@@ -266,7 +266,6 @@ class Population(Talker):
                 """
                 )
         except KeyError:
-
             # use a string or a list of strings make a subset by planet name
             # FIXME - maybe we should make this say more when it's making a sneaky choice for us?
             try:
@@ -647,7 +646,6 @@ class Population(Talker):
                 self.standard["tidyhostname"][match] = clean(new).lower()
 
     def removeRows(self, indices):
-
         raise NotImplementedError(
             """
         The `removeRows` method has been removed. Please use something like
@@ -1104,7 +1102,6 @@ class Population(Talker):
 
         """
         with np.errstate(invalid="ignore"):
-
             H = self.scale_height(mu)
             Rp = self.radius
             Rs = self.stellar_radius
@@ -1403,7 +1400,6 @@ class Population(Talker):
         ax.set_ylim(-scale(maxr), scale(maxr))
 
     def compare(self, x="teq", y="radius", area="depth", color="stellar_radius"):
-
         xplot = self.__dict__[x]
         yplot = self.__dict__[y]
         sizeplot = self.__dict__[size]

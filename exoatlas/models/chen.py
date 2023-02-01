@@ -60,7 +60,6 @@ def estimate_radius(M):
 
     # work our way down in mass, updating radii as we go
     for this in ["stellar", "jovian", "neptunian", "terran"]:
-
         # which planets are below this maximum?
         x = M < T_max[this]
 

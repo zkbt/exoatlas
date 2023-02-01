@@ -367,7 +367,6 @@ class FluxEscape(BubblePanel):
 
         # loop over factors of 10 of lambda
         for lam in 10 ** np.arange(6):
-
             plt.plot(
                 relative_insolation,
                 escape_velocity(teq, lam=lam),

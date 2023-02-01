@@ -7,7 +7,6 @@ __all__ = ["TransitingExoplanets"]
 
 class TransitingExoplanets(Exoplanets):
     def __init__(self, **kw):
-
         Exoplanets.__init__(self, **kw)
 
         # set the label

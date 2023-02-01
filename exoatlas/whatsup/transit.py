@@ -160,7 +160,6 @@ class Transit(Talker):
         )
 
     def details(self):
-
         s = f"{self.planet.name[0]:<20} \n"  # [not accounting for heliocentric]
         s += " {0:3.1f}x duration before = {1}\n".format(
             self.buffer, self.simpletime(self.pretransit)

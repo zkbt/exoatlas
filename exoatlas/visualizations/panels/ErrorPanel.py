@@ -131,7 +131,6 @@ class ErrorPanel(Panel):
             # Perhaps we should set things up so that we might
             # inherit some of this skills here in ErrorPanel
         else:
-
             # define the error bars to be plotting
             xl, xu = self.x_lowerupper
             x_unc = remove_unit(np.vstack([xl, xu]))
@@ -187,7 +186,6 @@ class ErrorPanel(Panel):
             )
 
             if (len(x) > 1) & (self.pop.plotkw.get("ink", True)):
-
                 self.speak("plotting inked errorbars, this may take a while")
                 # FIXME, 5/25/2020: We should make the
                 # "invisible" color be something more flexible

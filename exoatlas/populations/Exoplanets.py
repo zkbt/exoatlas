@@ -5,6 +5,7 @@ from .downloaders import merged_exoplanets
 
 __all__ = ["Exoplanets"]
 
+
 # apply some kludges to correct bad planet properties
 class Exoplanets(PredefinedPopulation):
     def __init__(self, label="All Exoplanets", remake=False, **plotkw):

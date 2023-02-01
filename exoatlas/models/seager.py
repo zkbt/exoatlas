@@ -2,6 +2,7 @@ from ..imports import *
 
 __all__ = ["plot_seager", "plot_both_seager"]
 
+
 # plot the mass radius models
 def plot_seager(which="rock", **kw):
     """

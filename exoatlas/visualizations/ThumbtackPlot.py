@@ -271,7 +271,6 @@ class ThumbtackPlot(BubblePanel):
         )
 
     def namestars(self, key):
-
         if True:
             old = self.key + ""
             self.point_at(key)
@@ -299,7 +298,6 @@ class ThumbtackPlot(BubblePanel):
                 tolabel = tolabel[np.unique(self.x[tolabel], return_index=True)[1]]
 
             for c in tolabel:
-
                 try:
                     assert self.pop.alpha == 0
                     downwardnudge = ""

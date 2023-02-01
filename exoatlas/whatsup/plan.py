@@ -51,7 +51,6 @@ class Plan(Talker):
         name="default",
         file_format="png",
     ):
-
         """initialize, setting the observatory, block, and population"""
 
         # initialize the talking setup
@@ -185,7 +184,6 @@ class Plan(Talker):
         return planets_tonight
 
     def plot_transits_on_night(self, midnight):
-
         # plot black bars to mask out when the Sun is up
         self.observatory.plot_empty_night(midnight)
 
@@ -202,7 +200,6 @@ class Plan(Talker):
         """
 
         for midnight in tqdm(self.block.midnights):
-
             try:
                 self.plot_transits_on_night(midnight)
                 date = Time(

@@ -127,7 +127,6 @@ class TOI(PredefinedPopulation):
 
 class TransitingExoplanetsSubset(TOI):
     def __init__(self, label, color="black", zorder=0):
-
         # set the label
         self.label = label
         self.color = color

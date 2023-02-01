@@ -16,7 +16,6 @@ __all__ = [
 
 class TransitingExoplanetsSubset(TransitingExoplanets):
     def __init__(self, label="Subset", **kw):
-
         TransitingExoplanets.__init__(self, **kw)
 
         # set the label
@@ -114,9 +113,7 @@ sigma = 2.5
 
 
 def mass_is_good(pop):
-
     with np.errstate(invalid="ignore"):
-
         # the uncertainty must be greater than 0
         exists = pop.uncertainty("mass") > 0
 

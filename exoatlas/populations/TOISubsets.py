@@ -9,7 +9,6 @@ __all__ = ["TOISubset", "PreviouslyKnownTOI", "BrandNewTOI"]
 
 class TOISubset(TOI):
     def __init__(self, label, **kw):
-
         TOI.__init__(self, **kw)
 
         # set the label

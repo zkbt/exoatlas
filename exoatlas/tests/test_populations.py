@@ -116,7 +116,6 @@ def test_attributes():
 
 
 def test_transiting(planet="GJ1214b"):
-
     with mock.patch("builtins.input", return_value=""):
         t = TransitingExoplanets()
         p = t[planet]

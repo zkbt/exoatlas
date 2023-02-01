@@ -27,7 +27,6 @@ class KOI(PredefinedPopulation):
         self.respond_to_color = True
 
     def loadFromScratch(self):
-
         # load from a NASA Exoplanet Archive csv file
         try:
             self.table = ascii.read(initial_filename)
@@ -114,7 +113,6 @@ class KOI(PredefinedPopulation):
 
 class TransitingExoplanetsSubset(KOI):
     def __init__(self, label, color="black", zorder=0):
-
         # set the label
         self.label = label
         self.color = color

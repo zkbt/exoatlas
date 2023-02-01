@@ -21,7 +21,6 @@ def test_chen():
 
 
 def test_kopparapu():
-
     # test a default HZ
     T = np.linspace(2600, 7000)
     f = make_hz()

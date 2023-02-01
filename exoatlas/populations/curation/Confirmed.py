@@ -3,7 +3,6 @@ import astropy.units as u
 
 
 def update_planet(pop):
-
     # Grimm et al. masses
     pop.update_planet(
         "TRAPPIST-1b",

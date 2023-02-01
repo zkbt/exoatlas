@@ -69,7 +69,6 @@ class Downloader(Talker):
 
 
 class ExoplanetArchiveDownloader(Downloader):
-
     # define the base of all URLs for to access the archive API
     # base = 'http://exoplanetarchive.ipac.caltech.edu/cgi-bin/nstedAPI/nph-nstedAPI?'
     base = "https://exoplanetarchive.ipac.caltech.edu/TAP/sync?"
@@ -84,7 +83,6 @@ class ExoplanetArchiveDownloader(Downloader):
     supported_tables = ["ps", "pscomppars"]
 
     def __init__(self, table="exoplanets"):  # , where='*'):
-
         # keep track of which table this is
         self.table = table
 
