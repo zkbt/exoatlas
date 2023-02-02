@@ -86,11 +86,13 @@ class ExoplanetArchiveDownloader(Downloader):
         # keep track of which table this is
         self.table = table
 
+        # FIXME -- store types of columns in table metadata?
         # populate the columns we want
         columns_directory = resource_filename(
             __name__, "data/exoplanet-archive-columns/"
         )
 
+        # start with no columns
         columns_to_include = ""
 
         # add columns
@@ -131,6 +133,10 @@ composite_exoplanets = ExoplanetArchiveDownloader("pscomppars")
 
 
 class MergedExoplanetArchiveDownloader(ExoplanetArchiveDownloader):
+    """
+    FIXME! Doesn't actually do any merging any more.
+    """
+
     def __init__(self):
         self.table = "merged"
 
@@ -147,22 +153,36 @@ class MergedExoplanetArchiveDownloader(ExoplanetArchiveDownloader):
         )
 
         # load the individual tables
+        print(
+            """
+        No fancy merging or decision-making is happening yet.
+        Data are sourced solely from the NASA Exoplanet Archive
+        `ps` table of self-consistent planet parameters.
+
+        To-do: we should identify which columns are frustratingly
+        missing for many planets and pull just those from the
+        composite table. We want to avoid estimated quantities
+        like planet radius or mass when no actual measurements
+        exist.
+        """
+        )
         e = exoplanets.get()
-        c = composite_exoplanets.get()
+        # c = composite_exoplanets.get()
 
         # join the two tables together on the planets' names
-        self.speak("Joining the two Exoplanet Archive tables together.")
-        self.speak(" (This may take a while. The tables are big!)")
+        # self.speak("Joining the two Exoplanet Archive tables together.")
+        # self.speak(" (This may take a while. The tables are big!)")
         # c.rename_column('fpl_name', 'pl_name')
-        j = join(e, c, keys="pl_name", table_names=["exoplanets", "composite"])
+        j = e
+        # j = join(e, c, keys="pl_name", table_names=["exoplanets", "composite"])
 
         # tidy up some of the column names
-        for k in j.colnames:
-            if "_exoplanets" in k:
-                j.rename_column(k, k.replace("_exoplanets", ""))
+        # for k in j.colnames:
+        #    if "_exoplanets" in k:
+        #        j.rename_column(k, k.replace("_exoplanets", ""))
 
         # write the merged table out to a file
-        self.speak(f"Merge successful! Saving file to {self.path}.")
+        self.speak(f"Saving file to {self.path}.")
         self.speak(" (This may take a while. The table is big!)")
         j.write(self.path, format="ascii.csv", delimiter=",", overwrite=True)
 
@@ -170,6 +190,9 @@ class MergedExoplanetArchiveDownloader(ExoplanetArchiveDownloader):
 
 
 merged_exoplanets = MergedExoplanetArchiveDownloader()
+
+
+# FIXME -- things below here almost certainly need tidying
 
 
 class ExoFOPDownloader(Downloader):

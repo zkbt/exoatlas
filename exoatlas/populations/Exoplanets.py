@@ -8,17 +8,47 @@ __all__ = ["Exoplanets"]
 
 # apply some kludges to correct bad planet properties
 class Exoplanets(PredefinedPopulation):
-    def __init__(self, label="All Exoplanets", remake=False, **plotkw):
+    def __init__(self, label="Exoplanets", remake=False, **plotkw):
         """
-        Initialize a population of all known exoplanets,
-        from a table downloaded from the NASA Exoplanet Archive.
+        Initialize a population of all known exoplanets
+        using the NASA Exoplanet Archive `ps` table.
+
+        This generates an Exoplanets population containing
+        planets discovered through any method. It tries to
+        be clever about loading cached files so that it
+        will work quickly and not try to redownload everything
+        from scratch every time it's called.
+
+        Parameters
+        ----------
+        label : string
+            A default label to be associated with this population.
+            This will show up in the legend on population
+            comparison plots.
+        remake : bool
+            Should the population be remade from raw files,
+            even if a recent version already exists?
+        **plotkw : dict
+            All other keywords will go toward defining
+            default plotting styles, like alpha` or `zorder`
         """
         # set up the population
         PredefinedPopulation.__init__(self, label=label, remake=remake, **plotkw)
 
     def load_raw(self, remake=False):
         """
-        Load the raw table of data from the NASA Exoplanet Archive.
+        Load the raw table of data.
+
+        Parameters
+        ----------
+        remake : bool
+            Should the raw table be re-made/re-downloaded,
+            even if a recent one exists?
+
+        Returns
+        -------
+        raw : astropy.table.Table
+            A raw, untrimmed, unstandardized table.
         """
 
         # load (or download) the table of composite exoplanet properties
@@ -32,6 +62,16 @@ class Exoplanets(PredefinedPopulation):
     def trim_raw(self, raw):
         """
         Trim the raw table down to ones with reasonable values.
+
+        Parameters
+        ----------
+        raw : astropy.table.Table
+            A raw, untrimmed, unstandardized table.
+
+        Returns
+        -------
+        trimmed : astropy.table.Table
+            A raw, trimmed, unstandardized table.
         """
 
         masks = {}
@@ -55,10 +95,27 @@ class Exoplanets(PredefinedPopulation):
 
         return trimmed
 
+    # FIXME -- stard here February 2023
     def create_standard(self, trimmed):
         """
-        Create a standardized table, pulling at least the necessary columns
-        from the raw table and potentially including others too.
+        Create a standardized table to make sure that at
+        least a few necessary columns are populated.
+
+        This standardization step aims to make it easier to
+        compare exoplanet populations from different sources.
+        It translates columns from a raw table into a standard
+        set of expected column names, doing some calculations
+        if necessary.
+
+        Parameters
+        ----------
+        trimmed : astropy.table.Table
+            A raw, trimmed, unstandardized table.
+
+        Returns
+        -------
+        standard : astropy.table.Table
+            A standardize table of exoplanet properties.
         """
 
         # define the table from which we're deriving everying
