@@ -1472,8 +1472,19 @@ class PredefinedPopulation(Population):
         # trim elements from raw table as necessary
         trimmed = self.trim_raw(raw)
 
-        # create a standardized table from the array
-        standard = self.create_standard(trimmed)
+        try:
+            # create a standardized table from the array
+            standard = self.create_standard(trimmed)
+        except Exception as e:
+            print(e)
+            warnings.warn(
+                """
+            UH-OH! The table standardization step didn't work.
+            This message should hopefully disappear once
+            Zach's debugging and restructuring is complete,
+            but if not, please let him know!
+            """
+            )
 
         # save the standardized table
         self.save_standard(standard)

@@ -1,7 +1,7 @@
 # exoplanet population of all "confirmed" exoplanets from exoplanet archive
 from ..imports import *
 from .Population import PredefinedPopulation
-from .downloaders import merged_exoplanets
+from .downloaders import *
 
 __all__ = ["Exoplanets"]
 
@@ -52,7 +52,21 @@ class Exoplanets(PredefinedPopulation):
         """
 
         # load (or download) the table of composite exoplanet properties
-        raw = merged_exoplanets.get(remake=remake)
+        raw = exoplanets_downloader.get(remake=remake)
+
+        # populate which type of columns are which
+        # populate what kinds of columns are what
+
+        """columns_directory = resource_filename(
+            __name__, "data/exoplanet-archive-columns/"
+        )
+        for k in ["with-errors-and-limits", "with-errors", "without-errors"]:
+            column_names = np.genfromtxt(
+                os.path.join(columns_directory, f"exoarchive-columns-{k}.txt"),
+                str,
+                comments="#",
+            )
+            raw.meta[f"columns-{k}"] = column_names"""
 
         # for debugging, hang on to the raw table as a hidden attribute
         self._raw = raw
@@ -95,7 +109,6 @@ class Exoplanets(PredefinedPopulation):
 
         return trimmed
 
-    # FIXME -- stard here February 2023
     def create_standard(self, trimmed):
         """
         Create a standardized table to make sure that at
@@ -119,65 +132,149 @@ class Exoplanets(PredefinedPopulation):
         """
 
         # define the table from which we're deriving everying
-        t = trimmed
+        r = trimmed
 
+        # the new standardized table
         s = Table()
 
-        # what's the name of the planet?
-        s["name"] = [x.strip() for x in t["pl_name"]]
-        s["hostname"] = [x.strip() for x in t["hostname"]]
+        def strip_even_if_masked(x):
+            try:
+                return x.strip()
+            except AttributeError:
+                return None
 
-        # badpos = (t['ra'] ==0.0)*(t['dec'] == 0.0)
-        s["ra"] = t["ra"] * u.deg  # t.MaskedColumn(t['ra'], mask=badpos)
-        s["dec"] = t["dec"] * u.deg  # t.MaskedColumn(t['dec'], mask=badpos)
+        def attach_unit(x, unit=None):
+            if isinstance(x[0], str):
+                return [strip_even_if_masked(a) for a in x]
+            if unit is None:
+                return x
+            else:
+                return x * unit
 
-        def merge(k):
+        def populate_one_or_more_columns(k_new, k_original, unit=None):
             """
-            For some particular column from the raw table, take all the data
-            we can from the confirmed planets table, and then
-            try to fill in from the composite planets table.
+            A wrapper to help smoothly grab quantities with limits.
+
+            Parameters
+            ----------
+            k_original : string
+                The column name in the original, raw table.
+            k_new : string
+                The column name in the new, standardized table.
+            unit : None, astropy.units.Unit
+                A unit to attach to the quantity, if necessary.
             """
 
-            # make an array from the confirmed table
-            x = t[k].copy()
+            if k_original in r.meta["columns-without-errors"]:
+                # easy, just record the column itself with no error
+                s[k_new] = attach_unit(r[k_original], unit)
+                print(f"populated {k_new} with {k_original}")
 
-            # try to fill in the bad ones from the composite table
-            bad = x.mask
-            n = len(x)
-            nmissing = sum(bad)
-            self.speak(f"{nmissing}/{n} missing from confirmed")
+            elif k_original in r.meta["columns-with-errors"]:
+                # record the column itself
+                s[k_new] = attach_unit(r[k_original], unit)
 
-            x[bad] = t["f" + k][bad]
-            self.speak(f"{nmissing}/{n} missing from confirmed and composite")
+                # record the upper and lower errorbars
+                s[f"{k_new}_uncertainty_upper"] = attach_unit(
+                    r[f"{k_original}err1"], unit
+                )
+                s[f"{k_new}_uncertainty_lower"] = attach_unit(
+                    r[f"{k_original}err2"], unit
+                )
+                print(f"populated {k_new} and errors with {k_original}")
 
-            return x
+            elif k_original in r.meta["columns-with-errors-and-limits"]:
+                # from playing with table, I think lim = +1 is upper limit, -1 is lower limit
 
-        # what's the period of the planet?
-        s["period"] = t["pl_orbper"] * u.day
-        s["semimajoraxis"] = t["pl_orbsmax"] * u.AU
-        s["e"] = t["pl_orbeccen"]
-        s["omega"] = t["pl_orblper"] * u.deg
-        s["inclination"] = t["pl_orbincl"] * u.deg
+                # record the upper and lower errorbars
+                limit_flag = r[f"{k_original}lim"]
 
-        # what are the observed transit properties?
-        s["transit_epoch"] = t["pl_tranmid"] * u.day
-        s["transit_duration"] = t["pl_trandur"] * u.day
-        s["transit_depth"] = t["pl_trandep"] / 100.0
+                # populate lower limits
+                is_lower = limit_flag == -1
+                if np.sum(is_lower) > 0:
+                    s[f"{k_new}_lower_limit"] = attach_unit(r[f"{k_original}"])
+                    s[f"{k_new}_lower_limit"][is_lower == False] = np.nan
 
-        # what are the basic stellar properties?
-        s["stellar_teff"] = merge("st_teff") * u.K
-        s["stellar_radius"] = merge("st_rad") * u.Rsun
-        s["stellar_mass"] = merge("st_mass") * u.Msun
+                # populate upper limits
+                is_upper = limit_flag == +1
+                if np.sum(is_upper) > 0:
+                    s[f"{k_new}_upper_limit"] = attach_unit(r[f"{k_original}"])
+                    s[f"{k_new}_upper_limit"][is_upper == False] = np.nan
 
-        # add stellar age
-        s["stellar_age"] = merge("st_age") * u.Gyr
-        upper = t["st_ageerr1"].data
-        lower = t["st_ageerr2"].data
-        bad = upper.mask | lower.mask
-        upper[bad] = np.inf
-        lower[bad] = np.inf
-        s["stellar_age_uncertainty_upper"] = upper * u.Gyr
-        s["stellar_age_uncertainty_lower"] = lower * u.Gyr
+                # populate bounded constraints
+                is_bounded = limit_flag == 0
+                if np.sum(is_bounded) > 0:
+                    s[k_new] = attach_unit(r[k_original], unit)
+                    s[f"{k_new}_uncertainty_upper"] = attach_unit(
+                        r[f"{k_original}err1"], unit
+                    )
+                    s[f"{k_new}_uncertainty_lower"] = attach_unit(
+                        r[f"{k_original}err2"], unit
+                    )
+                    s[k_new][is_bounded == False] = np.nan
+                    s[f"{k_new}_uncertainty_upper"][is_bounded == False] = np.nan
+                    s[f"{k_new}_uncertainty_lower"][is_bounded == False] = np.nan
+
+                    print(f"populated {k_new} and errors and limits with {k_original}")
+
+            else:
+                # easy, just record the column itself with no error
+                s[k_new] = attach_unit(r[k_original], unit)
+                print(f"populated {k_new} with {k_original}, but not 100% sure...")
+
+        # basic reference information
+        populate_one_or_more_columns("name", "pl_name")
+        populate_one_or_more_columns("hostname", "hostname")
+        populate_one_or_more_columns("letter", "pl_letter")
+        populate_one_or_more_columns("gaia_id", "gaia_id")
+        populate_one_or_more_columns("number_of_stars", "sy_snum")
+        populate_one_or_more_columns("number_of_planets", "sy_pnum")
+
+        # what's the history
+        populate_one_or_more_columns("discovery_method", "discoverymethod")
+        populate_one_or_more_columns("discovery_year", "disc_year")
+        populate_one_or_more_columns("discovery_reference", "disc_refname")
+        populate_one_or_more_columns("discovery_facility", "disc_facility")
+
+        # what are the basic locations on the sky
+        populate_one_or_more_columns("ra", "ra", u.deg)
+        populate_one_or_more_columns("dec", "dec", u.deg)
+        populate_one_or_more_columns("pmra", "sy_pmra", u.mas / u.year)
+        populate_one_or_more_columns("pmdec", "sy_pmdec", u.mas / u.year)
+        populate_one_or_more_columns("systemic_rv", "st_radv", u.km / u.s)
+        populate_one_or_more_columns("distance", "sy_dist", u.pc)
+
+        # what are some useful flags?
+        populate_one_or_more_columns("detected_in_rv", "rv_flag")
+        populate_one_or_more_columns("detected_in_pulsar", "pul_flag")
+        populate_one_or_more_columns("detected_in_pulsation_timing", "ptv_flag")
+        populate_one_or_more_columns("detected_in_transit", "tran_flag")
+        populate_one_or_more_columns("detected_in_astrometry", "ast_flag")
+        populate_one_or_more_columns(
+            "detected_in_orbital_brightness_modulations", "obm_flag"
+        )
+        populate_one_or_more_columns("detected_in_microlensing", "micro_flag")
+        populate_one_or_more_columns(
+            "detected_in_eclipse_timing_variations", "etv_flag"
+        )
+        populate_one_or_more_columns("detected_in_imaging", "ima_flag")
+        populate_one_or_more_columns("detected_in_disk_kinematics", "dkin_flag")
+
+        populate_one_or_more_columns("is_controversial", "pl_controv_flag")
+        populate_one_or_more_columns("shows_ttv", "ttv_flag")
+
+        # (these might need merging from the composite table?!)
+        populate_one_or_more_columns("stellar_spectral_type", "st_spectype")
+        populate_one_or_more_columns("stellar_teff", "st_teff", u.K)
+        populate_one_or_more_columns("stellar_radius", "st_rad", u.Rsun)
+        populate_one_or_more_columns("stellar_mass", "st_mass", u.Msun)
+        populate_one_or_more_columns("stellar_age", "st_age", u.Gyr)
+        populate_one_or_more_columns("stellar_metallicity", "st_met")
+        populate_one_or_more_columns("stellar_luminosity", "st_lum")
+        populate_one_or_more_columns("stellar_logg", "st_logg")
+        populate_one_or_more_columns("stellar_density", "st_dens")
+        populate_one_or_more_columns("stellar_vsini", "st_vsin")
+        populate_one_or_more_columns("stellar_rotation_period", "st_rotp")
 
         # what are the stellar magnitudes?
         bands = [
@@ -201,52 +298,47 @@ class Exoplanets(PredefinedPopulation):
             "kep",
         ]
         for b in bands:
-            s[f"{b}mag"] = t[f"sy_{b.lower()}mag"]
+            populate_one_or_more_columns(f"{b}mag", f"sy_{b.lower()}mag", u.mag)
 
-        # what is the planet radius?
-        s["radius"] = t["pl_rade"] * u.Rearth
+        # what are some basic orbital parameters
+        populate_one_or_more_columns("period", "pl_orbper", u.day)
+        populate_one_or_more_columns("semimajoraxis", "pl_orbsmax", u.AU)
+        populate_one_or_more_columns("eccentricity", "pl_orbeccen")
+        populate_one_or_more_columns("omega", "pl_orblper", u.deg)
+        populate_one_or_more_columns("inclination", "pl_orbincl", u.deg)
 
-        # pull out the radius uncertainties
-        upper = t["pl_radeerr1"].data
-        lower = t["pl_radeerr2"].data
-        bad = upper.mask | lower.mask
-        upper[bad] = np.inf
-        lower[bad] = np.inf
-        s["radius_uncertainty_upper"] = upper * u.Rearth
-        s["radius_uncertainty_lower"] = lower * u.Rearth
+        # what are the planet properties? (check Jupiter isn't better?!)
+        populate_one_or_more_columns("radius", "pl_rade", u.Rearth)
+        populate_one_or_more_columns("mass", "pl_masse", u.Mearth)
+        populate_one_or_more_columns("msini", "pl_msinie", u.Mearth)
+        populate_one_or_more_columns("density", "pl_dens", u.g / u.cm**3)
+        populate_one_or_more_columns(
+            "insolation",
+            "pl_insol",
+            (u.Lsun / 4 / np.pi / (1 * u.AU) ** 2).to("W/m**2"),
+        )
+        populate_one_or_more_columns("teq", "pl_eqt", u.K)
+
+        # does it have transmission + emission spec?
+        populate_one_or_more_columns(
+            "number_of_transmission_measurements", "pl_ntranspec"
+        )
+        populate_one_or_more_columns("number_of_emission_measurements", "pl_nespec")
 
         # what are the (often) transit-derived properties?
-        s["transit_ar"] = t["pl_ratdor"]
-        s["transit_b"] = t["pl_imppar"]
+        populate_one_or_more_columns("transit_midpoint", "pl_tranmid", u.day)
+        populate_one_or_more_columns("transit_ar", "pl_ratdor")
+        populate_one_or_more_columns("transit_b", "pl_imppar")
+        populate_one_or_more_columns("transit_depth", "pl_trandep", 0.01)
+        populate_one_or_more_columns("transit_duration", "pl_trandur", u.hour)
+        populate_one_or_more_columns("rv_semiamplitude", "pl_rvamp", u.m / u.s)
+        populate_one_or_more_columns("projected_obliquity", "pl_projobliq", u.deg)
+        populate_one_or_more_columns("obliquity", "pl_trueobliq", u.deg)
 
-        # KLUDGE?
-        # s['rv_semiamplitude'] =  t['pl_rvamp'] #t.MaskedColumn(t['K'], mask=t['K']==0.0)
+        populate_one_or_more_columns("default_parameter_set", "default_flag")
 
-        s["mass"] = t["pl_masse"] * u.Mearth
-
-        # pull out the mass uncertainties
-        upper = t["pl_masseerr1"].data
-        lower = t["pl_masseerr2"].data
-        bad = upper.mask | lower.mask
-        upper[bad] = np.inf
-        lower[bad] = np.inf
-        s["mass_uncertainty_upper"] = upper * u.Mearth
-        s["mass_uncertainty_lower"] = lower * u.Mearth
-
-        # keep track of msini (for non-transiting planets)
-        s["msini"] = t["pl_msinie"] * u.Mearth
-
-        # how far away is the star?
-        s["distance"] = merge("sy_dist") * u.pc
-        s["distance_uncertainty_upper"] = merge("sy_disterr1") * u.pc
-        s["distance_uncertainty_lower"] = merge("sy_disterr2") * u.pc
-
-        # what facility discovered the planet?
-        s["discoverer"] = t["disc_facility"]
-        s["method"] = t["discoverymethod"]
-
-        s["has_transit"] = t["tran_flag"]
-        s["has_RV"] = t["rv_flag"]
+        # trim to default parameter set (be more careful here!!!)
+        s = s[s["default_parameter_set"] == 1]
 
         # sort these planets by their names
         s.sort("name")

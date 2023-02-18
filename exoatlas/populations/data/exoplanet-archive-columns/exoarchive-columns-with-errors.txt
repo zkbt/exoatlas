@@ -22,6 +22,6 @@ sy_w3mag
 sy_w4mag
 
 sy_gaiamag
-sy_Tmag
+sy_tmag
 sy_kepmag
 sy_icmag

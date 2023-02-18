@@ -6,8 +6,10 @@ from .Population import (
 )
 from .Exoplanets import *
 from .TransitingExoplanets import *
-from .TOI import *
-from .TOISubsets import *
+
+# (the TOI downloaders need fixing)
+# from .TOI import *
+# from .TOISubsets import *
 from .SolarSystem import *
 from .TransitingExoplanetsSubsets import *
 from .summary import *

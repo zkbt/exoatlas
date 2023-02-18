@@ -39,7 +39,12 @@ class Downloader(Talker):
             self.speak(f"Loading local file from {self.path}")
 
         # read the actual file
-        return ascii.read(self.path, **self.readkw)
+        table = ascii.read(self.path, **self.readkw)
+
+        # possibly add some new metadata to the table
+        self.add_metadata(table)
+
+        return table
 
     def download_fresh(self):
         """
@@ -62,6 +67,9 @@ class Downloader(Talker):
         shutil.copyfile(temporary_path, self.path)
 
         self.speak(f"Download successful! Saved file to {self.path}")
+
+    def add_metadata(self, *args, **kwargs):
+        pass
 
 
 # columns_directory = resource_filename(__name__, "data/exoplanet-archive-columns/")
@@ -86,25 +94,6 @@ class ExoplanetArchiveDownloader(Downloader):
         # keep track of which table this is
         self.table = table
 
-        # FIXME -- store types of columns in table metadata?
-        # populate the columns we want
-        columns_directory = resource_filename(
-            __name__, "data/exoplanet-archive-columns/"
-        )
-
-        # start with no columns
-        columns_to_include = ""
-
-        # add columns
-        column_names = np.genfromtxt(
-            os.path.join(columns_directory, "exoarchive-columns-without-errors.txt"),
-            str,
-            comments="#",
-        )
-        columns_to_include += ",".join(column_names)
-
-        # self.where = where
-
     @property
     def url(self):
         """
@@ -127,11 +116,25 @@ class ExoplanetArchiveDownloader(Downloader):
         """
         return os.path.join(directories["data"], f"nea-{self.table}.txt")
 
+    def add_metadata(self, table):
+        # populate what kinds of columns are what
+        columns_directory = resource_filename(
+            __name__, "data/exoplanet-archive-columns/"
+        )
+        for k in ["with-errors-and-limits", "with-errors", "without-errors"]:
+            column_names = np.genfromtxt(
+                os.path.join(columns_directory, f"exoarchive-columns-{k}.txt"),
+                str,
+                comments="#",
+            )
+            table.meta[f"columns-{k}"] = column_names
 
-exoplanets = ExoplanetArchiveDownloader("ps")
-composite_exoplanets = ExoplanetArchiveDownloader("pscomppars")
+
+exoplanets_downloader = ExoplanetArchiveDownloader("ps")
+composite_exoplanets_downloader = ExoplanetArchiveDownloader("pscomppars")
 
 
+'''
 class MergedExoplanetArchiveDownloader(ExoplanetArchiveDownloader):
     """
     FIXME! Doesn't actually do any merging any more.
@@ -167,6 +170,19 @@ class MergedExoplanetArchiveDownloader(ExoplanetArchiveDownloader):
         """
         )
         e = exoplanets.get()
+
+        # populate what kinds of columns are what
+        columns_directory = resource_filename(
+            __name__, "data/exoplanet-archive-columns/"
+        )
+        for k in ["with-errors-and-limits", "with-errors", "without-errors"]:
+            column_names = np.genfromtxt(
+                os.path.join(columns_directory, f"exoarchive-columns-{k}.txt"),
+                str,
+                comments="#",
+            )
+            e.meta[f"columns-{k}"] = column_names
+
         # c = composite_exoplanets.get()
 
         # join the two tables together on the planets' names
@@ -267,3 +283,4 @@ class MergedTOIDownloader(ExoFOPDownloader):
 
 
 toi_merged = MergedTOIDownloader()
+'''
