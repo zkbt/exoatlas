@@ -766,7 +766,7 @@ class Population(Talker):
         """
 
         # pull out the actual values from the table
-        e = self.standard["e"].copy().quantity
+        e = self.standard["eccentricity"].copy().quantity
 
         # try to replace bad ones with NVK3L
         bad = np.isfinite(e) == False

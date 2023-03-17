@@ -104,6 +104,31 @@ def define_HST_unit(wavelength=1.4 * u.micron, **kw):
     )
 
 
+def define_APO_unit(wavelength=0.5 * u.micron, efficiency=0.1, **kw):
+    """
+    Create an APO telescope unit.
+
+    Parameters
+    ----------
+    wavelength : astropy.unit.Quantity
+        The wavelength at which it should be calculated.
+
+    R : float
+        The spectral resolution at which the
+        telescope will bin wavelengths..
+        (Ignored if telescope is None.)
+
+    dt : astropy.units.quantity.Quantity
+        The time over which the telescope exposes.
+        (Ignored if telescope is None.)
+    """
+    radius = 3.5 * u.m / 2
+    area = np.pi * radius**2
+    return define_telescope_unit(
+        telescope_name="APO", wavelength=wavelength, area=area * efficiency, **kw
+    )
+
+
 def define_TESS_unit(wavelength=0.8 * u.micron, R=2, **kw):
     """
     Create a TESS telescope unit.
@@ -156,6 +181,7 @@ telescope_units = dict(
     TESS=define_TESS_unit,
     HST=define_HST_unit,
     JWST=define_JWST_unit,
+    APO=define_APO_unit,
 )
 
 

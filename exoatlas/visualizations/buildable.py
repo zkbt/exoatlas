@@ -102,7 +102,15 @@ class observable_summary(BuildablePlot):
         self, pops, note="", telescope_name="JWST", per_transit=False, **wavelengthkw
     ):
         gs = self.create_gridspec(
-            2, 5, wspace=0.05, hspace=0.05, bottom=0.21, top=0.98, right=0.98, left=0.08
+            2,
+            5,
+            wspace=0.05,
+            hspace=0.05,
+            bottom=0.21,
+            top=0.98,
+            right=0.98,
+            left=0.08,
+            figsize=(10, 8),
         )
 
         if note == "trim":

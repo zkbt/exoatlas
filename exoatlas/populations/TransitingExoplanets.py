@@ -15,7 +15,7 @@ class TransitingExoplanets(Exoplanets):
         # remove non-transiting
         with warnings.catch_warnings():
             warnings.simplefilter("ignore", category=RuntimeWarning)
-            ok_transit = self.has_transit == 1
+            ok_transit = self.detected_in_transit == 1
             has_no_radius = np.isnan(self.radius)
 
         # apply any planet-specific curation to the population
@@ -34,7 +34,7 @@ class TransitingExoplanets(Exoplanets):
         -------
         (modifies the input population in place, but returns nothing)
         """
-        ok = self.has_transit == 1
+        ok = self.detected_in_transit == 1
         self.standard = self.standard[ok]
 
     def remove_bad_radii(self):
@@ -103,4 +103,4 @@ class TransitingExoplanets(Exoplanets):
             self.speak(f"The affected planets are {s}")
 
         # force those ones to zero
-        self.standard["e"][is_probably_upper_limit] = 0
+        self.standard["eccentricity"][is_probably_upper_limit] = 0
