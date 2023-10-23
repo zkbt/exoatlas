@@ -1,4 +1,5 @@
 from .Panel import *
+from .BubblePanel import BubblePanel
 from ..ink_errorbar import *
 
 __all__ = ["ErrorPanel"]
@@ -17,7 +18,7 @@ def remove_unit(x):
         return x
 
 
-class ErrorPanel(Panel):
+class ErrorPanel(BubblePanel):
     """
     Error is a general wrapper for making scatter plots
     where planets are represented with 2D error bars, with
@@ -101,6 +102,11 @@ class ErrorPanel(Panel):
 
         # focus attention on that population
         self.point_at(key)
+
+        # do a bubble instead, if requested
+        if getattr(self.pop, "bubble_anyway", False):
+            BubblePanel.plot(self, key=key, ax=ax, labelkw=labelkw, **kw)
+            return
 
         # make sure we're plotting into the appropriate axes
         try:

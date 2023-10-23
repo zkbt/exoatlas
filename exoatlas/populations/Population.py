@@ -1417,7 +1417,7 @@ class PredefinedPopulation(Population):
     Population object keeps track of an exoplanet population.
     """
 
-    expiration = 0.00001
+    expiration = 10
 
     def __init__(self, label="exoplanets", remake=False, skip_update=False, **plotkw):
         """
