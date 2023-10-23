@@ -322,7 +322,7 @@ class FluxEscape(BubblePanel):
     yaxis = EscapeVelocity
 
     def plot_constant_lambda(
-        self, alpha=0.5, color="gray", nudge=1, rotation=-4.5, **kw
+        self, alpha=0.5, color="gray", x=0.01, y=100, rotation=-4.5, **kw
     ):
         """
         Plot the escape velocity vs insolation for
@@ -342,8 +342,8 @@ class FluxEscape(BubblePanel):
 
         # label one of the lines
         plt.text(
-            0.005,
-            145 * nudge,
+            x,
+            y,
             r"$E_{grav}/E_{thermal}$",
             rotation=rotation,
             fontsize=8,

@@ -73,6 +73,7 @@ except AssertionError:
     cwd = os.getcwd()
     base = os.path.join(cwd, "exoatlas-downloads")
 mkdir(base)
+print(base)
 
 directories = dict(data=os.path.join(base, "data/"))
 for k in directories.keys():
