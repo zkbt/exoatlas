@@ -50,7 +50,7 @@ class TOI(PredefinedPopulation):
             # is this not a single-transit candidate (without period)?
             masks["notsingle"] = raw["Period (days)"] > 0
 
-        ok = np.ones(len(raw)).astype(np.bool)
+        ok = np.ones(len(raw)).astype(bool)
         for k in masks:
             ok *= masks[k]
             N = sum(ok == True)

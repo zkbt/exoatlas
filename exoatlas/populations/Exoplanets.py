@@ -90,7 +90,7 @@ class Exoplanets(PredefinedPopulation):
 
         masks = {}
 
-        ok = np.ones(len(raw)).astype(np.bool)
+        ok = np.ones(len(raw)).astype(bool)
         for k in masks:
             ok *= masks[k]
             N = sum(ok == True)

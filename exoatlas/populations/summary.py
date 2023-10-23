@@ -45,7 +45,7 @@ def plot_histograms(pop):
         if x in quant_cols:
             good = np.isfinite(pop.standard[x])
         else:
-            good = np.ones(len(pop.standard)).astype(np.bool)
+            good = np.ones(len(pop.standard)).astype(bool)
         bad = good == False
         badfraction = sum(bad) / len(bad)
 

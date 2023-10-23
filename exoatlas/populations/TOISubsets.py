@@ -80,7 +80,7 @@ class PreviouslyKnownTOI(TOISubset):
         matched_toi.standard["close"] = closeperiod
 
         # populate a mask with Trues where planets are close to another in space and period
-        wasknown = np.zeros(self.n).astype(np.bool)
+        wasknown = np.zeros(self.n).astype(bool)
         wasknown[i_match[closeperiod]] = True
 
         # weird = (matched_toi.period > 13*u.day)*closeperiod
