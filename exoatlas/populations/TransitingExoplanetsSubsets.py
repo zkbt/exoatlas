@@ -37,7 +37,9 @@ class Kepler(TransitingExoplanetsSubset):
         )
 
     def to_include(self):
-        foundbykepler = (self.discoverer == "Kepler") | (self.discoverer == "K2")
+        foundbykepler = (self.discovery_facility == "Kepler") | (
+            self.discovery_facility == "K2"
+        )
         return foundbykepler
 
 
@@ -48,7 +50,9 @@ class NonKepler(TransitingExoplanetsSubset):
         )
 
     def to_include(self):
-        foundbykepler = (self.discoverer == "Kepler") | (self.discoverer == "K2")
+        foundbykepler = (self.discovery_facility == "Kepler") | (
+            self.discovery_facility == "K2"
+        )
         return foundbykepler == False
 
 
@@ -59,7 +63,9 @@ class TESS(TransitingExoplanetsSubset):
         )
 
     def to_include(self):
-        foundbytess = self.discoverer == "Transiting Exoplanet Survey Satellite (TESS)"
+        foundbytess = (
+            self.discovery_facility == "Transiting Exoplanet Survey Satellite (TESS)"
+        )
         return foundbytess == True
 
 
@@ -70,7 +76,9 @@ class NonTESS(TransitingExoplanetsSubset):
         )
 
     def to_include(self):
-        foundbytess = self.discoverer == "Transiting Exoplanet Survey Satellite (TESS)"
+        foundbytess = (
+            self.discovery_facility == "Transiting Exoplanet Survey Satellite (TESS)"
+        )
         return foundbytess == False
 
 
@@ -92,7 +100,7 @@ class Space(TransitingExoplanetsSubset):
     def to_include(self):
         foundfromspace = np.zeros(self.n).astype(bool)
         for x in space_telescopes:
-            foundfromspace = foundfromspace | (self.discoverer == x)
+            foundfromspace = foundfromspace | (self.discovery_facility == x)
         return foundfromspace
 
 
@@ -105,7 +113,7 @@ class Ground(TransitingExoplanetsSubset):
     def to_include(self):
         foundfromspace = np.zeros(self.n).astype(bool)
         for x in space_telescopes:
-            foundfromspace = foundfromspace | (self.discoverer == x)
+            foundfromspace = foundfromspace | (self.discovery_facility == x)
         return foundfromspace == False
 
 

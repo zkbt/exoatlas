@@ -3,7 +3,6 @@ Tools for working with the habitable zone definitions
 in Kopparapu et al. (2013).
 """
 
-
 coefficients = {}
 coefficients["recent-venus"] = [1.7753, 1.4316e-4, 2.9875e-9, -7.5702e-12, -1.1635e-15]
 coefficients["runaway-greenhouse"] = [

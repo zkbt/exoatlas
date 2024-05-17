@@ -1,4 +1,5 @@
 """define a Transit class, to represent an individual planetary transit"""
+
 from ..imports import *
 
 
@@ -27,7 +28,7 @@ class Transit(Talker):
 
         # set the midtransit time of this particular transit
         self.midtransit = (
-            planet.period * (i + phasefrommidtransit) + planet.transit_epoch
+            planet.period * (i + phasefrommidtransit) + planet.transit_midpoint
         )[0]
         self.i = i
 

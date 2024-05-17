@@ -97,7 +97,7 @@ class BubblePanel(Panel):
             self.cmap = cmap
         # otherwise, treat the cmap as a string key
         else:
-            self.cmap = plt.matplotlib.cm.get_cmap(cmap)
+            self.cmap = plt.matplotlib.colormaps[cmap]
 
         # make sure the color map limits are set
         self.vmin = vmin or default_lim[0]

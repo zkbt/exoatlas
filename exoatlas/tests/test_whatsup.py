@@ -1,3 +1,5 @@
+from .setup_tests import *
+
 from exoatlas.imports import *
 from exoatlas.populations import TransitingExoplanets
 from exoatlas.whatsup import Plan

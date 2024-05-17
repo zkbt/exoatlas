@@ -72,10 +72,6 @@ class Downloader(Talker):
         pass
 
 
-# columns_directory = resource_filename(__name__, "data/exoplanet-archive-columns/")
-# "exoacrhive-columns-with-errors-and-limits.txt"
-
-
 class ExoplanetArchiveDownloader(Downloader):
     # define the base of all URLs for to access the archive API
     # base = 'http://exoplanetarchive.ipac.caltech.edu/cgi-bin/nstedAPI/nph-nstedAPI?'
@@ -118,9 +114,10 @@ class ExoplanetArchiveDownloader(Downloader):
 
     def add_metadata(self, table):
         # populate what kinds of columns are what
-        columns_directory = resource_filename(
-            __name__, "data/exoplanet-archive-columns/"
+        columns_directory = os.path.join(
+            code_directory, "populations/data/exoplanet-archive-columns/"
         )
+
         for k in ["with-errors-and-limits", "with-errors", "without-errors"]:
             column_names = np.genfromtxt(
                 os.path.join(columns_directory, f"exoarchive-columns-{k}.txt"),
