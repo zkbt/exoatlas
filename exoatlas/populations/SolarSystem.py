@@ -4,7 +4,9 @@ import astropy.units as u
 
 __all__ = ["SolarSystem"]
 
-initial_filename = resource_filename(__name__, "data/solarsystem/solarsystem.txt")
+initial_filename = os.path.join(
+    code_directory, "populations/data/solarsystem/solarsystem.txt"
+)
 
 
 class SolarSystem(PredefinedPopulation):
@@ -64,7 +66,7 @@ class SolarSystem(PredefinedPopulation):
         s["period"] = (t["period"] * u.year).to(u.day)
 
         # store an eccentricity and longitude of periastron
-        s["e"] = np.nan
+        s["eccentricity"] = np.nan
         s["omega"] = np.nan * u.deg
 
         # hide the stellar magnitudes
@@ -96,8 +98,8 @@ class SolarSystem(PredefinedPopulation):
         s["distance"] = np.nan * u.pc
         s["ra"] = 0.0 * u.deg
         s["dec"] = 0.0 * u.deg
-        s["discoverer"] = "humans"
-        s["transit_epoch"] = np.nan * u.day
+        s["discovery_facility"] = "humans"
+        s["transit_midpoint"] = np.nan * u.day
         s["transit_duration"] = np.nan * u.day
         s["transit_depth"] = (
             s["radius"].quantity / s["stellar_radius"].quantity

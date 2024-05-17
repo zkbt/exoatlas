@@ -15,7 +15,7 @@ def plot_zeng(which="75pSi_25pFe", **kw):
 
     """
 
-    file = resource_filename(__name__, f"data/zengandsasselov/MR_{which}.csv")
+    file = os.path.join(code_directory, f"models/data/zengandsasselov/MR_{which}.csv")
 
     # load the values
     m, r = np.transpose(np.loadtxt(file, delimiter=","))

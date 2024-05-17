@@ -134,7 +134,7 @@ class Plan(Talker):
 
         # pull out the period and epoch of all the planets
         P = pop.period.to("day")
-        T0 = pop.transit_epoch.to("day")
+        T0 = pop.transit_midpoint.to("day")
         coords = SkyCoord(ra=pop.ra, dec=pop.dec)
 
         # find the closest exact transit epochs
@@ -236,7 +236,9 @@ class Plan(Talker):
         plt.ioff()
 
         # set up the plotting window (one night at a time)
-        self.figure = plt.figure("upcoming transits", figsize=(15, 6), dpi=200)
+        self.figure = plt.figure(
+            "upcoming transits", figsize=(15, 6), dpi=200, constrained_layout=True
+        )
         self.gs = plt.matplotlib.gridspec.GridSpec(
             2, 1, hspace=0, wspace=0, height_ratios=[0.3, 1.0], bottom=0.35
         )
@@ -274,7 +276,6 @@ class Plan(Talker):
         self.ax["airmass"].xaxis.set_major_formatter(fmt)
         f = plt.gcf()
         f.autofmt_xdate(rotation=90)
-        plt.tight_layout()
 
         self.speak("making a movie of transits")
 

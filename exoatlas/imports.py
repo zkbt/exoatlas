@@ -1,8 +1,9 @@
 # imports that are need by many exoatlas subsections
-import os, sys, time, shutil, warnings, copy
-from unittest import mock
+import os, sys, time, shutil, warnings, copy, importlib
 from tqdm import tqdm
-import pytest
+
+code_directory = importlib.resources.files(__name__)
+
 
 import numpy as np, matplotlib.pyplot as plt, matplotlib.animation as animation
 from matplotlib.ticker import ScalarFormatter, FormatStrFormatter, LogLocator
@@ -87,9 +88,6 @@ def reset_local_data():
         shutil.rmtree(directories["data"])
         mkdir(directories["data"])
         print(f"Removed all local data from {directories['data']}")
-
-
-from pkg_resources import resource_filename
 
 
 # some kludge for dealing with Python 3 vs 2?
