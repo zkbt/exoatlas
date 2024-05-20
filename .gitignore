@@ -1,7 +1,7 @@
+sandbox/
 .vscode
 *.pdf
 .ipynb_checkpoints
-*.ipynb
 scratch/
 notebooks/
 .pytest_cache/

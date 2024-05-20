@@ -93,9 +93,16 @@ setup(
         "develop": [
             "pytest",
             "black",
+            "black[jupyter]",
             "jupyter",
             "ipython",
-            "sphinx",
+            "mkdocs",
+            "mkdocs-material",
+            "mkdocstrings",
+            "mkdocstrings-python",
+            "pytkdocs[numpy-style]",
+            "mkdocs-jupyter",
+            "mkdocs-exclude",
             "twine",
             "pre-commit",
         ]
