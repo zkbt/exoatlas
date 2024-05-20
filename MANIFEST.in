@@ -1,2 +1,0 @@
-# include data files inside the package directory structure
-recursive-include exoatlas *.txt *.csv

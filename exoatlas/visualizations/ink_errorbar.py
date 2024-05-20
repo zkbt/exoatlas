@@ -53,7 +53,7 @@ def ink_errorbar(
     colors[:, -1] *= alpha
 
     # loop over data points
-    for i in tqdm(i_sorted):
+    for i in i_sorted:  # tqdm()
         # pick this data point's color
         # color = np.array(colors[i]).astype(np.float)
         # assert(len(color) == 4)
