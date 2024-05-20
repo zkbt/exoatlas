@@ -64,7 +64,7 @@ def update_planet(pop):
         b=0.38,
         stellar_radius=0.2105,
         stellar_mass=0.181,
-        transit_epoch=2457184.55786,
+        transit_midpoint=2457184.55786,
     )
 
     pop.update_planet("30 Ari Bb", radius=np.nan)
@@ -137,7 +137,7 @@ def update_planet(pop):
         mass=369.303,
         mass_uncertainty_upper=18.433,
         mass_uncertainty_lower=-18.433,
-        transit_epoch=2454279.436714,
+        transit_midpoint=2454279.436714,
     )
 
     """ I went through all the planets shown in the Dressing et al. (2015)

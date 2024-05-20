@@ -39,7 +39,12 @@ def plot_histograms(pop):
     ncols = 3
     nrows = np.ceil(len(cols) / ncols).astype(np.int)
     scale = 2
-    fi, ax = plt.subplots(nrows, ncols, figsize=(ncols * 2 * scale, nrows * scale))
+    fi, ax = plt.subplots(
+        nrows,
+        ncols,
+        figsize=(ncols * 2 * scale, nrows * scale),
+        constrained_layout=True,
+    )
 
     for i, x in enumerate(cols):
         if x in quant_cols:
@@ -54,8 +59,6 @@ def plot_histograms(pop):
         plt.axvspan(*plt.xlim(), 0, badfraction, color="red", alpha=0.5, zorder=-1)
         plt.xlabel(x)
         plt.title(f"{x} lacks {sum(bad)}/{len(bad)} ({badfraction:.0%})")
-
-    plt.tight_layout()
 
 
 def summarize_planet(planets):

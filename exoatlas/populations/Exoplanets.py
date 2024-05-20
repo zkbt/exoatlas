@@ -54,20 +54,6 @@ class Exoplanets(PredefinedPopulation):
         # load (or download) the table of composite exoplanet properties
         raw = exoplanets_downloader.get(remake=remake)
 
-        # populate which type of columns are which
-        # populate what kinds of columns are what
-
-        """columns_directory = resource_filename(
-            __name__, "data/exoplanet-archive-columns/"
-        )
-        for k in ["with-errors-and-limits", "with-errors", "without-errors"]:
-            column_names = np.genfromtxt(
-                os.path.join(columns_directory, f"exoarchive-columns-{k}.txt"),
-                str,
-                comments="#",
-            )
-            raw.meta[f"columns-{k}"] = column_names"""
-
         # for debugging, hang on to the raw table as a hidden attribute
         self._raw = raw
 

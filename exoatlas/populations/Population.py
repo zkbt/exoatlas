@@ -5,15 +5,15 @@ from ..models import *
 
 import string
 
-basic_columns = ["name", "hostname", "ra", "dec", "distance", "discoverer"]
+basic_columns = ["name", "hostname", "ra", "dec", "distance", "discovery_facility"]
 
 transit_columns = [
     "period",
     "semimajoraxis",
-    "e",
+    "eccentricity",
     "omega",
     "inclination",
-    "transit_epoch",
+    "transit_midpoint",
     "transit_duration",
     "transit_depth",
     "stellar_teff",

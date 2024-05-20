@@ -1,0 +1,51 @@
+site_name: exoplanet-atlas
+site_url: https://zkbt.github.com/exoplanet-atlas
+nav:
+    - index.md
+    - installation.ipynb
+    - User Guide:
+      - creating.ipynb
+      - exploring.ipynb
+      - visualizing.ipynb
+    - Developer Guide:
+      - github.ipynb
+      - documentation.ipynb
+theme:
+  name: "material"
+  features:
+      - navigation.tracking
+repo_url: https://github.com/zkbt/exoplanet-atlas/
+plugins:
+  - search
+  - mkdocs-jupyter:
+      execute : True
+      include_source : True
+  - mkdocstrings:
+      default_handler: python
+      handlers:
+        python:
+          paths: [../exoatlas]
+          selection:
+            docstring_style: "numpy"
+          rendering:
+            show_source: True
+            show_root_heading: True
+            show_root_toc_entry: False
+            show_root_full_path: False
+            show_category_heading: False
+            show_submodules: False
+            merge_init_into_class: False
+            show_if_no_docstring: False
+            heading_level: 3
+            show_bases: False
+  - exclude:
+      glob:        
+        - "*.pdf"
+        - "*.fits"
+        - "*.npy"
+markdown_extensions:
+    - toc:
+        permalink: "#"
+
+# this is super borrowed from Christina Hedges' fabulous
+# https://christinahedges.github.io/astronomy_workflow/

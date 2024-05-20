@@ -2,6 +2,7 @@
 If something inherits from Talker, then we can print
 text to the terminal in a relatively standard way.
 """
+
 import textwrap, numpy as np, pprint
 import sys
 

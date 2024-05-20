@@ -1,3 +1,5 @@
+from .setup_tests import *
+
 from exoatlas.models import *
 from exoatlas.imports import *
 

@@ -87,16 +87,16 @@ class TOI(PredefinedPopulation):
 
         s["distance"] = t["Stellar Distance (pc)"] * u.pc
         s["distance_uncertainty"] = t["Stellar Distance (pc) err"] * u.pc
-        s["discoverer"] = "TESS"
+        s["discovery_facility"] = "TESS"
 
         s["period"] = t["Period (days)"] * u.day
         s["period_uncertainty"] = t["Period (days) err"] * u.day
 
-        s["e"] = np.nan
+        s["eccentricity"] = np.nan
         s["omega"] = np.nan * u.deg
 
-        s["transit_epoch"] = t["Epoch (BJD)"] * u.day
-        # s['transit_epoch_uncertainty'] = t['Epoch (BJD) err']*u.day
+        s["transit_midpoint"] = t["Epoch (BJD)"] * u.day
+        # s['transit_midpoint_uncertainty'] = t['Epoch (BJD) err']*u.day
 
         s["transit_duration"] = t["Duration (hours)"] * u.hour
         s["transit_duration_uncertainty"] = t["Duration (hours) err"] * u.hour

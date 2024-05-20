@@ -1,9 +1,0 @@
-nbsphinx
-ipykernel
-
-sphinx
-pandoc
-jupyter
-sphinx-typlog-theme
-nbformat
-nbconvert

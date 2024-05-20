@@ -1,3 +1,5 @@
+from .setup_tests import *
+
 from exoatlas import *
 
 
@@ -6,7 +8,7 @@ def test_reflection(telescope_name="JWST", wavelength=1 * u.micron):
         t = TransitingExoplanets()
 
     w = 1 * u.micron
-    fi, ax = plt.subplots(1, 2, figsize=(8, 4))
+    fi, ax = plt.subplots(1, 2, figsize=(8, 4), constrained_layout=True)
     for i, per_transit in enumerate([True, False]):
         BubblePanel(
             xaxis=StellarBrightnessTelescope(
@@ -22,7 +24,6 @@ def test_reflection(telescope_name="JWST", wavelength=1 * u.micron):
         ).build(t, ax=ax[i])
         d = {True: "Transit", False: "Hour"}
         plt.title(f"S/N in 1 {d[per_transit]}")
-    plt.tight_layout()
 
 
 def test_emission(telescope_name="JWST", wavelength=5 * u.micron):
@@ -30,7 +31,7 @@ def test_emission(telescope_name="JWST", wavelength=5 * u.micron):
         t = TransitingExoplanets()
 
     w = 5 * u.micron
-    fi, ax = plt.subplots(1, 2, figsize=(8, 4))
+    fi, ax = plt.subplots(1, 2, figsize=(8, 4), constrained_layout=True)
     for i, per_transit in enumerate([True, False]):
         BubblePanel(
             xaxis=StellarBrightnessTelescope(
@@ -42,7 +43,6 @@ def test_emission(telescope_name="JWST", wavelength=5 * u.micron):
         ).build(t, ax=ax[i])
         d = {True: "Transit", False: "Hour"}
         plt.title(f"S/N in 1 {d[per_transit]}")
-    plt.tight_layout()
 
 
 def test_transmission(telescope_name="JWST", wavelength=5 * u.micron):
@@ -50,7 +50,7 @@ def test_transmission(telescope_name="JWST", wavelength=5 * u.micron):
         t = TransitingExoplanets()
 
     w = 5 * u.micron
-    fi, ax = plt.subplots(1, 2, figsize=(8, 4))
+    fi, ax = plt.subplots(1, 2, figsize=(8, 4), constrained_layout=True)
     for i, per_transit in enumerate([True, False]):
         BubblePanel(
             xaxis=StellarBrightnessTelescope(
@@ -62,7 +62,6 @@ def test_transmission(telescope_name="JWST", wavelength=5 * u.micron):
         ).build(t, ax=ax[i])
         d = {True: "Transit", False: "Hour"}
         plt.title(f"S/N in 1 {d[per_transit]}")
-    plt.tight_layout()
 
 
 if __name__ == "__main__":

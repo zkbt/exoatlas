@@ -1,9 +1,9 @@
-name radius mass period
-Mercury 2440 3.30e23 0.240
-Venus 6052 4.87e24 0.615
-Earth 6378 5.97e24 1.00
-Mars 3397 6.42e23 1.88
-Jupiter 71492 1.90e27 11.86
-Saturn 60268 5.68e26 29.447
-Uranus 25559 8.68e25 84.0168
-Neptune 24766 1.02e26 164.79
+name radius mass period eccentricity
+Mercury 2440 3.30e23 0.240 0.206
+Venus 6052 4.87e24 0.615 0.007
+Earth 6378 5.97e24 1.00 0.017
+Mars 3397 6.42e23 1.88 	0.094
+Jupiter 71492 1.90e27 11.86  0.049
+Saturn 60268 5.68e26 29.447 	0.052
+Uranus 25559 8.68e25 84.0168 	0.047
+Neptune 24766 1.02e26 164.79  	0.010

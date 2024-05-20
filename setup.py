@@ -89,10 +89,26 @@ setup(
         "tqdm",
         "pytz",
     ],
+    extras_require={
+        "develop": [
+            "pytest",
+            "black",
+            "black[jupyter]",
+            "jupyter",
+            "ipython",
+            "mkdocs",
+            "mkdocs-material",
+            "mkdocstrings",
+            "mkdocstrings-python",
+            "pytkdocs[numpy-style]",
+            "mkdocs-jupyter",
+            "mkdocs-exclude",
+            "twine",
+            "pre-commit",
+        ]
+    },
     # what version of Python is required?
-    python_requires=">=3.6",
-    # packages in `key` will be installed with `pip install pkg-name[key]`
-    extras_require={},
+    python_requires=">=3.8",
     # (I think just leave this set to False)
     zip_safe=False,
     # under what license is this code released?

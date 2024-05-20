@@ -1,3 +1,5 @@
+from .setup_tests import *
+
 from exoatlas.imports import *
 from exoatlas.populations import *
 
@@ -18,7 +20,6 @@ def test_uncertainties():
 
     bad = p.uncertainty("distance")
     assert np.all(np.isnan(bad))
-    return p
 
 
 if __name__ == "__main__":  # pragma: no cover

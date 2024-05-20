@@ -1,3 +1,5 @@
+from .setup_tests import *
+
 from exoatlas.imports import *
 
 import exoatlas as ex
@@ -9,6 +11,7 @@ def test_panels():
     pops = {}
     pops["solarsystem"] = ex.SolarSystem()
     for p in predefined_panels:
+        print(p)
         plt.figure()
         p().build(pops=pops)
         plt.close()

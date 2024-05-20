@@ -1,3 +1,5 @@
+from .setup_tests import *
+
 from exoatlas.imports import *
 from exoatlas.populations import *
 
@@ -10,7 +12,6 @@ def test_population():
     fake = Table({x: [0] * 3 for x in attribute_columns}, masked=True)
     p = Population(standard=fake, label="fake")
     p.validate_columns()
-    return p
 
 
 def test_solarsystem():
@@ -19,7 +20,6 @@ def test_solarsystem():
     """
     p = SolarSystem()
     p.validate_columns()
-    return p
 
 
 def test_transitingexoplanets():
@@ -29,7 +29,6 @@ def test_transitingexoplanets():
     with mock.patch("builtins.input", return_value=""):
         p = TransitingExoplanets()
     p.validate_columns()
-    return p
 
 
 def test_exoplanets():
@@ -39,7 +38,6 @@ def test_exoplanets():
     with mock.patch("builtins.input", return_value=""):
         p = Exoplanets()
     p.validate_columns()
-    return p
 
 
 def test_subsets():
@@ -62,7 +60,6 @@ def test_tess():
     with mock.patch("builtins.input", return_value=""):
         p = TESS()
     p.validate_columns()
-    return p
 
 
 def test_indexing():
@@ -80,7 +77,7 @@ def test_indexing():
         d = p[p.stellar_radius < 1.0 * u.Rsun]
     e = p["GJ 1214b"]
     f = p[["GJ 1214b", "LHS 1140b"]]  #'GJ 1132b',
-    g = p[p.discoverer == "Kepler"]
+    g = p[p.discovery_facility == "Kepler"]
     h = p["TRAPPIST-1b"]
     i = p["TRAPPIST-1"]
     j = e + h
@@ -89,7 +86,6 @@ def test_indexing():
     m = p.create_subset_by_hostname("GJ1214")
     coordinates = SkyCoord(e.ra, e.dec)
     n = p.create_subset_by_position(coordinates)
-    return a, b, c, d, e, f, g, h, i, j, k, l, m, n
 
 
 def test_table():
@@ -132,8 +128,6 @@ def test_transiting(planet="GJ1214b"):
 
     p.reflection_signal(albedo=0.5)
     p.reflection_snr(albedo=0.5, wavelength=5 * u.micron, telescope_name="JWST")
-
-    return p
 
 
 if __name__ == "__main__":  # pragma: no cover
