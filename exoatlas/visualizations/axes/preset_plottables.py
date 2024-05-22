@@ -395,7 +395,7 @@ class Reflection(Depth):
         """
         PlottableAxis.__init__(self, **kw)
         self.albedo = albedo
-        self.label = f"Eclipse Depth\nin Reflected Light\n({albedo:.0%} albedo)"
+        self.label = f"Reflected Light\nEclipse Depth\n({albedo:.0%} albedo)"
 
     def value(self):
         return self.panel.pop.reflection_signal(self.albedo)
@@ -424,7 +424,7 @@ class ReflectionSNR(StellarBrightnessTelescope):
         """
         # define the label, based on the wavelength and telescope
         w = self.wavelength.to(u.micron).value
-        self.label = f"S/N for Eclipse Depth\nin Reflected Light\n({self.albedo:.0%} albedo)\nat $\lambda={w}\mu$m (R={self.R})"
+        self.label = f"S/N for Reflected Light\nEclipse Depth\n({self.albedo:.0%} albedo)\nat $\lambda={w}\mu$m (R={self.R})"
 
     def value(self):
         """

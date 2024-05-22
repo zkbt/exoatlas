@@ -159,14 +159,22 @@ class observable_summary(BuildablePlot):
         """
 
         column = 0
+
         if True:
-            fr = FluxRadius(**kw)
-            fr.xlabel = "Bolometric Flux Received\n(relative to Earth)"
-            fr.build(pops=pops, ax=plt.subplot(gs[1, column]))
+            pr = DistanceRadius(**kw, **wavelengthkw)
+            pr.build(pops=pops, ax=plt.subplot(gs[1, column]))
+
+            db = DistanceBrightness(telescope_name=telescope_name, **kw, **wavelengthkw)
+            db.build(pops=pops, ax=plt.subplot(gs[0, column]))
+            db.remove_xlabel()
             column += 1
 
         if "depth" in observables:
-            dr = DepthRadius(**kw, **wavelengthkw)
+            dr = DepthRadius(
+                size=DepthSNR(telescope_name=telescope_name, per_transit=per_transit),
+                **kw,
+                **wavelengthkw
+            )
             dr.build(pops=pops, ax=plt.subplot(gs[1, column]))
             dr.remove_ylabel()
 
@@ -179,10 +187,17 @@ class observable_summary(BuildablePlot):
             x.build(pops=pops, ax=plt.subplot(gs[0, column]))
             x.plot_sigma()
             x.remove_xlabel()
+            x.remove_ylabel()
             column += 1
 
         if "emission" in observables:
-            er = EmissionRadius(**kw, **wavelengthkw)
+            er = EmissionRadius(
+                size=EmissionSNR(
+                    telescope_name=telescope_name, per_transit=per_transit
+                ),
+                **kw,
+                **wavelengthkw
+            )
             er.build(pops=pops, ax=plt.subplot(gs[1, column]))
             er.remove_ylabel()
 
@@ -201,7 +216,13 @@ class observable_summary(BuildablePlot):
             column += 1
 
         if "reflection" in observables:
-            rr = ReflectionRadius(**kw, **wavelengthkw)
+            rr = ReflectionRadius(
+                size=ReflectionSNR(
+                    telescope_name=telescope_name, per_transit=per_transit
+                ),
+                **kw,
+                **wavelengthkw
+            )
             rr.build(pops=pops, ax=plt.subplot(gs[1, column]))
             rr.remove_ylabel()
 
@@ -220,7 +241,13 @@ class observable_summary(BuildablePlot):
             column += 1
 
         if "transmission" in observables:
-            tr = TransmissionRadius(**kw, **wavelengthkw)
+            tr = TransmissionRadius(
+                size=TransmissionSNR(
+                    telescope_name=telescope_name, per_transit=per_transit
+                ),
+                **kw,
+                **wavelengthkw
+            )
             tr.build(pops=pops, ax=plt.subplot(gs[1, column]))
             tr.remove_ylabel()
 
@@ -239,11 +266,8 @@ class observable_summary(BuildablePlot):
             column += 1
 
         if True:
-            pr = DistanceRadius(**kw, **wavelengthkw)
-            pr.build(pops=pops, ax=plt.subplot(gs[1, column]))
-            pr.remove_ylabel()
-
-            db = DistanceBrightness(telescope_name=telescope_name, **kw, **wavelengthkw)
-            db.build(pops=pops, ax=plt.subplot(gs[0, column]))
-            db.remove_xlabel()
-            db.remove_ylabel()
+            fr = FluxRadius(**kw)
+            fr.xlabel = "Bolometric Flux Received\n(relative to Earth)"
+            fr.build(pops=pops, ax=plt.subplot(gs[1, column]))
+            fr.remove_ylabel()
+            column += 1
