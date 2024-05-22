@@ -1112,7 +1112,7 @@ class Population(Talker):
             depth[bad] = np.nan
             return depth
 
-    def reflection_signal(self, albedo=1.0):
+    def reflection_signal(self, albedo=0.1):
         """
         What is the reflected light eclipse depth,
         for an albedo of 100%?
@@ -1289,6 +1289,17 @@ class Population(Talker):
         telescope_unit = define_telescope_unit_by_name(telescope_name, **kw)
 
         return noise, telescope_unit
+
+    def depth_snr(self, telescope_name="JWST", **kw):
+        """
+        What's the approximate S/N for the detection of the planet's transit?
+        """
+
+        noise, telescope_unit = self._get_noise_and_unit(
+            telescope_name=telescope_name, **kw
+        )
+        signal = self.transit_depth
+        return signal / noise
 
     def emission_snr(self, telescope_name="JWST", **kw):
         """
