@@ -7,6 +7,7 @@ nav:
       - creating.ipynb
       - exploring.ipynb
       - observing.ipynb
+      - filtering.ipynb
       - visualizing.ipynb
     - Developer Guide:
       - github.ipynb
@@ -45,6 +46,7 @@ plugins:
         - "*.pdf"
         - "*.fits"
         - "*.npy"
+        - "*.ecsv"
 markdown_extensions:
     - toc:
         permalink: "#"

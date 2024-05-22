@@ -1,6 +1,7 @@
 sandbox/
 site/
 .vscode
+*.ecsv
 *.pdf
 .ipynb_checkpoints
 scratch/

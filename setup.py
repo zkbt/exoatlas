@@ -84,6 +84,7 @@ setup(
         "matplotlib>=2.0",
         "astropy>=3.2.3",
         "astroquery>=0.3.9",
+        "astroplan>=0.10",
         "rainbow-connection>=0.0.1",
         "PyYAML",
         "tqdm",
