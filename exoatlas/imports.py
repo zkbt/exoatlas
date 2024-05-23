@@ -74,7 +74,12 @@ except AssertionError:
     cwd = os.getcwd()
     base = os.path.join(cwd, "exoatlas-downloads")
 mkdir(base)
-print(base)
+
+
+def locate_local_data():
+    print("💾 `exoatlas` archive data will be stored in:")
+    print(base)
+
 
 directories = dict(data=os.path.join(base, "data/"))
 for k in directories.keys():

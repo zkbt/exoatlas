@@ -25,6 +25,7 @@ class SolarSystem(PredefinedPopulation):
         self.s = 80
         self.respond_to_color = False
         self.exact = True
+        self.marker = "s"
 
     def load_raw(self):
         """

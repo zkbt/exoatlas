@@ -58,7 +58,7 @@ def define_telescope_unit(
     return unit
 
 
-def define_JWST_unit(wavelength=5 * u.micron, **kw):
+def define_JWST_unit(wavelength=5 * u.micron, efficiency=0.5, **kw):
     """
     Create a JWST telescope unit.
 
@@ -77,11 +77,14 @@ def define_JWST_unit(wavelength=5 * u.micron, **kw):
         (Ignored if telescope is None.)
     """
     return define_telescope_unit(
-        telescope_name="JWST", wavelength=wavelength, area=25 * u.m**2, **kw
+        telescope_name="JWST",
+        wavelength=wavelength,
+        area=efficiency * 25 * u.m**2,
+        **kw,
     )
 
 
-def define_HST_unit(wavelength=1.4 * u.micron, **kw):
+def define_HST_unit(wavelength=1.4 * u.micron, efficiency=0.3, **kw):
     """
     Create a HST telescope unit.
 
@@ -100,7 +103,10 @@ def define_HST_unit(wavelength=1.4 * u.micron, **kw):
         (Ignored if telescope is None.)
     """
     return define_telescope_unit(
-        telescope_name="HST", wavelength=wavelength, area=4.5 * u.m**2, **kw
+        telescope_name="HST",
+        wavelength=wavelength,
+        area=efficiency * 4.5 * u.m**2,
+        **kw,
     )
 
 

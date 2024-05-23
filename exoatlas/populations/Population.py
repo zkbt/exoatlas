@@ -1112,7 +1112,7 @@ class Population(Talker):
             depth[bad] = np.nan
             return depth
 
-    def reflection_signal(self, albedo=1.0):
+    def reflection_signal(self, albedo=0.1):
         """
         What is the reflected light eclipse depth,
         for an albedo of 100%?
@@ -1290,6 +1290,17 @@ class Population(Talker):
 
         return noise, telescope_unit
 
+    def depth_snr(self, telescope_name="JWST", **kw):
+        """
+        What's the approximate S/N for the detection of the planet's transit?
+        """
+
+        noise, telescope_unit = self._get_noise_and_unit(
+            telescope_name=telescope_name, **kw
+        )
+        signal = self.transit_depth
+        return signal / noise
+
     def emission_snr(self, telescope_name="JWST", **kw):
         """
         What's the approximate S/N for the detection of the
@@ -1410,6 +1421,81 @@ class Population(Talker):
         sizeplot = np.sqrt(area / np.nanmax(area) * maxarea)
 
         plt.scatter(xplot, yplot, linewidth=0, marker="o", markersize=sizeplot)
+
+    def create_table(
+        self,
+        desired_columns=[
+            "name",
+            "radius",
+            "relative_insolation",
+            "stellar_radius",
+            "stellar_teff",
+            "ra",
+            "dec",
+            "distance",
+        ],
+    ):
+        """
+        Create an astropy table based on this population,
+        using a subset of columns, which may include ones
+        that have been calculated as Population properties.
+
+        Parameters
+        ----------
+        desired_columns : list
+            The columns you want to include. Anything that
+            can be accessed via Population.??? can be provided
+            here as a string.
+
+        Returns
+        -------
+        table : astropy.table.Table
+            A table, with those columns, in the same order
+            as the Population itself.
+        """
+        # FIXME! need to add method support for arguments
+
+        # create a dictionary with the desired columns
+        d = {c: getattr(self, c) for c in desired_columns}
+
+        # turn that into an astropy Table
+        t = Table(d)
+
+        return t
+
+    def create_planning_table(
+        self,
+        desired_columns=[
+            "name",
+            "ra",
+            "dec",
+            "period",
+            "transit_midpoint",
+            "transit_duration",
+            "radius",
+            "relative_insolation",
+            "stellar_radius",
+            "stellar_teff",
+            "distance",
+        ],
+    ):
+        """
+        Create an astropy table to help plan transit observations.
+
+        Parameters
+        ----------
+        desired_columns : list
+            The columns you want to include. Anything that
+            can be accessed via Population.??? can be provided
+            here as a string.
+
+        Returns
+        -------
+        table : astropy.table.Table
+            A table, with those columns, in the same order
+            as the Population itself.
+        """
+        return self.create_table(desired_columns=desired_columns)
 
 
 class PredefinedPopulation(Population):
@@ -1560,44 +1646,3 @@ class PredefinedPopulation(Population):
         # save it as an ascii table for humans to read
         standard.write(self.standard_path, format="ascii.ecsv", overwrite=True)
         self.speak(f"Saved a standardized text table to {self.standard_path}")
-
-    def create_table(
-        self,
-        desired_columns=[
-            "name",
-            "radius",
-            "relative_insolation",
-            "stellar_radius",
-            "stellar_teff",
-            "ra",
-            "dec",
-            "distance",
-        ],
-    ):
-        """
-        Create an astropy table based on this population,
-        using a subset of columns, which may include ones
-        that have been calculated as Population properties.
-
-        Parameters
-        ----------
-        desired_columns : list
-            The columns you want to include. Anything that
-            can be accessed via Population.??? can be provided
-            here as a string.
-
-        Returns
-        -------
-        table : astropy.table.Table
-            A table, with those columns, in the same order
-            as the Population itself.
-        """
-        # FIXME! need to add method support for arguments
-
-        # create a dictionary with the desired columns
-        d = {c: getattr(self, c) for c in desired_columns}
-
-        # turn that into an astropy Table
-        t = Table(d)
-
-        return t

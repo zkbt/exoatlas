@@ -293,6 +293,38 @@ class StellarBrightnessTelescope(PlottableAxis):
         return self.panel.pop.stellar_brightness(self.wavelength).to(self.unit)
 
 
+class DepthSNR(StellarBrightnessTelescope):
+    scale = "log"
+    size_normalization = 10
+
+    def __init__(self, **kw):
+        """
+        Initialize S/N for the basic transit depth.
+
+        Parameters
+        ----------
+        wavelength : astropy.units.quantity.Quantity
+            The wavelength at which we want the
+            eclipse depth to be computed.
+        """
+        StellarBrightnessTelescope.__init__(self, **kw)
+        self.kw = kw
+
+    def setup_label(self):
+        """
+        How should this plottable be labled on an axis?
+        """
+        # define the label, based on the wavelength and telescope
+        w = self.wavelength.to(u.micron).value
+        self.label = f"S/N for Transit Depth\nat $\lambda={self.wavelength.to(u.micron).value}\mu m$\n(R={self.R})"
+
+    def value(self):
+        """
+        What data value to plot?
+        """
+        return self.panel.pop.depth_snr(**self.kw)
+
+
 class Transmission(Depth):
     def __init__(self, mu=2.32, threshold=2, **kw):
         """
@@ -352,7 +384,7 @@ class TransmissionSNR(StellarBrightnessTelescope):
 
 
 class Reflection(Depth):
-    def __init__(self, albedo=1, **kw):
+    def __init__(self, albedo=0.1, **kw):
         """
         Initialize for a particular albedo.
 
@@ -363,7 +395,7 @@ class Reflection(Depth):
         """
         PlottableAxis.__init__(self, **kw)
         self.albedo = albedo
-        self.label = f"Eclipse Depth\nin Reflected Light\n({albedo:.0%} albedo)"
+        self.label = f"Reflected Light\nEclipse Depth\n({albedo:.0%} albedo)"
 
     def value(self):
         return self.panel.pop.reflection_signal(self.albedo)
@@ -373,7 +405,7 @@ class ReflectionSNR(StellarBrightnessTelescope):
     scale = "log"
     size_normalization = 10
 
-    def __init__(self, albedo=1, **kw):
+    def __init__(self, albedo=0.1, **kw):
         """
         Initialize for a particular albedo.
 
@@ -392,7 +424,7 @@ class ReflectionSNR(StellarBrightnessTelescope):
         """
         # define the label, based on the wavelength and telescope
         w = self.wavelength.to(u.micron).value
-        self.label = f"S/N for Eclipse Depth\nin Reflected Light\n({self.albedo:.0%} albedo)\nat $\lambda={w}\mu$m (R={self.R})"
+        self.label = f"S/N for Reflected Light\nEclipse Depth\n({self.albedo:.0%} albedo)\nat $\lambda={w}\mu$m (R={self.R})"
 
     def value(self):
         """
