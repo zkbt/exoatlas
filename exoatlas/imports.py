@@ -1,8 +1,14 @@
 # imports that are need by many exoatlas subsections
-import os, sys, time, shutil, warnings, copy, importlib
+import os, sys, time, shutil, warnings, copy
 from tqdm import tqdm
 
-code_directory = importlib.resources.files(__name__)
+# (possibly different on Mac, Linux, Windows, even for Python versions 3.8-3.12)
+try:
+    from importlib.resources import files
+except (ModuleNotFoundError, AttributeError):
+    from importlib_resources import files
+
+code_directory = files(__name__)
 
 
 import numpy as np, matplotlib.pyplot as plt, matplotlib.animation as animation
