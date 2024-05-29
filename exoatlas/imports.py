@@ -1,8 +1,8 @@
 # imports that are need by many exoatlas subsections
-import os, sys, time, shutil, warnings, copy, importlib_resources
+import os, sys, time, shutil, warnings, copy, importlib
 from tqdm import tqdm
 
-code_directory = importlib_resources.files(__name__)
+code_directory = importlib.resources.files(__name__)
 
 
 import numpy as np, matplotlib.pyplot as plt, matplotlib.animation as animation
