@@ -1,11 +1,12 @@
 # imports that are need by many exoatlas subsections
+from ast import Import
 import os, sys, time, shutil, warnings, copy
 from tqdm import tqdm
 
 # (possibly different on Mac, Linux, Windows, even for Python versions 3.8-3.12)
 try:
     from importlib.resources import files
-except (ModuleNotFoundError, AttributeError):
+except (ModuleNotFoundError, AttributeError, ImportError):
     from importlib_resources import files
 
 code_directory = files(__name__)
