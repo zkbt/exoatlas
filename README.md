@@ -1,5 +1,5 @@
 # exoatlas
-Tools for compiling and plotting populations of transiting exoplanets. This package still a bit of a work in progress, but can be generally useful for downloading and working with exoplanet populations. For draft documentation explaing how to use `exoatlas`, please [read the documentation](https://zkbt.github.io/exoatlas/build/html/index.html).
+Tools for compiling and plotting populations of transiting exoplanets. This package still a bit of a work in progress, but can be generally useful for downloading and working with exoplanet populations. For draft documentation explaing how to use `exoatlas`, please [read the documentation](https://zkbt.github.io/exoatlas/).
 
 ### Installation
 If you want the most recent stable version, the simplest way is to install it from PyPI directly via `pip` from any UNIX prompt:
