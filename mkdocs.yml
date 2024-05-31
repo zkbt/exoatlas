@@ -1,5 +1,5 @@
-site_name: exoplanet-atlas
-site_url: https://zkbt.github.com/exoplanet-atlas
+site_name: exoplanet_atlas
+site_url: https://zkbt.github.com/exoplanet_atlas
 nav:
     - index.md
     - installation.ipynb
@@ -17,7 +17,7 @@ theme:
   name: "material"
   features:
       - navigation.tracking
-repo_url: https://github.com/zkbt/exoplanet-atlas/
+repo_url: https://github.com/zkbt/exoplanet_atlas/
 plugins:
   - search
   - mkdocs-jupyter:
@@ -27,7 +27,7 @@ plugins:
       default_handler: python
       handlers:
         python:
-          paths: [../exoatlas]
+          paths: [../exoplanet_atlas]
           selection:
             docstring_style: "numpy"
           rendering:
@@ -43,7 +43,7 @@ plugins:
             show_bases: False
   - exclude:
       glob:     
-        - "exoatlas-downloads/*"
+        - "exoplanet_atlas-downloads/*"
         - "*.pdf"
         - "*.fits"
         - "*.npy"

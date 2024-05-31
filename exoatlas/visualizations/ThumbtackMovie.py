@@ -1,7 +1,7 @@
-from exoatlas.ThumbtackPlot import ThumbtackPlot
-from exoatlas.TransitingExoplanets import GoodMass, BadMass, Kepler, NonKepler
-from exoatlas.KOI import UnconfirmedKepler
-from exoatlas.TESS import TESS
+from exoplanet_atlas.ThumbtackPlot import ThumbtackPlot
+from exoplanet_atlas.TransitingExoplanets import GoodMass, BadMass, Kepler, NonKepler
+from exoplanet_atlas.KOI import UnconfirmedKepler
+from exoplanet_atlas.TESS import TESS
 
 pops = dict(
     kepler=Kepler(), candidates=UnconfirmedKepler(), nonkepler=NonKepler(), new=TESS()

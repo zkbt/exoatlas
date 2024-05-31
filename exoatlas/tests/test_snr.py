@@ -1,6 +1,6 @@
 from .setup_tests import *
 
-from exoatlas import *
+from exoplanet_atlas import *
 
 
 def test_reflection(telescope_name="JWST", wavelength=1 * u.micron):

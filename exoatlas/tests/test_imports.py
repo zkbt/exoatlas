@@ -1,6 +1,6 @@
 from .setup_tests import *
 
-from exoatlas.imports import *
+from exoplanet_atlas.imports import *
 
 
 def test_directory():

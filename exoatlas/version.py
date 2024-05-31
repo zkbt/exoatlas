@@ -6,5 +6,5 @@ def version():
 
 
 # find and replace these if building another package off this one!
-# pypi_name = 'exoplanet-atlas'
-# import_name = 'exoatlas'
+# pypi_name = 'exoplanet_atlas'
+# import_name = 'exoplanet_atlas'

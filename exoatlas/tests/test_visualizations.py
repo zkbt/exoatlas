@@ -1,10 +1,10 @@
 from .setup_tests import *
 
-from exoatlas.imports import *
+from exoplanet_atlas.imports import *
 
-import exoatlas as ex
+import exoplanet_atlas as ex
 import matplotlib.pyplot as plt
-from exoatlas.visualizations.panels.preset_panels import predefined_panels
+from exoplanet_atlas.visualizations.panels.preset_panels import predefined_panels
 
 
 def test_panels():

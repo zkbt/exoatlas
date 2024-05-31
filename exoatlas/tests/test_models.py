@@ -1,7 +1,7 @@
 from .setup_tests import *
 
-from exoatlas.models import *
-from exoatlas.imports import *
+from exoplanet_atlas.models import *
+from exoplanet_atlas.imports import *
 
 
 def test_seager():
