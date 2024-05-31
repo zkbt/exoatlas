@@ -11,7 +11,7 @@ def make_sure_panel_is_iniated(x, **kw):
 
 class MultiPanelPlot(Talker):
     """
-    Make and modify row or a column of connected exoatlas plot panels.
+    Make and modify row or a column of connected exoplanet_atlas plot panels.
     """
 
     def __init__(

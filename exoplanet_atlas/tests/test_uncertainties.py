@@ -1,7 +1,7 @@
 from .setup_tests import *
 
-from exoatlas.imports import *
-from exoatlas.populations import *
+from exoplanet_atlas.imports import *
+from exoplanet_atlas.populations import *
 
 
 def test_uncertainties():

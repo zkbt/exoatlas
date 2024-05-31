@@ -41,28 +41,28 @@ if "release" in sys.argv[-1]:
     # uncomment the next line to test out on test.pypi.com/project/tess-zap
     # os.system("twine upload --repository-url https://test.pypi.org/legacy/ dist/*")
     os.system("twine upload dist/*")
-    os.system("rm -rf dist/rainbow-connection*")
+    os.system("rm -rf dist/exoplanet_atlas*")
     sys.exit()
 
 # a little kludge to get the version number from __version__
-exec(open("exoatlas/version.py").read())
+exec(open("exoplanet_atlas/version.py").read())
 
 # run the setup function
 setup(
     # the name folks can use to search for this with pip
-    name="exoplanet-atlas",
+    name="exoplanet_atlas",
     # this package will only be installed if the current version doesn't exist
     version=__version__,
     # what's a short description of the package?
     description="Tools for working with transiting exoplanet populations.",
     # what's a more detailed description?
-    long_description="For detailed usage, please read the documentation at https://zkbt.github.io/exoplanet-atlas/",
+    long_description="For detailed usage, please read the documentation at https://zkbt.github.io/exoplanet_atlas/",
     # who's the main author?
     author="Zach Berta-Thompson",
     # what's the main author's email?
     author_email="zach.bertathompson@colorado.edu",
     # what's the URL for the repository?
-    url="https://github.com/zkbt/exoplanet-atlas",
+    url="https://github.com/zkbt/exoplanet_atlas",
     # this figures out what subdirectories to include
     packages=find_packages(),
     # are there directories of data that should be accessible when installed?
@@ -109,7 +109,7 @@ setup(
         ]
     },
     # what version of Python is required?
-    python_requires=">=3.8",
+    python_requires=">=3.9",
     # (I think just leave this set to False)
     zip_safe=False,
     # under what license is this code released?

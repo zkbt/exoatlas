@@ -1,8 +1,8 @@
 from .setup_tests import *
 
-from exoatlas.imports import *
-from exoatlas.populations import TransitingExoplanets
-from exoatlas.whatsup import Plan
+from exoplanet_atlas.imports import *
+from exoplanet_atlas.populations import TransitingExoplanets
+from exoplanet_atlas.whatsup import Plan
 
 
 def test_whatsup():
