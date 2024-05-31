@@ -81,7 +81,7 @@ try:
 except AssertionError:
     # otherwise put it in the local directory
     cwd = os.getcwd()
-    base = os.path.join(cwd, "exoplanet_atlas-downloads")
+    base = os.path.join(cwd, "downloads-for-exoplanet-atlas")
 mkdir(base)
 
 
