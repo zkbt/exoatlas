@@ -1,7 +1,7 @@
 from .setup_tests import *
 
-from exoplanet_atlas.imports import *
-from exoplanet_atlas.populations.downloaders import *
+from exoatlas.imports import *
+from exoatlas.populations.downloaders import *
 
 
 def test_exoplanets():

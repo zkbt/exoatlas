@@ -1,6 +1,6 @@
 from .version import *
 
-# imports that are need by many exoplanet_atlas subsections
+# imports that are need by many exoatlas subsections
 from ast import Import
 import os, sys, time, shutil, warnings, copy
 from tqdm import tqdm
@@ -76,17 +76,17 @@ def name2color(name):
 # create a directory structure ()
 try:
     # search for an environment variable
-    base = os.getenv("exoplanet_atlas_DATA")
+    base = os.getenv("exoatlas_DATA")
     assert base is not None
 except AssertionError:
     # otherwise put it in the local directory
     cwd = os.getcwd()
-    base = os.path.join(cwd, "downloads-for-exoplanet-atlas")
+    base = os.path.join(cwd, "downloads-for-exoatlas")
 mkdir(base)
 
 
 def locate_local_data():
-    print("💾 `exoplanet_atlas` archive data will be stored in:")
+    print("💾 `exoatlas` archive data will be stored in:")
     print(base)
 
 
@@ -97,7 +97,7 @@ for k in directories.keys():
 
 def reset_local_data():
     if "y" in input(
-        "Are you sure you want to wipe all " "local exoplanet_atlas data files? [y/N]"
+        "Are you sure you want to wipe all " "local exoatlas data files? [y/N]"
     ):
         shutil.rmtree(directories["data"])
         mkdir(directories["data"])
