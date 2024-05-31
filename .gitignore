@@ -9,7 +9,7 @@ notebooks/
 .pytest_cache/
 *.xls
 *.pickled
-downloads-for-exoplanet-atlas
+downloads-for-exoatlas
 
 .DS_Store
 

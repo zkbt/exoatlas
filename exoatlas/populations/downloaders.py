@@ -229,7 +229,7 @@ toi_exofop = ExoFOPDownloader()
 
 class MergedTOIDownloader(ExoFOPDownloader):
     """
-    Download the TOIs from the exoplanet_atlas table, but also search the MAST
+    Download the TOIs from the exoatlas table, but also search the MAST
     archive to pull out extra parameters for each star from the TIC.
     """
 
@@ -256,7 +256,7 @@ class MergedTOIDownloader(ExoFOPDownloader):
         self.speak(f"Searching for {len(t)} stars in the TIC on the MAST.")
 
         # import Catalogs only when we need it
-        # (otherwise, we'll need the internet to ever run exoplanet_atlas)
+        # (otherwise, we'll need the internet to ever run exoatlas)
         from astroquery.mast import Catalogs
 
         tic_table = Catalogs.query_criteria(catalog="Tic", ID=np.unique(t["TIC ID"]))
