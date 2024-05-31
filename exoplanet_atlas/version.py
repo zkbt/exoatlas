@@ -1,4 +1,4 @@
-__version__ = "0.3.5"
+__version__ = "0.3.6"
 
 
 def version():
@@ -6,5 +6,5 @@ def version():
 
 
 # find and replace these if building another package off this one!
-# pypi_name = 'exoplanet_atlas'
-# import_name = 'exoplanet_atlas'
+pypi_name = "exoplanet-atlas"
+import_name = "exoplanet_atlas"

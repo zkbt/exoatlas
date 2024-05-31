@@ -41,7 +41,7 @@ if "release" in sys.argv[-1]:
     # uncomment the next line to test out on test.pypi.com/project/tess-zap
     # os.system("twine upload --repository-url https://test.pypi.org/legacy/ dist/*")
     os.system("twine upload dist/*")
-    os.system("rm -rf dist/rainbow-connection*")
+    os.system("rm -rf dist/exoplanet_atlas*")
     sys.exit()
 
 # a little kludge to get the version number from __version__
@@ -109,7 +109,7 @@ setup(
         ]
     },
     # what version of Python is required?
-    python_requires=">=3.8",
+    python_requires=">=3.9",
     # (I think just leave this set to False)
     zip_safe=False,
     # under what license is this code released?

@@ -1,3 +1,5 @@
+from .version import *
+
 # imports that are need by many exoplanet_atlas subsections
 from ast import Import
 import os, sys, time, shutil, warnings, copy
@@ -9,7 +11,7 @@ try:
 except (ModuleNotFoundError, AttributeError, ImportError):
     from importlib_resources import files
 
-code_directory = files("exoplanet_atlas")
+code_directory = files(import_name)
 
 
 import numpy as np, matplotlib.pyplot as plt, matplotlib.animation as animation
