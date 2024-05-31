@@ -62,7 +62,7 @@ setup(
     # what's the main author's email?
     author_email="zach.bertathompson@colorado.edu",
     # what's the URL for the repository?
-    url="https://github.com/zkbt/exoplanet_atlas",
+    url="https://github.com/zkbt/exoplanet-atlas",
     # this figures out what subdirectories to include
     packages=find_packages(),
     # are there directories of data that should be accessible when installed?

@@ -4,7 +4,7 @@ christinahedges's very useful tutorial [here](https://christinahedges.github.io/
 
 To get started, install the developer installation. The `'.[develop]'` will get all the dependencies needed to generate the docs (= something like `mkdocs mkdocs-material mkdocstrings 'pytkdocs[numpy-style]' mkdocs-jupyter`).
 ```bash
-git clone https://github.com/zkbt/exoplanet_atlas.git
+git clone https://github.com/zkbt/exoplanet-atlas.git
 cd exoplanet_atlas
 pip install -e '.[develop]'
 ```

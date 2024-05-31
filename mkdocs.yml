@@ -17,7 +17,7 @@ theme:
   name: "material"
   features:
       - navigation.tracking
-repo_url: https://github.com/zkbt/exoplanet_atlas/
+repo_url: https://github.com/zkbt/exoplanet-atlas/
 plugins:
   - search
   - mkdocs-jupyter:
