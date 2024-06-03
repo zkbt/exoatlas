@@ -6,12 +6,12 @@ from exoatlas.populations.downloaders import *
 
 def test_exoplanets():
     with mock.patch("builtins.input", return_value=""):
-        exoplanets_downloader.get()
+        planetary_systems_downloader.get()
 
 
 # def test_composite():
 #    with mock.patch("builtins.input", return_value=""):
-#        composite_exoplanets_downloader.get()
+#        composite_planetary_systems_downloader.get()
 
 
 # def test_tess():

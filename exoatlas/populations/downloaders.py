@@ -4,11 +4,13 @@
 
 # to-do:
 # [] implement filtering by the "where" keyword to the archive
+# [] (maybe), only download default parameters from Exoplanet Archive?
 
 from ..imports import *
 
 
 class Downloader(Talker):
+
     expiration = 1.0
 
     # anything special to know about reading this file format?
@@ -24,8 +26,10 @@ class Downloader(Talker):
         ----------
         remake : bool
             Should we definitely redownload the table?
+            If True, don't ask for user input and just download.
         skip_update : bool
             Should we skip checking if the table's out of date?
+            If True, don't ask for user input and just use existing table.
         """
 
         # if file doesn't exist, download it
@@ -58,10 +62,15 @@ class Downloader(Talker):
         Return
         """
 
-        self.speak(f"Attempting to freshly download data from \n{self.url}")
+        self.speak(
+            f"""
+        Attempting to freshly download data from \n{self.url}
+        This may take a long time!
+        """
+        )
 
-        # download the file from the URL (10-minute timeout)
-        temporary_path = download_file(self.url, cache=False, timeout=600)
+        # download the file from the URL (20-minute timeout)
+        temporary_path = download_file(self.url, cache=False, timeout=1200)
 
         # copy the file to its new location
         shutil.copyfile(temporary_path, self.path)
@@ -86,7 +95,7 @@ class ExoplanetArchiveDownloader(Downloader):
     # what tables are currently support through this mode of access?
     supported_tables = ["ps", "pscomppars"]
 
-    def __init__(self, table="exoplanets"):  # , where='*'):
+    def __init__(self, table="ps"):  # , where='*'):
         # keep track of which table this is
         self.table = table
 
@@ -127,8 +136,8 @@ class ExoplanetArchiveDownloader(Downloader):
             table.meta[f"columns-{k}"] = column_names
 
 
-exoplanets_downloader = ExoplanetArchiveDownloader("ps")
-composite_exoplanets_downloader = ExoplanetArchiveDownloader("pscomppars")
+planetary_systems_downloader = ExoplanetArchiveDownloader("ps")
+composite_planetary_systems_downloader = ExoplanetArchiveDownloader("pscomppars")
 
 
 '''

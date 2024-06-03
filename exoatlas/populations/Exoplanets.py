@@ -3,7 +3,7 @@ from ..imports import *
 from .Population import PredefinedPopulation
 from .downloaders import *
 
-__all__ = ["Exoplanets"]
+__all__ = ["Exoplanets", "ExoplanetsComposite"]
 
 
 # apply some kludges to correct bad planet properties
@@ -30,9 +30,11 @@ class Exoplanets(PredefinedPopulation):
             even if a recent version already exists?
         **plotkw : dict
             All other keywords will go toward defining
-            default plotting styles, like alpha` or `zorder`
+            default plotting styles, for example like
+            'alpha', 'marker', 'zorder', 'color', ...
         """
         # set up the population
+        self._downloader = planetary_systems_downloader
         PredefinedPopulation.__init__(self, label=label, remake=remake, **plotkw)
 
     def load_raw(self, remake=False):
@@ -51,8 +53,8 @@ class Exoplanets(PredefinedPopulation):
             A raw, untrimmed, unstandardized table.
         """
 
-        # load (or download) the table of composite exoplanet properties
-        raw = exoplanets_downloader.get(remake=remake)
+        # load (or download) the table of exoplanet properties
+        raw = self._downloader.get(remake=remake)
 
         # for debugging, hang on to the raw table as a hidden attribute
         self._raw = raw
@@ -216,13 +218,13 @@ class Exoplanets(PredefinedPopulation):
         populate_one_or_more_columns("number_of_stars", "sy_snum")
         populate_one_or_more_columns("number_of_planets", "sy_pnum")
 
-        # what's the history
+        # what's the history?
         populate_one_or_more_columns("discovery_method", "discoverymethod")
         populate_one_or_more_columns("discovery_year", "disc_year")
         populate_one_or_more_columns("discovery_reference", "disc_refname")
         populate_one_or_more_columns("discovery_facility", "disc_facility")
 
-        # what are the basic locations on the sky
+        # what are the host positions and kinematics?
         populate_one_or_more_columns("ra", "ra", u.deg)
         populate_one_or_more_columns("dec", "dec", u.deg)
         populate_one_or_more_columns("pmra", "sy_pmra", u.mas / u.year)
@@ -295,8 +297,27 @@ class Exoplanets(PredefinedPopulation):
 
         # what are the planet properties? (check Jupiter isn't better?!)
         populate_one_or_more_columns("radius", "pl_rade", u.Rearth)
-        populate_one_or_more_columns("mass", "pl_masse", u.Mearth)
-        populate_one_or_more_columns("msini", "pl_msinie", u.Mearth)
+
+        # kludge for dealing with different masses from different tables?
+        try:
+            # ps?
+            populate_one_or_more_columns("mass", "pl_masse", u.Mearth)
+            populate_one_or_more_columns("msini", "pl_msinie", u.Mearth)
+        except KeyError:
+            # pscomp?
+            populate_one_or_more_columns("mass", "pl_bmasse", u.Mearth)
+            x = "mass"
+            provenance = r["pl_bmassprov"]
+            is_measured_mass = (provenance == "Mass") | (provenance == "Msin(i)/sin(i)")
+            for k in [
+                x,
+                f"{x}_uncertainty_upper",
+                f"{x}_uncertainty_lower",
+                f"{x}_lower_limit",
+                f"{x}_upper_limit",
+            ]:
+                s[k][is_measured_mass == False].mask = True
+
         populate_one_or_more_columns("density", "pl_dens", u.g / u.cm**3)
         populate_one_or_more_columns(
             "insolation",
@@ -339,3 +360,34 @@ class Exoplanets(PredefinedPopulation):
 
         # return that standardized table
         return standard
+
+
+class ExoplanetsComposite(Exoplanets):
+    def __init__(self, label="ExoplanetsComposite", remake=False, **plotkw):
+        """
+        Initialize a population of all known exoplanets
+        using the NASA Exoplanet Archive `ps` table.
+
+        This generates an Exoplanets population containing
+        planets discovered through any method. It tries to
+        be clever about loading cached files so that it
+        will work quickly and not try to redownload everything
+        from scratch every time it's called.
+
+        Parameters
+        ----------
+        label : string
+            A default label to be associated with this population.
+            This will show up in the legend on population
+            comparison plots.
+        remake : bool
+            Should the population be remade from raw files,
+            even if a recent version already exists?
+        **plotkw : dict
+            All other keywords will go toward defining
+            default plotting styles, for example like
+            'alpha', 'marker', 'zorder', 'color', ...
+        """
+        # set up the population
+        self._downloader = composite_planetary_systems_downloader
+        PredefinedPopulation.__init__(self, label=label, remake=remake, **plotkw)
