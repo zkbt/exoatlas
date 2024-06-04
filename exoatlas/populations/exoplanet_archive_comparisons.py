@@ -5,7 +5,41 @@ from astropy.table import join
 
 
 class ExploreNEATables:
-    def __init__(self, **downloadkw):
+    some_key_parameters = dict(
+        stellar_basics=["st_mass", "st_rad", "st_dens", "st_lum", "st_teff"],
+        stellar_fancy=["st_logg", "st_vsin", "st_met", "st_rotp", "st_age"],
+        planet_basics=["pl_rade", "pl_bmasse", "pl_dens", "pl_orbper", "pl_orbsmax"],
+        planet_fancy=[
+            "pl_insol",
+            "pl_eqt",
+            "pl_imppar",
+            "pl_ratror",
+            "pl_ratdor",
+            "pl_trueobliq",
+            "pl_rvamp",
+            "pl_orblper",
+            "pl_orbtper",
+            "pl_orbincl",
+        ],
+        planet_transit=[
+            "pl_trandur",
+            "pl_tranmid",
+            "pl_trandep",
+        ],
+        stellar_positions=[
+            "ra",
+            "dec",
+            "sy_dist",
+            "sy_plx",
+            "sy_pmra",
+            "sy_pmdec",
+            "st_radv",
+        ],
+    )
+
+    def __init__(
+        self, plot_directory="nasa-exoplanet-archive-table-comparisons", **downloadkw
+    ):
 
         # empty dictionary of
         self.tables = {}
@@ -27,6 +61,13 @@ class ExploreNEATables:
                 keys="pl_name",
                 table_names=["pscp", k],
             )
+
+        # create a directory to store plots
+        self.plot_directory = plot_directory
+        try:
+            os.mkdir(plot_directory)
+        except FileExistsError:
+            pass
 
     def plot_parameter_comparison(self, k="pl_rade"):
         """
@@ -65,7 +106,7 @@ class ExploreNEATables:
         plt.ylabel(f'"{k}" from Planetary Systems')
         plt.legend(frameon=False, loc="upper left")
 
-        # plot fractional difference
+        # plot ratio, as points and as sideways histogram
         for t in ["ps", "default"]:
             ratio = (
                 self.joined[f"pscp+{t}"][f"{k}_{t}"]
@@ -85,28 +126,36 @@ class ExploreNEATables:
                 **plotkw,
                 **kws[t],
             )
-
         plt.xlabel(f'"{k}" from Planetary Systems Composite Parameters')
         plt.ylabel(f"ps/pscp")
+        plt.ylim(0.5e-3, 2e3)
         plt.axhline(0.1, color="gray", linestyle="--")
 
-        if True:
-
-            plt.sca(ax[0, 1])
-            plt.axis("off")
-            s = f"{k}:\n\n"
-            for t in ["ps", "default", "pscp"]:
-
-                this = self.tables[t][k]
+        # display a text summary
+        plt.sca(ax[0, 1])
+        plt.axis("off")
+        s = f"{k}:\n\n"
+        for t in ["ps", "default", "pscp"]:
+            this = self.tables[t][k]
+            try:
                 N = np.sum(this.mask == False)
-                s += f"{t} has data for {N/len(this):>5.1%} ({N}/{len(this)})\n"
+            except AttributeError:
+                N = np.sum(np.isfinite(this))
+            s += f"{t} has data for {N/len(this):>5.1%} ({N}/{len(this)})\n"
+        s += "\n"
+        for t in ["ps", "default"]:
+            this_joined = self.joined[f"pscp+{t}"]
+            is_same = this_joined[f"{k}_{t}"] == this_joined[f"{k}_pscp"]
+            N = np.sum(is_same)
+            s += f"{t} == pscp  for {N/len(this_joined):>5.1%} ({N}/{len(this_joined)})\n"
+        plt.text(0, 1, s, transform=ax[0, 1].transAxes, va="top", ha="left", fontsize=8)
+        return s
 
-            s += "\n"
-            for t in ["ps", "default"]:
-                this_joined = self.joined[f"pscp+{t}"]
-                is_same = this_joined[f"{k}_{t}"] == this_joined[f"{k}_pscp"]
-                N = np.sum(is_same)
-                s += f"{t} == pscp  for {N/len(this_joined):>5.1%} ({N}/{len(this_joined)})\n"
-            plt.text(
-                0, 1, s, transform=ax[0, 1].transAxes, va="top", ha="left", fontsize=8
-            )
+    def summarize_some_key_parameters(self):
+        for group in self.some_key_parameters:
+            print(group)
+            for k in self.some_key_parameters[group]:
+                s = self.plot_parameter_comparison(k)
+                print(s)
+                plt.savefig(os.path.join(self.plot_directory, f"pscp-{k}.png"))
+            print
