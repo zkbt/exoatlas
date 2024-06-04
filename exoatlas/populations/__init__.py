@@ -15,3 +15,4 @@ from .TransitingExoplanetsSubsets import *
 from .summary import *
 from .column_descriptions import *
 from .collections import *
+from .exoplanet_archive_comparisons import *
