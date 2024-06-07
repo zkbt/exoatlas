@@ -169,7 +169,9 @@ class NASAExoplanetArchiveComparison:
             for k in self.some_key_parameters[group]:
                 s = self.plot_parameter_comparison(k)
                 # print(s)
-                plt.savefig(os.path.join(self.plot_directory, f"pscp-{k}.png"))
+                plt.savefig(
+                    os.path.join(self.plot_directory, f"completeness-pscp-{k}.png")
+                )
             # print
 
     def do_units_check(self, egregious_threshold=0.05):
@@ -210,4 +212,38 @@ class NASAExoplanetArchiveComparison:
                     t[f"pl_{p}e/pl_{p}j"] = ratio[is_egregious]
                     print(t)
             plt.legend(frameon=False)
+            plt.savefig(os.path.join(self.plot_directory, f"units-pscp-{p}.png"))
+
             plt.show()
+
+    def do_mass_radius_check(self):
+        kw = dict(
+            marker=".",
+            linewidth=0,
+            alpha=0.25,
+        )
+        plt.figure(figsize=(8, 5), constrained_layout=True)
+        for k in ["ps", "default", "pscp"]:
+            ok_mass_error = (self.tables[k]["pl_bmasseerr1"].mask == False) * (
+                self.tables[k]["pl_bmasseerr2"].mask == False
+            )
+            ok_radius_error = (self.tables[k]["pl_radeerr1"].mask == False) * (
+                self.tables[k]["pl_radeerr2"].mask == False
+            )
+            t = self.tables[k][ok_mass_error * ok_radius_error]
+            plt.loglog(t["pl_bmasse"], t["pl_rade"], label=k, **kws[k], **kw)
+
+        t = self.tables[k][ok_mass_error * ok_radius_error == False]
+        plt.loglog(
+            t["pl_bmasse"],
+            t["pl_rade"],
+            color="red",
+            label="no mass|radius errors",
+            **kw,
+        )
+
+        plt.axis("scaled")
+        plt.legend(frameon=False)
+        plt.xlabel("Planet Mass ($M_\oplus$)")
+        plt.ylabel("Planet Radius ($R_\oplus$)")
+        plt.savefig(os.path.join(self.plot_directory, f"mass-radius-pscp.png"))
