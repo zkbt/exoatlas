@@ -170,7 +170,7 @@ class NASAExoplanetArchiveComparison:
                 s = self.plot_parameter_comparison(k)
                 # print(s)
                 plt.savefig(
-                    os.path.join(self.plot_directory, f"completeness-pscp-{k}.png")
+                    os.path.join(self.plot_directory, f"check-completeness-{k}.png")
                 )
             # print
 
@@ -190,7 +190,13 @@ class NASAExoplanetArchiveComparison:
                 from_jupiter = self.tables[k][f"pl_{p}j"] * u.Unit(f"{q}jup")
                 ratio = (from_earth / from_jupiter).decompose()
                 plt.semilogx(
-                    from_earth, ratio, marker=".", linewidth=0, alpha=0.25, **kws[k]
+                    from_earth,
+                    ratio,
+                    marker=".",
+                    linewidth=0,
+                    alpha=0.25,
+                    label=k,
+                    **kws[k],
                 )
                 plt.ylabel(f"(pl_{p}e/pl_{p}j)" + r"$\times (M_{Jupiter}/M_{Earth})$")
                 plt.ylim(0.75, 1.25)
@@ -205,18 +211,16 @@ class NASAExoplanetArchiveComparison:
                     simply because of weird rounding and/or Earth-Jupiter unit conversions.
                     """
                     )
-
-                    t = self.tables[k][is_egregious][
-                        ["pl_name", f"pl_{p}e", f"pl_{p}j"]
-                    ]
-                    t[f"pl_{p}e/pl_{p}j"] = ratio[is_egregious]
-                    print(t)
+                    print(list(self.tables[k][is_egregious]["pl_name"]))
             plt.legend(frameon=False)
-            plt.savefig(os.path.join(self.plot_directory, f"units-pscp-{p}.png"))
+            plt.savefig(os.path.join(self.plot_directory, f"check-units-{p}.png"))
 
             plt.show()
 
     def do_mass_radius_check(self):
+        """
+        Check that theoretical masses/radii get removed.
+        """
         kw = dict(
             marker=".",
             linewidth=0,
@@ -246,4 +250,57 @@ class NASAExoplanetArchiveComparison:
         plt.legend(frameon=False)
         plt.xlabel("Planet Mass ($M_\oplus$)")
         plt.ylabel("Planet Radius ($R_\oplus$)")
-        plt.savefig(os.path.join(self.plot_directory, f"mass-radius-pscp.png"))
+        plt.savefig(os.path.join(self.plot_directory, f"check-mass-radius.png"))
+
+    def do_luminosity_check(self):
+        kw = dict(
+            marker=".",
+            linewidth=0,
+            alpha=0.25,
+        )
+        fi, ax = plt.subplots(
+            2, 1, figsize=(8, 5), constrained_layout=True, sharex=True
+        )
+        for k in ["ps", "default", "pscp"]:
+            t = self.tables[k]  # [ok_mass_error * ok_radius_error]
+            ok_lum = (t["st_lumerr1"].mask == False) * (t["st_lumerr2"].mask == False)
+            ok_rad = (t["st_raderr1"].mask == False) * (t["st_raderr2"].mask == False)
+            ok_teff = (t["st_tefferr1"].mask == False) * (
+                t["st_tefferr2"].mask == False
+            )
+            ok = ok_lum * ok_rad * ok_lum
+            T = t["st_teff"] * u.K
+            L = 10 ** t["st_lum"] * u.Lsun
+            R = t["st_rad"] * u.Rsun
+            plt.sca(ax[0])
+            x = (4 * np.pi * R**2 * con.sigma_sb * T**4).to(u.Lsun)
+            y = L.to(u.Lsun)
+            plt.loglog(x[ok], y[ok], label=k, **kws[k], **kw)
+            plt.sca(ax[1])
+            plt.semilogx(x[ok], (y / x)[ok], label=k, **kws[k], **kw)
+            plt.ylim(0, 2)
+
+            bad = ok == False
+            plt.sca(ax[0])
+            plt.loglog(
+                x[bad],
+                y[bad],
+                label=f"{k} (no lum/teff/radius uncertainty)",
+                color="red",
+                **kws[k],
+                **kw,
+            )
+            plt.plot([1e-6, 1e4], [1e-6, 1e4], linestyle="--", color="gray")
+            plt.ylabel("L")
+            plt.legend(frameon=False, bbox_to_anchor=(1, 1), loc="upper left")
+
+            plt.sca(ax[1])
+            plt.semilogx(x[bad], (y / x)[bad], color="red", **kws[k], **kw)
+            plt.axhline(1, color="gray", linestyle="--")
+            plt.ylabel("L / [$4\pi R^2 \sigma T_{eff}^4$]")
+
+        plt.sca(ax[1])
+        plt.xlabel("$4\pi R^2 \sigma T_{eff}^4$")
+        plt.savefig(
+            os.path.join(self.plot_directory, f"check-luminosity-radius-teff.png")
+        )
