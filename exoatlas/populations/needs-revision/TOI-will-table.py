@@ -1,7 +1,7 @@
 # exoplanets from Will's summary table
 
 from ..imports import *
-from .Population import PredefinedPopulation
+from .population import PredefinedPopulation
 
 import pandas as pd
 from astroquery.mast import Catalogs

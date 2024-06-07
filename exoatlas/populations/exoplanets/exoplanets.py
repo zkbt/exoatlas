@@ -1,7 +1,7 @@
 # exoplanet population of all "confirmed" exoplanets from exoplanet archive
-from ..imports import *
-from .Population import PredefinedPopulation
-from .downloaders import *
+from ...imports import *
+from ..population import PredefinedPopulation
+from .exoplanet_downloaders import *
 
 __all__ = ["Exoplanets", "ExoplanetsComposite"]
 

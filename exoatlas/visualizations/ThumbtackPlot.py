@@ -1,6 +1,6 @@
 from .imports import *
 from .Panels import BubblePanel
-from .TransitingExoplanets import NonKepler, Kepler, TESS
+from .transiting_exoplanets import NonKepler, Kepler, TESS
 from .KOI import UnconfirmedKepler
 import datetime
 

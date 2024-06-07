@@ -1,5 +1,5 @@
 from .imports import *
-from .Population import Population
+from .population import Population
 
 
 class Custom(PredefinedPopulation):

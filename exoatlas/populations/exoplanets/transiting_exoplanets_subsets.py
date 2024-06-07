@@ -1,5 +1,10 @@
-from ..imports import *
-from .TransitingExoplanets import *
+"""
+Define some commonly useful subsets of all transiting exoplanets,
+giving them unique names and colors to simplify plotting
+"""
+
+from ...imports import *
+from .transiting_exoplanets import *
 
 __all__ = [
     "TransitingExoplanetsSubset",

@@ -1,6 +1,6 @@
 # exoplanet population of all "confirmed" exoplanets from exoplanet archive
 from .imports import *
-from .Population import Population
+from .population import Population
 
 
 url = "http://exoplanetarchive.ipac.caltech.edu/cgi-bin/nstedAPI/nph-nstedAPI?table=cumulative&format=bar-delimited&select=*"

@@ -1,6 +1,5 @@
-from ..imports import *
-from .Population import PredefinedPopulation
-import astropy.units as u
+from ...imports import *
+from ..population import PredefinedPopulation
 
 __all__ = ["SolarSystem"]
 

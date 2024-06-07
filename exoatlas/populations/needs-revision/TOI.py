@@ -1,6 +1,6 @@
 # exoplanet population of all "confirmed" exoplanets from exoplanet archive
 from ..imports import *
-from .Population import PredefinedPopulation
+from .population import PredefinedPopulation
 from .downloaders import toi_merged
 
 __all__ = ["TOI"]

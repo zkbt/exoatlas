@@ -1609,7 +1609,7 @@ class PredefinedPopulation(Population):
     def load_standard(self, skip_update=False):
         """
         Load a standardized population table. Generally this
-        will be from a file like ~/.exoatlas/standardized-*.txt
+        will be from a file like ~/downloads-for-exoatlas/standardized-*.txt
 
         Returns
         -------
@@ -1627,9 +1627,9 @@ class PredefinedPopulation(Population):
             assert old == False
 
         # keywords for reading a standardized table
-        readkw = dict(format="ecsv", fill_values=[("", np.nan), ("--", np.nan)])
+        read_kw = dict(format="ecsv", fill_values=[("", np.nan), ("--", np.nan)])
 
-        standard = ascii.read(self.standard_path, **readkw)
+        standard = ascii.read(self.standard_path, **read_kw)
         self.speak(f"Loaded standardized table from {self.standard_path}")
 
         # ??? change this to do something more clever with tables

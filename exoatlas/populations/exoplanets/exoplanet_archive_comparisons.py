@@ -1,10 +1,19 @@
-from ..imports import *
-from .downloaders import *
+from ...imports import *
+from .exoplanet_downloaders import *
+from IPython.display import display
 
 from astropy.table import join
 
+kws = {
+    "ps": dict(color="orchid"),
+    "default": dict(color="black"),
+    "pscp": dict(color="royalblue"),
+}
 
-class ExploreNEATables:
+
+class NASAExoplanetArchiveComparison:
+
+    # define some variables to pay attention to in plots
     some_key_parameters = dict(
         stellar_basics=["st_mass", "st_rad", "st_dens", "st_lum", "st_teff"],
         stellar_fancy=["st_logg", "st_vsin", "st_met", "st_rotp", "st_age"],
@@ -80,13 +89,13 @@ class ExploreNEATables:
             Which parameter to visualize.
         """
         plotkw = dict(marker=".", linewidth=0, alpha=0.5)
-        kws = {"ps": dict(color="orchid"), "default": dict(color="black")}
+
         fi, ax = plt.subplots(
             2,
             2,
             sharex="col",
             sharey="row",
-            figsize=(8, 8),
+            figsize=(8, 5),
             dpi=600,
             constrained_layout=True,
             gridspec_kw=dict(width_ratios=[1, 0.5]),
@@ -151,11 +160,54 @@ class ExploreNEATables:
         plt.text(0, 1, s, transform=ax[0, 1].transAxes, va="top", ha="left", fontsize=8)
         return s
 
-    def summarize_some_key_parameters(self):
+    def do_completeness_check(self):
+        """
+        Check how complete each table is for some key parameters.
+        """
         for group in self.some_key_parameters:
-            print(group)
+            # print(group)
             for k in self.some_key_parameters[group]:
                 s = self.plot_parameter_comparison(k)
-                print(s)
+                # print(s)
                 plt.savefig(os.path.join(self.plot_directory, f"pscp-{k}.png"))
-            print
+            # print
+
+    def do_units_check(self, egregious_threshold=0.05):
+        """
+        Check how values compare when provided in Earth or Jupiter units.
+        """
+        # loop over radius and mass
+        for p, q in zip(["rad", "bmass"], ["R", "M"]):
+
+            plt.figure(figsize=(8, 5), constrained_layout=True)
+            plt.title(f"'{p}' in different units")
+
+            # loop over tables
+            for k in ["ps", "default", "pscp"]:
+                from_earth = self.tables[k][f"pl_{p}e"] * u.Unit(f"{q}earth")
+                from_jupiter = self.tables[k][f"pl_{p}j"] * u.Unit(f"{q}jup")
+                ratio = (from_earth / from_jupiter).decompose()
+                plt.semilogx(
+                    from_earth, ratio, marker=".", linewidth=0, alpha=0.25, **kws[k]
+                )
+                plt.ylabel(f"(pl_{p}e/pl_{p}j)" + r"$\times (M_{Jupiter}/M_{Earth})$")
+                plt.ylim(0.75, 1.25)
+
+                if k == "pscp":
+                    is_egregious = np.abs(ratio - 1) > egregious_threshold
+                    bad_planets = self.tables[k][is_egregious]["pl_name"]
+                    print(
+                        f"""
+                    The parameter '{p}' is off by more than {egregious_threshold:%} for the {len(bad_planets)} planets 
+                    {bad_planets}
+                    simply because of weird rounding and/or Earth-Jupiter unit conversions.
+                    """
+                    )
+
+                    t = self.tables[k][is_egregious][
+                        ["pl_name", f"pl_{p}e", f"pl_{p}j"]
+                    ]
+                    t[f"pl_{p}e/pl_{p}j"] = ratio[is_egregious]
+                    print(t)
+            plt.legend(frameon=False)
+            plt.show()
