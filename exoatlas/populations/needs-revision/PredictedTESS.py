@@ -23,7 +23,7 @@ class PredictedTESS(PredefinedPopulation):
     def trim_raw(self):
         self.trimmed = self.table
 
-    def create_standard(self):
+    def create_standardardized(self):
         t = self.trimmed
         s = Table()
         s["name"] = ["tess{0:04}i".format(i) for i in range(len(t))]

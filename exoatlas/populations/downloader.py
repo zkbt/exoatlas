@@ -44,7 +44,7 @@ class Downloader(Talker):
         Parameters
         ----------
         remake : bool
-            Should we definitely redownload the table?
+            Whether we should (definitely) re-download the data.
                 If True, download data no matter what.
                 If None, download data only if (there is none) or (it's expired and the user agrees).
                 If False, download data only if there is none.

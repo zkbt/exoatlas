@@ -20,7 +20,7 @@ class ExoplanetArchiveDownloader(Downloader):
     supported_tables = ["ps", "pscomppars"]
 
     def __init__(
-        self, which_table="ps", format="csv", select="select+*", planet=None, **kw
+        self, which_table="ps", format="csv", select="select+*", planet="", **kw
     ):
         """
         Initialize an Exoplanet Archive downloader.
@@ -85,25 +85,6 @@ class ExoplanetArchiveDownloader(Downloader):
         return os.path.join(
             directories["data"], f"nea-{self.which_table}{planet_string}.txt"
         )
-
-    def add_metadata(self, table):
-        """
-        Add a little extra metadata to the table.
-        """
-        Downloader.add_metadata(self, table)
-
-        # populate what kinds of columns are what
-        columns_directory = os.path.join(
-            code_directory, "populations/data/exoplanet-archive-columns/"
-        )
-
-        for k in ["with-errors-and-limits", "with-errors", "without-errors"]:
-            column_names = np.genfromtxt(
-                os.path.join(columns_directory, f"exoarchive-columns-{k}.txt"),
-                str,
-                comments="#",
-            )
-            table.meta[f"columns-{k}"] = column_names
 
 
 planetary_systems_downloader = ExoplanetArchiveDownloader("ps")

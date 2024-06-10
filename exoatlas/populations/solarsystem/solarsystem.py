@@ -1,5 +1,5 @@
 from ...imports import *
-from ..population import PredefinedPopulation
+from ..predefined import PredefinedPopulation
 
 __all__ = ["SolarSystem"]
 
@@ -12,7 +12,7 @@ class SolarSystem(PredefinedPopulation):
     """The Solar System, very crudely."""
 
     # the data in the table probably don't need to be updated
-    expiration = np.inf
+    expiration = np.inf * u.day
 
     def __init__(self, **kwargs):
         """
@@ -26,7 +26,7 @@ class SolarSystem(PredefinedPopulation):
         self.exact = True
         self.marker = "s"
 
-    def load_raw(self):
+    def download_raw_data(self):
         """
         Load the raw table of data for the Solar System.
         """
@@ -40,7 +40,7 @@ class SolarSystem(PredefinedPopulation):
         # a table of unstandardized planet properties
         return raw
 
-    def create_standard(self, trimmed):
+    def create_standardardized(self, trimmed):
         """
         Create a standardized table of planet properties.
         It must at least contain the columns in

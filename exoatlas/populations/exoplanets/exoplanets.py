@@ -1,17 +1,145 @@
 # exoplanet population of all "confirmed" exoplanets from exoplanet archive
 from ...imports import *
-from ..population import PredefinedPopulation
+from ..predefined import PredefinedPopulation
 from .exoplanet_downloaders import *
 
-__all__ = ["Exoplanets", "ExoplanetsComposite"]
+__all__ = ["Exoplanets", "ExoplanetsPSCP", "ExoplanetsPS"]
+
+
+def parse_reflink(x):
+    """
+    Convert a 'reflink/refname' from NASA Exoplanet Archive into
+    a human-friendly string and a definitely-unique URL.
+
+    Parameters
+    ----------
+    x : str
+        The reflink or refname, which might look like:
+        '<a refstr=TORRES_ET_AL__2008 href=https://ui.adsabs.harvard.edu/abs/2008ApJ...677.1324T/abstract target=ref> Torres et al. 2008 </a>'
+
+    Returns
+    -------
+    name : str
+        The human-friendly string for this reference. Be careful, this might not
+        necessarily by 100% unique, particularly if folks publish multiple planets
+        in the same year.
+    url : str
+        The URL pointing to the reference. This should be unique.
+    """
+    try:
+        url = x.split("href=")[1].split(" ")[0]
+        name = x.split(">")[1].split("<")[0]
+        return name, url
+    except AttributeError:
+        return "", ""
 
 
 # apply some kludges to correct bad planet properties
-class Exoplanets(PredefinedPopulation):
-    def __init__(self, label="Exoplanets", remake=False, **plotkw):
+class ExoplanetsPSCP(PredefinedPopulation):
+    """
+    Exoplanets from the NASA Exoplanet Archive.
+
+    This uses the Planetary Systems Composite Parameters table,
+    which merges together data from different papers for the
+    same planet, which can sometimes result in parameters
+    that aren't necessarily consistent with each other.
+    """
+
+    label = "ExoplanetsPSCP"
+
+    # define columns to ingest with and without errors/limits
+    raw_columns_with_errors_and_limits = [
+        "pl_orbper",
+        "pl_orbsmax",
+        "pl_rade",
+        "pl_masse",
+        "pl_msinie",
+        "pl_dens",
+        "pl_orbeccen",
+        "pl_orbincl",
+        "pl_orblper",
+        "pl_tranmid",
+        "pl_trandep",
+        "pl_trandur",
+        "pl_imppar",
+        "pl_ratdor",
+        "pl_rvamp",
+        "pl_projobliq",
+        "pl_trueobliq",
+        "pl_insol",
+        "pl_eqt",
+        "st_teff",
+        "st_rad",
+        "st_mass",
+        "st_met",
+        "st_lum",
+        "st_logg",
+        "st_age",
+        "st_dens",
+        "st_vsin",
+        "st_rotp",
+        "st_radv",
+    ]
+    raw_columns_with_errors = [
+        "sy_dist",
+        "sy_plx",
+        "sy_bmag",
+        "sy_vmag",
+        "sy_jmag",
+        "sy_hmag",
+        "sy_kmag",
+        "sy_umag",
+        "sy_gmag",
+        "sy_rmag",
+        "sy_imag",
+        "sy_zmag",
+        "sy_w1mag",
+        "sy_w2mag",
+        "sy_w3mag",
+        "sy_w4mag",
+        "sy_gaiamag",
+        "sy_tmag",
+        "sy_kepmag",
+        "sy_icmag",
+    ]
+    raw_columns_without_errors = [
+        "pl_name",
+        "hostname",
+        "pl_letter",
+        "ra",
+        "dec",
+        "sy_pmra",
+        "sy_pmdec",
+        "gaia_id",
+        "sy_snum",
+        "sy_pnum",
+        "discoverymethod",
+        "disc_year",
+        "disc_refname",
+        "disc_facility",
+        "rv_flag",
+        "pul_flag",
+        "ptv_flag",
+        "tran_flag",
+        "ast_flag",
+        "obm_flag",
+        "micro_flag",
+        "etv_flag",
+        "ima_flag",
+        "dkin_flag",
+        "pl_controv_flag",
+        "ttv_flag",
+        "st_spectype",
+        "pl_nespec",
+        "pl_ntranspec",
+        "default_flag",
+    ]
+    _downloader = composite_planetary_systems_downloader
+
+    def __init__(self, remake=False, **plotkw):
         """
         Initialize a population of all known exoplanets
-        using the NASA Exoplanet Archive `ps` table.
+        using the NASA Exoplanet Archive `pscomppars` table.
 
         This generates an Exoplanets population containing
         planets discovered through any method. It tries to
@@ -21,10 +149,6 @@ class Exoplanets(PredefinedPopulation):
 
         Parameters
         ----------
-        label : string
-            A default label to be associated with this population.
-            This will show up in the legend on population
-            comparison plots.
         remake : bool
             Should the population be remade from raw files,
             even if a recent version already exists?
@@ -33,19 +157,19 @@ class Exoplanets(PredefinedPopulation):
             default plotting styles, for example like
             'alpha', 'marker', 'zorder', 'color', ...
         """
-        # set up the population
-        self._downloader = planetary_systems_downloader
-        PredefinedPopulation.__init__(self, label=label, remake=remake, **plotkw)
 
-    def load_raw(self, remake=False):
+        # load standard table(s) or ingest from raw data
+        PredefinedPopulation.__init__(self, remake=remake, **plotkw)
+
+    def download_raw_data(self, remake=False):
         """
-        Load the raw table of data.
+        Load the raw Exoplanet Archive tables, possibly downloading them if needed.
 
         Parameters
         ----------
         remake : bool
-            Should the raw table be re-made/re-downloaded,
-            even if a recent one exists?
+            Should the raw tables be re-made/re-downloaded,
+            even if recent local ones exist?
 
         Returns
         -------
@@ -53,15 +177,13 @@ class Exoplanets(PredefinedPopulation):
             A raw, untrimmed, unstandardized table.
         """
 
-        # load (or download) the table of exoplanet properties
-        raw = self._downloader.get(remake=remake)
+        #
+        self.raw = self._downloader.get(remake=remake)
 
-        # for debugging, hang on to the raw table as a hidden attribute
-        self._raw = raw
+        # return both, so they can both be turned into standardized tables
+        return self.raw
 
-        return raw
-
-    def trim_raw(self, raw):
+        '''    def trim_raw(self, raw):
         """
         Trim the raw table down to ones with reasonable values.
 
@@ -95,9 +217,9 @@ class Exoplanets(PredefinedPopulation):
         ntrimmed = len(trimmed)
         self.speak(f"trimmed down to {ntrimmed}/{ntotal} rows")
 
-        return trimmed
+        return trimmed'''
 
-    def create_standard(self, trimmed):
+    def create_standardardized(self, raw):
         """
         Create a standardized table to make sure that at
         least a few necessary columns are populated.
@@ -110,8 +232,8 @@ class Exoplanets(PredefinedPopulation):
 
         Parameters
         ----------
-        trimmed : astropy.table.Table
-            A raw, trimmed, unstandardized table.
+        raw : astropy.table.Table
+            A raw unstandardized table downloaded from the archive.
 
         Returns
         -------
@@ -120,18 +242,24 @@ class Exoplanets(PredefinedPopulation):
         """
 
         # define the table from which we're deriving everying
-        r = trimmed
+        r = raw
 
         # the new standardized table
         s = Table()
 
         def strip_even_if_masked(x):
+            """
+            Flexibly clean strings by removing trailing spaces.
+            """
             try:
                 return x.strip()
             except AttributeError:
                 return None
 
         def attach_unit(x, unit=None):
+            """
+            Flexibly give units to quantities that should have them.
+            """
             if isinstance(x[0], str):
                 return [strip_even_if_masked(a) for a in x]
             if unit is None:
@@ -141,7 +269,10 @@ class Exoplanets(PredefinedPopulation):
 
         def populate_one_or_more_columns(k_new, k_original, unit=None):
             """
-            A wrapper to help smoothly grab quantities with limits.
+            A wrapper to help smoothly grab quantities from raw
+            table and ingest them into the standardized table.
+
+            For columns with
 
             Parameters
             ----------
@@ -153,12 +284,16 @@ class Exoplanets(PredefinedPopulation):
                 A unit to attach to the quantity, if necessary.
             """
 
-            if k_original in r.meta["columns-without-errors"]:
+            if k_original not in r.colnames:
+                warnings.warn(f"No {k_original} found!")
+                return
+
+            if k_original in self.raw_columns_without_errors:
                 # easy, just record the column itself with no error
                 s[k_new] = attach_unit(r[k_original], unit)
                 print(f"populated {k_new} with {k_original}")
 
-            elif k_original in r.meta["columns-with-errors"]:
+            elif k_original in self.raw_columns_with_errors:
                 # record the column itself
                 s[k_new] = attach_unit(r[k_original], unit)
 
@@ -171,7 +306,7 @@ class Exoplanets(PredefinedPopulation):
                 )
                 print(f"populated {k_new} and errors with {k_original}")
 
-            elif k_original in r.meta["columns-with-errors-and-limits"]:
+            elif k_original in self.raw_columns_with_errors_and_limits:
                 # from playing with table, I think lim = +1 is upper limit, -1 is lower limit
 
                 # record the upper and lower errorbars
@@ -209,6 +344,11 @@ class Exoplanets(PredefinedPopulation):
                 # easy, just record the column itself with no error
                 s[k_new] = attach_unit(r[k_original], unit)
                 print(f"populated {k_new} with {k_original}, but not 100% sure...")
+
+            try:
+                s[f"{k_new}_reference"] = self.get_references(r, k_original)
+            except (KeyError, AssertionError):
+                print(f"no reference bibcodes found for {k_original} > {k_new}")
 
         # basic reference information
         populate_one_or_more_columns("name", "pl_name")
@@ -299,7 +439,7 @@ class Exoplanets(PredefinedPopulation):
         populate_one_or_more_columns("radius", "pl_rade", u.Rearth)
 
         # kludge for dealing with different masses from different tables?
-        try:
+        """try:
             # ps?
             populate_one_or_more_columns("mass", "pl_masse", u.Mearth)
             populate_one_or_more_columns("msini", "pl_msinie", u.Mearth)
@@ -317,7 +457,9 @@ class Exoplanets(PredefinedPopulation):
                 f"{x}_upper_limit",
             ]:
                 s[k][is_measured_mass == False].mask = True
-
+"""
+        # FIXME! MORE CAREFUL MASS FILTERING!!!
+        populate_one_or_more_columns("mass", "pl_bmasse", u.Mearth)
         populate_one_or_more_columns("density", "pl_dens", u.g / u.cm**3)
         populate_one_or_more_columns(
             "insolation",
@@ -345,7 +487,8 @@ class Exoplanets(PredefinedPopulation):
         populate_one_or_more_columns("default_parameter_set", "default_flag")
 
         # trim to default parameter set (be more careful here!!!)
-        s = s[s["default_parameter_set"] == 1]
+        # FIXME? i THINK REMOVE THIS TO KEEP PS COMPLETE FOR BORROWING RESOURCES FROM?
+        # s = s[s["default_parameter_set"] == 1]
 
         # sort these planets by their names
         s.sort("name")
@@ -361,25 +504,104 @@ class Exoplanets(PredefinedPopulation):
         # return that standardized table
         return standard
 
-
-class ExoplanetsComposite(Exoplanets):
-    def __init__(self, label="ExoplanetsComposite", remake=False, **plotkw):
+    def get_references(self, r, k):
         """
-        Initialize a population of all known exoplanets
-        using the NASA Exoplanet Archive `ps` table.
+        Try to get the reference for a particular measurement.
 
-        This generates an Exoplanets population containing
-        planets discovered through any method. It tries to
-        be clever about loading cached files so that it
-        will work quickly and not try to redownload everything
-        from scratch every time it's called.
+        For the Planetary Systems Composite Parameters table,
+        where references have merged, each measured quantity has
+        its own reference encoded as a '*reflink' column name.
 
         Parameters
         ----------
-        label : string
-            A default label to be associated with this population.
-            This will show up in the legend on population
-            comparison plots.
+        r : astropy.table.Table
+            The raw table being ingested.
+        k : str
+            The key for which a reference should be checked.
+        """
+
+        # define a column name for this quantity
+        k_reference = f"{k}_reflink"
+
+        # get a bibcode for this quantity from each row
+        list_of_references = [parse_reflink(x) for x in r[k_reference]]
+
+        return list_of_references
+
+
+class ExoplanetsPS(ExoplanetsPSCP):
+    """
+    Exoplanets from the NASA Exoplanet Archive.
+
+    This uses the Planetary Systems table,
+    which includes one row per planet per reference,
+    so it's a massive dataset providing multiple options
+    for most planets, although any one particular reference
+    might be missing the complete set of parameters needed
+    to fully characterize any one system.
+    """
+
+    label = "ExoplanetsPS"
+    _downloader = planetary_systems_downloader
+
+    def get_references(self, r, k):
+        """
+        Try to get the reference for a particular measurement.
+
+        For the Planetary Systems table, where references are
+        necessarily consistent across parameter sets, there
+        are only three reference columns:
+            'pl_refname' for the planet and orbit
+            'st_refname' for the stellar properties
+            'sy_refname' for the system positions + motions
+
+        Parameters
+        ----------
+        r : astropy.table.Table
+            The raw table being ingested.
+        k : str
+            The key for which a reference should be checked.
+        """
+
+        # is this key 'pl', 'st', or 'sy'?
+        prefix = k.split("_")[0]
+        assert prefix in ["pl", "st", "sy"]
+
+        # define a column name for this quantity
+        k_reference = f"{prefix}_refname"
+
+        # get a bibcode for this quantity from each row
+        list_of_references = [parse_reflink(x) for x in r[k_reference]]
+
+        return list_of_references
+
+
+class Exoplanets(ExoplanetsPSCP):
+    """
+    Exoplanets from the NASA Exoplanet Archive.
+
+    This uses the table of Planetary Systems Composite Parameters
+    (one row per planet, references merged) but it secretly also
+    loads the table of Planetary Systems (one row per reference,
+    with multiple rows per planet), so that we can choose to use
+    different references for any particular planet.
+    """
+
+    label = "Exoplanets"
+
+    def __init__(self, remake=False, **plotkw):
+        """
+        Initialize a population of all known exoplanet from
+        the NASA Exoplanet Archive `pscomppars` and `ps` tables.
+
+        The standard population comes only from `pscomppars`.
+        However, it should secretly also download the `ps` table,
+        which would enable the user to choose to replace
+        parameters for a particular planet by choosing a
+        particular reference.
+
+        Parameters
+        ----------
         remake : bool
             Should the population be remade from raw files,
             even if a recent version already exists?
@@ -388,6 +610,9 @@ class ExoplanetsComposite(Exoplanets):
             default plotting styles, for example like
             'alpha', 'marker', 'zorder', 'color', ...
         """
-        # set up the population
-        self._downloader = composite_planetary_systems_downloader
-        PredefinedPopulation.__init__(self, label=label, remake=remake, **plotkw)
+
+        # load standard table(s) or ingest from raw data
+        PredefinedPopulation.__init__(self, remake=remake, **plotkw)
+
+        # also load a hidden `ps`-based table in the background
+        self.ps = ExoplanetsPS(remake=remake)

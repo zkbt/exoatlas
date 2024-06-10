@@ -92,22 +92,37 @@ allowed_plotkw += ["s", "c", "cmap", "norm", "vmin", "vmax" "outlined", "filled"
 
 class Population(Talker):
     """
-    Create a population from a standardized table.
+    Populations of astronomical objects might contain
+        Exoplanets (planets with host stars),
+        Solar System objects (major/minor planets),
+        Stars (single or multiples),
+    or more!
     """
 
     # kludge?
     _pithy = True
 
-    def __init__(self, standard, label="unknown", verbose=False, **plotkw):
+    def __init__(self, standard, label="unknown", **plotkw):
         """
         Initialize a Population of exoplanets from a standardized table.
+
+        This creates a population from a standardized data table,
+        effectively just storing a table in the right format inside
+        the object. To simplify indexing via system name without having
+        to stress about capitalization and/or spaces, the population
+        will define a `tidyname` and `tidyhostname` columns, and use
+        those as table indices for searching via name.
 
         Parameters
         ----------
         standard : astropy.table.Table
-            A table that contains all the necessary columns.
+            A table that contains at least a few core essential columns.
+        label : str
+            A string by which this table can be identified. This will be
+            used for plots and for saving data files, so please try to
+            pick something informative and unique!
         **plotkw : dict
-            All other keyword arguments wil
+            All other keyword arguments will be taken as plotting suggestions.
         """
 
         # a standardized table with a minimum set of columns we can expect
@@ -119,7 +134,6 @@ class Population(Talker):
         # keywords to use for plotting
         self.plotkw = plotkw
 
-        self._pithy = verbose == False
         # define some cleaned names and hostnames, for indexing
         try:
             self.standard["tidyname"]
@@ -139,18 +153,65 @@ class Population(Talker):
         self.standard.add_index("tidyname")
         self.standard.add_index("tidyhostname")
 
+    @property
+    def fileprefix(self):
+        """
+        Define a fileprefix for this population, to be used
+        for setting the filename of the standardized population.
+        """
+        return clean(self.label)
+
+    @property
+    def standardized_data_path(self):
+        """
+        Define the filepath for the standardized table.
+        """
+        return os.path.join(directories["data"], f"standardized-{self.fileprefix}.txt")
+
+    def save_standardized_data(self, standard):
+        """
+        Save the standardized table to a text file.
+
+        This will save the table stored in `self.standard` out
+        into a .ecsv text file, which should always be readable
+        (including units and any metadata) with astropy, as in
+        ```
+        from astropy.io.ascii import read
+        table = read('some-standardized-table.ecsv')
+        ```
+        """
+
+        # save the table as an ascii table for humans to read
+        standard.write(self.standardized_data_path, format="ascii.ecsv", overwrite=True)
+        self.speak(f"Saved a standardized text table to {self.standardized_data_path}")
+
     def sort(self, x, reverse=False):
         """
         Sort this population by some key or attribute.
+
+        This sorts the population in place, meaning that the
+        Population object from which it is called will be modified.
+
+        Parameters
+        ----------
+        x : str
+            The key by which to sort the table.
+        reverse : bool
+            Whether to reverse the sort order.
+                `reverse = False` means low to high
+                `reverse == True` means high to low
         """
 
+        # get the values by which to sort the population
         to_sort = getattr(self, x)
+
+        # define the sorting indices
         i = np.argsort(to_sort)
         if reverse:
             i = i[::-1]
 
+        # reorder the standardized table
         self.standard = self.standard[i]
-        return self
 
     def __add__(self, other):
         """
@@ -240,8 +301,17 @@ class Population(Talker):
     def __getitem__(self, key):
         """
         Create a subpopulation of planets by indexing, slicing, or masking.
+
+        Parameters
+        ----------
+        key : int, list, array, slice
+            An index, slice, or mask to select a subset of the population.
+
+        Returns
+        -------
+        subset : Population
+            A subset of the population, as set by the index, slice, or mask.
         """
-        # FIXME -- maybe make it easier to pull out intermediate masks?
 
         try:
             # if the key is an index/slice/mask, return it
@@ -1496,153 +1566,3 @@ class Population(Talker):
             as the Population itself.
         """
         return self.create_table(desired_columns=desired_columns)
-
-
-class PredefinedPopulation(Population):
-    """
-    Population object keeps track of an exoplanet population.
-    """
-
-    expiration = 10
-
-    def __init__(self, label="exoplanets", remake=False, skip_update=False, **plotkw):
-        """
-        Initialize a population, by trying the following steps:
-                1) Load a standardized ascii table.
-                2) Ingest a raw table, and standardize it.
-
-        Parameters
-        ----------
-        label : str
-            The name of this population, for use both in filenames
-            and labeling points on plots.
-        remake : bool
-            Should we re-ingest this table from its raw ingredients?
-        skip_update : bool
-            Should we skip checking for updates in the existing data?
-        **plotkw : dict
-            All other keywords are stored as plotting suggestions.
-        """
-
-        # set the name for this population
-        self.label = label
-
-        try:
-            # try to load the standardized table
-            assert remake == False
-            standard = self.load_standard(skip_update=skip_update)
-        except (IOError, FileNotFoundError, AssertionError):
-            # or create a new standardized table and save it
-            standard = self.ingest_table(remake=remake)
-
-        # initialize with a standard table
-        Population.__init__(self, standard=standard, label=label, **plotkw)
-
-    @property
-    def fileprefix(self):
-        """
-        Define a fileprefix for this population, to be used
-        for setting the filename of the standardized population.
-        """
-        return clean(self.label)
-
-    def ingest_table(self, **kwargs):
-        """
-        Ingest a new population table of arbitrary format,
-        and then standardize it, using the tools defined in
-        inherited population classes."""
-
-        # load the raw table
-        raw = self.load_raw()
-
-        # trim elements from raw table as necessary
-        trimmed = self.trim_raw(raw)
-
-        try:
-            # create a standardized table from the array
-            standard = self.create_standard(trimmed)
-        except Exception as e:
-            print(e)
-            warnings.warn(
-                """
-            UH-OH! The table standardization step didn't work.
-            This message should hopefully disappear once
-            Zach's debugging and restructuring is complete,
-            but if not, please let him know!
-            """
-            )
-
-        # save the standardized table
-        self.save_standard(standard)
-
-        return standard
-
-    @property
-    def standard_path(self):
-        """
-        Define the filepath for the standardized table.
-        """
-        return os.path.join(directories["data"], f"standardized-{self.fileprefix}.txt")
-
-    def load_raw(self):
-        raise NotImplementedError(
-            """
-        Yikes! The `.load_raw` method has not been defined
-        for whatever object is trying to call it!
-        """
-        )
-
-    def trim_raw(self, raw):
-        """
-        Trim bad/unnecessary rows out of a raw table of planet properties.
-        """
-
-        # no trimming necessary
-        trimmed = raw
-
-        # for debugging, hang onto the trimmed table as a hidden attribute
-        self._trimmed = trimmed
-
-        # a trimmed table
-        return self._trimmed
-
-    def load_standard(self, skip_update=False):
-        """
-        Load a standardized population table. Generally this
-        will be from a file like ~/downloads-for-exoatlas/standardized-*.txt
-
-        Returns
-        -------
-
-        standard : astropy.table.Table
-            A table of planet properties,
-            with a minimal set of columns.
-        skip_update : bool
-            Should we skip checks to see if the data are too stale?
-        """
-
-        # make sure this file is recent enough (unless we're skipping updates)
-        if not skip_update:
-            old = check_if_needs_updating(self.standard_path, self.expiration)
-            assert old == False
-
-        # keywords for reading a standardized table
-        read_kw = dict(format="ecsv", fill_values=[("", np.nan), ("--", np.nan)])
-
-        standard = ascii.read(self.standard_path, **read_kw)
-        self.speak(f"Loaded standardized table from {self.standard_path}")
-
-        # ??? change this to do something more clever with tables
-        # masked = np.ma.filled(standard, fill_value = np.nan)
-
-        return standard
-
-    def save_standard(self, standard):
-        """
-        Save the standardized table out to a text file
-        like ~/exoatlas/standardized-*.txt
-        """
-
-        # save it as an ascii table for humans to read
-        standard.write(self.standard_path, format="ascii.ecsv", overwrite=True)
-        self.speak(f"Saved a standardized text table to {self.standard_path}")

@@ -2,7 +2,7 @@ from .version import *
 
 # imports that are need by many exoatlas subsections
 from ast import Import
-import os, sys, time, shutil, warnings, copy
+import os, sys, time, shutil, warnings, copy, glob
 from tqdm import tqdm
 
 # (possibly different on Mac, Linux, Windows, even for Python versions 3.8-3.12)
@@ -93,6 +93,13 @@ def locate_local_data():
 directories = dict(data=os.path.join(base, "data/"))
 for k in directories.keys():
     mkdir(directories[k])
+
+
+def reset_standardized_data():
+    files = glob.glob(os.path.join(directories["data"], "standardized-*"))
+    if "y" in input(f"Are you sure you want to wipe {files}? [y/N]"):
+        for f in files:
+            os.remove(f)
 
 
 def reset_local_data():

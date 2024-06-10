@@ -23,7 +23,7 @@ class TOI(PredefinedPopulation):
         PredefinedPopulation.__init__(self, label=label, remake=remake, **kw)
         self.color = "crimson"
 
-    def load_raw(self, remake=False):
+    def download_raw_data(self, remake=False):
         """
         Load the raw table of TOI data from the NASA Exoplanet Archive.
         """
@@ -68,7 +68,7 @@ class TOI(PredefinedPopulation):
 
         return trimmed
 
-    def create_standard(self, trimmed):
+    def create_standardardized(self, trimmed):
         """
         Create a standardized table, pulling at least the necessary columns
         from the raw table and potentially including others too.
@@ -201,7 +201,7 @@ class TOI(PredefinedPopulation):
         try:
             # first try to load this population
             Talker.__init__(self)
-            self.load_standard()
+            self.ingest_standardized_data()
         except IOError:
             # if that fails, recreate it from the confirmed population
             KOI.__init__(self)
@@ -214,7 +214,7 @@ class TOI(PredefinedPopulation):
         self.speak('removing {0} rows'.format(np.sum(tr)))
         self.removeRows(tr)
         self.speak('leaving {0} rows'.format(self.n))
-        self.save_standard()
+        self.save_standardized_data()
 
 """
 """class UnconfirmedKepler(TransitingExoplanetsSubset):

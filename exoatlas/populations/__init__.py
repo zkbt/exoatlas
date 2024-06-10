@@ -1,9 +1,9 @@
 from .population import (
     Population,
-    PredefinedPopulation,
     attribute_columns,
     method_columns,
 )
+from .predefined import PredefinedPopulation
 from .exoplanets import *
 from .solarsystem import *
 
