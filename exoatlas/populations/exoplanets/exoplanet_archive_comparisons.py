@@ -54,8 +54,8 @@ class NASAExoplanetArchiveComparison:
         self.tables = {}
 
         # download both tables from NASA Exoplanet Archive
-        self.tables["pscp"] = composite_planetary_systems_downloader.get(**downloadkw)
-        self.tables["ps"] = planetary_systems_downloader.get(**downloadkw)
+        self.tables["pscp"] = ExoplanetArchiveDownloader("pscomppars").get(**downloadkw)
+        self.tables["ps"] = ExoplanetArchiveDownloader("ps").get(**downloadkw)
 
         # trim down to just default solutions
         is_default = self.tables["ps"]["default_flag"] == 1

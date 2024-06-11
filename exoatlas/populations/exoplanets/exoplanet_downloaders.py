@@ -19,9 +19,7 @@ class ExoplanetArchiveDownloader(Downloader):
     # class-specific names of supported tables
     supported_tables = ["ps", "pscomppars"]
 
-    def __init__(
-        self, which_table="ps", format="csv", select="select+*", planet="", **kw
-    ):
+    def __init__(self, which_table="ps", format="csv", N=np.inf, planet="", **kw):
         """
         Initialize an Exoplanet Archive downloader.
 
@@ -33,9 +31,9 @@ class ExoplanetArchiveDownloader(Downloader):
             - 'pscomppars' is Planetary Systems Composite Parameters with one line per planet
         format : str
             The format of the table to download.
-        select : str
-            The "select" string for the TAP query.
-            This could be modified to select only a subset of columns.
+        N : int
+            The maximum number of rows to return.
+            This is mostly used for testing the downloader with small datasets.
         planet : str
             The name of planet to query, if desiring only a single planet.
             This is mostly used for testing the downloader with small datasets.
@@ -44,12 +42,31 @@ class ExoplanetArchiveDownloader(Downloader):
         """
 
         # keep track of what should be downloaded
-        self.select = select
         assert which_table in self.supported_tables
         self.which_table = which_table
-        self.planet = planet
         self.format = format
+        self.N = N
+        self.planet = planet
         Downloader.__init__(self, **kw)
+
+    @property
+    def top_string(self):
+        # limit to a certain number of rows
+        if (self.N == None) or (np.isfinite(self.N) == False):
+            return ""
+        else:
+            return f"top+{self.N}+"
+
+    @property
+    def where_string(self):
+        if (self.planet is "") or (self.planet is None):
+            return ""
+        else:
+            return f"where+pl_name+like+'{self.planet}'".replace(" ", "%20")
+
+    @property
+    def from_string(self):
+        return f"from+{self.which_table}+"
 
     @property
     def url(self):
@@ -57,17 +74,12 @@ class ExoplanetArchiveDownloader(Downloader):
         Define the download URL to acces the online table.
         """
 
-        if self.planet is None:
-            where_string = ""
-        else:
-            where_string = f"+where+pl_name+like+'{self.planet}'".replace(" ", "%20")
-
         # create the URL by stitching together keyword pairs
         url = (
             f"{self.base}"
-            f"query={self.select}+"
-            f"from+{self.which_table}"
-            f"{where_string}"
+            f"query=select+{self.top_string}*+"
+            f"{self.from_string}"
+            f"{self.where_string}"
             f"&format={self.format}"
         )
 
@@ -78,14 +90,5 @@ class ExoplanetArchiveDownloader(Downloader):
         """
         Define a file path where the local copy of this file should be stored.
         """
-        if self.planet == "":
-            planet_string = ""
-        else:
-            planet_string = "-" + clean(self.planet)
-        return os.path.join(
-            directories["data"], f"nea-{self.which_table}{planet_string}.txt"
-        )
-
-
-planetary_systems_downloader = ExoplanetArchiveDownloader("ps")
-composite_planetary_systems_downloader = ExoplanetArchiveDownloader("pscomppars")
+        label = f"{self.top_string}{self.from_string}{self.where_string}".strip("+")
+        return os.path.join(directories["data"], f"nasa-exoplanet-archive-{label}.txt")

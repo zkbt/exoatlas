@@ -11,6 +11,7 @@ initial_filename = os.path.join(
 class SolarSystem(PredefinedPopulation):
     """The Solar System, very crudely."""
 
+    label = "Solar System"
     # the data in the table probably don't need to be updated
     expiration = np.inf * u.day
 
@@ -18,7 +19,7 @@ class SolarSystem(PredefinedPopulation):
         """
         Initialize a population of Solar System (main) planets.
         """
-        PredefinedPopulation.__init__(self, label="Solar System", **kwargs)
+        PredefinedPopulation.__init__(self, **kwargs)
         self.color = "cornflowerblue"
         self.zorder = 1e10
         self.s = 80
@@ -26,7 +27,7 @@ class SolarSystem(PredefinedPopulation):
         self.exact = True
         self.marker = "s"
 
-    def download_raw_data(self):
+    def download_raw_data(self, **kw):
         """
         Load the raw table of data for the Solar System.
         """

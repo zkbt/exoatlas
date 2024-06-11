@@ -52,7 +52,7 @@ class ExoplanetsPSCP(PredefinedPopulation):
         "pl_orbper",
         "pl_orbsmax",
         "pl_rade",
-        "pl_masse",
+        "pl_bmasse",
         "pl_msinie",
         "pl_dens",
         "pl_orbeccen",
@@ -134,7 +134,7 @@ class ExoplanetsPSCP(PredefinedPopulation):
         "pl_ntranspec",
         "default_flag",
     ]
-    _downloader = composite_planetary_systems_downloader
+    _downloader = ExoplanetArchiveDownloader("pscomppars")
 
     def __init__(self, remake=False, **plotkw):
         """
@@ -542,7 +542,7 @@ class ExoplanetsPS(ExoplanetsPSCP):
     """
 
     label = "ExoplanetsPS"
-    _downloader = planetary_systems_downloader
+    _downloader = ExoplanetArchiveDownloader("ps")
 
     def get_references(self, r, k):
         """
@@ -615,4 +615,34 @@ class Exoplanets(ExoplanetsPSCP):
         PredefinedPopulation.__init__(self, remake=remake, **plotkw)
 
         # also load a hidden `ps`-based table in the background
-        self.ps = ExoplanetsPS(remake=remake)
+        self.individual_references = ExoplanetsPS(remake=remake)
+
+    def __getitem__(self, key):
+        """
+        Create a subpopulation of planets by indexing, slicing, or masking.
+
+        `Exoplanets` needs its own version of this (beyond the one inherited from
+        the overarching `Population` class) because it secretly contains a hidden
+        `ExoplanetsPS` table that should also be trimmed down to only relevant
+        rows every time that we select a subset.
+
+        Parameters
+        ----------
+        key : int, list, array, slice
+            An index, slice, or mask to select a subset of the population.
+
+        Returns
+        -------
+        subset : Population
+            A subset of the population, as set by the index, slice, or mask.
+        """
+
+        # first call the normal `Population` indexing/slicing/masking
+        subset = super().__getitem__(key)
+
+        # then trim the .ps population to only those (host)names in the subset
+        subset.individual_references = self.individual_references[
+            list(np.unique(subset.hostname))
+        ]
+
+        return subset
