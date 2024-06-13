@@ -348,7 +348,7 @@ class ExoplanetsPSCP(PredefinedPopulation):
                 print(f"🙋 populated {k_new} with {k_original}, but not 100% sure...")
 
             try:
-                s[f"{k_new}_reference"] = self.get_references(r, k_original)
+                s[f"{k_new}_reference"] = self.ingest_references(r, k_original)
             except (KeyError, AssertionError):
                 print(f"⚠️ no reference information found for {k_original} > {k_new}")
 
@@ -536,7 +536,7 @@ class ExoplanetsPSCP(PredefinedPopulation):
         print("values without reasonable uncertainties have been trimmed")
         return trimmed
 
-    def get_references(self, r, k):
+    def ingest_references(self, r, k):
         """
         Try to get the reference for a particular measurement.
 
@@ -576,7 +576,7 @@ class ExoplanetsPS(ExoplanetsPSCP):
     label = "ExoplanetsPS"
     _downloader = ExoplanetArchiveDownloader("ps")
 
-    def get_references(self, r, k):
+    def ingest_references(self, r, k):
         """
         Try to get the reference for a particular measurement.
 
@@ -646,9 +646,6 @@ class Exoplanets(ExoplanetsPSCP):
         # load standard table(s) or ingest from raw data
         PredefinedPopulation.__init__(self, remake=remake, **plotkw)
 
-        # also load a hidden `ps`-based table in the background
-        self.individual_references = ExoplanetsPS(remake=remake)
-
     def __getitem__(self, key):
         """
         Create a subpopulation of planets by indexing, slicing, or masking.
@@ -678,3 +675,39 @@ class Exoplanets(ExoplanetsPSCP):
         ]
 
         return subset
+
+    def load_individual_references(self):
+        """
+        Populate an internal `.individual_references` population
+        with individual references for planets.
+
+        The `pscomppars` table from which the Exoplanets population
+        is defined merged together multiple different references.
+        Sometimes we might want be able to see and/or choose the
+        values associated with one particular reference. This
+        function loads a separate Exoplanet-like population
+        containing those individual references and stores it
+        in the `.individual_references` attribute.
+        """
+
+        # skip slowly loading the data if it already exists
+        try:
+            return self.individual_references
+        except AttributeError:
+
+            print(
+                """
+            loading a large table of individual references;
+            this might take a while?
+            """
+            )
+
+            # load the internal population with data for individual references
+            self.individual_references = ExoplanetsPS()
+            # then trim the .ps population to only those (host)names in the subset
+            self.individual_references = self.individual_references[
+                list(np.unique(self.hostname))
+            ]
+
+            self.individual_references.label = "Individual References"
+            return self.individual_references
