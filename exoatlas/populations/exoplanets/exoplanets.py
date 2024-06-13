@@ -347,10 +347,19 @@ class ExoplanetsPSCP(PredefinedPopulation):
                 s[k_new] = attach_unit(r[k_original], unit)
                 print(f"🙋 populated {k_new} with {k_original}, but not 100% sure...")
 
-            try:
-                s[f"{k_new}_reference"] = self.ingest_references(r, k_original)
-            except (KeyError, AssertionError):
-                print(f"⚠️ no reference information found for {k_original} > {k_new}")
+            # keep track of reference for measurements
+            if (k_original in self.raw_columns_with_errors_and_limits) or (
+                k_original in self.raw_columns_with_errors
+            ):
+                try:
+                    s[f"{k_new}_reference"] = self.ingest_references(r, k_original)
+                    print(
+                        f"⚠️ ingested reference information for {k_original} > {k_new}"
+                    )
+                except (KeyError, AssertionError):
+                    print(
+                        f"⚠️ no reference information found for {k_original} > {k_new}"
+                    )
 
         # basic reference information
         populate_one_or_more_columns("name", "pl_name")
