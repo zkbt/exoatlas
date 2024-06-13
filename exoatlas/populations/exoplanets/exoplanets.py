@@ -285,13 +285,13 @@ class ExoplanetsPSCP(PredefinedPopulation):
             """
 
             if k_original not in r.colnames:
-                warnings.warn(f"No {k_original} found!")
+                warnings.warn(f"⚠️ No {k_original} found!")
                 return
 
             if k_original in self.raw_columns_without_errors:
                 # easy, just record the column itself with no error
                 s[k_new] = attach_unit(r[k_original], unit)
-                print(f"populated {k_new} with {k_original}")
+                print(f"📕 populated {k_new} with {k_original}")
 
             elif k_original in self.raw_columns_with_errors:
                 # record the column itself
@@ -304,7 +304,7 @@ class ExoplanetsPSCP(PredefinedPopulation):
                 s[f"{k_new}_uncertainty_lower"] = attach_unit(
                     r[f"{k_original}err2"], unit
                 )
-                print(f"populated {k_new} and errors with {k_original}")
+                print(f"📏 populated {k_new} and errors with {k_original}")
 
             elif k_original in self.raw_columns_with_errors_and_limits:
                 # from playing with table, I think lim = +1 is upper limit, -1 is lower limit
@@ -338,17 +338,19 @@ class ExoplanetsPSCP(PredefinedPopulation):
                     s[f"{k_new}_uncertainty_upper"][is_bounded == False] = np.nan
                     s[f"{k_new}_uncertainty_lower"][is_bounded == False] = np.nan
 
-                    print(f"populated {k_new} and errors and limits with {k_original}")
+                    print(
+                        f"👇 populated {k_new} and errors and limits with {k_original}"
+                    )
 
             else:
                 # easy, just record the column itself with no error
                 s[k_new] = attach_unit(r[k_original], unit)
-                print(f"populated {k_new} with {k_original}, but not 100% sure...")
+                print(f"🙋 populated {k_new} with {k_original}, but not 100% sure...")
 
             try:
                 s[f"{k_new}_reference"] = self.get_references(r, k_original)
             except (KeyError, AssertionError):
-                print(f"no reference bibcodes found for {k_original} > {k_new}")
+                print(f"⚠️ no reference information found for {k_original} > {k_new}")
 
         # basic reference information
         populate_one_or_more_columns("name", "pl_name")
@@ -437,28 +439,6 @@ class ExoplanetsPSCP(PredefinedPopulation):
 
         # what are the planet properties? (check Jupiter isn't better?!)
         populate_one_or_more_columns("radius", "pl_rade", u.Rearth)
-
-        # kludge for dealing with different masses from different tables?
-        """try:
-            # ps?
-            populate_one_or_more_columns("mass", "pl_masse", u.Mearth)
-            populate_one_or_more_columns("msini", "pl_msinie", u.Mearth)
-        except KeyError:
-            # pscomp?
-            populate_one_or_more_columns("mass", "pl_bmasse", u.Mearth)
-            x = "mass"
-            provenance = r["pl_bmassprov"]
-            is_measured_mass = (provenance == "Mass") | (provenance == "Msin(i)/sin(i)")
-            for k in [
-                x,
-                f"{x}_uncertainty_upper",
-                f"{x}_uncertainty_lower",
-                f"{x}_lower_limit",
-                f"{x}_upper_limit",
-            ]:
-                s[k][is_measured_mass == False].mask = True
-"""
-        # FIXME! MORE CAREFUL MASS FILTERING!!!
         populate_one_or_more_columns("mass", "pl_bmasse", u.Mearth)
         populate_one_or_more_columns("density", "pl_dens", u.g / u.cm**3)
         populate_one_or_more_columns(
@@ -476,19 +456,16 @@ class ExoplanetsPSCP(PredefinedPopulation):
 
         # what are the (often) transit-derived properties?
         populate_one_or_more_columns("transit_midpoint", "pl_tranmid", u.day)
+        populate_one_or_more_columns("transit_duration", "pl_trandur", u.hour)
+        populate_one_or_more_columns("transit_depth", "pl_trandep", 0.01)
         populate_one_or_more_columns("transit_ar", "pl_ratdor")
         populate_one_or_more_columns("transit_b", "pl_imppar")
-        populate_one_or_more_columns("transit_depth", "pl_trandep", 0.01)
-        populate_one_or_more_columns("transit_duration", "pl_trandur", u.hour)
         populate_one_or_more_columns("rv_semiamplitude", "pl_rvamp", u.m / u.s)
         populate_one_or_more_columns("projected_obliquity", "pl_projobliq", u.deg)
         populate_one_or_more_columns("obliquity", "pl_trueobliq", u.deg)
 
+        # is this the default parameter set?
         populate_one_or_more_columns("default_parameter_set", "default_flag")
-
-        # trim to default parameter set (be more careful here!!!)
-        # FIXME? i THINK REMOVE THIS TO KEEP PS COMPLETE FOR BORROWING RESOURCES FROM?
-        # s = s[s["default_parameter_set"] == 1]
 
         # sort these planets by their names
         s.sort("name")
@@ -501,8 +478,63 @@ class ExoplanetsPSCP(PredefinedPopulation):
         # fill in all the masked elements to make an unmasked array with nans
         standard = s.filled()
 
+        #
+        trimmed = self.trim_bad_data(standard)
+
         # return that standardized table
-        return standard
+        return trimmed
+
+    def trim_bad_data(self, standard):
+        """
+        Mask bad data from the '.standard' table.
+
+        Planetary Systems Composite Parameters contains lots of quantities
+        that aren't quite reliable empircal measurements that we want to use.
+        This trims theoretical calculations and/or suspicious measurements
+        out of the population, masking them and replacing their central values
+        with np.nan.
+
+        Parameters
+        ----------
+        standard : astropy.table.Table
+            The filled table that will populate the `.standard` table.
+
+        Returns
+        -------
+        trimmed : astropy.table.Table
+            The .standard table with bad data tidied away.
+        """
+
+        print("✂️ trimming weird data")
+
+        # make a copy of the table
+        trimmed = copy.deepcopy(standard)
+
+        # find the columns that should have uncertainties
+        columns_with_uncertainties = np.unique(
+            [
+                x.split("_uncertainty")[0]
+                for x in standard.colnames
+                if "uncertainty" in x
+            ]
+        )
+        for k in columns_with_uncertainties:
+
+            # remove quantities with no or nonsense uncertainties
+            ok = np.isfinite(standard[k])
+            N_has_value = np.sum(ok)
+            for w in ["lower", "upper"]:
+                ok *= np.isfinite(standard[f"{k}_uncertainty_{w}"])
+                ok *= standard[f"{k}_uncertainty_{w}"] != 0
+            N_has_uncertainty = np.sum(ok)
+            bad = ok == False
+            print(
+                f"""{k:>20}: {N_has_value:>4} values and {N_has_uncertainty:>4} with uncertainties ({N_has_uncertainty/N_has_value:>6.1%})"""
+            )
+            trimmed[k][bad] = np.nan
+
+        print("values without reasonable uncertainties have been trimmed")
+        return trimmed
 
     def get_references(self, r, k):
         """
