@@ -682,6 +682,7 @@ class Exoplanets(ExoplanetsPSCP):
         subset.individual_references = self.individual_references[
             list(np.unique(subset.hostname))
         ]
+        subset.individual_references.label = "Individual References"
 
         return subset
 
@@ -704,12 +705,7 @@ class Exoplanets(ExoplanetsPSCP):
             return self.individual_references
         except AttributeError:
 
-            print(
-                """
-            loading a large table of individual references;
-            this might take a while?
-            """
-            )
+            print("(loading individual references may take a few minutes)")
 
             # load the internal population with data for individual references
             self.individual_references = ExoplanetsPS()

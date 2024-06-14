@@ -570,7 +570,13 @@ class Population(Talker):
         """
         How should this object appear as a repr/str?
         """
-        return f"<{self.label} | population of {self.n} planets>"
+        return f"<{self.label} | {self.n} elements>"
+
+    def get(self, key):
+        """
+        Return an array of values for a column.
+        """
+        return getattr(self, key)
 
     def uncertainty(self, key):
         """
