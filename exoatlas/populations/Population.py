@@ -244,7 +244,7 @@ class Population(Talker):
             label = f"{self.label} + {other.label}"
 
         # create and return the new population
-        return Population(table, label=label)
+        return type(self)(standard=table, label=label)
 
     def remove_by_key(self, other, key="tidyname"):
         """
@@ -276,7 +276,7 @@ class Population(Talker):
             label = f"{self.label} - {other.label}"
 
         # create and return the new population
-        return Population(table, label=label)
+        return type(self)(standard=table, label=label)
 
     def __sub__(self, other):
         """
@@ -319,7 +319,7 @@ class Population(Talker):
                 label = None
             else:
                 label = f"Subset of {self.label}"
-            subset = Population(standard=self.standard[key], label=label, **self.plotkw)
+            subset = type(self)(standard=self.standard[key], label=label, **self.plotkw)
 
             # if the key is a column, raise an error
             if type(key) in self.standard.colnames:
@@ -385,7 +385,7 @@ class Population(Talker):
             label = "+".join(key)
 
         # create that new sub-population
-        return Population(standard=subset, label=label, **self.plotkw)
+        return type(self)(standard=subset, label=label, **self.plotkw)
 
     def create_subset_by_hostname(self, key):
         """
@@ -427,7 +427,7 @@ class Population(Talker):
             label = "+".join(key)
 
         # create that new sub-population
-        return Population(standard=subset, label=label, **self.plotkw)
+        return type(self)(standard=subset, label=label, **self.plotkw)
 
     def create_subset_by_position(
         self,
@@ -499,7 +499,7 @@ class Population(Talker):
         label = f"Spatial Cross-Match ({len(coordinates)} positions, {radius} radius)"
 
         # create that new sub-population
-        new_population = Population(standard=subset, label=label, **self.plotkw)
+        new_population = type(self)(standard=subset, label=label, **self.plotkw)
 
         # choose what to return
         if return_indices:
@@ -578,7 +578,7 @@ class Population(Talker):
         """
         return getattr(self, key)
 
-    def uncertainty(self, key):
+    def get_uncertainty(self, key):
         """
         Return an array of symmetric uncertainties on a column.
 
@@ -613,7 +613,7 @@ class Population(Talker):
         # then give up and return nans
         return np.nan * self.standard[key]
 
-    def uncertainty_lowerupper(self, key):
+    def get_uncertainty_lowerupper(self, key):
         """
         Return two arrays of lower and upper uncertainties on a column.
 
@@ -660,7 +660,7 @@ class Population(Talker):
         subset = self.standard.loc[name]
 
         # create a new object, from this subset
-        return Population(standard=subset, label=name, **self.plotkw)
+        return type(self)(standard=subset, label=name, **self.plotkw)
 
     def validate_columns(self):
         """
@@ -1183,7 +1183,7 @@ class Population(Talker):
             Rs = self.stellar_radius
             depth = (2 * H * Rp / Rs**2).decompose()
 
-            dlnm = self.uncertainty("mass") / self.mass
+            dlnm = self.get_uncertainty("mass") / self.mass
             bad = dlnm > 1 / threshold
             depth[bad] = np.nan
             return depth

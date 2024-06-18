@@ -291,7 +291,7 @@ class ExoplanetsPSCP(PredefinedPopulation):
             if k_original in self.raw_columns_without_errors:
                 # easy, just record the column itself with no error
                 s[k_new] = attach_unit(r[k_original], unit)
-                print(f"📕 populated {k_new} with {k_original}")
+                print(f"📕 populated {k_original} > {k_new}")
 
             elif k_original in self.raw_columns_with_errors:
                 # record the column itself
@@ -338,14 +338,12 @@ class ExoplanetsPSCP(PredefinedPopulation):
                     s[f"{k_new}_uncertainty_upper"][is_bounded == False] = np.nan
                     s[f"{k_new}_uncertainty_lower"][is_bounded == False] = np.nan
 
-                    print(
-                        f"👇 populated {k_new} and errors and limits with {k_original}"
-                    )
+                    print(f"👇 populated {k_original} > {k_new} and errors and limits ")
 
             else:
                 # easy, just record the column itself with no error
                 s[k_new] = attach_unit(r[k_original], unit)
-                print(f"🙋 populated {k_new} with {k_original}, but not 100% sure...")
+                print(f"🙋 populated {k_original} > {k_new} , but not 100% sure...")
 
             # keep track of reference for measurements
             if (k_original in self.raw_columns_with_errors_and_limits) or (
@@ -679,10 +677,11 @@ class Exoplanets(ExoplanetsPSCP):
         subset = super().__getitem__(key)
 
         # then trim the .ps population to only those (host)names in the subset
-        subset.individual_references = self.individual_references[
-            list(np.unique(subset.hostname))
-        ]
-        subset.individual_references.label = "Individual References"
+        if hasattr(self, "individual_references"):
+            subset.individual_references = self.individual_references[
+                list(np.unique(subset.hostname))
+            ]
+            subset.individual_references.label = "Individual References"
 
         return subset
 
@@ -716,3 +715,30 @@ class Exoplanets(ExoplanetsPSCP):
 
             self.individual_references.label = "Individual References"
             return self.individual_references
+
+    def plot_measurements_from_individual_references(self, x="mass", y="radius"):
+        """
+        Plot all available measurements from individual references.
+
+        Parameters
+        ----------
+        x : str
+            The quantity to plot on the x-axis.
+        y : str
+            The quantity to plot on the y-axis.
+        """
+        for p, c in zip([self.individual_references, self], ["orchid", "black"]):
+            plt.errorbar(
+                p.get(x),
+                p.get(y),
+                p.get_uncertainty_lowerupper(y),
+                p.get_uncertainty_lowerupper(x),
+                linewidth=0,
+                elinewidth=1,
+                marker="o",
+                color=c,
+                label=p.label,
+            )
+        plt.xlabel(x)
+        plt.ylabel(y)
+        plt.legend()

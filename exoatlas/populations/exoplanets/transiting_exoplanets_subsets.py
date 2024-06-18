@@ -128,10 +128,10 @@ sigma = 2.5
 def mass_is_good(pop):
     with np.errstate(invalid="ignore"):
         # the uncertainty must be greater than 0
-        exists = pop.uncertainty("mass") > 0
+        exists = pop.get_uncertainty("mass") > 0
 
         # the uncertainty must be less than a maximum
-        fractional = pop.uncertainty("mass") / pop.mass
+        fractional = pop.get_uncertainty("mass") / pop.mass
         small = fractional < pop.maximum_uncertainty
 
         return small & exists
