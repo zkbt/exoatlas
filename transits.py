@@ -9,13 +9,39 @@ from datetime import date
 from datetime import datetime
 from astropy.coordinates import SkyCoord
 from astroquery.ipac.nexsci.nasa_exoplanet_archive import NasaExoplanetArchive
-from astroplan import FixedTarget,EclipsingSystem, AtNightConstraint, is_event_observable # AltitudeConstraint, LocalTimeConstraint)
+from astroplan import FixedTarget,EclipsingSystem, AtNightConstraint, is_event_observable, AltitudeConstraint, LocalTimeConstraint
 from astroplan.plots import plot_airmass
-#from astroplan import Observer,TimeConstraint 
+from astroplan import Observer, TimeConstraint 
 import pytz
 from pytz import timezone
 
-def find_observable_transits(population, observer,obs_start_time, *args, **kwargs): # constraints=None, obs_start_time = datetime.now(), n_transits=1):
+def find_observable_transits(population, observer,obs_start_time, *args, **kwargs):# constraints=None, obs_start_time = datetime.now(), n_transits=1):
+    '''
+    Finds n observable transits for a population of 1 object starting from a given observation start time.
+
+    Parameters
+    -----------
+    population: an exoatlas Population object
+        Only accepts population objects that have a length of 1 (only 1 target)
+    observer: an astroplan Observer object
+        Where the observations are taking place
+    obs_start_time: an astropy Time object
+        Whne the observations are beginning
+
+    Args
+    -----
+    constraints: observing contraints from astroplan
+        default: observations occur after civil twilight
+    n_transits: int
+        default: 1 transit from given obs_start_time
+
+    Returns
+    --------
+    transit_table: astropy table
+        an astropy table with the population name, ra, dec, transit period, transit midpoint, transit duration, transit ingress time,transit midpoint time
+        ,and transit egress time
+
+    '''
     constraints = kwargs.get('constraints', AtNightConstraint.twilight_civil())
     #obs_start_time = kwargs.get('obs_start_time', Time(datetime.now(tz=pytz.utc)))
     n_transits = kwargs.get('n_transits', 1)
@@ -98,6 +124,31 @@ def find_observable_transits(population, observer,obs_start_time, *args, **kwarg
 
 
 def find_all_observable_transits(population,observer,obs_start_time,*args, **kwargs):
+    '''
+    Finds n observable transits for a population of objects starting from a given observation start time.
+
+    Parameters
+    -----------
+    population: an exoatlas Population object
+    observer: an astroplan Observer object
+        Where the observations are taking place
+    obs_start_time: an astropy Time object
+        Whne the observations are beginning
+
+    Args
+    -----
+    constraints: observing contraints from astroplan
+        default: observations occur after civil twilight
+    n_transits: int
+        default: 1 transit from given obs_start_time
+
+    Returns
+    --------
+    transit_table: astropy table
+        an astropy table with the population name, ra, dec, transit period, transit midpoint, transit duration, transit ingress time,transit midpoint time
+        ,and transit egress time
+
+    '''
     constraints = kwargs.get('constraints', AtNightConstraint.twilight_civil())
     #obs_start_time = kwargs.get('obs_start_time', datetime.now(tz=pytz.utc))
     n_transits = kwargs.get('n_transits', 1)
@@ -116,6 +167,23 @@ def find_all_observable_transits(population,observer,obs_start_time,*args, **kwa
 
 
 def make_airmass_plot(transit_table,observer,savefig=False):
+    '''
+    creates airmass plots from a given transit table
+
+    Parameters
+    -----------
+    transit_table: an astropy table
+        Result of find_observable transits or find_all_observable transits
+    observer: an astroplan Observer object
+        Where the observations are taking place
+
+
+    Returns
+    --------
+    airmass plots:
+        Airmass plots for each transit event in the given transit table
+
+    '''
     for i in range(len(transit_table)):
         name=transit_table['name'][i]
         ra = transit_table['ra'][i]
