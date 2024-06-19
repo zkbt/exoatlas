@@ -5,6 +5,15 @@ from .exoplanet_downloaders import *
 
 __all__ = ["Exoplanets", "ExoplanetsPSCP", "ExoplanetsPS"]
 
+suffixes = [
+    "_reference",
+    "",
+    "_uncertainty_lower",
+    "_uncertainty_upper",
+    "_lower_limit",
+    "_upper_limit",
+]
+
 
 def parse_reflink(x):
     """
@@ -23,15 +32,13 @@ def parse_reflink(x):
         The human-friendly string for this reference. Be careful, this might not
         necessarily by 100% unique, particularly if folks publish multiple planets
         in the same year.
-    url : str
-        The URL pointing to the reference. This should be unique.
     """
     try:
         url = x.split("href=")[1].split(" ")[0]
-        name = x.split(">")[1].split("<")[0]
-        return name, url
+        name = x.split(">")[1].split("<")[0].replace("&amp;", "+").strip()
+        return name  # , url
     except AttributeError:
-        return "", ""
+        return ""
 
 
 # apply some kludges to correct bad planet properties
@@ -160,6 +167,15 @@ class ExoplanetsPSCP(PredefinedPopulation):
 
         # load standard table(s) or ingest from raw data
         PredefinedPopulation.__init__(self, remake=remake, **plotkw)
+        # self._add_references_as_indices()
+
+    def _add_references_as_indices(self):
+        """
+        Add all keys that look like references as table indices for faster lookup.
+        """
+        for k in self.standard.colnames:
+            if "_reference" in k:
+                self._make_sure_index_exists(k)
 
     def download_raw_data(self, remake=False):
         """
@@ -354,6 +370,7 @@ class ExoplanetsPSCP(PredefinedPopulation):
                     print(
                         f"⚠️ ingested reference information for {k_original} > {k_new}"
                     )
+                    # s.add_index(f"{k_new}_reference")
                 except (KeyError, AssertionError):
                     print(
                         f"⚠️ no reference information found for {k_original} > {k_new}"
@@ -371,6 +388,7 @@ class ExoplanetsPSCP(PredefinedPopulation):
         populate_one_or_more_columns("discovery_method", "discoverymethod")
         populate_one_or_more_columns("discovery_year", "disc_year")
         populate_one_or_more_columns("discovery_reference", "disc_refname")
+        s["discovery_reference"] = [parse_reflink(x) for x in s["discovery_reference"]]
         populate_one_or_more_columns("discovery_facility", "disc_facility")
 
         # what are the host positions and kinematics?
@@ -583,6 +601,21 @@ class ExoplanetsPS(ExoplanetsPSCP):
     label = "ExoplanetsPS"
     _downloader = ExoplanetArchiveDownloader("ps")
 
+    def __init__(self, *args, **kwargs):
+        """
+        Initialize a population of all known exoplanets
+        using the NASA Exoplanet Archive `ps` table.
+
+        This contains many more rows than there are planets,
+        because there's one row for each reference (for each planet).
+
+        This also sets all the `*_reference` columns to serve as
+        table indices, to make them easy to extract for updating
+        individual planet references.
+        """
+        ExoplanetsPSCP.__init__(self, *args, **kwargs)
+        self._add_references_as_indices()
+
     def ingest_references(self, r, k):
         """
         Try to get the reference for a particular measurement.
@@ -679,7 +712,7 @@ class Exoplanets(ExoplanetsPSCP):
         # then trim the .ps population to only those (host)names in the subset
         if hasattr(self, "individual_references"):
             subset.individual_references = self.individual_references[
-                list(np.unique(subset.hostname))
+                list(np.unique(subset.name))
             ]
             subset.individual_references.label = "Individual References"
 
@@ -710,7 +743,7 @@ class Exoplanets(ExoplanetsPSCP):
             self.individual_references = ExoplanetsPS()
             # then trim the .ps population to only those (host)names in the subset
             self.individual_references = self.individual_references[
-                list(np.unique(self.hostname))
+                list(np.unique(self.name))
             ]
 
             self.individual_references.label = "Individual References"
@@ -742,3 +775,211 @@ class Exoplanets(ExoplanetsPSCP):
         plt.xlabel(x)
         plt.ylabel(y)
         plt.legend()
+
+    def check_individual_references(
+        self,
+        keys=["mass", "radius", "stellar_mass", "stellar_radius", "stellar_teff"],
+        planets=None,
+    ):
+        """
+        Summarize the available measurements for a particular quantity.
+
+        Parameters
+        ----------
+        planets : str, list
+            One planet to investigate, as a string,
+            or multiple planets to investigate, as a list of strings,
+            or, if None, show the entire population.
+        keys : str, list
+            One quantity to investigate, as a string,
+            or multiple quantities as a list of strings.
+
+        Returns
+        -------
+        table : Table
+            An abbreviated table summarizing the references and the
+            measurements they each provide, for the requested key(s).
+            The table will be sorted by planet name, to facilitate
+            comparing values within a particular system.
+        """
+
+        # extract the rows relevant to the requested planets
+        if planets == None:
+            pop = self
+        else:
+            pop = self[planets]
+
+        # replace a single key with a list of keys
+        if isinstance(keys, str):
+            keys = [keys]
+
+        # construct a list of columsn to appear in the final table
+        columns_to_include = ["name"]
+
+        # add all columns relevant to the requested key(s)
+        available_colnames = pop.standard.colnames
+        for k in keys:
+            if f"{k}_reference" in available_colnames:
+                for suffix in suffixes:
+                    if f"{k}{suffix}" in available_colnames:
+                        columns_to_include += [f"{k}{suffix}"]
+
+        # construct a subset table with just those columns, first row as actual, others as all available options
+        table = vstack(
+            [
+                pop.standard[columns_to_include],
+                pop.individual_references.standard[columns_to_include],
+            ]
+        )
+        table.add_column(["🏷️"] * len(table), index=0, name="is_being_used")
+        table["is_being_used"][: len(pop)] = "🗺️"
+        table.sort("name")
+
+        return table
+
+    def update_reference(self, references, keys=None, planets=None, verbose=False):
+        """
+        Modify the internal standardized data table to use
+        measurements from a particular reference.
+
+        Each planet may have multiple measurements available in the
+        NASA Exoplanet Archive. If you want to switch from the default
+        parameters that come from the merged Planetary Systems
+        Composite Parameters table to those coming from a particular
+        individual reference in the Planetary Systems table, you might...
+
+        1.  Run `.load_individual_references()` to make sure that the
+            data for individual references are loaded and stored in the
+            `.individul_references` attribute.
+        2.  Run `.check_individual_references()` to see what references
+            have useful data you might want to use for a particular planet.
+        3.  Run `.update_reference()` to use a reference to update the
+            parameters in the standardized population table.
+
+        Running this method will permanently modify the `.standard` table
+        inside the `Exoplanets` population. The only way to be sure to
+        undo the effect is to create a new `Exoplanets` population.
+
+        This will only update finite values; it won't overwrite existing
+        values with nan. To do so, we either need to add a keyword option
+        here, or you'll need to use `.update_values`.
+
+        TO-DO: This feels slow and inefficient; I'm sure there's a faster
+        and/or classier way to do this, but let's call this good for now!
+
+        Parameters
+        ----------
+        references : str, list
+            One reference to try to use, as a string,
+            or multiple references to try to use, as a list of strings.
+            References will be updated in order, so later references
+            in a list will overwrite earlier ones.
+        keys : str, list
+            One quantity to try to update, as a string,
+            or multiple quantities as a list of strings.
+        planets : str, list
+            One planet to try to update, as a string,
+            or multiple planets to update, as a list of strings,
+            or, if None, consider the entire population.
+        verbose : bool
+            Whether all changes should be displayed.
+        """
+
+        warning_message = f"""
+        Your request to update references with...
+            references = {references}
+            keys = {keys}
+            planets = {planets}
+        ...failed somehow. Sorry!
+        """
+        # make sure references are a list, even with just one element
+        if isinstance(references, str):
+            references = [references]
+
+        # make sure keys are a list, which might be all columns with references
+        if keys == None:
+            keys_with_reference = [
+                x.split("_reference")[0]
+                for x in self.standard.colnames
+                if "_reference" in x
+            ]
+            keys = [k for k in keys_with_reference if k in self.standard.colnames]
+        elif isinstance(keys, str):
+            keys = [keys]
+
+        # make sure planets are a list, which might be all planets in population
+        if planets == None:
+            planets_to_index = slice(None, None, None)
+        elif isinstance(planets, str):
+            planets_to_index = [clean(planets).lower()]
+        else:
+            planets_to_index = [clean(x).lower() for x in planets]
+
+        # make sure something happens
+        nothing_happened = True
+
+        # loop over columns
+        for k in keys:
+
+            # extract a table of just these references, or give up
+            try:
+                these_references = Table(
+                    self.individual_references.standard.loc[
+                        f"{k}_reference", references
+                    ]
+                )
+            except KeyError:
+                if verbose:
+                    print(f'No reference(s) "{references}" found for key "{k}"')
+                continue
+
+            # extract a (possibly even smaller) table of just these planets, or give up
+            try:
+                these_planets = Table(
+                    these_references.loc["tidyname", planets_to_index]
+                )
+            except KeyError:
+                if verbose:
+                    print(
+                        'No planet(s) "{planets_to_index}" found for reference "{references}"; moving on.'
+                    )
+                continue
+
+            # find where there is a real new measurement for this key
+            is_finite = np.isfinite(these_planets[f"{k}"])
+            if verbose:
+                print(
+                    k,
+                    planets_to_index,
+                    is_finite,
+                    type(is_finite).__name__,
+                    (type(these_planets).__name__),
+                )
+            new = these_planets[is_finite]
+
+            # construct a new table of the references we want to update for this key
+            if len(new) > 0:
+                for tidyname in np.unique(new["tidyname"]):
+                    old = self.standard.loc["tidyname", tidyname]
+                    if verbose:
+                        old_for_display = copy.deepcopy(old)
+                    keys_to_display = ["tidyname"]
+                    for s in suffixes:
+                        try:
+                            old[f"{k}{s}"] = new[f"{k}{s}"][0]
+                            keys_to_display.append(f"{k}{s}")
+                        except (IndexError, KeyError):
+                            pass
+                    if verbose:
+                        change_summary = vstack(
+                            [old_for_display[keys_to_display], new[keys_to_display][0]]
+                        )
+                        change_summary.add_column(
+                            ["old", "new"], index=0, name="version"
+                        )
+                        display(change_summary)
+
+                nothing_happened = False
+
+        if nothing_happened:
+            warnings.warn(warning_message)

@@ -150,8 +150,21 @@ class Population(Talker):
             ]
 
         # make sure the table is searchable via names
-        self.standard.add_index("tidyname")
-        self.standard.add_index("tidyhostname")
+        self._make_sure_index_exists("tidyname")
+        self._make_sure_index_exists("tidyhostname")
+
+    def _list_table_indices(self):
+        """
+        Return a list of keys being used as table indices.
+        """
+        return [x.columns[0].name for x in self.standard.indices]
+
+    def _make_sure_index_exists(self, k):
+        """
+        Add a key as an index, but don't add it twice.
+        """
+        if k not in self._list_table_indices():
+            self.standard.add_index(k)
 
     @property
     def fileprefix(self):

@@ -1,5 +1,10 @@
 from .version import *
 
+try:
+    from IPython.display import display
+except ImportError:
+    display = print
+
 # imports that are need by many exoatlas subsections
 from ast import Import
 import os, sys, time, shutil, warnings, copy, glob
@@ -122,10 +127,11 @@ def clean(s):
     """
     A wrapper function to clean up complicated strings.
     """
-    bad = """ !@#$%^&*()+-_'",./<>?"""
+    bad = """ !@#$%^&*()+-_'",./<>?;"""
     cleaned = str(s) + ""
     for c in bad:
         cleaned = cleaned.replace(c, "")
+
     return cleaned
 
 
@@ -195,5 +201,5 @@ class AtlasError(ValueError):
 
 import warnings
 
-warnings.catch_warnings()
-warnings.simplefilter("ignore")
+# warnings.catch_warnings()
+# warnings.simplefilter("ignore")
