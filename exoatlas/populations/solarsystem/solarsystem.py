@@ -52,7 +52,7 @@ class SolarSystem(PredefinedPopulation):
         t = trimmed
 
         # create an empty standardized table
-        s = Table()
+        s = QTable()
         s["name"] = t["name"]
         s["hostname"] = "Sun"
 

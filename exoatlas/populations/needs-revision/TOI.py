@@ -76,7 +76,7 @@ class TOI(PredefinedPopulation):
 
         t = trimmed
         n = len(t)
-        s = Table()
+        s = QTable()
 
         # use the TOI as the name
         s["name"] = [f"TOI{toi:.2f}" for toi in t["TOI"]]

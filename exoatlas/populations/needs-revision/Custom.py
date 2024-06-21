@@ -24,6 +24,6 @@ class Custom(PredefinedPopulation):
 
         d = listofdictionaries
 
-        self.standard = Table(d)
+        self.standard = QTable(d)
         #    # and resave it as a numpy table (for faster loading next time)
         #    np.save(standard_numpy, self.standard)

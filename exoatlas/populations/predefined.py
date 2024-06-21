@@ -27,7 +27,7 @@ class PredefinedPopulation(Population):
         ----------
         remake : bool
             Whether we re-ingest this table from its raw ingredients.
-        standard : astropy.table.Table
+        standard : astropy.table.QTable
             A standardized table with which to initialize this population;
             this is mostly used for creating subsets of existing predefined
             populations without having to reinitialize a cumbersome full
@@ -47,7 +47,7 @@ class PredefinedPopulation(Population):
                 # or create a new standardized table and save it
                 standard = self.ingest_raw_data(remake=remake)
 
-        assert (type(standard) == Table) or (type(standard) == Row)
+        assert type(standard) in [QTable, Table, Row]
 
         # initialize with a standard table
         Population.__init__(
@@ -101,7 +101,7 @@ class PredefinedPopulation(Population):
 
         Returns
         -------
-        standard : astropy.table.Table
+        standard : astropy.table.QTable
             A table of planet properties,
             with a minimal set of columns.
         """

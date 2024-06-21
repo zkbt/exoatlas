@@ -57,7 +57,7 @@ class KOI(PredefinedPopulation):
         t = self.trimmed
         n = len(t)
 
-        s = Table()
+        s = QTable()
         s["name"] = t[
             "kepler_name"
         ]  # [t['kepler_name'][i] + t['pl_letter'][i] for i in range(len(t))]

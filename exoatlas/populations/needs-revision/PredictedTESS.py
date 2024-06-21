@@ -25,7 +25,7 @@ class PredictedTESS(PredefinedPopulation):
 
     def create_standardardized(self):
         t = self.trimmed
-        s = Table()
+        s = QTable()
         s["name"] = ["tess{0:04}i".format(i) for i in range(len(t))]
         s["kepid"] = None
         s["period"] = t["P"]

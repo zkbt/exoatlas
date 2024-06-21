@@ -189,7 +189,7 @@ class ExoplanetsPSCP(PredefinedPopulation):
 
         Returns
         -------
-        raw : astropy.table.Table
+        raw : astropy.table.QTable
             A raw, untrimmed, unstandardized table.
         """
 
@@ -205,12 +205,12 @@ class ExoplanetsPSCP(PredefinedPopulation):
 
         Parameters
         ----------
-        raw : astropy.table.Table
+        raw : astropy.table.QTable
             A raw, untrimmed, unstandardized table.
 
         Returns
         -------
-        trimmed : astropy.table.Table
+        trimmed : astropy.table.QTable
             A raw, trimmed, unstandardized table.
         """
 
@@ -248,12 +248,12 @@ class ExoplanetsPSCP(PredefinedPopulation):
 
         Parameters
         ----------
-        raw : astropy.table.Table
+        raw : astropy.table.QTable
             A raw unstandardized table downloaded from the archive.
 
         Returns
         -------
-        standard : astropy.table.Table
+        standard : astropy.table.QTable
             A standardize table of exoplanet properties.
         """
 
@@ -261,7 +261,7 @@ class ExoplanetsPSCP(PredefinedPopulation):
         r = raw
 
         # the new standardized table
-        s = Table()
+        s = QTable()
 
         def strip_even_if_masked(x):
             """
@@ -521,12 +521,12 @@ class ExoplanetsPSCP(PredefinedPopulation):
 
         Parameters
         ----------
-        standard : astropy.table.Table
+        standard : astropy.table.QTable
             The filled table that will populate the `.standard` table.
 
         Returns
         -------
-        trimmed : astropy.table.Table
+        trimmed : astropy.table.QTable
             The .standard table with bad data tidied away.
         """
 
@@ -571,7 +571,7 @@ class ExoplanetsPSCP(PredefinedPopulation):
 
         Parameters
         ----------
-        r : astropy.table.Table
+        r : astropy.table.QTable
             The raw table being ingested.
         k : str
             The key for which a reference should be checked.
@@ -629,7 +629,7 @@ class ExoplanetsPS(ExoplanetsPSCP):
 
         Parameters
         ----------
-        r : astropy.table.Table
+        r : astropy.table.QTable
             The raw table being ingested.
         k : str
             The key for which a reference should be checked.
@@ -923,7 +923,7 @@ class Exoplanets(ExoplanetsPSCP):
 
             # extract a table of just these references, or give up
             try:
-                these_references = Table(
+                these_references = QTable(
                     self.individual_references.standard.loc[
                         f"{k}_reference", references
                     ]
@@ -935,7 +935,7 @@ class Exoplanets(ExoplanetsPSCP):
 
             # extract a (possibly even smaller) table of just these planets, or give up
             try:
-                these_planets = Table(
+                these_planets = QTable(
                     these_references.loc["tidyname", planets_to_index]
                 )
             except KeyError:

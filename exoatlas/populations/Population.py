@@ -115,7 +115,7 @@ class Population(Talker):
 
         Parameters
         ----------
-        standard : astropy.table.Table
+        standard : astropy.table.QTable
             A table that contains at least a few core essential columns.
         label : str
             A string by which this table can be identified. This will be
@@ -126,7 +126,7 @@ class Population(Talker):
         """
 
         # a standardized table with a minimum set of columns we can expect
-        self.standard = Table(standard)
+        self.standard = QTable(standard)
 
         # store a label for this population
         self.label = label
@@ -538,12 +538,13 @@ class Population(Talker):
             raise RuntimeError("Yikes!")
         try:
             # extract the column from the standardized table
-            try:
+            return self.standard[key]
+            """try:
                 # try to return the array of quantities (with units)
                 return self.standard[key].quantity
             except TypeError:
                 # columns without units don't have quantities
-                return self.standard[key].data
+                return self.standard[key].data"""
         except KeyError:
             # try to get a plotkw from this pop, from the plotting defaults, from None
             try:
@@ -701,47 +702,76 @@ class Population(Talker):
 
         return np.array([clean(name) in clean(x) for x in self.name]).nonzero()[0]
 
-    def update_planet(self, planet_name, **kwargs):
+    def update_values(self, planets, **kwargs):
         """
-        Correct the properties of a particular planet,
-        modifying its values in the standardized table.
+        Update values for one or more planets.
+
+        This modifies the internal `.standard` table
+        to update individual values. This is meant to
+        be a tool that can be used to provide alternate,
+        better, and/or unpublished planet parameters
+        to a population.
+
+        Changes made by this function will only last for
+        the duration of the Python session in which they
+        are run. If you want them to be more permanent,
+        you will need to save out the population to a
+        custom curated standardized file.
 
         Parameters
         ----------
-        planet_name : str
-            The name of the planet to fix.
-        **kwargs : dict
-            Keyword arguments will go into modifying
-            the properties of that planet.
+        planets : str, list
+            Names of one or more planets to update.
+        kwargs : dict
+            All other keyword arguments will be passed to update
+            the values for the planet(s). Quantities should have
+            appropriate units.
+
+            If only one planet eis being updated, quantities should
+            each be single values. If N planets are being updated,
+            quantities should be (N,)-dimensional arrays in the
+            same order as the planets.
         """
 
-        # find the entry to replace
-        match = self.find(planet_name)
-        if len(match) != 1:
-            self.speak(f"failed when trying to modify parameters for {planet_name}")
-            return
+        # create `tidyname` keys to index by planet name
+        if isinstance(planets, str):
+            planets_to_index = [clean(planets).lower()]
         else:
-            match = match[0]
+            planets_to_index = [clean(p).lower() for p in planets]
 
-        # loop over the keys, modifying each
-        self.speak(f'for planet "{planet_name}"')
-        for k, new in kwargs.items():
-            old = self.standard[k][match]
-            self.speak(f" {k} changed from {old} to {new}")
-            self.standard[k][match] = new
-            if k == "name":
-                self.standard["tidyname"][match] = clean(new).lower()
-            if k == "hostname":
-                self.standard["tidyhostname"][match] = clean(new).lower()
+        # extract just the subsection of the table relating to these planets
+        i = self.standard.loc_indices[planets_to_index]
 
-    def removeRows(self, indices):
-        raise NotImplementedError(
-            """
-        The `removeRows` method has been removed. Please use something like
-        `population[0:42]` or `population[ok]` to use slices, indices, or masks
-        to create new sub-populations that extract subsets from this one.
-        """
-        )
+        # loop over keyword arguments
+        for k, v in kwargs.items():
+
+            # make sure it's a valid keyword value to assign
+            # assert k in subset.colnames
+
+            if k[-12:] == "_uncertainty":
+                # nudge symmetric uncertainties into asymmetric form
+                for suffix, sign in zip(["_lower", "_upper"], [-1, 1]):
+                    old = self.standard[i][k + suffix] * 1
+                    new = sign * np.abs(v)
+                    self.standard[i][k + suffix] = new
+                    print(f"{planets_to_index} | {k+suffix}: {old} > {new}")
+            else:
+                # update value in table
+                old = self.standard[i][k] * 1
+                new = v
+                self.standard[i][k] = new
+                print(f"{planets_to_index} | {k}: {old} > {new}")
+
+            # warn if uncertainties should have been provided but weren't
+            should_have_uncertainty = f"{k}_uncertainty_lower" in self.standard.colnames
+            does_have_uncertainty = (f"{k}_uncertainty" in kwargs) or (
+                (f"{k}_uncertainty_lower" in kwargs)
+                and (f"{k}_uncertainty_upper" in kwargs)
+            )
+            if should_have_uncertainty and (does_have_uncertainty == False):
+                warnings.warn(
+                    f"'{k}' should probably have some uncertainties, which you didn't provide."
+                )
 
     @property
     def n(self):
@@ -1538,7 +1568,7 @@ class Population(Talker):
 
         Returns
         -------
-        table : astropy.table.Table
+        table : astropy.table.QTable
             A table, with those columns, in the same order
             as the Population itself.
         """
@@ -1548,7 +1578,7 @@ class Population(Talker):
         d = {c: getattr(self, c) for c in desired_columns}
 
         # turn that into an astropy Table
-        t = Table(d)
+        t = QTable(d)
 
         return t
 
@@ -1580,7 +1610,7 @@ class Population(Talker):
 
         Returns
         -------
-        table : astropy.table.Table
+        table : astropy.table.QTable
             A table, with those columns, in the same order
             as the Population itself.
         """

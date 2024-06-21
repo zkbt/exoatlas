@@ -48,7 +48,7 @@ class TOI(PredefinedPopulation):
 
         t = trimmed
         n = len(t)
-        s = Table()
+        s = QTable()
 
         # PICK UP FROM HERE!!!!!!!!!!!!!
 
