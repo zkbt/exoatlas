@@ -251,7 +251,10 @@ class Population(Talker):
             warnings.simplefilter("ignore")
 
             #  create a new table, joining both together
-            table = join(self.standard, other.standard, join_type="outer")
+            table = join(
+                self.standard.filled(), other.standard.filled(), join_type="outer"
+            )
+            # TO-DO, I'm not 100% sure why the tables need to be `filled()` here; shouldn't they already be?
 
             # create an informative label
             label = f"{self.label} + {other.label}"
@@ -539,12 +542,6 @@ class Population(Talker):
         try:
             # extract the column from the standardized table
             return self.standard[key]
-            """try:
-                # try to return the array of quantities (with units)
-                return self.standard[key].quantity
-            except TypeError:
-                # columns without units don't have quantities
-                return self.standard[key].data"""
         except KeyError:
             # try to get a plotkw from this pop, from the plotting defaults, from None
             try:
@@ -799,7 +796,7 @@ class Population(Talker):
         """
 
         # pull out the actual values from the table
-        a = self.standard["semimajoraxis"].copy().quantity
+        a = self.standard["semimajoraxis"].copy()
 
         # try to replace bad ones with NVK3L
         bad = np.isfinite(a) == False
@@ -815,8 +812,8 @@ class Population(Talker):
         stillbad = np.isfinite(a) == False
         self.speak(f"{sum(stillbad)}/{self.n} are still missing after NVK3L")
         # (pull from table to avoid potential for recursion)
-        a_over_rs = self.standard["transit_ar"][stillbad].quantity
-        rs = self.standard["stellar_radius"][stillbad].quantity
+        a_over_rs = self.standard["transit_ar"][stillbad]
+        rs = self.standard["stellar_radius"][stillbad]
         a[stillbad] = a_over_rs * rs
 
         return a
@@ -885,7 +882,7 @@ class Population(Talker):
         """
 
         # pull out the actual values from the table
-        e = self.standard["eccentricity"].copy().quantity
+        e = self.standard["eccentricity"].copy()
 
         # try to replace bad ones with NVK3L
         bad = np.isfinite(e) == False
@@ -902,7 +899,7 @@ class Population(Talker):
         """
 
         # pull out the actual values from the table
-        omega = self.standard["omega"].copy().quantity
+        omega = self.standard["omega"].copy()
 
         # try to replace bad ones with NVK3L
         bad = np.isfinite(omega) == False
@@ -921,7 +918,7 @@ class Population(Talker):
         """
 
         # pull out the actual values from the table
-        b = self.standard["transit_b"].copy().quantity
+        b = self.standard["transit_b"].copy()
 
         # try to replace bad ones with NVK3L
         bad = np.isfinite(b) == False
@@ -929,7 +926,7 @@ class Population(Talker):
 
         # calculate from the period and the stellar mass
         a_over_rs = self.a_over_rs[bad]
-        i = self.standard["inclination"][bad].quantity
+        i = self.standard["inclination"][bad]
         e = self.e[bad]
         omega = self.omega[bad]
         b[bad] = a_over_rs * np.cos(i) * ((1 - e**2) / (1 + e * np.sin(omega)))
@@ -994,7 +991,7 @@ class Population(Talker):
         """
 
         # pull out the actual values from the table
-        d = self.standard["transit_depth"].copy().quantity
+        d = self.standard["transit_depth"].copy()
 
         # try to replace bad ones with NVK3L
         bad = np.isfinite(d) == False
@@ -1022,7 +1019,7 @@ class Population(Talker):
             warnings.simplefilter("ignore")
 
             # pull out the actual values from the table
-            d = self.standard["transit_duration"].copy().quantity
+            d = self.standard["transit_duration"].copy()
 
             # try to replace bad ones with NVK3L
             bad = np.isfinite(d) == False
@@ -1058,7 +1055,7 @@ class Population(Talker):
         """
 
         # pull out the actual values from the table
-        M = self.standard["mass"].copy().quantity
+        M = self.standard["mass"].copy()
 
         # try to replace bad ones with NVK3L
         bad = np.isfinite(M) == False
@@ -1087,7 +1084,7 @@ class Population(Talker):
         """
 
         # pull out the actual values from the table
-        R = self.standard["radius"].copy().quantity
+        R = self.standard["radius"].copy()
 
         # try to replace bad ones with NVK3L
         bad = np.isfinite(R) == False
@@ -1119,7 +1116,7 @@ class Population(Talker):
         """
 
         # pull out the actual values from the table
-        age = self.standard["stellar_age"].copy().quantity
+        age = self.standard["stellar_age"].copy()
 
         # try to replace bad ones with NVK3L
         bad = np.isfinite(age) == False

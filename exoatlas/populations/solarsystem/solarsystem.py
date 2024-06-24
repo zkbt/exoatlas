@@ -93,18 +93,14 @@ class SolarSystem(PredefinedPopulation):
 
         # some other planet parameters we might not need for the solar system
         s["rv_semiamplitude"] = np.nan * u.m / u.s
-        s["radius_ratio"] = (
-            (s["radius"].quantity / s["stellar_radius"].quantity).decompose().value
-        )
+        s["radius_ratio"] = (s["radius"] / s["stellar_radius"]).decompose().value
         s["distance"] = np.nan * u.pc
         s["ra"] = 0.0 * u.deg
         s["dec"] = 0.0 * u.deg
         s["discovery_facility"] = "humans"
         s["transit_midpoint"] = np.nan * u.day
         s["transit_duration"] = np.nan * u.day
-        s["transit_depth"] = (
-            s["radius"].quantity / s["stellar_radius"].quantity
-        ).decompose() ** 2
+        s["transit_depth"] = (s["radius"] / s["stellar_radius"]).decompose() ** 2
         s["transit_b"] = 0.0
         s["inclination"] = 90 * u.deg
 

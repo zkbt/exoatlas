@@ -27,6 +27,7 @@ def test_exoplanets():
     Can we make a population of confirmed exoplanets?
     """
     p = Exoplanets(remake=False)
+    p.load_individual_references()
     p.validate_columns()
 
     # check that the background reference population for Exoplanets filters too

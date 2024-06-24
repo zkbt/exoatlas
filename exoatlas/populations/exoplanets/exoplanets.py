@@ -743,7 +743,7 @@ class Exoplanets(ExoplanetsPSCP):
             self.individual_references = ExoplanetsPS()
             # then trim the .ps population to only those (host)names in the subset
             self.individual_references = self.individual_references[
-                list(np.unique(self.name))
+                list(np.unique(self.tidyname))
             ]
 
             self.individual_references.label = "Individual References"
