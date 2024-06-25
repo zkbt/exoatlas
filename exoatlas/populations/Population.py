@@ -92,34 +92,56 @@ allowed_plotkw += ["s", "c", "cmap", "norm", "vmin", "vmax" "outlined", "filled"
 
 class Population(Talker):
     """
-    Create a population from a standardized table.
+    Populations of astronomical objects might contain
+        Exoplanets (planets with host stars),
+        Solar System objects (major/minor planets),
+        Stars (single or multiples),
+    or more!
     """
 
     # kludge?
     _pithy = True
 
-    def __init__(self, standard, label="unknown", verbose=False, **plotkw):
+    def __init__(self, standard, label="unknown", **plotkw):
         """
         Initialize a Population of exoplanets from a standardized table.
 
+        This creates a population from a standardized data table,
+        effectively just storing a table in the right format inside
+        the object. To simplify indexing via system name without having
+        to stress about capitalization and/or spaces, the population
+        will define a `tidyname` and `tidyhostname` columns, and use
+        those as table indices for searching via name.
+
         Parameters
         ----------
-        standard : astropy.table.Table
-            A table that contains all the necessary columns.
+        standard : astropy.table.QTable, str
+            If a Table, the standardized data table.
+            If a string, the filename to the standardized data table.
+        label : str
+            A string by which this table can be identified. This will be
+            used for plots and for saving data files, so please try to
+            pick something informative and unique!
         **plotkw : dict
-            All other keyword arguments wil
+            All other keyword arguments will be taken as plotting suggestions.
         """
 
-        # a standardized table with a minimum set of columns we can expect
-        self.standard = Table(standard)
+        if isinstance(standard, Table) or isinstance(standard, Row):
+            # a standardized table with a minimum set of columns we can expect
+            self.standard = QTable(standard)
 
-        # store a label for this population
-        self.label = label
+            # store a label for this population
+            self.label = label
 
-        # keywords to use for plotting
-        self.plotkw = plotkw
+            # keywords to use for plotting
+            self.plotkw = plotkw
 
-        self._pithy = verbose == False
+        elif isinstance(standard, str):
+            filename = standard
+            self.standard = QTable(ascii.read(filename))
+            self.label = self.standard.meta["label"]
+            self.plotkw = self.standard.meta["plotkw"]
+
         # define some cleaned names and hostnames, for indexing
         try:
             self.standard["tidyname"]
@@ -136,21 +158,109 @@ class Population(Talker):
             ]
 
         # make sure the table is searchable via names
-        self.standard.add_index("tidyname")
-        self.standard.add_index("tidyhostname")
+        self._make_sure_index_exists("tidyname")
+        self._make_sure_index_exists("tidyhostname")
+
+    def _list_table_indices(self):
+        """
+        Return a list of keys being used as table indices.
+        """
+        return [x.columns[0].name for x in self.standard.indices]
+
+    def _make_sure_index_exists(self, k):
+        """
+        Add a key as an index, but don't add it twice.
+        """
+        if k not in self._list_table_indices():
+            self.standard.add_index(k)
+
+    @property
+    def fileprefix(self):
+        """
+        Define a fileprefix for this population, to be used
+        for setting the filename of the standardized population.
+        """
+        return clean(self.label)
+
+    @property
+    def standardized_data_path(self):
+        """
+        Define the filepath for the standardized table.
+        """
+        return os.path.join(directories["data"], f"standardized-{self.fileprefix}.txt")
+
+    def save(self, filename=None, overwrite=True):
+        """
+        Save this population out to a file.
+
+        This saves the standardized data table from this population
+        out to a file, along with metadata needed to be loaded
+        back into as a drop-in replacement for a live population.
+
+        Parameters
+        ----------
+        filename : str
+            The filepath to which the population should be saved.
+        overwrite : bool
+            Whether
+
+        Examples
+        --------
+        >>> from exoatlas import *
+        >>> one = Exoplanets()['GJ1132b']
+        >>> one.save('pop.txt')
+        >>> the_same_one = Population('pop.txt')
+        """
+
+        # be a little fussy about overwriting automatic filenames
+        if filename == None:
+            filename = f"exoatlas-population-{self.label}.ecsv"
+            overwrite = False
+            if os.path.exists(filename):
+                warnings.warn(
+                    f"{filename} will not be overwritten unless you explicitly provide a filename."
+                )
+
+                # save the table as an ascii table for humans to read
+        to_save = copy.deepcopy(self.standard)
+        to_save.meta["label"] = self.label
+        to_save.meta["plotkw"] = self.plotkw
+
+        to_save.write(filename, format="ascii.ecsv", overwrite=overwrite)
+        print(
+            f"""
+        Saved {self} to {filename}.
+        It can be reloaded with `x = Population('{filename}')`
+        """
+        )
 
     def sort(self, x, reverse=False):
         """
         Sort this population by some key or attribute.
+
+        This sorts the population in place, meaning that the
+        Population object from which it is called will be modified.
+
+        Parameters
+        ----------
+        x : str
+            The key by which to sort the table.
+        reverse : bool
+            Whether to reverse the sort order.
+                `reverse = False` means low to high
+                `reverse == True` means high to low
         """
 
+        # get the values by which to sort the population
         to_sort = getattr(self, x)
+
+        # define the sorting indices
         i = np.argsort(to_sort)
         if reverse:
             i = i[::-1]
 
+        # reorder the standardized table
         self.standard = self.standard[i]
-        return self
 
     def __add__(self, other):
         """
@@ -177,13 +287,16 @@ class Population(Talker):
             warnings.simplefilter("ignore")
 
             #  create a new table, joining both together
-            table = join(self.standard, other.standard, join_type="outer")
+            table = join(
+                self.standard.filled(), other.standard.filled(), join_type="outer"
+            )
+            # TO-DO, I'm not 100% sure why the tables need to be `filled()` here; shouldn't they already be?
 
             # create an informative label
             label = f"{self.label} + {other.label}"
 
         # create and return the new population
-        return Population(table, label=label)
+        return type(self)(standard=table, label=label)
 
     def remove_by_key(self, other, key="tidyname"):
         """
@@ -215,7 +328,7 @@ class Population(Talker):
             label = f"{self.label} - {other.label}"
 
         # create and return the new population
-        return Population(table, label=label)
+        return type(self)(standard=table, label=label)
 
     def __sub__(self, other):
         """
@@ -240,8 +353,17 @@ class Population(Talker):
     def __getitem__(self, key):
         """
         Create a subpopulation of planets by indexing, slicing, or masking.
+
+        Parameters
+        ----------
+        key : int, list, array, slice
+            An index, slice, or mask to select a subset of the population.
+
+        Returns
+        -------
+        subset : Population
+            A subset of the population, as set by the index, slice, or mask.
         """
-        # FIXME -- maybe make it easier to pull out intermediate masks?
 
         try:
             # if the key is an index/slice/mask, return it
@@ -249,7 +371,7 @@ class Population(Talker):
                 label = None
             else:
                 label = f"Subset of {self.label}"
-            subset = Population(standard=self.standard[key], label=label, **self.plotkw)
+            subset = type(self)(standard=self.standard[key], label=label, **self.plotkw)
 
             # if the key is a column, raise an error
             if type(key) in self.standard.colnames:
@@ -315,7 +437,7 @@ class Population(Talker):
             label = "+".join(key)
 
         # create that new sub-population
-        return Population(standard=subset, label=label, **self.plotkw)
+        return type(self)(standard=subset, label=label, **self.plotkw)
 
     def create_subset_by_hostname(self, key):
         """
@@ -357,7 +479,7 @@ class Population(Talker):
             label = "+".join(key)
 
         # create that new sub-population
-        return Population(standard=subset, label=label, **self.plotkw)
+        return type(self)(standard=subset, label=label, **self.plotkw)
 
     def create_subset_by_position(
         self,
@@ -429,7 +551,7 @@ class Population(Talker):
         label = f"Spatial Cross-Match ({len(coordinates)} positions, {radius} radius)"
 
         # create that new sub-population
-        new_population = Population(standard=subset, label=label, **self.plotkw)
+        new_population = type(self)(standard=subset, label=label, **self.plotkw)
 
         # choose what to return
         if return_indices:
@@ -451,16 +573,11 @@ class Population(Talker):
         key : str
             The attribute we're trying to get.
         """
-        if key == "label":
-            raise RuntimeError("Yikes!")
+        if key in ["label", 'plotkw', 'standard']:
+            raise RuntimeError(f"Yikes! {key}")
         try:
             # extract the column from the standardized table
-            try:
-                # try to return the array of quantities (with units)
-                return self.standard[key].quantity
-            except TypeError:
-                # columns without units don't have quantities
-                return self.standard[key].data
+            return self.standard[key]
         except KeyError:
             # try to get a plotkw from this pop, from the plotting defaults, from None
             try:
@@ -500,9 +617,15 @@ class Population(Talker):
         """
         How should this object appear as a repr/str?
         """
-        return f"<{self.label} | population of {self.n} planets>"
+        return f"<{self.label} | {self.n} elements>"
 
-    def uncertainty(self, key):
+    def get(self, key):
+        """
+        Return an array of values for a column.
+        """
+        return getattr(self, key)
+
+    def get_uncertainty(self, key):
         """
         Return an array of symmetric uncertainties on a column.
 
@@ -537,7 +660,7 @@ class Population(Talker):
         # then give up and return nans
         return np.nan * self.standard[key]
 
-    def uncertainty_lowerupper(self, key):
+    def get_uncertainty_lowerupper(self, key):
         """
         Return two arrays of lower and upper uncertainties on a column.
 
@@ -584,7 +707,7 @@ class Population(Talker):
         subset = self.standard.loc[name]
 
         # create a new object, from this subset
-        return Population(standard=subset, label=name, **self.plotkw)
+        return type(self)(standard=subset, label=name, **self.plotkw)
 
     def validate_columns(self):
         """
@@ -612,47 +735,76 @@ class Population(Talker):
 
         return np.array([clean(name) in clean(x) for x in self.name]).nonzero()[0]
 
-    def update_planet(self, planet_name, **kwargs):
+    def update_values(self, planets, **kwargs):
         """
-        Correct the properties of a particular planet,
-        modifying its values in the standardized table.
+        Update values for one or more planets.
+
+        This modifies the internal `.standard` table
+        to update individual values. This is meant to
+        be a tool that can be used to provide alternate,
+        better, and/or unpublished planet parameters
+        to a population.
+
+        Changes made by this function will only last for
+        the duration of the Python session in which they
+        are run. If you want them to be more permanent,
+        you will need to save out the population to a
+        custom curated standardized file.
 
         Parameters
         ----------
-        planet_name : str
-            The name of the planet to fix.
-        **kwargs : dict
-            Keyword arguments will go into modifying
-            the properties of that planet.
+        planets : str, list
+            Names of one or more planets to update.
+        kwargs : dict
+            All other keyword arguments will be passed to update
+            the values for the planet(s). Quantities should have
+            appropriate units.
+
+            If only one planet eis being updated, quantities should
+            each be single values. If N planets are being updated,
+            quantities should be (N,)-dimensional arrays in the
+            same order as the planets.
         """
 
-        # find the entry to replace
-        match = self.find(planet_name)
-        if len(match) != 1:
-            self.speak(f"failed when trying to modify parameters for {planet_name}")
-            return
+        # create `tidyname` keys to index by planet name
+        if isinstance(planets, str):
+            planets_to_index = [clean(planets).lower()]
         else:
-            match = match[0]
+            planets_to_index = [clean(p).lower() for p in planets]
 
-        # loop over the keys, modifying each
-        self.speak(f'for planet "{planet_name}"')
-        for k, new in kwargs.items():
-            old = self.standard[k][match]
-            self.speak(f" {k} changed from {old} to {new}")
-            self.standard[k][match] = new
-            if k == "name":
-                self.standard["tidyname"][match] = clean(new).lower()
-            if k == "hostname":
-                self.standard["tidyhostname"][match] = clean(new).lower()
+        # extract just the subsection of the table relating to these planets
+        i = self.standard.loc_indices[planets_to_index]
 
-    def removeRows(self, indices):
-        raise NotImplementedError(
-            """
-        The `removeRows` method has been removed. Please use something like
-        `population[0:42]` or `population[ok]` to use slices, indices, or masks
-        to create new sub-populations that extract subsets from this one.
-        """
-        )
+        # loop over keyword arguments
+        for k, v in kwargs.items():
+
+            # make sure it's a valid keyword value to assign
+            # assert k in subset.colnames
+
+            if k[-12:] == "_uncertainty":
+                # nudge symmetric uncertainties into asymmetric form
+                for suffix, sign in zip(["_lower", "_upper"], [-1, 1]):
+                    old = self.standard[i][k + suffix] * 1
+                    new = sign * np.abs(v)
+                    self.standard[i][k + suffix] = new
+                    print(f"{planets_to_index} | {k+suffix}: {old} > {new}")
+            else:
+                # update value in table
+                old = self.standard[i][k] * 1
+                new = v
+                self.standard[i][k] = new
+                print(f"{planets_to_index} | {k}: {old} > {new}")
+
+            # warn if uncertainties should have been provided but weren't
+            should_have_uncertainty = f"{k}_uncertainty_lower" in self.standard.colnames
+            does_have_uncertainty = (f"{k}_uncertainty" in kwargs) or (
+                (f"{k}_uncertainty_lower" in kwargs)
+                and (f"{k}_uncertainty_upper" in kwargs)
+            )
+            if should_have_uncertainty and (does_have_uncertainty == False):
+                warnings.warn(
+                    f"'{k}' should probably have some uncertainties, which you didn't provide."
+                )
 
     @property
     def n(self):
@@ -680,7 +832,7 @@ class Population(Talker):
         """
 
         # pull out the actual values from the table
-        a = self.standard["semimajoraxis"].copy().quantity
+        a = self.standard["semimajoraxis"].copy()
 
         # try to replace bad ones with NVK3L
         bad = np.isfinite(a) == False
@@ -696,8 +848,8 @@ class Population(Talker):
         stillbad = np.isfinite(a) == False
         self.speak(f"{sum(stillbad)}/{self.n} are still missing after NVK3L")
         # (pull from table to avoid potential for recursion)
-        a_over_rs = self.standard["transit_ar"][stillbad].quantity
-        rs = self.standard["stellar_radius"][stillbad].quantity
+        a_over_rs = self.standard["transit_ar"][stillbad]
+        rs = self.standard["stellar_radius"][stillbad]
         a[stillbad] = a_over_rs * rs
 
         return a
@@ -766,7 +918,7 @@ class Population(Talker):
         """
 
         # pull out the actual values from the table
-        e = self.standard["eccentricity"].copy().quantity
+        e = self.standard["eccentricity"].copy()
 
         # try to replace bad ones with NVK3L
         bad = np.isfinite(e) == False
@@ -783,7 +935,7 @@ class Population(Talker):
         """
 
         # pull out the actual values from the table
-        omega = self.standard["omega"].copy().quantity
+        omega = self.standard["omega"].copy()
 
         # try to replace bad ones with NVK3L
         bad = np.isfinite(omega) == False
@@ -802,7 +954,7 @@ class Population(Talker):
         """
 
         # pull out the actual values from the table
-        b = self.standard["transit_b"].copy().quantity
+        b = self.standard["transit_b"].copy()
 
         # try to replace bad ones with NVK3L
         bad = np.isfinite(b) == False
@@ -810,7 +962,7 @@ class Population(Talker):
 
         # calculate from the period and the stellar mass
         a_over_rs = self.a_over_rs[bad]
-        i = self.standard["inclination"][bad].quantity
+        i = self.standard["inclination"][bad]
         e = self.e[bad]
         omega = self.omega[bad]
         b[bad] = a_over_rs * np.cos(i) * ((1 - e**2) / (1 + e * np.sin(omega)))
@@ -875,7 +1027,7 @@ class Population(Talker):
         """
 
         # pull out the actual values from the table
-        d = self.standard["transit_depth"].copy().quantity
+        d = self.standard["transit_depth"].copy()
 
         # try to replace bad ones with NVK3L
         bad = np.isfinite(d) == False
@@ -903,7 +1055,7 @@ class Population(Talker):
             warnings.simplefilter("ignore")
 
             # pull out the actual values from the table
-            d = self.standard["transit_duration"].copy().quantity
+            d = self.standard["transit_duration"].copy()
 
             # try to replace bad ones with NVK3L
             bad = np.isfinite(d) == False
@@ -939,7 +1091,7 @@ class Population(Talker):
         """
 
         # pull out the actual values from the table
-        M = self.standard["mass"].copy().quantity
+        M = self.standard["mass"].copy()
 
         # try to replace bad ones with NVK3L
         bad = np.isfinite(M) == False
@@ -968,7 +1120,7 @@ class Population(Talker):
         """
 
         # pull out the actual values from the table
-        R = self.standard["radius"].copy().quantity
+        R = self.standard["radius"].copy()
 
         # try to replace bad ones with NVK3L
         bad = np.isfinite(R) == False
@@ -1000,7 +1152,7 @@ class Population(Talker):
         """
 
         # pull out the actual values from the table
-        age = self.standard["stellar_age"].copy().quantity
+        age = self.standard["stellar_age"].copy()
 
         # try to replace bad ones with NVK3L
         bad = np.isfinite(age) == False
@@ -1107,7 +1259,7 @@ class Population(Talker):
             Rs = self.stellar_radius
             depth = (2 * H * Rp / Rs**2).decompose()
 
-            dlnm = self.uncertainty("mass") / self.mass
+            dlnm = self.get_uncertainty("mass") / self.mass
             bad = dlnm > 1 / threshold
             depth[bad] = np.nan
             return depth
@@ -1449,7 +1601,7 @@ class Population(Talker):
 
         Returns
         -------
-        table : astropy.table.Table
+        table : astropy.table.QTable
             A table, with those columns, in the same order
             as the Population itself.
         """
@@ -1459,7 +1611,7 @@ class Population(Talker):
         d = {c: getattr(self, c) for c in desired_columns}
 
         # turn that into an astropy Table
-        t = Table(d)
+        t = QTable(d)
 
         return t
 
@@ -1491,158 +1643,8 @@ class Population(Talker):
 
         Returns
         -------
-        table : astropy.table.Table
+        table : astropy.table.QTable
             A table, with those columns, in the same order
             as the Population itself.
         """
         return self.create_table(desired_columns=desired_columns)
-
-
-class PredefinedPopulation(Population):
-    """
-    Population object keeps track of an exoplanet population.
-    """
-
-    expiration = 10
-
-    def __init__(self, label="exoplanets", remake=False, skip_update=False, **plotkw):
-        """
-        Initialize a population, by trying the following steps:
-                1) Load a standardized ascii table.
-                2) Ingest a raw table, and standardize it.
-
-        Parameters
-        ----------
-        label : str
-            The name of this population, for use both in filenames
-            and labeling points on plots.
-        remake : bool
-            Should we re-ingest this table from its raw ingredients?
-        skip_update : bool
-            Should we skip checking for updates in the existing data?
-        **plotkw : dict
-            All other keywords are stored as plotting suggestions.
-        """
-
-        # set the name for this population
-        self.label = label
-
-        try:
-            # try to load the standardized table
-            assert remake == False
-            standard = self.load_standard(skip_update=skip_update)
-        except (IOError, FileNotFoundError, AssertionError):
-            # or create a new standardized table and save it
-            standard = self.ingest_table(remake=remake)
-
-        # initialize with a standard table
-        Population.__init__(self, standard=standard, label=label, **plotkw)
-
-    @property
-    def fileprefix(self):
-        """
-        Define a fileprefix for this population, to be used
-        for setting the filename of the standardized population.
-        """
-        return clean(self.label)
-
-    def ingest_table(self, **kwargs):
-        """
-        Ingest a new population table of arbitrary format,
-        and then standardize it, using the tools defined in
-        inherited population classes."""
-
-        # load the raw table
-        raw = self.load_raw()
-
-        # trim elements from raw table as necessary
-        trimmed = self.trim_raw(raw)
-
-        try:
-            # create a standardized table from the array
-            standard = self.create_standard(trimmed)
-        except Exception as e:
-            print(e)
-            warnings.warn(
-                """
-            UH-OH! The table standardization step didn't work.
-            This message should hopefully disappear once
-            Zach's debugging and restructuring is complete,
-            but if not, please let him know!
-            """
-            )
-
-        # save the standardized table
-        self.save_standard(standard)
-
-        return standard
-
-    @property
-    def standard_path(self):
-        """
-        Define the filepath for the standardized table.
-        """
-        return os.path.join(directories["data"], f"standardized-{self.fileprefix}.txt")
-
-    def load_raw(self):
-        raise NotImplementedError(
-            """
-        Yikes! The `.load_raw` method has not been defined
-        for whatever object is trying to call it!
-        """
-        )
-
-    def trim_raw(self, raw):
-        """
-        Trim bad/unnecessary rows out of a raw table of planet properties.
-        """
-
-        # no trimming necessary
-        trimmed = raw
-
-        # for debugging, hang onto the trimmed table as a hidden attribute
-        self._trimmed = trimmed
-
-        # a trimmed table
-        return self._trimmed
-
-    def load_standard(self, skip_update=False):
-        """
-        Load a standardized population table. Generally this
-        will be from a file like ~/.exoatlas/standardized-*.txt
-
-        Returns
-        -------
-
-        standard : astropy.table.Table
-            A table of planet properties,
-            with a minimal set of columns.
-        skip_update : bool
-            Should we skip checks to see if the data are too stale?
-        """
-
-        # make sure this file is recent enough (unless we're skipping updates)
-        if not skip_update:
-            old = check_if_needs_updating(self.standard_path, self.expiration)
-            assert old == False
-
-        # keywords for reading a standardized table
-        readkw = dict(format="ecsv", fill_values=[("", np.nan), ("--", np.nan)])
-
-        standard = ascii.read(self.standard_path, **readkw)
-        self.speak(f"Loaded standardized table from {self.standard_path}")
-
-        # ??? change this to do something more clever with tables
-        # masked = np.ma.filled(standard, fill_value = np.nan)
-
-        return standard
-
-    def save_standard(self, standard):
-        """
-        Save the standardized table out to a text file
-        like ~/exoatlas/standardized-*.txt
-        """
-
-        # save it as an ascii table for humans to read
-        standard.write(self.standard_path, format="ascii.ecsv", overwrite=True)
-        self.speak(f"Saved a standardized text table to {self.standard_path}")

@@ -24,7 +24,7 @@ class Radius(PlottableAxis):
     lim = [0.3, 30]
 
     def value_lowerupper(self):
-        return self.panel.pop.uncertainty_lowerupper("radius")
+        return self.panel.pop.get_uncertainty_lowerupper("radius")
 
 
 class Mass(PlottableAxis):
@@ -34,7 +34,7 @@ class Mass(PlottableAxis):
     lim = [0.03, 3000]
 
     def value_lowerupper(self):
-        return self.panel.pop.uncertainty_lowerupper("mass")
+        return self.panel.pop.get_uncertainty_lowerupper("mass")
 
 
 class SemimajorAxis(PlottableAxis):
@@ -124,10 +124,10 @@ class Escape(PlottableAxis):
         """
 
         m = self.panel.pop.mass
-        sigma_m = self.panel.pop.uncertainty("mass")
+        sigma_m = self.panel.pop.get_uncertainty("mass")
 
         r = self.panel.pop.radius
-        sigma_r = self.panel.pop.uncertainty("radius")
+        sigma_r = self.panel.pop.get_uncertainty("radius")
 
         dlnm = sigma_m / m
         dlnr = sigma_r / r

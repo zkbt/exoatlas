@@ -1,6 +1,5 @@
-from ..imports import *
-from .Population import PredefinedPopulation
-import astropy.units as u
+from ...imports import *
+from ..predefined import PredefinedPopulation
 
 __all__ = ["SolarSystem"]
 
@@ -12,14 +11,15 @@ initial_filename = os.path.join(
 class SolarSystem(PredefinedPopulation):
     """The Solar System, very crudely."""
 
+    label = "Solar System"
     # the data in the table probably don't need to be updated
-    expiration = np.inf
+    expiration = np.inf * u.day
 
     def __init__(self, **kwargs):
         """
         Initialize a population of Solar System (main) planets.
         """
-        PredefinedPopulation.__init__(self, label="Solar System", **kwargs)
+        PredefinedPopulation.__init__(self, **kwargs)
         self.color = "cornflowerblue"
         self.zorder = 1e10
         self.s = 80
@@ -27,7 +27,7 @@ class SolarSystem(PredefinedPopulation):
         self.exact = True
         self.marker = "s"
 
-    def load_raw(self):
+    def download_raw_data(self, **kw):
         """
         Load the raw table of data for the Solar System.
         """
@@ -41,7 +41,7 @@ class SolarSystem(PredefinedPopulation):
         # a table of unstandardized planet properties
         return raw
 
-    def create_standard(self, trimmed):
+    def create_standardardized(self, trimmed):
         """
         Create a standardized table of planet properties.
         It must at least contain the columns in
@@ -52,7 +52,7 @@ class SolarSystem(PredefinedPopulation):
         t = trimmed
 
         # create an empty standardized table
-        s = Table()
+        s = QTable()
         s["name"] = t["name"]
         s["hostname"] = "Sun"
 
@@ -93,18 +93,14 @@ class SolarSystem(PredefinedPopulation):
 
         # some other planet parameters we might not need for the solar system
         s["rv_semiamplitude"] = np.nan * u.m / u.s
-        s["radius_ratio"] = (
-            (s["radius"].quantity / s["stellar_radius"].quantity).decompose().value
-        )
+        s["radius_ratio"] = (s["radius"] / s["stellar_radius"]).decompose().value
         s["distance"] = np.nan * u.pc
         s["ra"] = 0.0 * u.deg
         s["dec"] = 0.0 * u.deg
         s["discovery_facility"] = "humans"
         s["transit_midpoint"] = np.nan * u.day
         s["transit_duration"] = np.nan * u.day
-        s["transit_depth"] = (
-            s["radius"].quantity / s["stellar_radius"].quantity
-        ).decompose() ** 2
+        s["transit_depth"] = (s["radius"] / s["stellar_radius"]).decompose() ** 2
         s["transit_b"] = 0.0
         s["inclination"] = 90 * u.deg
 

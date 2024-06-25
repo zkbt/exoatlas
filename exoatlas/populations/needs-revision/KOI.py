@@ -1,6 +1,6 @@
 # exoplanet population of all "confirmed" exoplanets from exoplanet archive
 from .imports import *
-from .Population import Population
+from .population import Population
 
 
 url = "http://exoplanetarchive.ipac.caltech.edu/cgi-bin/nstedAPI/nph-nstedAPI?table=cumulative&format=bar-delimited&select=*"
@@ -20,7 +20,7 @@ class KOI(PredefinedPopulation):
 
         # set up the population
         Population.__init__(self, label=label, **kwargs)
-        self.save_standard()
+        self.save_standardized_data()
         # defing some plotting parameters
         self.color = "gray"
         self.zorder = -1
@@ -53,11 +53,11 @@ class KOI(PredefinedPopulation):
         print("  having removed")
         print(self.table[ok == False])
 
-    def create_standard(self):
+    def create_standardardized(self):
         t = self.trimmed
         n = len(t)
 
-        s = Table()
+        s = QTable()
         s["name"] = t[
             "kepler_name"
         ]  # [t['kepler_name'][i] + t['pl_letter'][i] for i in range(len(t))]
@@ -120,7 +120,7 @@ class TransitingExoplanetsSubset(KOI):
         try:
             # first try to load this population
             Talker.__init__(self)
-            self.load_standard()
+            self.ingest_standardized_data()
         except IOError:
             # if that fails, recreate it from the confirmed population
             KOI.__init__(self)
@@ -133,7 +133,7 @@ class TransitingExoplanetsSubset(KOI):
         self.speak("removing {0} rows".format(np.sum(tr)))
         self.removeRows(tr)
         self.speak("leaving {0} rows".format(self.n))
-        self.save_standard()
+        self.save_standardized_data()
 
 
 class UnconfirmedKepler(TransitingExoplanetsSubset):
