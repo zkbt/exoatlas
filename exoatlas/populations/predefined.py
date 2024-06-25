@@ -51,7 +51,10 @@ class PredefinedPopulation(Population):
 
         # initialize with a standard table
         Population.__init__(
-            self, standard=standard, label=label or self.label, **plotkw
+            self,
+            standard=standard,
+            label=label or self.label,
+            **plotkw,
         )
 
     def ingest_raw_data(self, remake=None):
@@ -75,8 +78,9 @@ class PredefinedPopulation(Population):
         # create a standardized table from the array
         standard = self.create_standardardized(raw)
 
-        # save the standardized table
-        self.save_standardized_data(standard)
+        # save the standardized table as an ascii table for humans to read
+        standard.write(self.standardized_data_path, format="ascii.ecsv", overwrite=True)
+        self.speak(f"Saved a standardized text table to {self.standardized_data_path}")
 
         return standard
 

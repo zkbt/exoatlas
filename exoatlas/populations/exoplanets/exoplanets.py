@@ -737,7 +737,7 @@ class Exoplanets(ExoplanetsPSCP):
             return self.individual_references
         except AttributeError:
 
-            print("(loading individual references may take a few minutes)")
+            print("(loading individual references may take up to a few minutes)")
 
             # load the internal population with data for individual references
             self.individual_references = ExoplanetsPS()

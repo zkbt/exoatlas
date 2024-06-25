@@ -115,8 +115,9 @@ class Population(Talker):
 
         Parameters
         ----------
-        standard : astropy.table.QTable
-            A table that contains at least a few core essential columns.
+        standard : astropy.table.QTable, str
+            If a Table, the standardized data table.
+            If a string, the filename to the standardized data table.
         label : str
             A string by which this table can be identified. This will be
             used for plots and for saving data files, so please try to
@@ -125,14 +126,21 @@ class Population(Talker):
             All other keyword arguments will be taken as plotting suggestions.
         """
 
-        # a standardized table with a minimum set of columns we can expect
-        self.standard = QTable(standard)
+        if isinstance(standard, Table) or isinstance(standard, Row):
+            # a standardized table with a minimum set of columns we can expect
+            self.standard = QTable(standard)
 
-        # store a label for this population
-        self.label = label
+            # store a label for this population
+            self.label = label
 
-        # keywords to use for plotting
-        self.plotkw = plotkw
+            # keywords to use for plotting
+            self.plotkw = plotkw
+
+        elif isinstance(standard, str):
+            filename = standard
+            self.standard = QTable(ascii.read(filename))
+            self.label = self.standard.meta["label"]
+            self.plotkw = self.standard.meta["plotkw"]
 
         # define some cleaned names and hostnames, for indexing
         try:
@@ -181,22 +189,50 @@ class Population(Talker):
         """
         return os.path.join(directories["data"], f"standardized-{self.fileprefix}.txt")
 
-    def save_standardized_data(self, standard):
+    def save(self, filename=None, overwrite=True):
         """
-        Save the standardized table to a text file.
+        Save this population out to a file.
 
-        This will save the table stored in `self.standard` out
-        into a .ecsv text file, which should always be readable
-        (including units and any metadata) with astropy, as in
-        ```
-        from astropy.io.ascii import read
-        table = read('some-standardized-table.ecsv')
-        ```
+        This saves the standardized data table from this population
+        out to a file, along with metadata needed to be loaded
+        back into as a drop-in replacement for a live population.
+
+        Parameters
+        ----------
+        filename : str
+            The filepath to which the population should be saved.
+        overwrite : bool
+            Whether
+
+        Examples
+        --------
+        >>> from exoatlas import *
+        >>> one = Exoplanets()['GJ1132b']
+        >>> one.save('pop.txt')
+        >>> the_same_one = Population('pop.txt')
         """
 
-        # save the table as an ascii table for humans to read
-        standard.write(self.standardized_data_path, format="ascii.ecsv", overwrite=True)
-        self.speak(f"Saved a standardized text table to {self.standardized_data_path}")
+        # be a little fussy about overwriting automatic filenames
+        if filename == None:
+            filename = f"exoatlas-population-{self.label}.ecsv"
+            overwrite = False
+            if os.path.exists(filename):
+                warnings.warn(
+                    f"{filename} will not be overwritten unless you explicitly provide a filename."
+                )
+
+                # save the table as an ascii table for humans to read
+        to_save = copy.deepcopy(self.standard)
+        to_save.meta["label"] = self.label
+        to_save.meta["plotkw"] = self.plotkw
+
+        to_save.write(filename, format="ascii.ecsv", overwrite=overwrite)
+        print(
+            f"""
+        Saved {self} to {filename}.
+        It can be reloaded with `x = Population('{filename}')`
+        """
+        )
 
     def sort(self, x, reverse=False):
         """
@@ -537,8 +573,8 @@ class Population(Talker):
         key : str
             The attribute we're trying to get.
         """
-        if key == "label":
-            raise RuntimeError("Yikes!")
+        if key in ["label", 'plotkw', 'standard']:
+            raise RuntimeError(f"Yikes! {key}")
         try:
             # extract the column from the standardized table
             return self.standard[key]
