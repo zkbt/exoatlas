@@ -983,3 +983,8 @@ class Exoplanets(ExoplanetsPSCP):
 
         if nothing_happened:
             warnings.warn(warning_message)
+
+    from ...observing.transits import (
+        find_all_observable_transits,
+        find_observable_transits,
+    )
