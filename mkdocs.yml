@@ -13,6 +13,8 @@ nav:
       - github.ipynb
       - testing.ipynb
       - documentation.ipynb
+    - Details:
+      - compare-nasa-exoplanet-archive-tables.ipynb
 theme:
   name: "material"
   features:

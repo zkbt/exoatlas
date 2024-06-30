@@ -94,7 +94,7 @@ class PlottableAxis:
         """
 
         try:
-            ul = self.panel.pop.uncertainty_lowerupper(self.source)
+            ul = self.panel.pop.get_uncertainty_lowerupper(self.source)
             return ul
         except AtlasError:
             sigma = self.value() * 0.0
