@@ -8,6 +8,7 @@ nav:
       - exploring.ipynb
       - observing.ipynb
       - filtering.ipynb
+      - planning.ipynb
       - visualizing.ipynb
     - Developer Guide:
       - github.ipynb
