@@ -9,7 +9,7 @@ def test_population():
     Can we make a population from scratch from a table?
     """
 
-    fake = Table({x: [0] * 3 for x in attribute_columns}, masked=True)
+    fake = QTable({x: [0] * 3 for x in attribute_columns}, masked=True)
     p = Population(standard=fake, label="fake")
     p.validate_columns()
 
@@ -22,21 +22,27 @@ def test_solarsystem():
     p.validate_columns()
 
 
-def test_transitingexoplanets():
-    """
-    Can we make a population of confirmed transiting exoplanets?
-    """
-    with mock.patch("builtins.input", return_value=""):
-        p = TransitingExoplanets()
-    p.validate_columns()
-
-
 def test_exoplanets():
     """
     Can we make a population of confirmed exoplanets?
     """
-    with mock.patch("builtins.input", return_value=""):
-        p = Exoplanets()
+    p = Exoplanets(remake=False)
+    p.load_individual_references()
+    p.validate_columns()
+
+    # check that the background reference population for Exoplanets filters too
+    f = p[:10]
+    for x in f.hostname:
+        assert x in f.individual_references.hostname
+    for x in f.individual_references.hostname:
+        assert x in f.hostname
+
+
+def test_transitingexoplanets():
+    """
+    Can we make a population of confirmed transiting exoplanets?
+    """
+    p = TransitingExoplanets(remake=False)
     p.validate_columns()
 
 
@@ -44,30 +50,19 @@ def test_subsets():
     """
     Can we make a population of confirmed Kepler planets?
     """
-    with mock.patch("builtins.input", return_value=""):
-        for x in [Kepler, NonKepler, TESS, NonTESS, Space, Ground, GoodMass, BadMass]:
-            p = x()
-            p.validate_columns()
+    for x in [Kepler, NonKepler, TESS, NonTESS, Space, Ground, GoodMass, BadMass]:
+        p = x(remake=False)
+        p.validate_columns()
 
-        with pytest.raises(NotImplementedError):
-            q = TransitingExoplanetsSubset()
-
-
-def test_tess():
-    """
-    Can we make a population of confirmed TESS planets?
-    """
-    with mock.patch("builtins.input", return_value=""):
-        p = TESS()
-    p.validate_columns()
+    with pytest.raises(NotImplementedError):
+        q = TransitingExoplanetsSubset()
 
 
 def test_indexing():
     """
     Can we make a population of confirmed transiting exoplanets?
     """
-    with mock.patch("builtins.input", return_value=""):
-        p = TransitingExoplanets()
+    p = Exoplanets(remake=False)
 
     # try different subsets
     a = p[[]]
@@ -76,7 +71,7 @@ def test_indexing():
     with np.errstate(invalid="ignore"):
         d = p[p.stellar_radius < 1.0 * u.Rsun]
     e = p["GJ 1214b"]
-    f = p[["GJ 1214b", "LHS 1140b"]]  #'GJ 1132b',
+    f = p[["GJ 1214b", "LHS 1140b", "GJ 1132b"]]
     g = p[p.discovery_facility == "Kepler"]
     h = p["TRAPPIST-1b"]
     i = p["TRAPPIST-1"]
@@ -128,7 +123,3 @@ def test_transiting(planet="GJ1214b"):
 
     p.reflection_signal(albedo=0.5)
     p.reflection_snr(albedo=0.5, wavelength=5 * u.micron, telescope_name="JWST")
-
-
-if __name__ == "__main__":  # pragma: no cover
-    outputs = {k.split("_")[-1]: v() for k, v in locals().items() if "test_" in k}

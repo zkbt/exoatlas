@@ -1,6 +1,10 @@
-from ..imports import *
-from .Exoplanets import *
-from .curation.TransitingExoplanets import curate
+"""
+Define a subset of all exoplanets for only those known to transit. 
+"""
+
+from ...imports import *
+from .exoplanets import *
+from ..curation.transiting_exoplanets import curate
 
 __all__ = ["TransitingExoplanets"]
 

@@ -1,25 +1,16 @@
 from .setup_tests import *
 
-from exoatlas.imports import *
-from exoatlas.populations.downloaders import *
+from exoatlas import *
 
 
-def test_exoplanets():
-    with mock.patch("builtins.input", return_value=""):
-        exoplanets_downloader.get()
+def test_exoplanets_downloader():
+    planet_name = "GJ 1132 b"
 
-
-# def test_composite():
-#    with mock.patch("builtins.input", return_value=""):
-#        composite_exoplanets_downloader.get()
-
-
-# def test_tess():
-#    with mock.patch("builtins.input", return_value=""):
-#        toi_exofop.get()
-
-
-if __name__ == "__main__":  # pragma: no covers
-    a = test_exoplanets()
-    c = test_composite()
-    t = test_tess()
+    for t in ["ps", "pscomppars"]:
+        fresh = ExoplanetArchiveDownloader(which_table=t, planet=planet_name).get(
+            remake=True
+        )
+        loaded = ExoplanetArchiveDownloader(which_table=t, planet=planet_name).get(
+            remake=False
+        )
+        assert np.all(loaded["ra"] == fresh["ra"])

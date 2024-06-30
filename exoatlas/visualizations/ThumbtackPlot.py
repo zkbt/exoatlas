@@ -1,6 +1,6 @@
 from .imports import *
 from .Panels import BubblePanel
-from .TransitingExoplanets import NonKepler, Kepler, TESS
+from .transiting_exoplanets import NonKepler, Kepler, TESS
 from .KOI import UnconfirmedKepler
 import datetime
 
@@ -305,7 +305,7 @@ class ThumbtackPlot(BubblePanel):
                     downwardnudge = "\n\n"
 
                 text = downwardnudge + r"{}".format(self.pop.name[c].replace(" ", ""))
-                self.labeled[c] = plt.text(
+                self.standard.labeled[c] = plt.text(
                     self.x[c],
                     self.y[c],
                     text,
@@ -321,9 +321,9 @@ class ThumbtackPlot(BubblePanel):
 
     def clearnames(self):
         """Remove system names that have been added to the plot."""
-        for k in self.labeled:
+        for k in self.standard.labeled:
             try:
-                self.labeled[k].remove()
+                self.standard.labeled[k].remove()
             except ValueError:
                 pass
 

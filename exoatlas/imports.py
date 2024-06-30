@@ -1,8 +1,13 @@
 from .version import *
 
+try:
+    from IPython.display import display
+except ImportError:
+    display = print
+
 # imports that are need by many exoatlas subsections
 from ast import Import
-import os, sys, time, shutil, warnings, copy
+import os, sys, time, shutil, warnings, copy, glob
 from tqdm import tqdm
 
 # (possibly different on Mac, Linux, Windows, even for Python versions 3.8-3.12)
@@ -25,7 +30,7 @@ warnings.simplefilter("ignore", category=AstropyDeprecationWarning)
 # this function downloads a file and returns its filepath
 from astropy.utils.data import download_file
 from astropy.io import ascii
-from astropy.table import Table, vstack, join, setdiff
+from astropy.table import Table, QTable, Row, vstack, join, setdiff
 from astropy.visualization import quantity_support
 from astropy.coordinates import SkyCoord
 
@@ -95,6 +100,13 @@ for k in directories.keys():
     mkdir(directories[k])
 
 
+def reset_standardized_data():
+    files = glob.glob(os.path.join(directories["data"], "standardized-*"))
+    if "y" in input(f"Are you sure you want to wipe {files}? [y/N]"):
+        for f in files:
+            os.remove(f)
+
+
 def reset_local_data():
     if "y" in input(
         "Are you sure you want to wipe all " "local exoatlas data files? [y/N]"
@@ -115,10 +127,11 @@ def clean(s):
     """
     A wrapper function to clean up complicated strings.
     """
-    bad = """ !@#$%^&*()+-_'",./<>?"""
+    bad = """ !@#$%^&*()+-_'",./<>?;"""
     cleaned = str(s) + ""
     for c in bad:
         cleaned = cleaned.replace(c, "")
+
     return cleaned
 
 
@@ -188,5 +201,5 @@ class AtlasError(ValueError):
 
 import warnings
 
-warnings.catch_warnings()
-warnings.simplefilter("ignore")
+# warnings.catch_warnings()
+# warnings.simplefilter("ignore")

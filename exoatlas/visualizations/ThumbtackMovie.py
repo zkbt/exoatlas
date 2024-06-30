@@ -1,5 +1,5 @@
 from exoatlas.ThumbtackPlot import ThumbtackPlot
-from exoatlas.TransitingExoplanets import GoodMass, BadMass, Kepler, NonKepler
+from exoatlas.transiting_exoplanets import GoodMass, BadMass, Kepler, NonKepler
 from exoatlas.KOI import UnconfirmedKepler
 from exoatlas.TESS import TESS
 
