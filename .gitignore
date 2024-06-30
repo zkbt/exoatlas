@@ -10,6 +10,7 @@ notebooks/
 *.xls
 *.pickled
 downloads-for-exoatlas
+nasa-exoplanet-archive-table-comparisons
 
 .DS_Store
 
