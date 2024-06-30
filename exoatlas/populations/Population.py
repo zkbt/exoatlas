@@ -573,7 +573,7 @@ class Population(Talker):
         key : str
             The attribute we're trying to get.
         """
-        if key in ["label", 'plotkw', 'standard']:
+        if key in ["label", "plotkw", "standard"]:
             raise RuntimeError(f"Yikes! {key}")
         try:
             # extract the column from the standardized table
