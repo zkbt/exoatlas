@@ -36,7 +36,7 @@ def find_observable_transits(
     observer: an astroplan Observer object
         Where the observations are taking place
     obs_start_time: an astropy Time object
-        Whne the observations are beginning
+        When the observations are beginning
 
     Args
     -----
@@ -63,42 +63,7 @@ def find_observable_transits(
     midpoint = population.transit_midpoint.to_value("day")
     duration = population.transit_duration.to_value("day")
 
-    for i in range(len(population)):
-        if len(population) > 1:
-            print(
-                "Population length cannot exceed 1. If transits for more than 1 object are desired, use function 'find_all_observable_transits'"
-            )
-            break
-        elif np.isnan(ra) == True:
-            print("Object ra not found. Please use a valid ra.")
-            break
-        elif np.isnan(dec) == True:
-            print("Object dec not found. Please use a valid dec.")
-            break
-        elif np.isnan(period) == True:
-            print("Object period not found. Please use a valid period.")
-            break
-        elif np.isnan(midpoint) == True:
-            print(
-                "Object transit midpoint not found. Please use a valid transit midpoint."
-            )
-            break
-        elif np.isnan(duration) == True:
-            print(
-                "Object transit duration not found. Please use a valid transit duration."
-            )
-            break
-        else:
-            pass
-
-        c = SkyCoord(ra, dec, unit="deg")
-        target = FixedTarget(coord=c, name=name)
-
-        midtransit_time = Time(midpoint, format="jd")
-        transit_duration = duration * u.day
-        period = period * u.day
-
-        transit_table = QTable(
+    transit_table = QTable(
             names=(
                 "name",
                 "ra",
@@ -123,47 +88,85 @@ def find_observable_transits(
             ),
         )
 
-        es = EclipsingSystem(
-            primary_eclipse_time=midtransit_time,
-            orbital_period=period,
-            duration=transit_duration,
+    #for i in range(len(population)):
+    if len(population) > 1:
+        print(
+            "Population length cannot exceed 1. If transits for more than 1 object are desired, use function 'find_all_observable_transits'"
+        )
+        return transit_table
+    elif np.isnan(ra) == True:
+        print("Ra not found for ",name.value,". Please use a valid ra.")
+        return transit_table
+    elif np.isnan(dec) == True:
+        print("Dec not found for  " ,name.value, ". Please use a valid dec." )
+        return transit_table
+    elif np.isnan(period) == True:
+        print("Period not found for " ,name.value, " . Please use a valid period." )
+        return transit_table
+    elif np.isnan(midpoint) == True:
+        print(
+            "Transit midpoint not found for " ,name.value, ". Please use a valid transit midpoint." 
+        )
+        return transit_table
+    elif np.isnan(duration) == True:
+        print(
+            "Transit duration not found for " ,name.value, ". Please use a valid transit duration." 
+        )
+        return transit_table
+    else:
+        pass
+
+    c = SkyCoord(ra, dec, unit="deg")
+    target = FixedTarget(coord=c, name=name)
+
+    midtransit_time = Time(midpoint, format="jd")
+    transit_duration = duration * u.day
+    period = period * u.day
+
+
+    es = EclipsingSystem(
+        primary_eclipse_time=midtransit_time,
+        orbital_period=period,
+        duration=transit_duration,
+    )
+
+    transit_times = es.next_primary_eclipse_time(
+        obs_start_time, n_eclipses=n_transits
+    )  # creating the array of mid-transit times
+    ing_eg_times = es.next_primary_ingress_egress_time(
+        obs_start_time, n_eclipses=n_transits
+    )  # array of ingress/egress times
+
+    in_iso = []
+    eg_iso = []
+    for j in range(len(transit_times)):
+        in_iso = np.append(
+            in_iso, Time(ing_eg_times[j, 0], format="iso", scale="utc")
+        )
+        eg_iso = np.append(
+            eg_iso, Time(ing_eg_times[j, 1], format="iso", scale="utc")
         )
 
-        transit_times = es.next_primary_eclipse_time(
-            obs_start_time, n_eclipses=n_transits
-        )  # creating the array of mid-transit times
-        ing_eg_times = es.next_primary_ingress_egress_time(
-            obs_start_time, n_eclipses=n_transits
-        )  # array of ingress/egress times
+    in_eg_arr = np.vstack((in_iso, eg_iso)).T
+    obs_arr = is_event_observable(
+        constraints=constraints,
+        observer=observer,
+        target=target,
+        times=transit_times,
+        times_ingress_egress=in_eg_arr,
+    )
 
-        in_iso = []
-        eg_iso = []
-        for j in range(len(transit_times)):
-            in_iso = np.append(
-                in_iso, Time(ing_eg_times[j, 0], format="iso", scale="utc")
-            )
-            eg_iso = np.append(
-                eg_iso, Time(ing_eg_times[j, 1], format="iso", scale="utc")
-            )
-
-        in_eg_arr = np.vstack((in_iso, eg_iso)).T
-        obs_arr = is_event_observable(
-            constraints=constraints,
-            observer=observer,
-            target=target,
-            times=transit_times,
-            times_ingress_egress=in_eg_arr,
-        )
-
-        midpoint_times = []
-        ingress = []
-        egress = []
-        for j in range(n_transits):
-            if obs_arr[:, j] == True:
-                midpoint_times = np.append(midpoint_times, transit_times[j])
-                ingress = np.append(ingress, in_iso[j])
-                egress = np.append(egress, eg_iso[j])
-
+    midpoint_times = []
+    ingress = []
+    egress = []
+    for j in range(n_transits):
+        if obs_arr[:, j] == True:
+            midpoint_times = np.append(midpoint_times, transit_times[j])
+            ingress = np.append(ingress, in_iso[j])
+            egress = np.append(egress, eg_iso[j])
+    if len(ingress) == 0:
+        return transit_table
+    else:
         for i in range(len(ingress)):
             transit_table.add_row(
                 vals=(
@@ -176,8 +179,8 @@ def find_observable_transits(
                     ingress[i].value,
                     midpoint_times[i].value,
                     egress[i].value,
-                )
             )
+        )
 
     return transit_table
 
@@ -192,7 +195,7 @@ def find_all_observable_transits(population, observer, obs_start_time, *args, **
     observer: an astroplan Observer object
         Where the observations are taking place
     obs_start_time: an astropy Time object
-        Whne the observations are beginning
+        When the observations are beginning
 
     Args
     -----
@@ -243,7 +246,7 @@ def find_all_observable_transits(population, observer, obs_start_time, *args, **
             observer=observer,
             constraints=constraints,
             obs_start_time=obs_start_time,
-            n_transits=n_transits[i],
+            n_transits=n_transits, #[i],
         )
 
         transit_table = vstack([transit_table, row])
