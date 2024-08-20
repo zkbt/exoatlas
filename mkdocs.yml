@@ -5,6 +5,7 @@ nav:
     - installation.ipynb
     - User Guide:
       - creating.ipynb
+      - curating.ipynb
       - exploring.ipynb
       - observing.ipynb
       - filtering.ipynb

@@ -956,7 +956,8 @@ class Exoplanets(ExoplanetsPSCP):
             #        type(is_finite).__name__,
             #        (type(these_planets).__name__),
             #    )
-            new = these_planets[is_finite]
+            new = copy.deepcopy(these_planets[is_finite])
+            new.add_index("tidyname")
 
             # if verbose:
             #    print("The new properties to be adopted:")
