@@ -148,7 +148,6 @@ class Population(Talker):
         # define some cleaned names and hostnames, for indexing
         try:
             self.standard["tidyname"]
-            print("tidyname was not found, creating it!")
         except KeyError:
             self.standard["tidyname"] = [
                 clean(x).lower() for x in self.standard["name"]

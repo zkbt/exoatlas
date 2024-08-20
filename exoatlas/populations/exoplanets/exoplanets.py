@@ -930,8 +930,8 @@ class Exoplanets(ExoplanetsPSCP):
                     ]
                 )
             except KeyError:
-                if verbose:
-                    print(f'No reference(s) "{references}" found for key "{k}"')
+                # if verbose:
+                #    print(f'No reference(s) "{references}" found for key "{k}"')
                 continue
 
             # extract a (possibly even smaller) table of just these planets, or give up
@@ -948,26 +948,48 @@ class Exoplanets(ExoplanetsPSCP):
 
             # find where there is a real new measurement for this key
             is_finite = np.isfinite(these_planets[f"{k}"])
-            if verbose:
-                print(
-                    k,
-                    planets_to_index,
-                    is_finite,
-                    type(is_finite).__name__,
-                    (type(these_planets).__name__),
-                )
+            # if verbose:
+            #    print(
+            #        k,
+            #        planets_to_index,
+            #        is_finite,
+            #        type(is_finite).__name__,
+            #        (type(these_planets).__name__),
+            #    )
             new = these_planets[is_finite]
+
+            # if verbose:
+            #    print("The new properties to be adopted:")
+            #    display(new)
 
             # construct a new table of the references we want to update for this key
             if len(new) > 0:
                 for tidyname in np.unique(new["tidyname"]):
-                    old = self.standard.loc["tidyname", tidyname]
                     if verbose:
-                        old_for_display = copy.deepcopy(old)
+                        print(f"'{k}' for '{tidyname}'")
+                    old_for_this_planet = self.standard.loc["tidyname", tidyname]
+                    new_for_this_planet = new.loc["tidyname", tidyname]
+                    # if verbose:
+                    # print("old", old_for_this_planet["tidyname"])
+                    # print("new", new_for_this_planet["tidyname"])
+                    assert (
+                        old_for_this_planet["tidyname"]
+                        == new_for_this_planet["tidyname"]
+                    )
+
                     keys_to_display = ["tidyname"]
+                    if verbose:
+                        old_for_display = copy.deepcopy(old_for_this_planet)
+
                     for s in suffixes:
                         try:
-                            old[f"{k}{s}"] = new[f"{k}{s}"][0]
+                            if verbose:
+                                old_value = old_for_this_planet[f"{k}{s}"]
+                                new_value = new_for_this_planet[f"{k}{s}"]
+                                # print(f"{k}{s}: {old_value} > {new_value}")
+                            old_for_this_planet[f"{k}{s}"] = new_for_this_planet[
+                                f"{k}{s}"
+                            ]
                             keys_to_display.append(f"{k}{s}")
                         except (IndexError, KeyError):
                             pass
@@ -975,7 +997,7 @@ class Exoplanets(ExoplanetsPSCP):
                         change_summary = vstack(
                             [
                                 old_for_display[keys_to_display],
-                                new[keys_to_display][0],
+                                new_for_this_planet[keys_to_display],
                             ]
                         )
                         change_summary.add_column(
