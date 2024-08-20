@@ -128,7 +128,10 @@ class Population(Talker):
 
         if isinstance(standard, Table) or isinstance(standard, Row):
             # a standardized table with a minimum set of columns we can expect
-            self.standard = QTable(standard)
+            self.standard = QTable(copy.deepcopy(standard))
+            # (the deepcopy seems to be needed to reset indexing,
+            #  so that astropy.table doesn't try to track slices across
+            #  too many subsets, because it was getting lost in weird ways)
 
             # store a label for this population
             self.label = label
@@ -145,6 +148,7 @@ class Population(Talker):
         # define some cleaned names and hostnames, for indexing
         try:
             self.standard["tidyname"]
+            print("tidyname was not found, creating it!")
         except KeyError:
             self.standard["tidyname"] = [
                 clean(x).lower() for x in self.standard["name"]
@@ -160,6 +164,10 @@ class Population(Talker):
         # make sure the table is searchable via names
         self._make_sure_index_exists("tidyname")
         self._make_sure_index_exists("tidyhostname")
+
+        # test that indexing still works
+        name = self.tidyname[0]
+        self.standard.loc[name]
 
     def _list_table_indices(self):
         """
@@ -573,7 +581,7 @@ class Population(Talker):
         key : str
             The attribute we're trying to get.
         """
-        if key in ["label", 'plotkw', 'standard']:
+        if key in ["label", "plotkw", "standard"]:
             raise RuntimeError(f"Yikes! {key}")
         try:
             # extract the column from the standardized table

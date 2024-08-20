@@ -1,2 +1,0 @@
-def curate(pop):
-    pass

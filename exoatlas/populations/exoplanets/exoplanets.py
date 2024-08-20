@@ -923,6 +923,7 @@ class Exoplanets(ExoplanetsPSCP):
 
             # extract a table of just these references, or give up
             try:
+                # print(f"{k}_reference", references)
                 these_references = QTable(
                     self.individual_references.standard.loc[
                         f"{k}_reference", references
@@ -972,7 +973,10 @@ class Exoplanets(ExoplanetsPSCP):
                             pass
                     if verbose:
                         change_summary = vstack(
-                            [old_for_display[keys_to_display], new[keys_to_display][0]]
+                            [
+                                old_for_display[keys_to_display],
+                                new[keys_to_display][0],
+                            ]
                         )
                         change_summary.add_column(
                             ["old", "new"], index=0, name="version"
