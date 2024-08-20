@@ -75,7 +75,7 @@ class physical_summary(BuildablePlot):
         fr.ticks_simplify_exponents("y")
         fr.add_teqaxis()
         if len(pops) > 1:
-            fr.add_legend(frameon=False)
+            fr.add_legend(frameon=False, bbox_to_anchor=(1, 1), loc="lower left")
         fr.remove_ylabel()
 
         mr = MassRadius()

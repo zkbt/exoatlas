@@ -13,7 +13,8 @@ class TransitingExoplanets(Exoplanets):
         Exoplanets.__init__(self, **kw)
 
         # set the label
-        self.label = "Transiting Exoplanets"
+        if "label" not in kw:
+            self.label = "Transiting Exoplanets"
 
         # tidy up this population
         self.remove_nontransiting()

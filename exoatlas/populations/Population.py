@@ -102,7 +102,7 @@ class Population(Talker):
     # kludge?
     _pithy = True
 
-    def __init__(self, standard, label="unknown", **plotkw):
+    def __init__(self, standard, label=None, **plotkw):
         """
         Initialize a Population of exoplanets from a standardized table.
 
@@ -429,13 +429,13 @@ class Population(Talker):
         # use a (list of) string(s) to index population by name
         if isinstance(key, str):
             # is it just one name?
-            key = clean(key).lower()
+            tidy = clean(key).lower()
         elif isinstance(key[0], str):
             # is it a list of names?
-            key = [clean(k).lower() for k in key]
+            tidy = [clean(k).lower() for k in key]
 
         # pull out rows by planet name
-        subset = self.standard.loc["tidyname", key]
+        subset = self.standard.loc["tidyname", tidy]
 
         # create a useful label for the population
         if isinstance(key, str):
@@ -471,13 +471,13 @@ class Population(Talker):
         # use a string or a list of strings to index the population by name
         if isinstance(key, str):
             # is it just one name?
-            key = clean(key).lower()
+            tidy = clean(key).lower()
         elif isinstance(key[0], str):
             # is it a list of names?
-            key = [clean(k).lower() for k in key]
+            tidy = [clean(k).lower() for k in key]
 
         # pull out rows by planet name
-        subset = self.standard.loc["tidyhostname", key]
+        subset = self.standard.loc["tidyhostname", tidy]
 
         # create a useful label for the population
         if isinstance(key, str):
