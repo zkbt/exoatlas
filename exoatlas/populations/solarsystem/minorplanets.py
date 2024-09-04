@@ -13,7 +13,7 @@ class SolarSystemMinorPlanets(PredefinedPopulation):
 
         self.color = "gray"
         self.zorder = 1
-        self.s = 5
+        self.s = 20
         self.respond_to_color = False
         self.exact = True
         self.marker = "."
