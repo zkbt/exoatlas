@@ -1,11 +1,11 @@
 from ...imports import *
 from ..predefined import PredefinedPopulation
-from .solarsystem import SolarSystem
+from .planets import SolarSystem
 
 __all__ = ["SolarSystemMoons"]
 
 initial_filename = os.path.join(
-    code_directory, "populations/data/solarsystem/moons.txt"
+    code_directory, "populations/data/solarsystem/jpl-ssd-moons.txt"
 )
 
 
@@ -25,12 +25,12 @@ class SolarSystemMoons(PredefinedPopulation):
         Initialize a population of Solar System (main) planets.
         """
         PredefinedPopulation.__init__(self, **kwargs)
-        self.color = "royalblue"
+        self.color = "mediumblue"
         self.zorder = None
         self.s = 20
         self.respond_to_color = False
         self.exact = True
-        self.marker = "o"
+        self.marker = "s"
 
     def download_raw_data(self, **kw):
         """

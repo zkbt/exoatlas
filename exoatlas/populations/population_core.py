@@ -5,7 +5,7 @@ from ..models import *
 
 import string
 
-basic_columns = ["name", "hostname", "ra", "dec", "distance", "discovery_facility"]
+basic_columns = ["name", "hostname", "ra", "dec", "distance"]
 
 transit_columns = [
     "period",
@@ -855,9 +855,12 @@ class Population(Talker):
         stillbad = np.isfinite(a) == False
         self.speak(f"{sum(stillbad)}/{self.n} are still missing after NVK3L")
         # (pull from table to avoid potential for recursion)
-        a_over_rs = self.standard["transit_ar"][stillbad]
-        rs = self.standard["stellar_radius"][stillbad]
-        a[stillbad] = a_over_rs * rs
+        try:
+            a_over_rs = self.standard["transit_ar"][stillbad]
+            rs = self.standard["stellar_radius"][stillbad]
+            a[stillbad] = a_over_rs * rs
+        except KeyError:
+            pass
 
         return a
 
@@ -1005,7 +1008,14 @@ class Population(Talker):
         return np.log10(self.relative_insolation)
 
     @property
-    def relative_cumulative_xuv(self):
+    def relative_cumulative_xuv_insolation(self):
+        """
+        A *very very very* approximate estimate for the cumulative XUV flux (J/m**2)
+        felt by a planet over its lifetime. It comes from Zahnle + Catling (2017) Equation 27,
+        where they say they did integrals over the Lammer et al. (2009) XUV flux relations.
+        This effectively assumes that the early times dominate, so the time integral doesn't
+        depend (?!?) on the age of the system. It's very rough!
+        """
         xuv_proxy = (self.stellar_luminosity / u.Lsun) ** -0.6
         return self.relative_insolation * xuv_proxy
 
@@ -1210,6 +1220,14 @@ class Population(Talker):
         M = self.mass
         R = self.radius
         return np.sqrt(2 * G * M / R).to("km/s")
+
+    @property
+    def orbital_velocity(self):
+        return (2 * np.pi * self.semimajor_axis / self.period).to("km/s")
+
+    @property
+    def impact_velocity(self):
+        return np.sqrt(self.orbital_velocity**2 + self.escape_velocity**2)
 
     @property
     def escape_parameter(self):

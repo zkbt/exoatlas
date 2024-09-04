@@ -18,8 +18,13 @@ def test_solarsystem():
     """
     Can we make a population of Solar System planets?
     """
-    p = SolarSystem()
-    p.validate_columns()
+    for p in [
+        SolarSystem,
+        SolarSystemDwarfPlanets,
+        SolarSystemMoons,
+        SolarSystemMinorPlanets,
+    ]:
+        p().validate_columns()
 
 
 def test_exoplanets():
@@ -65,7 +70,6 @@ def test_indexing():
     p = Exoplanets(remake=False)
 
     # try different subsets
-    a = p[[]]
     b = p[5]
     c = p[0:10]
     with np.errstate(invalid="ignore"):

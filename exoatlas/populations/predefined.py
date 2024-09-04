@@ -1,4 +1,4 @@
-from .population import *
+from .population_core import *
 
 
 class PredefinedPopulation(Population):

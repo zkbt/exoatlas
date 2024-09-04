@@ -11,12 +11,12 @@ class SolarSystemMinorPlanets(PredefinedPopulation):
         self._downloader = SBDBDownloader(minimum_diameter=minimum_diameter)
         PredefinedPopulation.__init__(self, **kw)
 
-        self.color = "gray"
+        self.color = "midnightblue"
         self.zorder = 1
         self.s = 20
         self.respond_to_color = False
         self.exact = True
-        self.marker = "."
+        self.marker = "s"
 
     @property
     def fileprefix(self):
