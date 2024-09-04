@@ -66,7 +66,7 @@ class Downloader(Talker):
             self.speak(f"Loading local file from {self.path}")
 
         # read the actual file
-        table = ascii.read(self.path, **self.read_kw)
+        table = Table.read(self.path, **self.read_kw)
 
         # possibly add some new metadata to the table
         self.add_metadata(table)

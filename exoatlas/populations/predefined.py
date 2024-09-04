@@ -84,13 +84,27 @@ class PredefinedPopulation(Population):
 
         return standard
 
-    def download_raw_data(self):
-        raise NotImplementedError(
-            """
-        Yikes! The `.download_raw_data` method has not been defined
-        for whatever object is trying to call it!
+    def download_raw_data(self, remake=False):
         """
-        )
+        Load raw data, possibly downloading them if needed.
+
+        Parameters
+        ----------
+        remake : bool
+            Should the raw tables be re-made/re-downloaded,
+            even if recent local ones exist?
+
+        Returns
+        -------
+        raw : astropy.table.QTable
+            A raw, untrimmed, unstandardized table.
+        """
+
+        #
+        self.raw = self._downloader.get(remake=remake)
+
+        # return both, so they can both be turned into standardized tables
+        return self.raw
 
     def ingest_standardized_data(self):
         """
