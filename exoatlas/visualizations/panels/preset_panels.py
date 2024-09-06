@@ -451,18 +451,24 @@ class EscapeFlux(BubblePanel):
             reference_escape_velocity
             * (relative_insolation / reference_relative_insolation) ** 0.125
         )
-        plt.plot(escape_velocity, relative_insolation, alpha=alpha, color=color)
-
-        plt.text(
-            reference_escape_velocity,
-            reference_relative_insolation,
-            r"$v_{thermal} \propto v_{escape}$    ",
-            fontsize=8,
-            color=color,
+        plt.plot(
+            escape_velocity,
+            relative_insolation,
             alpha=alpha,
-            ha="right",
-            **kw
+            color=color,
+            label=r"$v_{thermal} \propto v_{escape}$",
         )
+
+        """        plt.text(
+                    reference_escape_velocity,
+                    reference_relative_insolation,
+                    r"$v_{thermal} \propto v_{escape}$    ",
+                    fontsize=8,
+                    color=color,
+                    alpha=alpha,
+                    ha="right",
+                    **kw
+                )"""
 
     def plot_shoreline(
         self,
@@ -479,9 +485,15 @@ class EscapeFlux(BubblePanel):
             reference_escape_velocity
             * (relative_insolation / reference_relative_insolation) ** 0.25
         )
-        plt.plot(escape_velocity, relative_insolation, alpha=alpha, color=color)
+        plt.plot(
+            escape_velocity,
+            relative_insolation,
+            alpha=alpha,
+            color=color,
+            label=r"$I \propto v_{escape}^4$",
+        )
 
-        plt.text(
+        """plt.text(
             reference_escape_velocity,
             reference_relative_insolation,
             r"   $I \propto v_{escape}^4$",
@@ -489,7 +501,7 @@ class EscapeFlux(BubblePanel):
             color=color,
             alpha=alpha,
             **kw
-        )
+        )"""
 
 
 class EscapeCumulativeXUV(EscapeFlux):
