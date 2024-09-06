@@ -491,7 +491,12 @@ class ExoplanetsPSCP(PredefinedPopulation):
             N_has_value = np.sum(ok)
             for w in ["lower", "upper"]:
                 ok *= np.isfinite(standard[f"{k}_uncertainty_{w}"])
-                ok *= standard[f"{k}_uncertainty_{w}"] != 0
+                # this comment is a potentially harmless or potentially troublesome KLUDGE!
+                # see https://github.com/zkbt/exoatlas/issues/58
+                # ok *= standard[f"{k}_uncertainty_{w}"] != 0
+                warnings.warn(
+                    f"🚨😳🔔‼️ some values with zero-uncertainty might have snuck through for {k} 🚨😳🔔‼️🚨😳🔔‼️"
+                )
             N_has_uncertainty = np.sum(ok)
             bad = ok == False
             print(

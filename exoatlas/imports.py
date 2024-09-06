@@ -81,7 +81,7 @@ def name2color(name):
 # create a directory structure ()
 try:
     # search for an environment variable
-    base = os.getenv("exoatlas_DATA")
+    base = os.getenv("EXOATLAS_DATA")
     assert base is not None
 except AssertionError:
     # otherwise put it in the local directory
