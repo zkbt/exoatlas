@@ -19,7 +19,8 @@ def test_zeng():
 
 def test_chen():
     plt.cla()
-    plot_chen()
+    plot_chen("mass")
+    plot_chen("radius", alpha=0.5, linewidth=4)
 
 
 def test_kopparapu():

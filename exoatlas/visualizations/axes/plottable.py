@@ -82,7 +82,7 @@ class PlottableAxis:
         Write over this function in order to make
         more complicated function calls
         """
-        return getattr(self.panel.pop, self.source)
+        return self.panel.pop.get(self.source)
 
     def value_lowerupper(self):
         """
@@ -96,8 +96,8 @@ class PlottableAxis:
         try:
             ul = self.panel.pop.get_uncertainty_lowerupper(self.source)
             return ul
-        except AtlasError:
-            sigma = self.value() * 0.0
+        except (AtlasError, AttributeError, KeyError):
+            sigma = self.panel.pop.get_uncertainty(self.source)
             return sigma, sigma
 
 

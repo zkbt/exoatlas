@@ -316,7 +316,6 @@ class MassRadius(ErrorPanel):
             )
 
 
-# class FluxEscape(ErrorPanel):
 class FluxEscape(BubblePanel):
     xaxis = Flux
     yaxis = EscapeVelocity
@@ -374,6 +373,176 @@ class FluxEscape(BubblePanel):
                 alpha=alpha,
                 **kw
             )
+
+    def plot_jeans_shoreline(
+        self,
+        reference_relative_insolation=0.43337238,
+        reference_escape_velocity=5.02270418 * u.km / u.s,
+        alpha=0.5,
+        color="gray",
+        x=0.01,
+        y=100,
+        **kw
+    ):
+        relative_insolation = np.logspace(-5, 5)
+        # v ~ T**(1/2) ~ I**(1/8)
+        escape_velocity = (
+            reference_escape_velocity
+            * (relative_insolation / reference_relative_insolation) ** 0.125
+        )
+        plt.plot(relative_insolation, escape_velocity, alpha=alpha, color=color)
+
+        plt.text(
+            reference_relative_insolation,
+            reference_escape_velocity,
+            r"$v_{thermal} \propto v_{escape}$    ",
+            fontsize=8,
+            color=color,
+            alpha=alpha,
+            ha="right",
+            **kw
+        )
+
+    def plot_shoreline(
+        self,
+        reference_relative_insolation=0.43337238,
+        reference_escape_velocity=5.02270418 * u.km / u.s,
+        alpha=0.5,
+        color="blue",
+        x=0.01,
+        y=100,
+        **kw
+    ):
+        relative_insolation = np.logspace(-5, 5)
+        escape_velocity = (
+            reference_escape_velocity
+            * (relative_insolation / reference_relative_insolation) ** 0.25
+        )
+        plt.plot(relative_insolation, escape_velocity, alpha=alpha, color=color)
+
+        plt.text(
+            reference_relative_insolation,
+            reference_escape_velocity,
+            r"   $I \propto v_{escape}^4$",
+            fontsize=8,
+            color=color,
+            alpha=alpha,
+            **kw
+        )
+
+
+class EscapeFlux(BubblePanel):
+    xaxis = EscapeVelocity
+    yaxis = Flux
+
+    def plot_jeans_shoreline(
+        self,
+        reference_relative_insolation=0.43337238,
+        reference_escape_velocity=5.02270418 * u.km / u.s,
+        alpha=0.5,
+        color="gray",
+        x=0.01,
+        y=100,
+        **kw
+    ):
+        relative_insolation = np.logspace(-5, 5)
+        # v ~ T**(1/2) ~ I**(1/8)
+        escape_velocity = (
+            reference_escape_velocity
+            * (relative_insolation / reference_relative_insolation) ** 0.125
+        )
+        plt.plot(
+            escape_velocity,
+            relative_insolation,
+            alpha=alpha,
+            color=color,
+            label=r"$v_{thermal} \propto v_{escape}$",
+        )
+
+        """        plt.text(
+                    reference_escape_velocity,
+                    reference_relative_insolation,
+                    r"$v_{thermal} \propto v_{escape}$    ",
+                    fontsize=8,
+                    color=color,
+                    alpha=alpha,
+                    ha="right",
+                    **kw
+                )"""
+
+    def plot_shoreline(
+        self,
+        reference_relative_insolation=0.43337238,
+        reference_escape_velocity=5.02270418 * u.km / u.s,
+        alpha=0.5,
+        color="blue",
+        x=0.01,
+        y=100,
+        **kw
+    ):
+        relative_insolation = np.logspace(-5, 5)
+        escape_velocity = (
+            reference_escape_velocity
+            * (relative_insolation / reference_relative_insolation) ** 0.25
+        )
+        plt.plot(
+            escape_velocity,
+            relative_insolation,
+            alpha=alpha,
+            color=color,
+            label=r"$I \propto v_{escape}^4$",
+        )
+
+        """plt.text(
+            reference_escape_velocity,
+            reference_relative_insolation,
+            r"   $I \propto v_{escape}^4$",
+            fontsize=8,
+            color=color,
+            alpha=alpha,
+            **kw
+        )"""
+
+
+class EscapeCumulativeXUV(EscapeFlux):
+    yaxis = CumulativeXUVFlux
+
+
+class CumulativeXUVEscape(FluxEscape):
+    xaxis = CumulativeXUVFlux
+
+
+class ImpactVelocityEscape(FluxEscape):
+    xaxis = ImpactVelocity
+
+    def plot_shoreline(
+        self,
+        reference_impact_velocity=24.650357 * u.km / u.s,
+        reference_escape_velocity=5.02270418 * u.km / u.s,
+        alpha=0.5,
+        color="brown",
+        x=0.01,
+        y=100,
+        rotation=-4.5,
+        **kw
+    ):
+        impact_velocity = np.logspace(0, 3) * u.km / u.s
+        escape_velocity = (
+            reference_escape_velocity
+            * (impact_velocity / reference_impact_velocity) ** 0.25
+        )
+        plt.plot(impact_velocity, escape_velocity, alpha=alpha, color=color)
+
+        plt.text(
+            reference_impact_velocity,
+            reference_escape_velocity,
+            r"   $v_{impact} \propto {v_{escape}}$",
+            fontsize=8,
+            color=color,
+            alpha=alpha,
+            va="center",
+            ha="left",
+        )
 
 
 # construct a list of predefined panels

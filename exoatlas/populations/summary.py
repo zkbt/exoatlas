@@ -3,7 +3,7 @@ Tools to summarize a particular population.
 """
 
 from ..imports import *
-from .population import attribute_columns, method_columns
+from .population_core import attribute_columns, method_columns
 
 __all__ = ["plot_histograms", "summarize_planet"]
 

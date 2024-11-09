@@ -10,6 +10,17 @@ class Flux(PlottableAxis):
     lim = [6e4, 2e-4]
 
 
+class CumulativeXUVFlux(Flux):
+    source = "relative_cumulative_xuv_insolation"
+    label = "Time-Integrated XUV Flux Received (relative to Earth)"
+
+
+class ImpactVelocity(PlottableAxis):
+    source = "impact_velocity"
+    label = "Estimated Impact Velocity (km/s)"
+    scale = "log"
+
+
 class LogFlux(PlottableAxis):
     source = "relative_insolation"
     label = "Bolometric Flux Received (relative to Earth)"

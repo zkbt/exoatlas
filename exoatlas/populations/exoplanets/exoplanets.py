@@ -41,7 +41,6 @@ def parse_reflink(x):
         return ""
 
 
-# apply some kludges to correct bad planet properties
 class ExoplanetsPSCP(PredefinedPopulation):
     """
     Exoplanets from the NASA Exoplanet Archive.
@@ -177,64 +176,6 @@ class ExoplanetsPSCP(PredefinedPopulation):
             if "_reference" in k:
                 self._make_sure_index_exists(k)
 
-    def download_raw_data(self, remake=False):
-        """
-        Load the raw Exoplanet Archive tables, possibly downloading them if needed.
-
-        Parameters
-        ----------
-        remake : bool
-            Should the raw tables be re-made/re-downloaded,
-            even if recent local ones exist?
-
-        Returns
-        -------
-        raw : astropy.table.QTable
-            A raw, untrimmed, unstandardized table.
-        """
-
-        #
-        self.raw = self._downloader.get(remake=remake)
-
-        # return both, so they can both be turned into standardized tables
-        return self.raw
-
-        '''    def trim_raw(self, raw):
-        """
-        Trim the raw table down to ones with reasonable values.
-
-        Parameters
-        ----------
-        raw : astropy.table.QTable
-            A raw, untrimmed, unstandardized table.
-
-        Returns
-        -------
-        trimmed : astropy.table.QTable
-            A raw, trimmed, unstandardized table.
-        """
-
-        masks = {}
-
-        ok = np.ones(len(raw)).astype(bool)
-        for k in masks:
-            ok *= masks[k]
-            N = sum(ok == True)
-            self.speak(f"{N} planets pass the `{k}` filter")
-
-        # trim down the table to just those that are OK
-        trimmed = raw[ok]
-
-        # for debugging, hang onto the trimmed table as a hidden attribute
-        self._trimmed = trimmed
-
-        # report how many points got trimmed away
-        ntotal = len(raw)
-        ntrimmed = len(trimmed)
-        self.speak(f"trimmed down to {ntrimmed}/{ntotal} rows")
-
-        return trimmed'''
-
     def create_standardardized(self, raw):
         """
         Create a standardized table to make sure that at
@@ -249,7 +190,7 @@ class ExoplanetsPSCP(PredefinedPopulation):
         Parameters
         ----------
         raw : astropy.table.QTable
-            A raw unstandardized table downloaded from the archive.
+            A raw unstandardized table from `ExoplanetArchiveDownloader`.
 
         Returns
         -------
@@ -550,7 +491,12 @@ class ExoplanetsPSCP(PredefinedPopulation):
             N_has_value = np.sum(ok)
             for w in ["lower", "upper"]:
                 ok *= np.isfinite(standard[f"{k}_uncertainty_{w}"])
-                ok *= standard[f"{k}_uncertainty_{w}"] != 0
+                # this comment is a potentially harmless or potentially troublesome KLUDGE!
+                # see https://github.com/zkbt/exoatlas/issues/58
+                # ok *= standard[f"{k}_uncertainty_{w}"] != 0
+                warnings.warn(
+                    f"🚨😳🔔‼️ some values with zero-uncertainty might have snuck through for {k} 🚨😳🔔‼️🚨😳🔔‼️"
+                )
             N_has_uncertainty = np.sum(ok)
             bad = ok == False
             print(

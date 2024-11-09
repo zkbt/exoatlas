@@ -5,7 +5,7 @@ from ..models import *
 
 import string
 
-basic_columns = ["name", "hostname", "ra", "dec", "distance", "discovery_facility"]
+basic_columns = ["name", "hostname", "ra", "dec", "distance"]
 
 transit_columns = [
     "period",
@@ -87,7 +87,17 @@ default_plotkw = dict(
 
 # what keywords can we set for the population plotkw?
 allowed_plotkw = list(default_plotkw.keys())
-allowed_plotkw += ["s", "c", "cmap", "norm", "vmin", "vmax" "outlined", "filled"]
+allowed_plotkw += [
+    "s",
+    "c",
+    "cmap",
+    "norm",
+    "vmin",
+    "vmax" "outlined",
+    "filled",
+    "markeredgewidth",
+    "markeredgecolor",
+]
 
 
 class Population(Talker):
@@ -644,7 +654,7 @@ class Population(Talker):
 
         # first try for an `uncertainty_{key}` column
         try:
-            return self.__getattr__(f"{key}_uncertainty")
+            return self.get(f"{key}_uncertainty")  # __getattr__
         except (
             KeyError,
             AssertionError,
@@ -656,8 +666,8 @@ class Population(Talker):
 
         # then try for crudely averaging asymmetric uncertainties
         try:
-            lower = self.__getattr__(f"{key}_uncertainty_lower")
-            upper = self.__getattr__(f"{key}_uncertainty_upper")
+            lower = self.get(f"{key}_uncertainty_lower")  # __getattr__
+            upper = self.get(f"{key}_uncertainty_upper")  # __getattr__
             avg = 0.5 * (np.abs(lower) + np.abs(upper))
             return avg
         except (KeyError, AssertionError, AtlasError, AttributeError):
@@ -855,11 +865,19 @@ class Population(Talker):
         stillbad = np.isfinite(a) == False
         self.speak(f"{sum(stillbad)}/{self.n} are still missing after NVK3L")
         # (pull from table to avoid potential for recursion)
-        a_over_rs = self.standard["transit_ar"][stillbad]
-        rs = self.standard["stellar_radius"][stillbad]
-        a[stillbad] = a_over_rs * rs
+        try:
+            a_over_rs = self.standard["transit_ar"][stillbad]
+            rs = self.standard["stellar_radius"][stillbad]
+            a[stillbad] = a_over_rs * rs
+        except KeyError:
+            pass
 
         return a
+
+    @property
+    def semimajor_axis_uncertainty(self):
+        # MASSIVE KLUDGE TO MAKE FLUX ERRORS WORK IN A HURRY!
+        return 0.03 * self.semimajor_axis
 
     @property
     def angular_separation(self):
@@ -917,6 +935,21 @@ class Population(Talker):
         R = self.stellar_radius
         sigma = con.sigma_sb
         return (4 * np.pi * R**2 * sigma * T**4).to(u.Lsun)
+
+    @property
+    def stellar_luminosity_uncertainty(self):
+        T = self.stellar_teff
+        R = self.stellar_radius
+        T_uncertainty = self.get_uncertainty("stellar_teff")
+        R_uncertainty = self.get_uncertainty("stellar_radius")
+
+        sigma = con.sigma_sb
+
+        dLdT = 4 * 4 * np.pi * R**2 * sigma * T**3
+        dLdR = 2 * 4 * np.pi * R**1 * sigma * T**4
+        return (
+            (dLdT**2 * T_uncertainty**2 + dLdR**2 * R_uncertainty**2) ** 0.5
+        ).to("Lsun")
 
     @property
     def e(self):
@@ -994,6 +1027,25 @@ class Population(Talker):
         return insolation.to(u.W / u.m**2)
 
     @property
+    def insolation_uncertainty(self):
+        """
+        The insolation the planet receives, in W/m^2.
+        """
+
+        # calculate the average insolation the planet receives
+        dinsolation_dluminosity = 1 / 4 / np.pi / self.semimajor_axis**2
+        dinsolation_dsemimajor = (
+            -2 * self.stellar_luminosity / 4 / np.pi / self.semimajor_axis**3
+        )
+        L_uncertainty = self.get_uncertainty("stellar_luminosity")
+        a_uncertainty = self.get_uncertainty("semimajor_axis")
+        insolation_uncertainty = (
+            dinsolation_dluminosity**2 * L_uncertainty**2
+            + dinsolation_dsemimajor**2 * a_uncertainty**2
+        ) ** 0.5
+        return insolation_uncertainty.to(u.W / u.m**2)
+
+    @property
     def relative_insolation(self):
         """
         The insolation the planet receives, relative to Earth.
@@ -1001,11 +1053,25 @@ class Population(Talker):
         return self.insolation / self.earth_insolation
 
     @property
+    def relative_insolation_uncertainty(self):
+        """
+        The insolation the planet receives, relative to Earth.
+        """
+        return self.insolation_uncertainty / self.earth_insolation
+
+    @property
     def log_relative_insolation(self):
         return np.log10(self.relative_insolation)
 
     @property
-    def relative_cumulative_xuv(self):
+    def relative_cumulative_xuv_insolation(self):
+        """
+        A *very very very* approximate estimate for the cumulative XUV flux (J/m**2)
+        felt by a planet over its lifetime. It comes from Zahnle + Catling (2017) Equation 27,
+        where they say they did integrals over the Lammer et al. (2009) XUV flux relations.
+        This effectively assumes that the early times dominate, so the time integral doesn't
+        depend (?!?) on the age of the system. It's very rough!
+        """
         xuv_proxy = (self.stellar_luminosity / u.Lsun) ** -0.6
         return self.relative_insolation * xuv_proxy
 
@@ -1210,6 +1276,14 @@ class Population(Talker):
         M = self.mass
         R = self.radius
         return np.sqrt(2 * G * M / R).to("km/s")
+
+    @property
+    def orbital_velocity(self):
+        return (2 * np.pi * self.semimajor_axis / self.period).to("km/s")
+
+    @property
+    def impact_velocity(self):
+        return np.sqrt(self.orbital_velocity**2 + self.escape_velocity**2)
 
     @property
     def escape_parameter(self):

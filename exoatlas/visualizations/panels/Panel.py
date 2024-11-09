@@ -350,9 +350,11 @@ class Panel(Talker):
         # for p in self.pops:
         #    self.point_at(p)
         if self.pop.label_planets:
+            kw = dict(**labelkw)
             if getattr(self.pop, "zorder", None) is not None:
-                labelkw["zorder"] = self.pop.zorder
-            self.label_planets(**labelkw)
+                kw["zorder"] = self.pop.zorder
+            kw.update(**getattr(self.pop, "labelkw", {}))
+            self.label_planets(**kw)
 
     def remove_xlabel(self):
         """
