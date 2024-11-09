@@ -37,7 +37,7 @@ class ErrorPanel(BubblePanel):
         # return np.sqrt(l*u)
         return 0.5 * (l + u)
 
-    def intensity(self, invisible_fraction=0.8, x_power=1, y_power=1):
+    def intensity(self, invisible_fraction=0.75, x_power=2, y_power=2):
         """
         What visual intensity should each datapoint have?
 
