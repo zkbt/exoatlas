@@ -2,73 +2,7 @@
 from ..imports import *
 from ..telescopes import *
 from ..models import *
-
-import string
-
-basic_columns = ["name", "hostname", "ra", "dec", "distance"]
-
-transit_columns = [
-    "period",
-    "semimajoraxis",
-    "eccentricity",
-    "omega",
-    "inclination",
-    "transit_midpoint",
-    "transit_duration",
-    "transit_depth",
-    "stellar_teff",
-    "stellar_mass",
-    "stellar_radius",
-    "radius",
-    "mass",
-    "transit_ar",
-    "transit_b",
-]
-
-calculated_columns = [
-    "a_over_rs",
-    "b",
-    "insolation",
-    "relative_insolation",
-    "log_relative_insolation",
-    "teq",
-    "planet_luminosity",
-    "density",
-    "surface_gravity",
-    "distance_modulus",
-    "escape_velocity",
-    "escape_parameter",
-    "angular_separation",
-    "imaging_contrast",
-    "stellar_luminosity",
-]
-
-
-table_columns = basic_columns + transit_columns
-attribute_columns = table_columns + calculated_columns
-
-
-method_columns = [
-    "scale_height",
-    "transmission_signal",
-    "transmission_snr",
-    "emission_signal",
-    "emission_snr",
-    "reflection_signal",
-    "reflection_snr",
-    "stellar_brightness",
-    "stellar_brightness_in_telescope_units",
-    "depth_uncertainty",
-]
-
-desired_columns = [
-    "mass_uncertainty_upper",
-    "mass_uncertainty_lower",
-    "radius_uncertainty_upper",
-    "radius_uncertainty_lower",
-    "distance_uncertainty_upper",
-    "distance_uncertainty_lower",
-]
+from .column_descriptions import *
 
 # these are keywords that can be set for a population
 default_plotkw = dict(
@@ -762,7 +696,7 @@ class Population(Talker):
         """
 
         N = len(self.standard)
-        for k in table_columns:
+        for k in core_columns:
             try:
                 n = sum(self.standard[k].mask == False)
             except AttributeError:
@@ -1158,7 +1092,7 @@ class Population(Talker):
 
             P = self.period[bad]
             a_over_rs = self.a_over_rs[bad]
-            b = self.b[bad]
+            b = self.impact_parameter[bad]
 
             T0 = P / np.pi / a_over_rs
             T = T0 * np.sqrt(1 - b**2)
