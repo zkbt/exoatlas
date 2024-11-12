@@ -103,7 +103,7 @@ class Space(TransitingExoplanetsSubset):
         )
 
     def to_include(self):
-        foundfromspace = np.zeros(self.n).astype(bool)
+        foundfromspace = np.zeros(len(self)).astype(bool)
         for x in space_telescopes:
             foundfromspace = foundfromspace | (self.discovery_facility == x)
         return foundfromspace
@@ -116,7 +116,7 @@ class Ground(TransitingExoplanetsSubset):
         )
 
     def to_include(self):
-        foundfromspace = np.zeros(self.n).astype(bool)
+        foundfromspace = np.zeros(len(self)).astype(bool)
         for x in space_telescopes:
             foundfromspace = foundfromspace | (self.discovery_facility == x)
         return foundfromspace == False

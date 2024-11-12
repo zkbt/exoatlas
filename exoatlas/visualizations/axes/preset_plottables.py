@@ -294,7 +294,7 @@ class StellarBrightnessTelescope(PlottableAxis):
         # define the label, based on the wavelength and telescope
         w = self.wavelength.to(u.micron).value
         self.label = (
-            f"Stellar Brightness at Earth at $\lambda={w}\mu$m\n({self.unit_string})"
+            rf"Stellar Brightness at Earth at $\lambda={w}\mu$m\n({self.unit_string})"
         )
 
     def value(self):
@@ -327,7 +327,7 @@ class DepthSNR(StellarBrightnessTelescope):
         """
         # define the label, based on the wavelength and telescope
         w = self.wavelength.to(u.micron).value
-        self.label = f"S/N for Transit Depth\nat $\lambda={self.wavelength.to(u.micron).value}\mu m$\n(R={self.R})"
+        self.label = rf"S/N for Transit Depth\nat $\lambda={self.wavelength.to(u.micron).value}\mu m$\n(R={self.R})"
 
     def value(self):
         """
@@ -351,7 +351,7 @@ class Transmission(Depth):
         PlottableAxis.__init__(self, **kw)
         self.mu = mu
         self.threshold = threshold
-        self.label = f"Transit Depth\nof 1 Scale Height\n for $\mu$={mu} Atmosphere"
+        self.label = rf"Transit Depth\nof 1 Scale Height\n for $\mu$={mu} Atmosphere"
 
     def value(self):
         return self.panel.pop.transmission_signal(mu=self.mu, threshold=self.threshold)
@@ -383,7 +383,7 @@ class TransmissionSNR(StellarBrightnessTelescope):
         """
         # define the label, based on the wavelength and telescope
         w = self.wavelength.to(u.micron).value
-        self.label = f"S/N for Transit Depth\nof 1 Scale Height\n for $\mu$={self.mu} Atmosphere\nat $\lambda={w}\mu$m (R={self.R})"
+        self.label = rf"S/N for Transit Depth\nof 1 Scale Height\n for $\mu$={self.mu} Atmosphere\nat $\lambda={w}\mu$m (R={self.R})"
 
     def value(self):
         """

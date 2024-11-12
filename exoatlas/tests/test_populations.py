@@ -11,7 +11,7 @@ def test_population():
 
     fake = QTable({x: [0] * 3 for x in attribute_columns}, masked=True)
     p = Population(standard=fake, label="fake")
-    p.validate_columns()
+    p._validate_columns()
 
 
 def test_solarsystem():
@@ -24,7 +24,7 @@ def test_solarsystem():
         SolarSystemMoons,
         SolarSystemMinorPlanets,
     ]:
-        p().validate_columns()
+        p()._validate_columns()
 
 
 def test_exoplanets():
@@ -33,7 +33,7 @@ def test_exoplanets():
     """
     p = Exoplanets(remake=False)
     p.load_individual_references()
-    p.validate_columns()
+    p._validate_columns()
 
     # check that the background reference population for Exoplanets filters too
     f = p[:10]
@@ -48,7 +48,7 @@ def test_transitingexoplanets():
     Can we make a population of confirmed transiting exoplanets?
     """
     p = TransitingExoplanets(remake=False)
-    p.validate_columns()
+    p._validate_columns()
 
 
 def test_subsets():
@@ -57,7 +57,7 @@ def test_subsets():
     """
     for x in [Kepler, NonKepler, TESS, NonTESS, Space, Ground, GoodMass, BadMass]:
         p = x(remake=False)
-        p.validate_columns()
+        p._validate_columns()
 
     with pytest.raises(NotImplementedError):
         q = TransitingExoplanetsSubset()

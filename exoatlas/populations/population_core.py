@@ -181,30 +181,47 @@ class Population(Talker):
     def _list_table_indices(self):
         """
         Return a list of keys being used as table indices.
+
+        Core populations should likely have just ['tidyname', 'tidyhostname']
+        but internal `.individual_references` populations could have lots,
+        one for each quantity with an reference that might be chosen.
+
+        Returns
+        -------
+        index_keys : list
+            The list of keys that are being used as an index.
         """
         return [x.columns[0].name for x in self.standard.indices]
 
     def _make_sure_index_exists(self, k):
         """
-        Add a key as an index, but don't add it twice.
+        Add a new key as an index, but don't add it twice.
+
+        Parameters
+        ----------
+        k : str
+            The new key to add.
         """
         if k not in self._list_table_indices():
             self.standard.add_index(k)
 
     @property
-    def fileprefix(self):
+    def _fileprefix(self):
         """
         Define a fileprefix for this population, to be used
         for setting the filename of the standardized population.
+
+        Return
+        ------
         """
         return clean(self.label)
 
     @property
-    def standardized_data_path(self):
+    def _standardized_data_path(self):
         """
         Define the filepath for the standardized table.
         """
-        return os.path.join(directories["data"], f"standardized-{self.fileprefix}.txt")
+        return os.path.join(directories["data"], f"standardized-{self._fileprefix}.txt")
 
     def save(self, filename=None, overwrite=True):
         """
@@ -219,7 +236,7 @@ class Population(Talker):
         filename : str
             The filepath to which the population should be saved.
         overwrite : bool
-            Whether
+            Whether to automatically overwrite existing populations.
 
         Examples
         --------
@@ -231,7 +248,7 @@ class Population(Talker):
 
         # be a little fussy about overwriting automatic filenames
         if filename == None:
-            filename = f"exoatlas-population-{self.label}.ecsv"
+            filename = f"exoatlas-population-{self._fileprefix}.ecsv"
             overwrite = False
             if os.path.exists(filename):
                 warnings.warn(
@@ -257,6 +274,7 @@ class Population(Talker):
 
         This sorts the population in place, meaning that the
         Population object from which it is called will be modified.
+        Nothing will be returned.
 
         Parameters
         ----------
@@ -264,7 +282,7 @@ class Population(Talker):
             The key by which to sort the table.
         reverse : bool
             Whether to reverse the sort order.
-                `reverse = False` means low to high
+                `reverse == False` means low to high
                 `reverse == True` means high to low
         """
 
@@ -315,7 +333,7 @@ class Population(Talker):
         # create and return the new population
         return type(self)(standard=table, label=label)
 
-    def remove_by_key(self, other, key="tidyname"):
+    def _remove_by_key(self, other, key="tidyname"):
         """
         Create a new population by removing some rows from here:
 
@@ -365,7 +383,7 @@ class Population(Talker):
             A subset of `this` population, where some rows
             have been removed.
         """
-        return self.remove_by_key(other)
+        return self._remove_by_key(other)
 
     def __getitem__(self, key):
         """
@@ -508,7 +526,7 @@ class Population(Talker):
         """
         Extract a subset of this population,
         by performing a spatial cross-match by
-        RA and Dec. This will return all plannets
+        RA and Dec. This will return all planets
         from this population that fall within
         the specified radius of at least one of
         the specified coordinates.
@@ -579,8 +597,8 @@ class Population(Talker):
 
     def __getattr__(self, key):
         """
-        If an attribute/method isn't defined for a population,
-        look for it as a column of the standardized table.
+        If an attribute/method isn't explicitly defined for a population,
+        look for it as a column of the standardized table or as a plotting keyword.
 
         For example, `population.stellar_radius` will try to
         access `population.standard['stellar_radius']`.
@@ -589,9 +607,18 @@ class Population(Talker):
         ----------
         key : str
             The attribute we're trying to get.
+
+        Returns
+        -------
+        value : Quantity, str
+            The array of quantities from the standardized table,
+            or the plotting keyword.
+
         """
         if key in ["label", "plotkw", "standard"]:
-            raise RuntimeError(f"Yikes! {key}")
+            raise RuntimeError(
+                f"Yikes! It looks like `.{key}` isn't defined for {self}, but it should be!"
+            )
         try:
             # extract the column from the standardized table
             return self.standard[key]
@@ -604,13 +631,14 @@ class Population(Talker):
                 raise AttributeError(
                     f"""
                 Alas, there seems to be no way to find `.{key}`
-                as an attribute or propetry of {self}.
+                as a table column, attribute, method, or property of {self}.
                 """
-                )  # AtlasError
+                )
 
     def __setattr__(self, key, value):
         """
         Define what happens when we try to set an attribute via `pop.attr = x`.
+
         If the keyword is a pre-defined "plotting" keyword in `allowed_plotkw`,
         then we should save it in a special `plotkw` dictionary. Otherwise,
         the attribute should be set as normal.
@@ -634,11 +662,21 @@ class Population(Talker):
         """
         How should this object appear as a repr/str?
         """
-        return f"<{self.label} | {self.n} elements>"
+        return f"✨ {self.label} | {len(self)} elements ✨"
 
     def get(self, key):
         """
         Return an array of values for a column.
+
+        Parameters
+        ----------
+        key : str
+            The name of the quantity we're trying to retrieve.
+
+        Returns
+        -------
+        value : Quantity
+            The values, as an array with units.
         """
         return getattr(self, key)
 
@@ -649,7 +687,9 @@ class Population(Talker):
         Parameters
         ----------
         key : str
-            The column for which we want errors.
+            The quantity for which we want uncertaintes.
+        uncertainty : Quantity
+            The uncertainties, as an array with units.
         """
 
         # first try for an `uncertainty_{key}` column
@@ -684,7 +724,7 @@ class Population(Talker):
         Parameters
         ----------
         key : str
-            The column for which we want errors.
+            The quantity for which we want lower + upper uncertaintes.
 
         Returns
         -------
@@ -715,18 +755,7 @@ class Population(Talker):
         unc = np.nan * self.__getattr__(key)
         return unc, unc
 
-    def single(self, name):
-        """
-        Create a subpopulation of a single planet.
-        """
-
-        # create a subset of the standardized table
-        subset = self.standard.loc[name]
-
-        # create a new object, from this subset
-        return type(self)(standard=subset, label=name, **self.plotkw)
-
-    def validate_columns(self):
+    def _validate_columns(self):
         """
         Make sure this standardized table has all the necessary columns.
         Summarize the amount of good data in each.
@@ -743,7 +772,7 @@ class Population(Talker):
                     n = sum(self.standard[k] != "")
             self.speak(f"{k:>25} | {n:4}/{N} rows = {n/N:4.0%} are not empty")
 
-    def find(self, name):
+    def _find_index(self, name):
         """
         Return index of a particular planet in the population.
 
@@ -823,13 +852,6 @@ class Population(Talker):
                     f"'{k}' should probably have some uncertainties, which you didn't provide."
                 )
 
-    @property
-    def n(self):
-        """
-        How many planets are in this population?
-        """
-        return len(self.standard)
-
     def __len__(self):
         """
         How many planets are in this population?
@@ -853,7 +875,7 @@ class Population(Talker):
 
         # try to replace bad ones with NVK3L
         bad = np.isfinite(a) == False
-        self.speak(f"{sum(bad)}/{self.n} semimajoraxes are missing")
+        self.speak(f"{sum(bad)}/{len(self)} semimajoraxes are missing")
 
         # calculate from the period and the stellar mass
         P = self.period[bad]
@@ -863,7 +885,7 @@ class Population(Talker):
 
         # replace those that are still bad with the a/R*
         stillbad = np.isfinite(a) == False
-        self.speak(f"{sum(stillbad)}/{self.n} are still missing after NVK3L")
+        self.speak(f"{sum(stillbad)}/{len(self)} are still missing after NVK3L")
         # (pull from table to avoid potential for recursion)
         try:
             a_over_rs = self.standard["transit_ar"][stillbad]
@@ -918,14 +940,14 @@ class Population(Talker):
 
         # try to replace bad ones with NVK3L
         bad = np.isfinite(a_over_rs) == False
-        self.speak(f"{sum(bad)}/{self.n} values for a/R* are missing")
+        self.speak(f"{sum(bad)}/{len(self)} values for a/R* are missing")
 
         a = self.semimajor_axis[bad]
         R = self.stellar_radius[bad]
         a_over_rs[bad] = a / R
 
         stillbad = np.isfinite(a_over_rs) == False
-        self.speak(f"{sum(stillbad)}/{self.n} are still missing after a and R*")
+        self.speak(f"{sum(stillbad)}/{len(self)} are still missing after a and R*")
 
         return a_over_rs
 
@@ -962,7 +984,7 @@ class Population(Talker):
 
         # try to replace bad ones with NVK3L
         bad = np.isfinite(e) == False
-        self.speak(f"{sum(bad)}/{self.n} eccentricities are missing")
+        self.speak(f"{sum(bad)}/{len(self)} eccentricities are missing")
         self.speak(f"assuming they are all zero")
         e[bad] = 0
 
@@ -979,7 +1001,7 @@ class Population(Talker):
 
         # try to replace bad ones with NVK3L
         bad = np.isfinite(omega) == False
-        self.speak(f"{sum(bad)}/{self.n} longitudes of periastron are missing")
+        self.speak(f"{sum(bad)}/{len(self)} longitudes of periastron are missing")
         e_zero = self.e == 0
         self.speak(f"{sum(e_zero)} have eccentricities assumed to be 0")
         omega[e_zero] = 0 * u.deg
@@ -998,7 +1020,7 @@ class Population(Talker):
 
         # try to replace bad ones with NVK3L
         bad = np.isfinite(b) == False
-        self.speak(f"{sum(bad)}/{self.n} impact parameters are missing")
+        self.speak(f"{sum(bad)}/{len(self)} impact parameters are missing")
 
         # calculate from the period and the stellar mass
         a_over_rs = self.a_over_rs[bad]
@@ -1009,7 +1031,7 @@ class Population(Talker):
 
         # report those that are still bad
         stillbad = np.isfinite(b) == False
-        self.speak(f"{sum(stillbad)}/{self.n} are still missing after using i")
+        self.speak(f"{sum(stillbad)}/{len(self)} are still missing after using i")
 
         return b
 
@@ -1104,7 +1126,7 @@ class Population(Talker):
 
         # try to replace bad ones with NVK3L
         bad = np.isfinite(d) == False
-        self.speak(f"{sum(bad)}/{self.n} transit depths are missing")
+        self.speak(f"{sum(bad)}/{len(self)} transit depths are missing")
 
         Rp = self.radius[bad]
         Rs = self.stellar_radius[bad]
@@ -1113,7 +1135,7 @@ class Population(Talker):
 
         # report those that are still bad
         stillbad = np.isfinite(d) == False
-        self.speak(f"{sum(stillbad)}/{self.n} are still missing after Rp/Rs")
+        self.speak(f"{sum(stillbad)}/{len(self)} are still missing after Rp/Rs")
 
         return d
 
@@ -1132,7 +1154,7 @@ class Population(Talker):
 
             # try to replace bad ones with NVK3L
             bad = np.isfinite(d) == False
-            self.speak(f"{sum(bad)}/{self.n} transit durations are missing")
+            self.speak(f"{sum(bad)}/{len(self)} transit durations are missing")
 
             P = self.period[bad]
             a_over_rs = self.a_over_rs[bad]
@@ -1149,7 +1171,9 @@ class Population(Talker):
 
             # report those that are still bad
             stillbad = np.isfinite(d) == False
-            self.speak(f"{sum(stillbad)}/{self.n} are still missing after P, a/R*, b")
+            self.speak(
+                f"{sum(stillbad)}/{len(self)} are still missing after P, a/R*, b"
+            )
 
             return d
 
@@ -1168,7 +1192,7 @@ class Population(Talker):
 
         # try to replace bad ones with NVK3L
         bad = np.isfinite(M) == False
-        self.speak(f"{sum(bad)}/{self.n} masses are missing")
+        self.speak(f"{sum(bad)}/{len(self)} masses are missing")
 
         # estimate from the msini
         try:
@@ -1178,7 +1202,7 @@ class Population(Talker):
 
         # replace those that are still bad with the a/R*
         stillbad = np.isfinite(M) == False
-        self.speak(f"{sum(stillbad)}/{self.n} are still missing after msini")
+        self.speak(f"{sum(stillbad)}/{len(self)} are still missing after msini")
 
         return M
 
@@ -1197,7 +1221,7 @@ class Population(Talker):
 
         # try to replace bad ones with NVK3L
         bad = np.isfinite(R) == False
-        self.speak(f"{sum(bad)}/{self.n} radii are missing")
+        self.speak(f"{sum(bad)}/{len(self)} radii are missing")
 
         # estimate from Chen and Kipping
         try:
@@ -1209,7 +1233,7 @@ class Population(Talker):
         # replace those that are still bad with the a/R*
         stillbad = np.isfinite(R) == False
         self.speak(
-            f"{sum(stillbad)}/{self.n} are still missing after Chen & Kipping (2017)"
+            f"{sum(stillbad)}/{len(self)} are still missing after Chen & Kipping (2017)"
         )
 
         return R
@@ -1229,7 +1253,7 @@ class Population(Talker):
 
         # try to replace bad ones with NVK3L
         bad = np.isfinite(age) == False
-        self.speak(f"{sum(bad)}/{self.n} ages are missing")
+        self.speak(f"{sum(bad)}/{len(self)} ages are missing")
 
         # estimate from the msini
         try:
@@ -1240,7 +1264,7 @@ class Population(Talker):
         # replace those that are still bad with the a/R*
         stillbad = np.isfinite(age) == False
         self.speak(
-            f"{sum(stillbad)}/{self.n} are still missing after blindly assuming 5Gyr for missing ages"
+            f"{sum(stillbad)}/{len(self)} are still missing after blindly assuming 5Gyr for missing ages"
         )
 
         return age

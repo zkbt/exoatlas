@@ -174,7 +174,7 @@ class ThumbtackPlot(BubblePanel):
                 for thiskey in keys:
                     self.namestars(thiskey)
                 plt.draw()
-                plt.savefig(self.fileprefix(key))
+                plt.savefig(self._fileprefix(key))
         return self
 
     def movie(
@@ -241,7 +241,7 @@ class ThumbtackPlot(BubblePanel):
                 self.speak("zoomed to {0}".format(z))
                 z *= step
                 # plt.draw()
-            # plt.savefig(self.fileprefix(key))
+            # plt.savefig(self._fileprefix(key))
 
     def zoom(self, distance):
         self.outer = distance
@@ -293,7 +293,7 @@ class ThumbtackPlot(BubblePanel):
                 tolabel = (nottooclose * onplot).nonzero()[0]
             else:
                 tolabel = (nottooclose * onplot * nottoofar).nonzero()[0]
-            # tolabel = self.pop.find('WASP94Ab')
+            # tolabel = self.pop._find_index('WASP94Ab')
             if np.size(tolabel) > 1:
                 tolabel = tolabel[np.unique(self.x[tolabel], return_index=True)[1]]
 

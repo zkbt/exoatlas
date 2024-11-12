@@ -79,8 +79,10 @@ class PredefinedPopulation(Population):
         standard = self.create_standardardized(raw)
 
         # save the standardized table as an ascii table for humans to read
-        standard.write(self.standardized_data_path, format="ascii.ecsv", overwrite=True)
-        self.speak(f"Saved a standardized text table to {self.standardized_data_path}")
+        standard.write(
+            self._standardized_data_path, format="ascii.ecsv", overwrite=True
+        )
+        self.speak(f"Saved a standardized text table to {self._standardized_data_path}")
 
         return standard
 
@@ -127,7 +129,7 @@ class PredefinedPopulation(Population):
         # keywords for reading a standardized table
         read_kw = dict(format="ecsv", fill_values=[("", np.nan), ("--", np.nan)])
 
-        standard = ascii.read(self.standardized_data_path, **read_kw)
-        self.speak(f"Loaded standardized table from {self.standardized_data_path}")
+        standard = ascii.read(self._standardized_data_path, **read_kw)
+        self.speak(f"Loaded standardized table from {self._standardized_data_path}")
 
         return standard
