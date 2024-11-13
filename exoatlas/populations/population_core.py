@@ -44,9 +44,6 @@ class Population(Talker):
     or more!
     """
 
-    # kludge?
-    _pithy = True
-
     def __init__(self, standard, label=None, **plotkw):
         """
         Initialize a Population of exoplanets from a standardized table.
@@ -82,13 +79,13 @@ class Population(Talker):
             self.label = label
 
             # keywords to use for plotting
-            self.plotkw = plotkw
+            self._plotkw = plotkw
 
         elif isinstance(standard, str):
             filename = standard
             self.standard = QTable(ascii.read(filename))
             self.label = self.standard.meta["label"]
-            self.plotkw = self.standard.meta["plotkw"]
+            self._plotkw = self.standard.meta["plotkw"]
 
         # define some cleaned names and hostnames, for indexing
         try:
@@ -193,7 +190,7 @@ class Population(Talker):
                 # save the table as an ascii table for humans to read
         to_save = copy.deepcopy(self.standard)
         to_save.meta["label"] = self.label
-        to_save.meta["plotkw"] = self.plotkw
+        to_save.meta["plotkw"] = self._plotkw
 
         to_save.write(filename, format="ascii.ecsv", overwrite=overwrite)
         print(
@@ -341,7 +338,9 @@ class Population(Talker):
                 label = None
             else:
                 label = f"Subset of {self.label}"
-            subset = type(self)(standard=self.standard[key], label=label, **self.plotkw)
+            subset = type(self)(
+                standard=self.standard[key], label=label, **self._plotkw
+            )
 
             # if the key is a column, raise an error
             if type(key) in self.standard.colnames:
@@ -407,7 +406,7 @@ class Population(Talker):
             label = "+".join(key)
 
         # create that new sub-population
-        return type(self)(standard=subset, label=label, **self.plotkw)
+        return type(self)(standard=subset, label=label, **self._plotkw)
 
     def create_subset_by_hostname(self, key):
         """
@@ -449,7 +448,7 @@ class Population(Talker):
             label = "+".join(key)
 
         # create that new sub-population
-        return type(self)(standard=subset, label=label, **self.plotkw)
+        return type(self)(standard=subset, label=label, **self._plotkw)
 
     def create_subset_by_position(
         self,
@@ -521,7 +520,7 @@ class Population(Talker):
         label = f"Spatial Cross-Match ({len(coordinates)} positions, {radius} radius)"
 
         # create that new sub-population
-        new_population = type(self)(standard=subset, label=label, **self.plotkw)
+        new_population = type(self)(standard=subset, label=label, **self._plotkw)
 
         # choose what to return
         if return_indices:
@@ -561,7 +560,7 @@ class Population(Talker):
             # try to get a plotkw from this pop, from the plotting defaults, from None
             try:
                 assert key in allowed_plotkw
-                return self.plotkw.get(key, default_plotkw[key])
+                return self._plotkw.get(key, default_plotkw[key])
             except (AssertionError, KeyError):
                 raise AttributeError(
                     f"""
@@ -588,7 +587,7 @@ class Population(Talker):
 
         if key in allowed_plotkw:
             # store plotting keywords in a separate plotting dictionary
-            self.plotkw[key] = value
+            self._plotkw[key] = value
         else:
             # otherwise, store attributes as normal for objects
             self.__dict__[key] = value
@@ -637,7 +636,7 @@ class Population(Talker):
             AttributeError,
         ):  # is including AttributeError a kludge?
             # this can be removed after debugging
-            self.speak(f'no symmetric uncertainties found for "{key}"')
+            self._speak(f'no symmetric uncertainties found for "{key}"')
 
         # then try for crudely averaging asymmetric uncertainties
         try:
@@ -647,7 +646,7 @@ class Population(Talker):
             return avg
         except (KeyError, AssertionError, AtlasError, AttributeError):
             # this can be removed after debugging
-            self.speak(f'no asymmetric uncertainties found for "{key}"')
+            self._speak(f'no asymmetric uncertainties found for "{key}"')
 
         # then give up and return nans
         return np.nan * self.standard[key]
@@ -676,7 +675,7 @@ class Population(Talker):
             return np.abs(lower), np.abs(upper)
         except (KeyError, AssertionError, AttributeError):
             # this can be removed after debugging
-            self.speak(f'no asymmetric uncertainties found for "{key}"')
+            self._speak(f'no asymmetric uncertainties found for "{key}"')
 
         # first try for an `uncertainty_{key}` column
         try:
@@ -684,7 +683,7 @@ class Population(Talker):
             return np.abs(sym), np.abs(sym)
         except (KeyError, AssertionError, AttributeError):
             # this can be removed after debugging
-            self.speak(f'no symmetric uncertainties found for "{key}"')
+            self._speak(f'no symmetric uncertainties found for "{key}"')
 
         # then give up and return nans
         unc = np.nan * self.__getattr__(key)
@@ -697,7 +696,7 @@ class Population(Talker):
         """
 
         N = len(self.standard)
-        for k in core_columns:
+        for k in basic_columns:
             try:
                 n = sum(self.standard[k].mask == False)
             except AttributeError:
@@ -705,7 +704,7 @@ class Population(Talker):
                     n = sum(np.isfinite(self.standard[k]))
                 except TypeError:
                     n = sum(self.standard[k] != "")
-            self.speak(f"{k:>25} | {n:4}/{N} rows = {n/N:4.0%} are not empty")
+            self._speak(f"{k:>25} | {n:4}/{N} rows = {n/N:4.0%} are not empty")
 
     def _find_index(self, name):
         """
@@ -792,91 +791,6 @@ class Population(Talker):
         How many planets are in this population?
         """
         return len(self.standard)
-
-    def scatter(
-        self, xname, yname, c=None, s=None, names=True, xlog=True, ylog=True, **kw
-    ):
-        """
-        Quick tool to plot one parameter against another.
-        """
-        plt.ion()
-        x, y = self.__getattr__(xname), self.__getattr__(yname)
-        try:
-            self.ax.cla()
-        except:
-            self.figure = plt.figure("Exoplanet Population")
-            self.ax = plt.subplot()
-
-        self.ax.set_xlabel(xname)
-        self.ax.set_ylabel(yname)
-        self.ax.scatter(x, y, c=c, s=s, **kw)
-        if False:
-            for i in range(len(x)):
-                self.ax.text(x[i], y[i], self.table["NAME"][i])
-        if xlog:
-            plt.xscale("log")
-        if ylog:
-            plt.yscale("log")
-
-        plt.draw()
-
-    def thumbtack(self, maxr=1000, dr=100, labels=False):
-        """Plot the planets as thumbtacks."""
-
-        def scale(d):
-            return np.array(d) ** 1.5
-
-        r = scale(self.distance)
-        x, y = r * np.cos(self.ra * np.pi / 180), r * np.sin(self.ra * np.pi / 180)
-        plt.ion()
-        plt.figure("thumbtacks")
-
-        ax = plt.subplot()
-        ax.cla()
-        ax.set_aspect("equal")
-        theta = np.linspace(0, 2 * np.pi, 1000)
-        angle = -90 * np.pi / 180
-
-        gridkw = dict(alpha=0.25, color="green")
-        for originalradius in np.arange(dr, maxr * 2, dr):
-            radii = scale(originalradius)
-
-            ax.plot(radii * np.cos(theta), radii * np.sin(theta), linewidth=3, **gridkw)
-            ax.text(
-                radii * np.cos(angle),
-                radii * np.sin(angle),
-                "{0:.0f} pc".format(originalradius),
-                rotation=90 + angle * 180 / np.pi,
-                va="bottom",
-                ha="center",
-                size=13,
-                weight="extra bold",
-                **gridkw,
-            )
-
-        ax.plot(
-            x, y, marker="o", alpha=0.5, color="gray", linewidth=0, markeredgewidth=0
-        )
-        close = (self.name == "WASP-94A b").nonzero()[
-            0
-        ]  # (self.distance < maxr).nonzero()[0]
-        if labels:
-            for c in close:
-                plt.text(x[c], y[c], self.name[c])
-        ax.set_xlim(-scale(maxr), scale(maxr))
-        ax.set_ylim(-scale(maxr), scale(maxr))
-
-    def compare(self, x="teq", y="radius", area="depth", color="stellar_radius"):
-        xplot = self.__dict__[x]
-        yplot = self.__dict__[y]
-        sizeplot = self.__dict__[size]
-        colorplot = self.__dict__[color]
-
-        maxarea = 1000
-        area = self.__dict__[area]
-        sizeplot = np.sqrt(area / np.nanmax(area) * maxarea)
-
-        plt.scatter(xplot, yplot, linewidth=0, marker="o", markersize=sizeplot)
 
     def create_table(
         self,

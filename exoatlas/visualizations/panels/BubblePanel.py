@@ -133,7 +133,7 @@ class BubblePanel(Panel):
 
         # should we ignore any variable size instructions?
         if self.pop.respond_to_size == False:
-            size = self.pop.plotkw.get("s", None)
+            size = self.pop._plotkw.get("s", None)
         # if desired, set variable sizes
         elif isinstance(self.plottable["size"], PlottableAxis):
             # get the raw values for the sizes
@@ -143,7 +143,7 @@ class BubblePanel(Panel):
         # otherwise, set a single size
         else:
             # get default, first from pop and then from panel
-            size = self.pop.plotkw.get("s", self.plottable["size"])
+            size = self.pop._plotkw.get("s", self.plottable["size"])
 
         # return a valid input to plt.scatter(s=...)
         return size

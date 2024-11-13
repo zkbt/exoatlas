@@ -9,7 +9,7 @@ def test_population():
     Can we make a population from scratch from a table?
     """
 
-    fake = QTable({x: [0] * 3 for x in attribute_columns}, masked=True)
+    fake = QTable({x: [0] * 3 for x in core_columns}, masked=True)
     p = Population(standard=fake, label="fake")
     p._validate_columns()
 
@@ -104,9 +104,9 @@ def test_attributes():
 
     print(p.color)
     p.alpha = 0.5
-    assert p.plotkw["alpha"] == 0.5
+    assert p._plotkw["alpha"] == 0.5
 
-    for k in attribute_columns:
+    for k in basic_columns:
         getattr(p, k)
 
 

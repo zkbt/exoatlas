@@ -54,7 +54,7 @@ class ExoplanetsPSCP(PredefinedPopulation):
     label = "ExoplanetsPSCP"
 
     # define columns to ingest with and without errors/limits
-    raw_columns_with_errors_and_limits = [
+    _raw_columns_with_errors_and_limits = [
         "pl_orbper",
         "pl_orbsmax",
         "pl_rade",
@@ -86,7 +86,7 @@ class ExoplanetsPSCP(PredefinedPopulation):
         "st_rotp",
         "st_radv",
     ]
-    raw_columns_with_errors = [
+    _raw_columns_with_errors = [
         "sy_dist",
         "sy_plx",
         "sy_bmag",
@@ -108,7 +108,7 @@ class ExoplanetsPSCP(PredefinedPopulation):
         "sy_kepmag",
         "sy_icmag",
     ]
-    raw_columns_without_errors = [
+    _raw_columns_without_errors = [
         "pl_name",
         "hostname",
         "pl_letter",
@@ -245,12 +245,12 @@ class ExoplanetsPSCP(PredefinedPopulation):
                 warnings.warn(f"⚠️ No {k_original} found!")
                 return
 
-            if k_original in self.raw_columns_without_errors:
+            if k_original in self._raw_columns_without_errors:
                 # easy, just record the column itself with no error
                 s[k_new] = attach_unit(r[k_original], unit)
                 print(f"📕 populated {k_original} > {k_new}")
 
-            elif k_original in self.raw_columns_with_errors:
+            elif k_original in self._raw_columns_with_errors:
                 # record the column itself
                 s[k_new] = attach_unit(r[k_original], unit)
 
@@ -263,7 +263,7 @@ class ExoplanetsPSCP(PredefinedPopulation):
                 )
                 print(f"📏 populated {k_new} and errors with {k_original}")
 
-            elif k_original in self.raw_columns_with_errors_and_limits:
+            elif k_original in self._raw_columns_with_errors_and_limits:
                 # from playing with table, I think lim = +1 is upper limit, -1 is lower limit
 
                 # record the upper and lower errorbars
@@ -303,8 +303,8 @@ class ExoplanetsPSCP(PredefinedPopulation):
                 print(f"🙋 populated {k_original} > {k_new} , but not 100% sure...")
 
             # keep track of reference for measurements
-            if (k_original in self.raw_columns_with_errors_and_limits) or (
-                k_original in self.raw_columns_with_errors
+            if (k_original in self._raw_columns_with_errors_and_limits) or (
+                k_original in self._raw_columns_with_errors
             ):
                 try:
                     s[f"{k_new}_reference"] = self.ingest_references(r, k_original)
@@ -445,12 +445,12 @@ class ExoplanetsPSCP(PredefinedPopulation):
         standard = s.filled()
 
         #
-        trimmed = self.trim_bad_data(standard)
+        trimmed = self._trim_bad_data(standard)
 
         # return that standardized table
         return trimmed
 
-    def trim_bad_data(self, standard):
+    def _trim_bad_data(self, standard):
         """
         Mask bad data from the '.standard' table.
 

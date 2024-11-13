@@ -32,7 +32,7 @@ class Downloader(Talker):
             What's the longest we should wait before giving up on the download?
         """
 
-        self.expiration = expiration
+        self._expiration = expiration
         self.timeout = timeout
 
     def get(self, remake=False):
@@ -55,7 +55,7 @@ class Downloader(Talker):
         if remake == True:
             should_we_download = True
         if remake == None:
-            should_we_download = check_if_needs_updating(self.path, self.expiration)
+            should_we_download = check_if_needs_updating(self.path, self._expiration)
         elif remake == False:
             should_we_download = os.path.exists(self.path) == False
 
@@ -63,7 +63,7 @@ class Downloader(Talker):
         if should_we_download:
             self.download_fresh()
         else:
-            self.speak(f"Loading local file from {self.path}")
+            self._speak(f"Loading local file from {self.path}")
 
         # read the actual file
         table = Table.read(self.path, **self.read_kw)
@@ -78,7 +78,7 @@ class Downloader(Talker):
         Download a brand new table from the Exoplanet Archive.
         """
 
-        self.speak(
+        self._speak(
             f"""
         Attempting to freshly download data from
         {self.url}
@@ -100,7 +100,7 @@ class Downloader(Talker):
         # copy the file to its new location
         shutil.copyfile(temporary_path, self.path)
 
-        self.speak(f"Download successful! Saved file to {self.path}")
+        self._speak(f"Download successful! Saved file to {self.path}")
 
     def add_metadata(self, table):
         pass

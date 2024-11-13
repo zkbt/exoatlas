@@ -4,7 +4,7 @@
 
 # basic_columns = ["name", "hostname", "ra", "dec", "distance"]
 
-core_descriptions = {
+core_basic_descriptions = {
     "name": "name of the planet/star/object",
     "ra": "Right Ascension of the system",
     "dec": "Declination of the system",
@@ -124,17 +124,23 @@ derived_observability_descriptions = {
 #    "stellar_brightness_in_telescope_units",
 #    "depth_uncertainty",
 # ]
-column_descriptions = (
-    core_descriptions
+core_descriptions = (
+    core_basic_descriptions
     | core_stellar_descriptions
-    | derived_stellar_descriptions
     | core_planet_descriptions
     | core_transit_descriptions
+)
+derived_descriptions = (
+    derived_stellar_descriptions
     | derived_planet_descriptions
     | derived_observability_descriptions
 )
+all_descriptions = core_basic_descriptions | derived_descriptions
 
+basic_columns = list(core_basic_descriptions.keys())
 core_columns = list(core_descriptions.keys())
+derived_columns = list(derived_descriptions.keys())
+all_columns = list(all_descriptions.keys())
 
 
 def describe_columns():

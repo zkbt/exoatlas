@@ -171,7 +171,7 @@ class ErrorPanel(BubblePanel):
             )
 
             n_nouncertainty = sum(ok == False)
-            # self.speak(
+            # self._speak(
             #    f"skipping {n_nouncertainty} planets that are missing data or uncertainties"
             # )
 
@@ -187,12 +187,12 @@ class ErrorPanel(BubblePanel):
             # negative.
 
             n_consistentwithzero = sum(ok == False) - n_nouncertainty
-            # self.speak(
+            # self._speak(
             #    f"skipping {n_consistentwithzero} planets that are consistent with zero"
             # )
 
-            if (len(x) > 1) & (self.pop.plotkw.get("ink", True)):
-                # self.speak("plotting inked errorbars, this may take a while")
+            if (len(x) > 1) & (self.pop._plotkw.get("ink", True)):
+                # self._speak("plotting inked errorbars, this may take a while")
                 # FIXME, 5/25/2020: We should make the
                 # "invisible" color be something more flexible
                 # than white, in case we're plotting on a dark

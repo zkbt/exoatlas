@@ -1,8 +1,5 @@
-from .population_core import (
-    Population,
-    attribute_columns,
-    method_columns,
-)
+from .population_core import Population
+
 from .predefined import PredefinedPopulation
 from .exoplanets import *
 from .solarsystem import *

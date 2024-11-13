@@ -17,9 +17,9 @@ class TransitingExoplanets(Exoplanets):
             self.label = "Transiting Exoplanets"
 
         # tidy up this population
-        self.remove_nontransiting()
+        self._remove_nontransiting()
 
-    def remove_nontransiting(self):
+    def _remove_nontransiting(self):
         """
         Remove non-transiting planets from the population.
 

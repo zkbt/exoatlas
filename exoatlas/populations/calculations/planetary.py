@@ -18,7 +18,7 @@ def semimajor_axis(self):
 
     # try to replace bad ones with NVK3L
     bad = np.isfinite(a) == False
-    self.speak(f"{sum(bad)}/{len(self)} semimajoraxes are missing")
+    self._speak(f"{sum(bad)}/{len(self)} semimajoraxes are missing")
 
     # calculate from the period and the stellar mass
     P = self.period[bad]
@@ -28,7 +28,7 @@ def semimajor_axis(self):
 
     # replace those that are still bad with the a/R*
     stillbad = np.isfinite(a) == False
-    self.speak(f"{sum(stillbad)}/{len(self)} are still missing after NVK3L")
+    self._speak(f"{sum(stillbad)}/{len(self)} are still missing after NVK3L")
     # (pull from table to avoid potential for recursion)
     try:
         a_over_rs = self.standard["transit_ar"][stillbad]
@@ -55,14 +55,14 @@ def a_over_rs(self):
 
     # try to replace bad ones with NVK3L
     bad = np.isfinite(a_over_rs) == False
-    self.speak(f"{sum(bad)}/{len(self)} values for a/R* are missing")
+    self._speak(f"{sum(bad)}/{len(self)} values for a/R* are missing")
 
     a = self.semimajor_axis[bad]
     R = self.stellar_radius[bad]
     a_over_rs[bad] = a / R
 
     stillbad = np.isfinite(a_over_rs) == False
-    self.speak(f"{sum(stillbad)}/{len(self)} are still missing after a and R*")
+    self._speak(f"{sum(stillbad)}/{len(self)} are still missing after a and R*")
 
     return a_over_rs
 
@@ -78,8 +78,8 @@ def e(self):
 
     # try to replace bad ones with NVK3L
     bad = np.isfinite(e) == False
-    self.speak(f"{sum(bad)}/{len(self)} eccentricities are missing")
-    self.speak(f"assuming they are all zero")
+    self._speak(f"{sum(bad)}/{len(self)} eccentricities are missing")
+    self._speak(f"assuming they are all zero")
     e[bad] = 0
 
     return e
@@ -96,9 +96,9 @@ def omega(self):
 
     # try to replace bad ones with NVK3L
     bad = np.isfinite(omega) == False
-    self.speak(f"{sum(bad)}/{len(self)} longitudes of periastron are missing")
+    self._speak(f"{sum(bad)}/{len(self)} longitudes of periastron are missing")
     e_zero = self.e == 0
-    self.speak(f"{sum(e_zero)} have eccentricities assumed to be 0")
+    self._speak(f"{sum(e_zero)} have eccentricities assumed to be 0")
     omega[e_zero] = 0 * u.deg
 
     return omega
@@ -116,7 +116,7 @@ def b(self):
 
     # try to replace bad ones with NVK3L
     bad = np.isfinite(b) == False
-    self.speak(f"{sum(bad)}/{len(self)} impact parameters are missing")
+    self._speak(f"{sum(bad)}/{len(self)} impact parameters are missing")
 
     # calculate from the period and the stellar mass
     a_over_rs = self.a_over_rs[bad]
@@ -127,7 +127,7 @@ def b(self):
 
     # report those that are still bad
     stillbad = np.isfinite(b) == False
-    self.speak(f"{sum(stillbad)}/{len(self)} are still missing after using i")
+    self._speak(f"{sum(stillbad)}/{len(self)} are still missing after using i")
 
     return b
 
@@ -232,7 +232,7 @@ def transit_depth(self):
 
     # try to replace bad ones with NVK3L
     bad = np.isfinite(d) == False
-    self.speak(f"{sum(bad)}/{len(self)} transit depths are missing")
+    self._speak(f"{sum(bad)}/{len(self)} transit depths are missing")
 
     Rp = self.radius[bad]
     Rs = self.stellar_radius[bad]
@@ -241,7 +241,7 @@ def transit_depth(self):
 
     # report those that are still bad
     stillbad = np.isfinite(d) == False
-    self.speak(f"{sum(stillbad)}/{len(self)} are still missing after Rp/Rs")
+    self._speak(f"{sum(stillbad)}/{len(self)} are still missing after Rp/Rs")
 
     return d
 
@@ -261,7 +261,7 @@ def transit_duration(self):
 
         # try to replace bad ones with NVK3L
         bad = np.isfinite(d) == False
-        self.speak(f"{sum(bad)}/{len(self)} transit durations are missing")
+        self._speak(f"{sum(bad)}/{len(self)} transit durations are missing")
 
         P = self.period[bad]
         a_over_rs = self.a_over_rs[bad]
@@ -278,7 +278,7 @@ def transit_duration(self):
 
         # report those that are still bad
         stillbad = np.isfinite(d) == False
-        self.speak(f"{sum(stillbad)}/{len(self)} are still missing after P, a/R*, b")
+        self._speak(f"{sum(stillbad)}/{len(self)} are still missing after P, a/R*, b")
 
         return d
 
@@ -298,7 +298,7 @@ def kludge_mass(self):
 
     # try to replace bad ones with NVK3L
     bad = np.isfinite(M) == False
-    self.speak(f"{sum(bad)}/{len(self)} masses are missing")
+    self._speak(f"{sum(bad)}/{len(self)} masses are missing")
 
     # estimate from the msini
     try:
@@ -308,7 +308,7 @@ def kludge_mass(self):
 
     # replace those that are still bad with the a/R*
     stillbad = np.isfinite(M) == False
-    self.speak(f"{sum(stillbad)}/{len(self)} are still missing after msini")
+    self._speak(f"{sum(stillbad)}/{len(self)} are still missing after msini")
 
     return M
 
@@ -328,7 +328,7 @@ def kludge_radius(self):
 
     # try to replace bad ones with NVK3L
     bad = np.isfinite(R) == False
-    self.speak(f"{sum(bad)}/{len(self)} radii are missing")
+    self._speak(f"{sum(bad)}/{len(self)} radii are missing")
 
     # estimate from Chen and Kipping
     try:
@@ -339,7 +339,7 @@ def kludge_radius(self):
 
     # replace those that are still bad with the a/R*
     stillbad = np.isfinite(R) == False
-    self.speak(
+    self._speak(
         f"{sum(stillbad)}/{len(self)} are still missing after Chen & Kipping (2017)"
     )
 
@@ -361,7 +361,7 @@ def kludge_age(self):
 
     # try to replace bad ones with NVK3L
     bad = np.isfinite(age) == False
-    self.speak(f"{sum(bad)}/{len(self)} ages are missing")
+    self._speak(f"{sum(bad)}/{len(self)} ages are missing")
 
     # estimate from the msini
     try:
@@ -371,7 +371,7 @@ def kludge_age(self):
 
     # replace those that are still bad with the a/R*
     stillbad = np.isfinite(age) == False
-    self.speak(
+    self._speak(
         f"{sum(stillbad)}/{len(self)} are still missing after blindly assuming 5Gyr for missing ages"
     )
 
