@@ -2,9 +2,7 @@
 # are attributes and which are methods which need to be called as
 # functions. We should try to make that more transparent/easy!
 
-# basic_columns = ["name", "hostname", "ra", "dec", "distance"]
-
-core_basic_descriptions = {
+core_descriptions = {
     "name": "name of the planet/star/object",
     "ra": "Right Ascension of the system",
     "dec": "Declination of the system",
@@ -93,40 +91,12 @@ derived_planet_descriptions = {
     "transmission_signal": "transit depth of one scale height of atmosphere (a function of mean molecular weight)",
     "emission_signal": "thermal-emission eclipse depth (a function of wavelength)",
     "reflection_signal": "reflected-light eclipse depth (a function of albedo)",
-    "angular_separation": "maximum angular separation between planet and star",
-    "imaging_contrast": "???",
 }
 
-derived_observability_descriptions = {
-    "transmission_signal": "transit depth of one scale height of atmosphere (a function of mean molecular weight)",
-    "transmission_snr": "S/N for transmission spectrum spanning one scale height",
-    "emission_signal": "thermal-emission eclipse depth (a function of wavelength)",
-    "emission_snr": "S/N for thermal emission eclipse spectrum",
-    "reflection_signal": "reflected-light eclipse depth (a function of albedo)",
-    "reflection_snr": "S/N for reflected light eclipse spectrum",
-    "stellar_brightness": "photon flux from the star at Earth (a function of wavelength)",
-    "stellar_brightness_in_telescope_units": "photon flux in a particular telescope's units",
-    "depth_uncertainty": "expected photon-noise transit/eclipse depth uncertainty",
-    "angular_separation": "maximum angular separation between planet and star",
-    "imaging_contrast": "???",
-}
-
-
-# method_columns = [
-#    "scale_height",
-#    "transmission_signal",
-#    "transmission_snr",
-#    "emission_signal",
-#    "emission_snr",
-#    "reflection_signal",
-#    "reflection_snr",
-#    "stellar_brightness",
-#    "stellar_brightness_in_telescope_units",
-#    "depth_uncertainty",
-# ]
-core_descriptions = (
-    core_basic_descriptions
+column_descriptions = (
+    core_descriptions
     | core_stellar_descriptions
+    | derived_stellar_descriptions
     | core_planet_descriptions
     | core_transit_descriptions
 )

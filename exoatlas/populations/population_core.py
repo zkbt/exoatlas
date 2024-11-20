@@ -529,6 +529,25 @@ class Population(Talker):
         else:
             return new_population
 
+    def get_values_from_table(self, key, distribution=False):
+        """
+        Retrieve values directly from the standardized table.
+
+        This wrapper extracts values from the internal `.standard`
+        table without performing any calculations or filtering.
+        Some quantities might have explicit methods that override
+        direct retrieval from the table, but this provides direct
+        access to the table values no matter what.
+
+        Parameters
+        ----------
+        key : str
+            The quantity to extract. This must exactly match a
+            column in `.standard`; if not, `KeyError` will be raised.
+        distribution : bool
+            Should an astropy.
+        """
+
     def __getattr__(self, key):
         """
         If an attribute/method isn't explicitly defined for a population,
@@ -549,9 +568,9 @@ class Population(Talker):
             or the plotting keyword.
 
         """
-        if key in ["label", "plotkw", "standard"]:
+        if key in ["label", "_plotkw", "standard"]:
             raise RuntimeError(
-                f"Yikes! It looks like `.{key}` isn't defined for {self}, but it should be!"
+                f"Yikes! It looks like `.{key}` isn't defined, but it should be!"
             )
         try:
             # extract the column from the standardized table
@@ -574,7 +593,7 @@ class Population(Talker):
         Define what happens when we try to set an attribute via `pop.attr = x`.
 
         If the keyword is a pre-defined "plotting" keyword in `allowed_plotkw`,
-        then we should save it in a special `plotkw` dictionary. Otherwise,
+        then we should save it in a special `_plotkw` dictionary. Otherwise,
         the attribute should be set as normal.
 
         Parameters

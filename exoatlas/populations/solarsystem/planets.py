@@ -46,7 +46,6 @@ class SolarSystem(PredefinedPopulation):
     def create_standardardized(self, trimmed):
         """
         Create a standardized table of planet properties.
-        It must at least contain the columns in `basic_columns`.
         """
 
         # start from the trimmed table

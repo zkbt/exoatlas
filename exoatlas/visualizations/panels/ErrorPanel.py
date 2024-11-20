@@ -192,7 +192,7 @@ class ErrorPanel(BubblePanel):
             # )
 
             if (len(x) > 1) & (self.pop._plotkw.get("ink", True)):
-                # self._speak("plotting inked errorbars, this may take a while")
+                # self.speak("plotting inked errorbars, this may take a while")
                 # FIXME, 5/25/2020: We should make the
                 # "invisible" color be something more flexible
                 # than white, in case we're plotting on a dark

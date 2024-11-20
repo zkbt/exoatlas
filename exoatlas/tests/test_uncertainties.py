@@ -2,6 +2,56 @@ from .setup_tests import *
 
 from exoatlas.imports import *
 from exoatlas.populations import *
+from exoatlas.populations.pineda_skew import *
+
+
+def test_skew(N_data=25):
+    mu = np.zeros(N_data)
+    sigma_lower = 10 ** np.linspace(-1, 1, N_data)
+    sigma_upper = 10 ** np.linspace(1, -1, N_data)
+    x = make_skew_samples_from_lowerupper(
+        mu=mu, sigma_lower=sigma_lower, sigma_upper=sigma_upper
+    )
+    measured_lower, measured_upper = np.percentile(
+        x,
+        np.array([0.5 - central_interval / 2, 0.5 + central_interval / 2]) * 100,
+        axis=0,
+    )
+
+    x_axis = np.log10(sigma_upper / sigma_lower)  # np.arange(N_data) #
+    expected_kw = dict(color="gray", zorder=-1, alpha=0.3)
+    fi, ax = plt.subplots(2, 1, sharex=True)
+    plt.sca(ax[0])
+    plt.plot(
+        x_axis,
+        mu,
+        linestyle="-",
+        label=r"requested $\mu^{+\sigma_{upper}}_{-\sigma_{lower}}$",
+        **expected_kw
+    )
+    plt.plot(x_axis, mu - sigma_lower, linestyle="--", **expected_kw)
+    plt.plot(x_axis, mu + sigma_upper, linestyle="--", **expected_kw)
+    if N_data == 1:
+        w = 1
+    else:
+        w = np.median(np.gradient(x_axis)) * 0.9
+    plt.violinplot(
+        x,
+        positions=x_axis,
+        widths=w,
+        showextrema=False,
+        quantiles=[[0.5 - central_interval / 2, 0.5, 0.5 + central_interval / 2]]
+        * N_data,
+    )
+    plt.legend(frameon=False)
+    plt.ylabel("simulated distributions")
+
+    plt.sca(ax[1])
+    plt.plot(x_axis, (mu - measured_lower) / sigma_lower, marker="o", label="upper")
+    plt.plot(x_axis, (measured_upper - mu) / sigma_upper, marker="o", label="lower")
+    plt.legend(frameon=False)
+    plt.xlabel(r"$\log_{10}(\sigma_{upper}/\sigma_{lower})$")
+    plt.ylabel(r"$\sigma_{68\%, measured}/\sigma_{injected}$")
 
 
 def test_uncertainties():
