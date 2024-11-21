@@ -2,7 +2,7 @@
 # are attributes and which are methods which need to be called as
 # functions. We should try to make that more transparent/easy!
 
-core_descriptions = {
+core_basic_descriptions = {
     "name": "name of the planet/star/object",
     "ra": "Right Ascension of the system",
     "dec": "Declination of the system",
@@ -13,11 +13,6 @@ core_stellar_descriptions = {
     "stellar_teff": "stellar effective temperature",
     "stellar_mass": "stellar mass",
     "stellar_radius": "stellar radius",
-}
-
-derived_stellar_descriptions = {
-    "stellar_luminosity": "bolometric luminosity of the star",
-    "distance_modulus": "apparent magnitude - absolute magnitude",
 }
 
 
@@ -57,7 +52,10 @@ core_transit_descriptions = {
     "transit_b": "(transit-derived) impact parameter b",
 }
 
-
+derived_stellar_descriptions = {
+    "stellar_luminosity": "bolometric luminosity of the star",
+    "distance_modulus": "apparent magnitude - absolute magnitude",
+}
 # calculated_columns = [
 #    "a_over_rs",
 #    "b",
@@ -88,15 +86,21 @@ derived_planet_descriptions = {
     "scale_height": "scale height of an H2-rich atmosphere",
     "escape_velocity": "escape velocity of the planet",
     "escape_parameter": "ratio of gravitational potential to thermal energy for an H atom",
+}
+
+derived_observability_descriptions = {
     "transmission_signal": "transit depth of one scale height of atmosphere (a function of mean molecular weight)",
     "emission_signal": "thermal-emission eclipse depth (a function of wavelength)",
     "reflection_signal": "reflected-light eclipse depth (a function of albedo)",
+    "depth_uncertainty": "predicted, photon-limited transit depth uncertainty",
+    "transmission_snr": "S/N for transmission",
+    "emission_snr": "S/N for emission",
+    "reflection_snr": "S/N for reflection",
 }
 
-column_descriptions = (
-    core_descriptions
+core_descriptions = (
+    core_basic_descriptions
     | core_stellar_descriptions
-    | derived_stellar_descriptions
     | core_planet_descriptions
     | core_transit_descriptions
 )
@@ -105,7 +109,7 @@ derived_descriptions = (
     | derived_planet_descriptions
     | derived_observability_descriptions
 )
-all_descriptions = core_basic_descriptions | derived_descriptions
+all_descriptions = core_descriptions | derived_descriptions
 
 basic_columns = list(core_basic_descriptions.keys())
 core_columns = list(core_descriptions.keys())

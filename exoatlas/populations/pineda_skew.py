@@ -382,6 +382,8 @@ def make_skew_samples_from_lowerupper(
 
     """
 
+    assert np.max([len(np.shape(x)) for x in [mu, sigma_lower, sigma_upper]]) <= 1
+
     N_data = np.max([np.size(mu), np.size(sigma_lower), np.size(sigma_upper)])
 
     # find coefficients for mu=0, sigma_lower=1, sigma_upper/sigma_lower
@@ -395,8 +397,12 @@ def make_skew_samples_from_lowerupper(
         sigma_upper / sigma_lower, skew_table["sigma_upper"], skew_table["alpha_skew"]
     )
 
-    # create zero-centered, unnormalized skewnormal distribution + samples
-    p = skewnorm(loc=mu_skew, scale=sigma_skew, a=alpha_skew)
-    x = p.rvs(size=(N_samples, N_data)) * sigma_lower + mu
+    # populate empty array with nans, to skip asking skewnormal to handle them
+    ok = np.isfinite(mu_skew * sigma_skew * alpha_skew)
+    samples = np.ones((N_samples, N_data)) * mu[np.newaxis, :] * np.nan
 
-    return x
+    # create zero-centered, unnormalized skewnormal distribution + samples
+    p = skewnorm(loc=mu_skew[ok], scale=sigma_skew[ok], a=alpha_skew[ok])
+    samples[:, ok] = p.rvs(size=(N_samples, sum(ok))) * sigma_lower[ok] + mu[ok]
+
+    return samples.T

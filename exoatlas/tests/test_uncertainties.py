@@ -15,7 +15,7 @@ def test_skew(N_data=25):
     measured_lower, measured_upper = np.percentile(
         x,
         np.array([0.5 - central_interval / 2, 0.5 + central_interval / 2]) * 100,
-        axis=0,
+        axis=-1,
     )
 
     x_axis = np.log10(sigma_upper / sigma_lower)  # np.arange(N_data) #
@@ -36,7 +36,7 @@ def test_skew(N_data=25):
     else:
         w = np.median(np.gradient(x_axis)) * 0.9
     plt.violinplot(
-        x,
+        x.T,
         positions=x_axis,
         widths=w,
         showextrema=False,
@@ -52,6 +52,27 @@ def test_skew(N_data=25):
     plt.legend(frameon=False)
     plt.xlabel(r"$\log_{10}(\sigma_{upper}/\sigma_{lower})$")
     plt.ylabel(r"$\sigma_{68\%, measured}/\sigma_{injected}$")
+
+
+def test_make_astropy_distribution(key="radius"):
+    mu = e.get_values_from_table(key)
+    lower, upper = e.get_lowerupper_uncertainty_from_table(key)
+    inject_kw = dict(color="gray", linewidth=5, alpha=0.2)
+    fi, ax = plt.subplots(2, 1, sharex=True)
+    plt.sca(ax[0])
+    plt.plot(-lower, **inject_kw)
+    plt.plot(upper, **inject_kw)
+    plt.title(key)
+    plt.ylabel("upper + lower\n" + r"$\sigma_{samples}$ and $\sigma_{table}$")
+    d = e.get_values_from_table(key, distribution=True)
+    sample_lower, sample_upper = d.pdf_percentiles([15.8, 84.2])
+    sample_kw = dict(color="black")
+    plt.plot(sample_lower - mu, **sample_kw)
+    plt.plot(sample_upper - mu, **sample_kw)
+    plt.sca(ax[1])
+    plt.plot((sample_lower - mu) / lower, **sample_kw)
+    plt.plot((sample_upper - mu) / upper, **sample_kw)
+    plt.ylabel("upper + lower\n" + r"$\sigma_{samples}/\sigma_{table}$")
 
 
 def test_uncertainties():

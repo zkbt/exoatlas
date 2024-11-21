@@ -4,6 +4,7 @@ from ..imports import *
 # from ..telescopes import *
 # from ..models import *
 from .column_descriptions import *
+from .pineda_skew import make_skew_samples_from_lowerupper
 
 # these are keywords that can be set for a population
 default_plotkw = dict(
@@ -33,6 +34,41 @@ allowed_plotkw += [
     "markeredgewidth",
     "markeredgecolor",
 ]
+
+
+def _clean_column(raw_column):
+    """
+    Convert a Column into an array disconnected from its original Table.
+
+    Parameters
+    ----------
+    raw_column : astropy.table.column.Column
+        The column to clean.
+
+    Returns
+    -------
+    cleaned_column : array, Quantity, Time, SkyCoord, ...
+        The data as an array-like object, without
+        connection to its original table.
+    """
+    # strip the connection to the table column
+    if isinstance(raw_column, Column):
+        cleaned_column = np.array(raw_column)
+    else:
+        cleaned_column = type(raw_column)(raw_column)
+        # This is equivalent to
+        #
+        # if isinstance(raw_column, u.Quantity):
+        #   cleaned_column = u.Quantity(raw_column)
+        #
+        # I'm not 100% sure why this is necessary, but
+        # in some tests it seems a QTable will return a
+        # Quantity or SkyCoord or Time object, but still
+        # with some sort of connection to being a Column
+        # from a Table (and therefore potentially some
+        # sneaky link that we want to erase). Re-initializing
+        # an object seems to erase that connection.
+    return cleaned_column
 
 
 class Population(Talker):
@@ -529,6 +565,43 @@ class Population(Talker):
         else:
             return new_population
 
+    def get_lowerupper_uncertainty_from_table(self, key):
+        """
+        Return two arrays of lower and upper uncertainties,
+        direct from a table.
+
+        Parameters
+        ----------
+        key : str
+            The quantity for which we want lower + upper uncertaintes.
+
+        Returns
+        -------
+        lower : np.array, u.Quantity
+            The magnitude of the lower uncertainties (x_{-lower}^{+upper})
+        upper : np.array, u.Quantity
+            The magnitude of the upper uncertainties (x_{-lower}^{+upper})
+        """
+
+        # first try for asymmetric table uncertainties
+        try:
+            lower = _clean_column(self.standard[f"{key}_uncertainty_lower"])
+            upper = _clean_column(self.standard[f"{key}_uncertainty_upper"])
+            return np.abs(lower), np.abs(upper)
+        except KeyError:
+            pass
+
+        # next try for symmetric table uncertainties
+        try:
+            sym = _clean_column(self.standard[f"{key}_uncertainty"])
+            return np.abs(sym), np.abs(sym)
+        except KeyError:
+            pass
+
+        # then give up and return zeroes
+        unc = 0 * _clean_column(self.standard[key])
+        return unc, unc
+
     def get_values_from_table(self, key, distribution=False):
         """
         Retrieve values directly from the standardized table.
@@ -545,8 +618,42 @@ class Population(Talker):
             The quantity to extract. This must exactly match a
             column in `.standard`; if not, `KeyError` will be raised.
         distribution : bool
-            Should an astropy.
+            Should it be returned as an astropy distribution,
+            for uncertainty propagation?
+
+        Returns
+        -------
+        values : array, astropy.units.Quantity, astropy.uncertainty.Distribution
+            The requested table column.
+                If it has units, it will be an astropy Quantity.
+                If it has no units, it will be an astropy array.
+                If `distribution` is True, it will be an astropy Distribution.
         """
+
+        # extract the column from self.standard for this key
+        try:
+            raw_column = self.standard[key]
+        except KeyError:
+            raise KeyError(
+                f"The column '{key}' wasn't found in {self}'s internal table."
+            )
+
+        # return a distribution or an array
+        if distribution:
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore")
+                # set the mode of the distribution to be the table value
+                mu = _clean_column(raw_column)
+                # get the lower + upper uncertainties from the table
+                sigma_lower, sigma_upper = self.get_lowerupper_uncertainty_from_table(
+                    key
+                )
+                samples = make_skew_samples_from_lowerupper(
+                    mu=mu, sigma_lower=sigma_lower, sigma_upper=sigma_upper
+                )
+                return Distribution(samples)
+        else:
+            return _clean_column(raw_column)
 
     def __getattr__(self, key):
         """
