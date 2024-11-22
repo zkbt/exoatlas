@@ -43,7 +43,7 @@ class SolarSystem(PredefinedPopulation):
         # a table of unstandardized planet properties
         return raw
 
-    def create_standardardized(self, trimmed):
+    def _create_standardized(self, trimmed):
         """
         Create a standardized table of planet properties.
         """

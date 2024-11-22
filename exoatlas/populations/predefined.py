@@ -76,7 +76,7 @@ class PredefinedPopulation(Population):
         raw = self._download_raw_data(remake=remake)
 
         # create a standardized table from the array
-        standard = self.create_standardardized(raw)
+        standard = self._create_standardized(raw)
 
         # save the standardized table as an ascii table for humans to read
         standard.write(

@@ -26,7 +26,7 @@ class SolarSystemMinorPlanets(PredefinedPopulation):
         """
         return f'{clean(self.label)}-{self.minimum_diameter.to_value("km")}km'
 
-    def create_standardardized(self, raw):
+    def _create_standardized(self, raw):
         """
         Create a standardized table to make sure that at
         least a few necessary columns are populated.

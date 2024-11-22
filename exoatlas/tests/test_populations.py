@@ -12,6 +12,7 @@ def test_population():
     fake = QTable({x: [0] * 3 for x in core_descriptions}, masked=True)
     p = Population(standard=fake, label="fake")
     p._validate_columns()
+    p.print_column_summary()
 
 
 def test_solarsystem():

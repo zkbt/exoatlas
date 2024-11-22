@@ -176,7 +176,7 @@ class ExoplanetsPSCP(PredefinedPopulation):
             if "_reference" in k:
                 self._make_sure_index_exists(k)
 
-    def create_standardardized(self, raw):
+    def _create_standardized(self, raw):
         """
         Create a standardized table to make sure that at
         least a few necessary columns are populated.
@@ -307,7 +307,7 @@ class ExoplanetsPSCP(PredefinedPopulation):
                 k_original in self._raw_columns_with_errors
             ):
                 try:
-                    s[f"{k_new}_reference"] = self.ingest_references(r, k_original)
+                    s[f"{k_new}_reference"] = self._ingest_references(r, k_original)
                     print(
                         f"⚠️ ingested reference information for {k_original} > {k_new}"
                     )
@@ -394,7 +394,7 @@ class ExoplanetsPSCP(PredefinedPopulation):
             "kep",
         ]
         for b in bands:
-            populate_one_or_more_columns(f"{b}mag", f"sy_{b.lower()}mag", u.mag)
+            populate_one_or_more_columns(f"magnitude_{b}", f"sy_{b.lower()}mag", u.mag)
 
         # what are some basic orbital parameters
         populate_one_or_more_columns("period", "pl_orbper", u.day)
@@ -494,8 +494,8 @@ class ExoplanetsPSCP(PredefinedPopulation):
                 # this comment is a potentially harmless or potentially troublesome KLUDGE!
                 # see https://github.com/zkbt/exoatlas/issues/58
                 # ok *= standard[f"{k}_uncertainty_{w}"] != 0
-                warnings.warn(
-                    f"🚨😳🔔‼️ some values with zero-uncertainty might have snuck through for {k} 🚨😳🔔‼️🚨😳🔔‼️"
+                print(
+                    "🚨😳🔔‼️ some values with zero-uncertainty might have snuck through for {k} 🚨😳🔔‼️🚨😳🔔‼️"
                 )
             N_has_uncertainty = np.sum(ok)
             bad = ok == False
@@ -507,7 +507,7 @@ class ExoplanetsPSCP(PredefinedPopulation):
         print("values without reasonable uncertainties have been trimmed")
         return trimmed
 
-    def ingest_references(self, r, k):
+    def _ingest_references(self, r, k):
         """
         Try to get the reference for a particular measurement.
 
@@ -562,7 +562,7 @@ class ExoplanetsPS(ExoplanetsPSCP):
         ExoplanetsPSCP.__init__(self, *args, **kwargs)
         self._add_references_as_indices()
 
-    def ingest_references(self, r, k):
+    def _ingest_references(self, r, k):
         """
         Try to get the reference for a particular measurement.
 
@@ -722,7 +722,7 @@ class Exoplanets(ExoplanetsPSCP):
         plt.ylabel(y)
         plt.legend()
 
-    def check_individual_references(
+    def display_individual_references(
         self,
         keys=["mass", "radius", "stellar_mass", "stellar_radius", "stellar_teff"],
         planets=None,
@@ -797,7 +797,7 @@ class Exoplanets(ExoplanetsPSCP):
         1.  Run `.load_individual_references()` to make sure that the
             data for individual references are loaded and stored in the
             `.individul_references` attribute.
-        2.  Run `.check_individual_references()` to see what references
+        2.  Run `.display_individual_references()` to see what references
             have useful data you might want to use for a particular planet.
         3.  Run `.update_reference()` to use a reference to update the
             parameters in the standardized population table.

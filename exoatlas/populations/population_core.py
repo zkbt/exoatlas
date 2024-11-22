@@ -130,7 +130,6 @@ class Population(Talker):
             self.standard["tidyname"] = [
                 clean(x).lower() for x in self.standard["name"]
             ]
-
         try:
             self.standard["tidyhostname"]
         except KeyError:
@@ -145,6 +144,71 @@ class Population(Talker):
         # test that indexing still works
         name = self.tidyname[0]
         self.standard.loc[name]
+
+        # define internal lists of column names
+        self._populate_colname_summary()
+
+    def _populate_colname_summary(self):
+        """
+        Populate a dictionary summarizing the types of columns in `.standard`.
+        """
+        uncertainty_suffixes = [
+            "_uncertainty_lower",
+            "_uncertainty_upper",
+            "_uncertainty",
+        ]
+        limit_suffixes = ["_lower_limit", "_upper_limit"]
+        reference_suffixes = ["_reference"]
+        all_suffixes = uncertainty_suffixes + limit_suffixes + reference_suffixes
+
+        def ends_with(s, suffixes):
+            return np.any([s[-len(suffix) :] == suffix for suffix in suffixes])
+
+        def remove_suffixes(s):
+            for suffix in all_suffixes:
+                s = s.replace(suffix, "")
+            return s
+
+        self._colnames = {}
+        self._colnames["everything"] = np.unique(
+            [remove_suffixes(x) for x in self.standard.colnames]
+        )
+        self._colnames["with uncertainties"] = np.unique(
+            [
+                remove_suffixes(x)
+                for x in self.standard.colnames
+                if ends_with(x, uncertainty_suffixes)
+            ]
+        )
+        self._colnames["without uncertainties"] = np.unique(
+            [
+                x
+                for x in self._colnames["everything"]
+                if x not in self._colnames["with uncertainties"]
+            ]
+        )
+        # self._colnames["with limits"] = np.unique(
+        #    [
+        #        remove_suffixes(x)
+        #        for x in self.standard.colnames
+        #        if ends_with(x, limit_suffixes)
+        #    ]
+        # )
+        self._colnames["with references"] = np.unique(
+            [
+                remove_suffixes(x)
+                for x in self.standard.colnames
+                if ends_with(x, reference_suffixes)
+            ]
+        )
+
+    def print_column_summary(self):
+        """
+        Print a summary of columns that come directly from the `.standard` table.
+        """
+        print(f"The following columns are present in the internal `.standard` table:\n")
+        for k in self._colnames:
+            print(f"{k} =\n{self._colnames[k]}\n")
 
     def _list_table_indices(self):
         """
