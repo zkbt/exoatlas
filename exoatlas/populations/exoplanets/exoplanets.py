@@ -328,8 +328,10 @@ class ExoplanetsPSCP(PredefinedPopulation):
         # what's the history?
         populate_one_or_more_columns("discovery_method", "discoverymethod")
         populate_one_or_more_columns("discovery_year", "disc_year")
-        populate_one_or_more_columns("discovery_reference", "disc_refname")
-        s["discovery_reference"] = [parse_reflink(x) for x in s["discovery_reference"]]
+        populate_one_or_more_columns("discovery_publication", "disc_refname")
+        s["discovery_publication"] = [
+            parse_reflink(x) for x in s["discovery_publication"]
+        ]
         populate_one_or_more_columns("discovery_facility", "disc_facility")
 
         # what are the host positions and kinematics?
@@ -495,7 +497,7 @@ class ExoplanetsPSCP(PredefinedPopulation):
                 # see https://github.com/zkbt/exoatlas/issues/58
                 # ok *= standard[f"{k}_uncertainty_{w}"] != 0
                 print(
-                    "🚨😳🔔‼️ some values with zero-uncertainty might have snuck through for {k} 🚨😳🔔‼️🚨😳🔔‼️"
+                    f"🚨😳🔔‼️ some values with zero-uncertainty might have snuck through for {k} 🚨😳🔔‼️🚨😳🔔‼️"
                 )
             N_has_uncertainty = np.sum(ok)
             bad = ok == False

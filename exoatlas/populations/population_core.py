@@ -146,9 +146,63 @@ class Population(Talker):
         self.standard.loc[name]
 
         # define internal lists of column names
-        self._populate_colname_summary()
+        self._populate_column_summaries()
 
-    def _populate_colname_summary(self):
+        self._populate_column_methods()
+
+    def _populate_column_methods(self):
+        """
+        Populate this object with one method for each table column.
+
+        This wrapper converts table columns from the internal .standard
+        table into callable methods, so that (for example), the data
+        in `self.standard['radius']` can be retrieved as `self.radius()`.
+        This is necessary for seamlesssly integrating core table quantities
+        with derived quantities (some of which must be callable because
+        they require keyword arguments), for making them appear as hints
+        with tab-completion in ipython/jupyter, and for being able to
+        attach a docstring to each.
+        """
+
+        def create_method_from_table_quantity(name):
+            # create the method to extract a particular column
+            def f(distribution=False, **kw):
+                return self.get_values_from_table(name, distribution=distribution)
+
+            # build a basic docstring for that method.
+            try:
+                unit = self.get_values_from_table(name).unit.to_string()
+                unit_string = f", with units of '{unit}'"
+            except AttributeError:
+                unit_string = ""
+
+            f.__doc__ = f"""
+                The table quantity '{name}'{unit_string}.
+
+                Parameters 
+                ----------
+                distribution : bool 
+                    Should we try to return an astropy Distribution, 
+                    for uncertainty propagation? If the table contains 
+                    quoted uncertainties, a distribution will be returned; 
+                    if not, a simple array will be.
+                kw : dict 
+                    All other keyword arguments will be ignored.
+
+                Returns 
+                -------
+                values : array-like, or Distribution
+                    The values for this table column. 
+                    If `distribution==True`, these values will be as an 
+                    astropy Distribution, built from the table uncertainties.
+                """
+            return f
+
+        # add all the basic table quantities as methods to the population
+        for k in self._colnames["everything"]:
+            setattr(self, k, create_method_from_table_quantity(k))
+
+    def _populate_column_summaries(self):
         """
         Populate a dictionary summarizing the types of columns in `.standard`.
         """
@@ -166,7 +220,7 @@ class Population(Talker):
 
         def remove_suffixes(s):
             for suffix in all_suffixes:
-                s = s.replace(suffix, "")
+                s = s.split(suffix)[0]
             return s
 
         self._colnames = {}

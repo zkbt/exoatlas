@@ -27,5 +27,6 @@ class TransitingExoplanets(Exoplanets):
         -------
         (modifies the input population in place, but returns nothing)
         """
-        ok = self.detected_in_transit == 1
+        ok = self.detected_in_transit() == 1
+
         self.standard = self.standard[ok]
