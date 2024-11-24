@@ -683,10 +683,11 @@ class Population(Talker):
         else:
             return new_population
 
-    def get_lowerupper_uncertainty_from_table(self, key):
+    def get_uncertainty_lowerupper_from_table(self, key):
         """
-        Return two arrays of lower and upper uncertainties,
-        direct from a table.
+        Return two arrays of lower and upper uncertainties, direct from table.
+
+        If no uncertainties of any kind are found, a KeyError should be raised.
 
         Parameters
         ----------
@@ -707,18 +708,13 @@ class Population(Talker):
             upper = _clean_column(self.standard[f"{key}_uncertainty_upper"])
             return np.abs(lower), np.abs(upper)
         except KeyError:
-            pass
-
-        # next try for symmetric table uncertainties
-        try:
+            # next try for symmetric table uncertainties
             sym = _clean_column(self.standard[f"{key}_uncertainty"])
             return np.abs(sym), np.abs(sym)
-        except KeyError:
-            pass
 
         # then give up and return zeroes
-        unc = 0 * _clean_column(self.standard[key])
-        return unc, unc
+        # unc = 0 * _clean_column(self.standard[key])
+        # return unc, unc
 
     def get_values_from_table(self, key, distribution=False):
         """
@@ -762,24 +758,49 @@ class Population(Talker):
                 warnings.simplefilter("ignore")
                 # set the mode of the distribution to be the table value
                 mu = _clean_column(raw_column)
-                # get the lower + upper uncertainties from the table
-                sigma_lower, sigma_upper = self.get_lowerupper_uncertainty_from_table(
-                    key
-                )
-                samples = make_skew_samples_from_lowerupper(
-                    mu=mu, sigma_lower=sigma_lower, sigma_upper=sigma_upper
-                )
-                return Distribution(samples)
+                try:
+                    # get the lower + upper uncertainties from the table
+                    sigma_lower, sigma_upper = (
+                        self.get_uncertainty_lowerupper_from_table(key)
+                    )
+                    samples = make_skew_samples_from_lowerupper(
+                        mu=mu, sigma_lower=sigma_lower, sigma_upper=sigma_upper
+                    )
+                    return Distribution(samples)
+                except KeyError:
+                    # if uncertainties fail, give up and return simple array
+                    return mu
         else:
             return _clean_column(raw_column)
 
     def __getattr__(self, key):
         """
         If an attribute/method isn't explicitly defined for a population,
-        look for it as a column of the standardized table or as a plotting keyword.
+        try to access it as `population.something` with this wrapper.
 
-        For example, `population.stellar_radius` will try to
-        access `population.standard['stellar_radius']`.
+        Lots of data is stored inside an exoatlas Population; this hidden
+        method will be called to try to access those data only if no other
+        explicit definition defines that variable first. If we try to access
+        an internal Population variable via `pop.x` or `getattr(pop, 'x')`,
+        here's what happens, shown approximately in order of precedence:
+
+            1) We look for an explicit definition that has been
+            attached to the Population as a method/attribute. This may have been
+            defined either with a `def x()` definition inside a module in
+            `exoatlas/populations/calculations/` or an attribute/method that
+            gets defined anywhere with `pop.x =`, potentially including
+            by a user creating a new quantity function and assigning it.
+            These definitions should show up with `pop.<tab>` in jupyter.
+
+            2) We look for an implicit method definition that was created
+            by `_populate_column_methods()`, where every data column in
+            the `.standard` table gets its own function with basic docstring.
+            These definitions should also show up with `pop.<tab>` in jupyter.
+
+            3) We use this `__getattr__` function. It will be called only if
+            no other definition anywhere overrides it. Practically, this is
+            mostly used for retrieving obvious plotting keywords, which
+            might be hidden inside the `._plotkw` internal dictionary.
 
         Parameters
         ----------
@@ -788,30 +809,31 @@ class Population(Talker):
 
         Returns
         -------
-        value : Quantity, str
-            The array of quantities from the standardized table,
-            or the plotting keyword.
-
+        value : any
+            The attribute we're trying to get.
         """
+
+        # do a quick check that something essential isn't missing
         if key in ["label", "_plotkw", "standard"]:
             raise RuntimeError(
-                f"Yikes! It looks like `.{key}` isn't defined, but it should be!"
-            )
-        try:
-            # extract the column from the standardized table
-            return self.standard[key]
-        except KeyError:
-            # try to get a plotkw from this pop, from the plotting defaults, from None
-            try:
-                assert key in allowed_plotkw
-                return self._plotkw.get(key, default_plotkw[key])
-            except (AssertionError, KeyError):
-                raise AttributeError(
-                    f"""
-                Alas, there seems to be no way to find `.{key}`
-                as a table column, attribute, method, or property of {self}.
+                f"""
+                Yikes! It looks like `.{key}` isn't defined for this Population. 
+                Ideally, this error should never been seen, but if it does, something's 
+                gone dreadfully wrong. 
                 """
-                )
+            )
+
+        # try to get a plotkw from this pop, from the plotting defaults, from None
+        try:
+            assert key in allowed_plotkw
+            return self._plotkw.get(key, default_plotkw[key])
+        except (AssertionError, KeyError):
+            raise AttributeError(
+                f"""
+            Alas, there seems to be no way to find `.{key}`
+            as a table column, attribute, method, or property of {self}.
+            """
+            )
 
     def __setattr__(self, key, value):
         """
@@ -842,21 +864,80 @@ class Population(Talker):
         """
         return f"✨ {self.label} | {len(self)} elements ✨"
 
-    def get(self, key):
+    def get(self, key, **kw):
         """
-        Return an array of values for a column.
+        Return an array properties for a Population.
+
+        While population properties are usually callable functions,
+        this wrapper returns a direct array of values. For example,
+        planet radius might be retrieved either as `.stellar_radius()`
+        or as `.get('stellar_radius')`, and quantities that can take
+        keyword arguments can pass those keywords directly to `.get`,
+        as in `.stellar_brightness(wavelength=5*u.micron)` or
+        or `.get('stellar_brightness', wavelength=5*u.micron).
+
 
         Parameters
         ----------
         key : str
             The name of the quantity we're trying to retrieve.
 
+        kw : dict
+            All additional keywords will be passed to the
+            method that retrieves the quantities. One common
+            (internal) use might be to pass `distribution=True`,
+            to be used for uncertainty propagation.
+
         Returns
         -------
         value : Quantity
             The values, as an array with units.
         """
-        return getattr(self, key)
+        return getattr(self, key)(**kw)
+
+    def get_uncertainty_lowerupper(self, key, **kw):
+        """
+        Return two arrays of lower and upper uncertainties on a column.
+
+        For table column quantities with uncertainties, this should
+        return uncertainties direct from `_uncertainty` or
+        `_uncertainty_lower` + `_uncertainty_upper` columns in the table.
+
+        For derived quantities, this uncertainty will be estimated from
+        central 68% confidence interval of samples from the calculated
+        distribution of the quantity.
+
+        Parameters
+        ----------
+        key : str
+            The quantity for which we want lower + upper uncertaintes.
+
+        Returns
+        -------
+        lower : np.array
+            The magnitude of the lower uncertainties (x_{-lower}^{+upper})
+        upper : np.array
+            The magnitude of the upper uncertainties (x_{-lower}^{+upper})
+        """
+
+        # first try for uncertainties direct from table
+        try:
+            lower, upper = self.get_lowerupper_uncertainty_from_table(key)
+            return lower, upper
+        except KeyError:
+            dist = self.get(key, distribution=True)
+
+        # first try for an `uncertainty_{key}` column
+        try:
+            sym = self.__getattr__(f"{key}_uncertainty")
+            return np.abs(sym), np.abs(sym)
+        except (KeyError, AssertionError, AttributeError):
+            # this can be removed after debugging
+            self._speak(f'no symmetric uncertainties found for "{key}"')
+
+        # then give up and return nans
+        unc = np.nan * self.__getattr__(key)
+        return unc, unc
 
     def get_uncertainty(self, key):
         """
@@ -894,44 +975,6 @@ class Population(Talker):
 
         # then give up and return nans
         return np.nan * self.standard[key]
-
-    def get_uncertainty_lowerupper(self, key):
-        """
-        Return two arrays of lower and upper uncertainties on a column.
-
-        Parameters
-        ----------
-        key : str
-            The quantity for which we want lower + upper uncertaintes.
-
-        Returns
-        -------
-        lower : np.array
-            The magnitude of the lower uncertainties (x_{-lower}^{+upper})
-        upper : np.array
-            The magnitude of the upper uncertainties (x_{-lower}^{+upper})
-        """
-
-        # first try for actual asymmetric uncertainties
-        try:
-            lower = self.__getattr__(f"{key}_uncertainty_lower")
-            upper = self.__getattr__(f"{key}_uncertainty_upper")
-            return np.abs(lower), np.abs(upper)
-        except (KeyError, AssertionError, AttributeError):
-            # this can be removed after debugging
-            self._speak(f'no asymmetric uncertainties found for "{key}"')
-
-        # first try for an `uncertainty_{key}` column
-        try:
-            sym = self.__getattr__(f"{key}_uncertainty")
-            return np.abs(sym), np.abs(sym)
-        except (KeyError, AssertionError, AttributeError):
-            # this can be removed after debugging
-            self._speak(f'no symmetric uncertainties found for "{key}"')
-
-        # then give up and return nans
-        unc = np.nan * self.__getattr__(key)
-        return unc, unc
 
     def _validate_columns(self):
         """

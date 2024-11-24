@@ -56,7 +56,7 @@ def test_skew(N_data=25):
 
 def test_make_astropy_distribution(key="radius"):
     mu = e.get_values_from_table(key)
-    lower, upper = e.get_lowerupper_uncertainty_from_table(key)
+    lower, upper = e.get_uncertainty_lowerupper_from_table(key)
     inject_kw = dict(color="gray", linewidth=5, alpha=0.2)
     fi, ax = plt.subplots(2, 1, sharex=True)
     plt.sca(ax[0])
