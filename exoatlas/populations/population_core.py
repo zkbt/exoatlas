@@ -4,7 +4,7 @@ from ..imports import *
 # from ..telescopes import *
 # from ..models import *
 from .column_descriptions import *
-from .pineda_skew import make_skew_samples_from_lowerupper
+from .pineda_skew import make_skew_samples_from_lowerupper, gaussian_central_1sigma
 
 # these are keywords that can be set for a population
 default_plotkw = dict(
@@ -142,7 +142,7 @@ class Population(Talker):
         self._make_sure_index_exists("tidyhostname")
 
         # test that indexing still works
-        name = self.tidyname[0]
+        name = self.standard["tidyname"][0]
         self.standard.loc[name]
 
         # define internal lists of column names
@@ -897,7 +897,7 @@ class Population(Talker):
 
     def get_uncertainty_lowerupper(self, key, **kw):
         """
-        Return two arrays of lower and upper uncertainties on a column.
+        Return two arrays of lower and upper uncertainties.
 
         For table column quantities with uncertainties, this should
         return uncertainties direct from `_uncertainty` or
@@ -911,6 +911,8 @@ class Population(Talker):
         ----------
         key : str
             The quantity for which we want lower + upper uncertaintes.
+        kw : dict
+            All other keywords will be passed to `.get`.
 
         Returns
         -------
@@ -922,24 +924,24 @@ class Population(Talker):
 
         # first try for uncertainties direct from table
         try:
-            lower, upper = self.get_lowerupper_uncertainty_from_table(key)
-            return lower, upper
+            sigma_lower, sigma_upper = self.get_uncertainty_lowerupper_from_table(key)
+            return sigma_lower, sigma_upper
         except KeyError:
-            dist = self.get(key, distribution=True)
+            mu = self.get(key, **kw)
+            dist = self.get(key, distribution=True, **kw)
+            lower, upper = d.pdf_percentiles(
+                100
+                * np.array(
+                    [
+                        0.5 - gaussian_central_1sigma / 2,
+                        0.5 + gaussian_central_1sigma / 2,
+                    ]
+                )
+            )
+            sigma_lower, sigma_upper = mu - lower, upper - mu
+            return sigma_lower, sigma_upper
 
-        # first try for an `uncertainty_{key}` column
-        try:
-            sym = self.__getattr__(f"{key}_uncertainty")
-            return np.abs(sym), np.abs(sym)
-        except (KeyError, AssertionError, AttributeError):
-            # this can be removed after debugging
-            self._speak(f'no symmetric uncertainties found for "{key}"')
-
-        # then give up and return nans
-        unc = np.nan * self.__getattr__(key)
-        return unc, unc
-
-    def get_uncertainty(self, key):
+    def get_uncertainty(self, key, **kw):
         """
         Return an array of symmetric uncertainties on a column.
 
@@ -951,30 +953,8 @@ class Population(Talker):
             The uncertainties, as an array with units.
         """
 
-        # first try for an `uncertainty_{key}` column
-        try:
-            return self.get(f"{key}_uncertainty")  # __getattr__
-        except (
-            KeyError,
-            AssertionError,
-            AtlasError,
-            AttributeError,
-        ):  # is including AttributeError a kludge?
-            # this can be removed after debugging
-            self._speak(f'no symmetric uncertainties found for "{key}"')
-
-        # then try for crudely averaging asymmetric uncertainties
-        try:
-            lower = self.get(f"{key}_uncertainty_lower")  # __getattr__
-            upper = self.get(f"{key}_uncertainty_upper")  # __getattr__
-            avg = 0.5 * (np.abs(lower) + np.abs(upper))
-            return avg
-        except (KeyError, AssertionError, AtlasError, AttributeError):
-            # this can be removed after debugging
-            self._speak(f'no asymmetric uncertainties found for "{key}"')
-
-        # then give up and return nans
-        return np.nan * self.standard[key]
+        sigma_lower, sigma_upper = self.get_uncertainty_lowerupper(key, **kw)
+        return 0.5 * (sigma_lower + sigma_upper)
 
     def _validate_columns(self):
         """

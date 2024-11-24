@@ -20,7 +20,7 @@ def confidenceInterval(values, interval=0.682689, ThSig=False):
 
 from scipy.stats import skewnorm, norm
 
-central_interval = np.diff(norm(loc=0, scale=1).cdf([-1, 1]))[0]
+gaussian_central_1sigma = np.diff(norm(loc=0, scale=1).cdf([-1, 1]))[0]
 
 
 def plot_skewnormal(mu=0, sigma=1, alpha=0):
@@ -28,20 +28,20 @@ def plot_skewnormal(mu=0, sigma=1, alpha=0):
     p = skewnorm(a=alpha, loc=mu, scale=sigma)
     x = np.linspace(mu - 5 * sigma, mu + 5 * sigma, 1000)
     skew_median = p.median()
-    skew_lower, skew_upper = p.interval(central_interval)
+    skew_lower, skew_upper = p.interval(gaussian_central_1sigma)
     skew_mode = x[np.argmax(p.pdf(x))]
 
     median_description = rf"""
     median = {skew_median:.2f}  
-    median - {central_interval/2:.2%} = {skew_median - skew_lower:.2f}  
-    {central_interval/2:.2%} - median = {skew_upper - skew_median:.2f}  
+    median - {gaussian_central_1sigma/2:.2%} = {skew_median - skew_lower:.2f}  
+    {gaussian_central_1sigma/2:.2%} - median = {skew_upper - skew_median:.2f}  
     upper/lower = {(skew_upper - skew_median)/(skew_median - skew_lower):.2f}  
     """
 
     mode_description = rf"""
     mode = {skew_mode:.2f}  
-    mode - {central_interval/2:.2%} = {skew_mode - skew_lower:.2f}  
-    {central_interval/2:.2%} - mode = {skew_upper - skew_mode:.2f}  
+    mode - {gaussian_central_1sigma/2:.2%} = {skew_mode - skew_lower:.2f}  
+    {gaussian_central_1sigma/2:.2%} - mode = {skew_upper - skew_mode:.2f}  
     upper/lower = {(skew_upper - skew_mode)/(skew_mode - skew_lower):.2f}  
     """
 

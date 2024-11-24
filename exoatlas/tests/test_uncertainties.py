@@ -14,7 +14,8 @@ def test_skew(N_data=25):
     )
     measured_lower, measured_upper = np.percentile(
         x,
-        np.array([0.5 - central_interval / 2, 0.5 + central_interval / 2]) * 100,
+        np.array([0.5 - gaussian_central_1sigma / 2, 0.5 + gaussian_central_1sigma / 2])
+        * 100,
         axis=-1,
     )
 
@@ -40,7 +41,9 @@ def test_skew(N_data=25):
         positions=x_axis,
         widths=w,
         showextrema=False,
-        quantiles=[[0.5 - central_interval / 2, 0.5, 0.5 + central_interval / 2]]
+        quantiles=[
+            [0.5 - gaussian_central_1sigma / 2, 0.5, 0.5 + gaussian_central_1sigma / 2]
+        ]
         * N_data,
     )
     plt.legend(frameon=False)
