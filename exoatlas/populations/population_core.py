@@ -215,8 +215,8 @@ class Population(Talker):
         reference_suffixes = ["_reference"]
         all_suffixes = uncertainty_suffixes + limit_suffixes + reference_suffixes
 
-        def ends_with(s, suffixes):
-            return np.any([s[-len(suffix) :] == suffix for suffix in suffixes])
+        def ends_with_any_of(s, suffixes):
+            return np.any([s.endswith(suffix) for suffix in suffixes])
 
         def remove_suffixes(s):
             for suffix in all_suffixes:
@@ -231,7 +231,7 @@ class Population(Talker):
             [
                 remove_suffixes(x)
                 for x in self.standard.colnames
-                if ends_with(x, uncertainty_suffixes)
+                if ends_with_any_of(x, uncertainty_suffixes)
             ]
         )
         self._colnames["without uncertainties"] = np.unique(
@@ -245,14 +245,14 @@ class Population(Talker):
         #    [
         #        remove_suffixes(x)
         #        for x in self.standard.colnames
-        #        if ends_with(x, limit_suffixes)
+        #        if ends_with_any_of(x, limit_suffixes)
         #    ]
         # )
         self._colnames["with references"] = np.unique(
             [
                 remove_suffixes(x)
                 for x in self.standard.colnames
-                if ends_with(x, reference_suffixes)
+                if ends_with_any_of(x, reference_suffixes)
             ]
         )
 
@@ -800,7 +800,9 @@ class Population(Talker):
             3) We use this `__getattr__` function. It will be called only if
             no other definition anywhere overrides it. Practically, this is
             mostly used for retrieving obvious plotting keywords, which
-            might be hidden inside the `._plotkw` internal dictionary.
+            might be hidden inside the `._plotkw` internal dictionary, or
+            to get uncertainties when requesting `.x_uncertainty()` or
+            `.x_uncertainty_lowerupper()`.
 
         Parameters
         ----------
@@ -828,12 +830,49 @@ class Population(Talker):
             assert key in allowed_plotkw
             return self._plotkw.get(key, default_plotkw[key])
         except (AssertionError, KeyError):
-            raise AttributeError(
-                f"""
+            pass
+
+        # check if we're asking for an uncertainty
+        if key.endswith("_uncertainty_lowerupper"):
+            quantity_key = key.split("_uncertainty_lowerupper")[0]
+
+            def f(**kw):
+                return self.get_uncertainty_lowerupper(key=quantity_key, **kw)
+
+            f.__docstring__ = f"""
+            A function to return the two-sided uncertainty on '.{quantity_key}'. 
+
+            Returns
+            -------
+            lower : np.array, u.Quantity
+                The magnitude of the lower uncertainties (x_-lower^+upper)
+            upper : np.array, u.Quantity
+                The magnitude of the upper uncertainties (x_-lower^+upper)              
+            """
+            return f
+
+        if key.endswith("_uncertainty"):
+            quantity_key = key.split("_uncertainty")[0]
+
+            def f(**kw):
+                return self.get_uncertainty(key=quantity_key, **kw)
+
+            f.__docstring__ = f"""
+            A function to return the symmetric uncertainty on '.{quantity_key}'. 
+
+            Returns
+            -------
+            sigma : np.array, u.Quantity
+                The magnitude of the uncertainties (x \pm -sigma)
+            """
+            return f
+
+        raise AttributeError(
+            f"""
             Alas, there seems to be no way to find `.{key}`
             as a table column, attribute, method, or property of {self}.
             """
-            )
+        )
 
     def __setattr__(self, key, value):
         """
@@ -866,15 +905,14 @@ class Population(Talker):
 
     def get(self, key, **kw):
         """
-        Return an array properties for a Population.
+        Return an array property for a Population.
 
-        While population properties are usually callable functions,
-        this wrapper returns a direct array of values. For example,
-        planet radius might be retrieved either as `.stellar_radius()`
-        or as `.get('stellar_radius')`, and quantities that can take
-        keyword arguments can pass those keywords directly to `.get`,
-        as in `.stellar_brightness(wavelength=5*u.micron)` or
-        or `.get('stellar_brightness', wavelength=5*u.micron).
+        This returns an array, not a function. For example, stellar
+        radius might be retrieved either as `.stellar_radius()`
+        or as `.get('stellar_radius')`. Quantities that can take
+        keyword arguments can pass those keywords as in
+        `.stellar_brightness(wavelength=5*u.micron)` or
+        `.get('stellar_brightness', wavelength=5*u.micron)`.
 
 
         Parameters
@@ -902,6 +940,7 @@ class Population(Talker):
         For table column quantities with uncertainties, this should
         return uncertainties direct from `_uncertainty` or
         `_uncertainty_lower` + `_uncertainty_upper` columns in the table.
+        This returns an array, not a function.
 
         For derived quantities, this uncertainty will be estimated from
         central 68% confidence interval of samples from the calculated
@@ -944,6 +983,12 @@ class Population(Talker):
     def get_uncertainty(self, key, **kw):
         """
         Return an array of symmetric uncertainties on a column.
+
+        This (very crudely) averages the lower and upper uncertainties
+        to make a symmetric errorbar. For quantities with nearly symmetric
+        errors this should be totally fine, but for ones with wildly
+        asymmetric uncertainties, use `.get_uncertainty_lowerupper()`.
+        This returns an array, not a function.
 
         Parameters
         ----------

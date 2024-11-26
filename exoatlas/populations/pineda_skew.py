@@ -368,8 +368,8 @@ def make_skew_samples_from_lowerupper(
         mu down to the 15.87% confidence interval, which would be exactly
         1 sigma below the mode/median/mean of symmetric Gaussian.
 
-    sigma_lower : float, Quantity, and/or array-like
-        The magnitude of the lower uncertainty = the distance from the mode
+    sigma_upper: float, Quantity, and/or array-like
+        The magnitude of the upper uncertainty = the distance from the mode
         mu down to the 15.87% confidence interval, which would be exactly
         1 sigma below the mode/median/mean of symmetric Gaussian.
 

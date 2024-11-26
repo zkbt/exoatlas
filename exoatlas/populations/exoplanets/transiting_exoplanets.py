@@ -9,6 +9,10 @@ __all__ = ["TransitingExoplanets"]
 
 
 class TransitingExoplanets(Exoplanets):
+    """
+    Transiting Exoplanets from the NASA Exoplanet Archive.
+    """
+
     def __init__(self, **kw):
         Exoplanets.__init__(self, **kw)
 
