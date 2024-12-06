@@ -1178,3 +1178,5 @@ class Population(Talker):
             as the Population itself.
         """
         return self.create_table(desired_columns=desired_columns)
+
+    from .calculations.planetary import semimajoraxis_from_period

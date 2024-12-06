@@ -1,6 +1,17 @@
 from ...imports import *
 
 
+def semimajoraxis_from_period(self, distribution=False):
+    """
+    Calculate semimajor axis from the period and mass.
+    """
+    P = self.get("period", distribution=distribution)
+    M = self.get("stellar_mass", distribution=distribution)
+    G = con.G
+    a = ((G * M * P**2 / 4 / np.pi**2) ** (1 / 3)).to("AU")
+    return a
+
+
 @property
 def semimajor_axis(self):
     """
