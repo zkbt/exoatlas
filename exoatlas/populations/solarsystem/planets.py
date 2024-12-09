@@ -100,9 +100,9 @@ class SolarSystem(PredefinedPopulation):
         # s["Vmag"] = np.nan
 
         # use Kepler's (actual) 3rd Law to get semimajor axis
-        semimajor_axis = (s["period"].to(u.year).value) ** (2.0 / 3.0) * u.AU
-        s["semimajoraxis"] = semimajor_axis
-        # s["transit_ar"] = (semimajor_axis / u.Rsun).decompose().value
+        semimajoraxis = (s["period"].to(u.year).value) ** (2.0 / 3.0) * u.AU
+        s["semimajoraxis"] = semimajoraxis
+        # s["transit_ar"] = (semimajoraxis / u.Rsun).decompose().value
 
         # equilibrium temperature assuming uniform redistribution + 0 albedo
         # s["teq"] = s["stellar_teff"] * (0.25 * 1.0 / s["transit_ar"] ** 2) ** 0.25

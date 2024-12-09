@@ -3,7 +3,18 @@ from ...imports import *
 
 def semimajoraxis_from_period(self, distribution=False):
     """
-    Calculate semimajor axis from the period and mass.
+    Planet Semi-major Axis (AU)
+
+    Calculate "a" from the period and stellar mass.
+    This might be used if no semi-major axis is
+    available in the standardized table.
+
+    Parameters
+    ----------
+    distribution : bool
+        If False, return a simple array of values.
+        If True, return an astropy.uncertainty.Distribution,
+        which can be used for error propagation.
     """
     P = self.get("period", distribution=distribution)
     M = self.get("stellar_mass", distribution=distribution)
@@ -12,8 +23,106 @@ def semimajoraxis_from_period(self, distribution=False):
     return a
 
 
+def semimajoraxis_from_transit_ar(self, distribution=False):
+    """
+    Planet Semi-major Axis (AU)
+
+    Calculate "a" from the transit-derived a/Rs.
+    This might be used if no semi-major axis is
+    available in the standardized table.
+
+    Parameters
+    ----------
+    distribution : bool
+        If False, return a simple array of values.
+        If True, return an astropy.uncertainty.Distribution,
+        which can be used for error propagation.
+    """
+    a_over_R = self.get("transit_ar", distribution=distribution)
+    R = self.get("stellar_radius", distribution=distribution)
+    a = (a_over_R * R).to("AU")
+    return a
+
+
+def _choose_calculation(
+    self, methods=[], distribution=False, how_to_choose="preference", **kw
+):
+    """
+    Choose values element-wise from multiple functions.
+
+    This wrapper helps merge together different calculations
+    of the same quantity, choosing sources based on preference,
+    whether the calculation is finite, and/or uncertainties.
+
+    Parameters
+    ----------
+    methods : list of strings
+        The names of methods to consider for calculating
+        the quantity, in order of preference. The order
+        matters most if `how_to_choose=='preference'`
+        (see below); if `how_to_choose=='precision'`
+        then preference doesn't really matter (except
+        in cases where two different options have
+        identical fractional uncertainties).
+    distribution : bool
+        If False, return a simple array of values.
+        If True, return an astropy.uncertainty.Distribution,
+        which can be used for error propagation.
+    how_to_choose : str
+        A string describing how to pick values from
+        among the different possible calculations.
+        Options include:
+            'preference' = pick the highest preference
+            option that produces a finite value
+            'precision' = pick the most precise value,
+            base on the calculated mean uncertainty
+    **kw : dict
+        All other keywords will be passed to the functions
+        for calculating quantities. All functions must be able
+        to accept the same set of keyword.
+    """
+
+    # construct a list of arrays of values
+    value_estimates = u.Quantity(
+        [self.get(m, distribution=distribution, **kw) for m in methods]
+    )
+
+    # pick the first option as baseline
+    values = value_estimates[0]
+
+    if how_to_choose == "preference":
+        # loop through options, picking the first finite value
+        for v in value_estimates:
+            isnt_good_yet = np.isfinite(values) == False
+            values[isnt_good_yet] = v[isnt_good_yet]
+    elif how_to_choose == "precision":
+        # calculate (symmetric) fractional uncertainties for all options
+        mu_estimates = u.Quantity(
+            [self.get(m, distribution=False, **kw) for m in methods]
+        )
+        uncertainty_estimates = u.Quantity(
+            [self.get_uncertainty(m, **kw) for m in methods]
+        )
+        fractional_uncertainty_estimates = u.Quantity(
+            [u / v for v, u in zip(mu_estimates, uncertainty_estimates)]
+        )
+
+        fractional_uncertainty_estimates[np.isnan(fractional_uncertainty_estimates)] = (
+            np.inf
+        )
+        current_fractional_uncertainty = fractional_uncertainty_estimates[0]
+
+        # loop through options to select the one with smallest uncertainty
+        for v, f in zip(value_estimates, fractional_uncertainty_estimates):
+            has_smaller_uncertainty = f < current_fractional_uncertainty
+            current_fractional_uncertainty[has_smaller_uncertainty] = f[
+                has_smaller_uncertainty
+            ]
+            values[has_smaller_uncertainty] = v[has_smaller_uncertainty]
+
+
 @property
-def semimajor_axis(self):
+def semimajoraxis(self):
     """
     Have a safe way to calculate the semimajor axis of planets,
     that fills in gaps as necessary. Basic strategy:
@@ -68,7 +177,7 @@ def a_over_rs(self):
     bad = np.isfinite(a_over_rs) == False
     self._speak(f"{sum(bad)}/{len(self)} values for a/R* are missing")
 
-    a = self.semimajor_axis[bad]
+    a = self.semimajoraxis[bad]
     R = self.stellar_radius[bad]
     a_over_rs[bad] = a / R
 
@@ -154,7 +263,7 @@ def insolation(self):
     """
 
     # calculate the average insolation the planet receives
-    insolation = self.stellar_luminosity / 4 / np.pi / self.semimajor_axis**2
+    insolation = self.stellar_luminosity / 4 / np.pi / self.semimajoraxis**2
     return insolation.to(u.W / u.m**2)
 
 
@@ -165,12 +274,12 @@ def insolation_uncertainty(self):
     """
 
     # calculate the average insolation the planet receives
-    dinsolation_dluminosity = 1 / 4 / np.pi / self.semimajor_axis**2
+    dinsolation_dluminosity = 1 / 4 / np.pi / self.semimajoraxis**2
     dinsolation_dsemimajor = (
-        -2 * self.stellar_luminosity / 4 / np.pi / self.semimajor_axis**3
+        -2 * self.stellar_luminosity / 4 / np.pi / self.semimajoraxis**3
     )
     L_uncertainty = self.get_uncertainty("stellar_luminosity")
-    a_uncertainty = self.get_uncertainty("semimajor_axis")
+    a_uncertainty = self.get_uncertainty("semimajoraxis")
     insolation_uncertainty = (
         dinsolation_dluminosity**2 * L_uncertainty**2
         + dinsolation_dsemimajor**2 * a_uncertainty**2
@@ -426,7 +535,7 @@ def escape_velocity(self):
 
 @property
 def orbital_velocity(self):
-    return (2 * np.pi * self.semimajor_axis / self.period).to("km/s")
+    return (2 * np.pi * self.semimajoraxis / self.period).to("km/s")
 
 
 @property

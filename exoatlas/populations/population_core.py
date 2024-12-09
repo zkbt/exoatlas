@@ -832,6 +832,28 @@ class Population(Talker):
         except (AssertionError, KeyError):
             pass
 
+        # check if we're asking for a quantity explicitly from the table
+        if key.endswith("_from_table"):
+            quantity_key = key.split("_from_table")[0]
+
+            def f(**kw):
+                return self.get_values_from_table(key=quantity_key, **kw)
+
+            f.__docstring__ = f"""
+            A function to return the column '.{quantity_key}'. 
+
+            Parameters 
+            ----------
+            distribution : bool 
+                Should this return a Distribution, for uncertainty propagation?
+
+            Returns
+            -------
+            value : np.array, u.Quantity, astropy.uncertainty.Distribution
+                The values, drawn from the table. 
+            """
+            return f
+
         # check if we're asking for an uncertainty
         if key.endswith("_uncertainty_lowerupper"):
             quantity_key = key.split("_uncertainty_lowerupper")[0]
@@ -967,7 +989,7 @@ class Population(Talker):
             return sigma_lower, sigma_upper
         except KeyError:
             mu = self.get(key, **kw)
-            dist = self.get(key, distribution=True, **kw)
+            d = self.get(key, distribution=True, **kw)
             lower, upper = d.pdf_percentiles(
                 100
                 * np.array(
@@ -1179,4 +1201,7 @@ class Population(Talker):
         """
         return self.create_table(desired_columns=desired_columns)
 
-    from .calculations.planetary import semimajoraxis_from_period
+    from .calculations.planetary import (
+        semimajoraxis_from_period,
+        semimajoraxis_from_transit_ar,
+    )

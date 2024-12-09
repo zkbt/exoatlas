@@ -9,7 +9,7 @@ def angular_separation(self):
     simply as theta = a/D
     """
 
-    a = self.semimajor_axis
+    a = self.semimajoraxis
     D = self.distance
 
     theta = np.arctan(a / D).to(u.arcsec)
@@ -25,7 +25,7 @@ def imaging_contrast(self):
 
     But use a kludged radius
     """
-    return 0.25 * (self.kludge_radius / self.semimajor_axis).decompose() ** 2
+    return 0.25 * (self.kludge_radius / self.semimajoraxis).decompose() ** 2
 
 
 def transmission_signal(self, mu=2.32, threshold=2):
@@ -58,7 +58,7 @@ def reflection_signal(self, albedo=0.1):
     What is the reflected light eclipse depth,
     for an albedo of 100%?
     """
-    return albedo * 0.25 * (self.radius / self.semimajor_axis).decompose() ** 2
+    return albedo * 0.25 * (self.radius / self.semimajoraxis).decompose() ** 2
 
 
 def emission_signal(self, wavelength=5 * u.micron):
