@@ -200,7 +200,9 @@ class Population(Talker):
 
         # add all the basic table quantities as methods to the population
         for k in self._colnames["everything"]:
-            setattr(self, k, create_method_from_table_quantity(k))
+            # if no other function is defined, populate a table one
+            if hasattr(self, k) == False:
+                setattr(self, k, create_method_from_table_quantity(k))
 
     def _populate_column_summaries(self):
         """
@@ -1202,7 +1204,12 @@ class Population(Talker):
         return self.create_table(desired_columns=desired_columns)
 
     def _choose_calculation(
-        self, methods=[], distribution=False, how_to_choose="preference", **kw
+        self,
+        methods=[],
+        distribution=False,
+        how_to_choose="preference",
+        visualize=False,
+        **kw,
     ):
         """
         Choose values element-wise from multiple functions.
@@ -1233,6 +1240,8 @@ class Population(Talker):
                 option that produces a finite value
                 'precision' = pick the most precise value,
                 base on the calculated mean uncertainty
+        visualize : bool
+            Should we visualize all the options and what gets chosen?
         **kw : dict
             All other keywords will be passed to the functions
             for calculating quantities. All functions must be able
@@ -1240,37 +1249,34 @@ class Population(Talker):
         """
 
         # construct a list of arrays of values
-        value_estimates = u.Quantity(
-            [self.get(m, distribution=distribution, **kw) for m in methods]
-        )
-
-        # pick the first option as baseline
-        values = value_estimates[0]
+        value_estimates = [
+            self.get(m, distribution=distribution, **kw) for m in methods
+        ]
 
         if how_to_choose == "preference":
             # loop through options, picking the first finite value
-            for v in value_estimates:
+            for i, v in enumerate(value_estimates):
+                if i == 0:
+                    values = v
                 isnt_good_yet = np.isfinite(values) == False
                 values[isnt_good_yet] = v[isnt_good_yet]
         elif how_to_choose == "precision":
             # calculate (symmetric) fractional uncertainties for all options
-            mu_estimates = u.Quantity(
-                [self.get(m, distribution=False, **kw) for m in methods]
-            )
-            uncertainty_estimates = u.Quantity(
-                [self.get_uncertainty(m, **kw) for m in methods]
-            )
-            fractional_uncertainty_estimates = u.Quantity(
-                [u / v for v, u in zip(mu_estimates, uncertainty_estimates)]
-            )
+            mu_estimates = [self.get(m, distribution=False, **kw) for m in methods]
 
-            fractional_uncertainty_estimates[
-                np.isnan(fractional_uncertainty_estimates)
-            ] = np.inf
-            current_fractional_uncertainty = fractional_uncertainty_estimates[0]
+            uncertainty_estimates = [self.get_uncertainty(m, **kw) for m in methods]
 
+            fractional_uncertainty_estimates = [
+                u / v for v, u in zip(mu_estimates, uncertainty_estimates)
+            ]
             # loop through options to select the one with smallest uncertainty
-            for v, f in zip(value_estimates, fractional_uncertainty_estimates):
+            for i, (v, f) in enumerate(
+                zip(value_estimates, fractional_uncertainty_estimates)
+            ):
+                f[np.isnan(f)] = np.inf
+                if i == 0:
+                    values = v
+                    current_fractional_uncertainty = f
                 has_smaller_uncertainty = f < current_fractional_uncertainty
                 current_fractional_uncertainty[has_smaller_uncertainty] = f[
                     has_smaller_uncertainty
@@ -1284,6 +1290,33 @@ class Population(Talker):
             Only "preference" or "precision" are currently allowed. 
             """
             )
+
+        if visualize:
+            plt.figure(figsize=(8, 3))
+            if distribution:
+                for m, v in zip(methods, value_estimates):
+                    plt.violinplot(
+                        dataset=np.array(v.distribution.T), positions=np.arange(len(v))
+                    )
+                plt.plot(
+                    values.pdf_median(),
+                    color="black",
+                    marker="o",
+                    markerfacecolor="none",
+                )
+            else:
+                for m, v in zip(methods, value_estimates):
+                    plt.plot(v, alpha=0.5, label=m, marker=".")
+                plt.plot(
+                    values,
+                    color="black",
+                    marker="o",
+                    markersize=10,
+                    markerfacecolor="none",
+                    linewidth=0,
+                )
+            plt.legend(frameon=False)
+
         return values
 
     from .calculations.planetary import (

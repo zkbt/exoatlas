@@ -1,7 +1,7 @@
 from ...imports import *
 
 
-def semimajoraxis_from_period(self, distribution=False):
+def semimajoraxis_from_period(self, distribution=False, **kw):
     """
     Planet Semi-major Axis (AU)
 
@@ -23,7 +23,7 @@ def semimajoraxis_from_period(self, distribution=False):
     return a
 
 
-def semimajoraxis_from_transit_ar(self, distribution=False):
+def semimajoraxis_from_transit_ar(self, distribution=False, **kw):
     """
     Planet Semi-major Axis (AU)
 
@@ -44,7 +44,7 @@ def semimajoraxis_from_transit_ar(self, distribution=False):
     return a
 
 
-def semimajoraxis(self, distribution=False):
+def semimajoraxis(self, distribution=False, **kw):
     """
     Planet Semi-major Axis (AU)
 
@@ -58,6 +58,7 @@ def semimajoraxis(self, distribution=False):
         If True, return an astropy.uncertainty.Distribution,
         which can be used for error propagation.
     """
+    print(kw)
     a = self._choose_calculation(
         methods=[
             "semimajoraxis_from_table",
@@ -65,6 +66,7 @@ def semimajoraxis(self, distribution=False):
             "semimajoraxis_from_transit_ar",
         ],
         distribution=distribution,
+        **kw,
     )
     return a
 

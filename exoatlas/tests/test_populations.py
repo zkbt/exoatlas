@@ -128,3 +128,11 @@ def test_transiting(planet="GJ1214b"):
 
     p.reflection_signal(albedo=0.5)
     p.reflection_snr(albedo=0.5, wavelength=5 * u.micron, telescope_name="JWST")
+
+
+def test_choosing():
+    # this could be more informative
+    e = TransitingExoplanets()[:10]
+    e.semimajoraxis(visualize=True)
+    e.semimajoraxis(distribution=True, visualization=True)
+    e.semimajoraxis_uncertainty()
