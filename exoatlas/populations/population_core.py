@@ -1201,7 +1201,93 @@ class Population(Talker):
         """
         return self.create_table(desired_columns=desired_columns)
 
+    def _choose_calculation(
+        self, methods=[], distribution=False, how_to_choose="preference", **kw
+    ):
+        """
+        Choose values element-wise from multiple functions.
+
+        This wrapper helps merge together different calculations
+        of the same quantity, choosing sources based on preference,
+        whether the calculation is finite, and/or uncertainties.
+
+        Parameters
+        ----------
+        methods : list of strings
+            The names of methods to consider for calculating
+            the quantity, in order of preference. The order
+            matters most if `how_to_choose=='preference'`
+            (see below); if `how_to_choose=='precision'`
+            then preference doesn't really matter (except
+            in cases where two different options have
+            identical fractional uncertainties).
+        distribution : bool
+            If False, return a simple array of values.
+            If True, return an astropy.uncertainty.Distribution,
+            which can be used for error propagation.
+        how_to_choose : str
+            A string describing how to pick values from
+            among the different possible calculations.
+            Options include:
+                'preference' = pick the highest preference
+                option that produces a finite value
+                'precision' = pick the most precise value,
+                base on the calculated mean uncertainty
+        **kw : dict
+            All other keywords will be passed to the functions
+            for calculating quantities. All functions must be able
+            to accept the same set of keyword.
+        """
+
+        # construct a list of arrays of values
+        value_estimates = u.Quantity(
+            [self.get(m, distribution=distribution, **kw) for m in methods]
+        )
+
+        # pick the first option as baseline
+        values = value_estimates[0]
+
+        if how_to_choose == "preference":
+            # loop through options, picking the first finite value
+            for v in value_estimates:
+                isnt_good_yet = np.isfinite(values) == False
+                values[isnt_good_yet] = v[isnt_good_yet]
+        elif how_to_choose == "precision":
+            # calculate (symmetric) fractional uncertainties for all options
+            mu_estimates = u.Quantity(
+                [self.get(m, distribution=False, **kw) for m in methods]
+            )
+            uncertainty_estimates = u.Quantity(
+                [self.get_uncertainty(m, **kw) for m in methods]
+            )
+            fractional_uncertainty_estimates = u.Quantity(
+                [u / v for v, u in zip(mu_estimates, uncertainty_estimates)]
+            )
+
+            fractional_uncertainty_estimates[
+                np.isnan(fractional_uncertainty_estimates)
+            ] = np.inf
+            current_fractional_uncertainty = fractional_uncertainty_estimates[0]
+
+            # loop through options to select the one with smallest uncertainty
+            for v, f in zip(value_estimates, fractional_uncertainty_estimates):
+                has_smaller_uncertainty = f < current_fractional_uncertainty
+                current_fractional_uncertainty[has_smaller_uncertainty] = f[
+                    has_smaller_uncertainty
+                ]
+                values[has_smaller_uncertainty] = v[has_smaller_uncertainty]
+        else:
+            raise ValueError(
+                f"""
+            "{how_to_choose}" is not a valid option choosing from among
+            {methods}
+            Only "preference" or "precision" are currently allowed. 
+            """
+            )
+        return values
+
     from .calculations.planetary import (
         semimajoraxis_from_period,
         semimajoraxis_from_transit_ar,
+        semimajoraxis,
     )

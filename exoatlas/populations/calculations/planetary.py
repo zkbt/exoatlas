@@ -44,119 +44,28 @@ def semimajoraxis_from_transit_ar(self, distribution=False):
     return a
 
 
-def _choose_calculation(
-    self, methods=[], distribution=False, how_to_choose="preference", **kw
-):
+def semimajoraxis(self, distribution=False):
     """
-    Choose values element-wise from multiple functions.
+    Planet Semi-major Axis (AU)
 
-    This wrapper helps merge together different calculations
-    of the same quantity, choosing sources based on preference,
-    whether the calculation is finite, and/or uncertainties.
+    Retrieve "a" first from the standardized table,
+    then from period/mass, then from transit a/R.
 
     Parameters
     ----------
-    methods : list of strings
-        The names of methods to consider for calculating
-        the quantity, in order of preference. The order
-        matters most if `how_to_choose=='preference'`
-        (see below); if `how_to_choose=='precision'`
-        then preference doesn't really matter (except
-        in cases where two different options have
-        identical fractional uncertainties).
     distribution : bool
         If False, return a simple array of values.
         If True, return an astropy.uncertainty.Distribution,
         which can be used for error propagation.
-    how_to_choose : str
-        A string describing how to pick values from
-        among the different possible calculations.
-        Options include:
-            'preference' = pick the highest preference
-            option that produces a finite value
-            'precision' = pick the most precise value,
-            base on the calculated mean uncertainty
-    **kw : dict
-        All other keywords will be passed to the functions
-        for calculating quantities. All functions must be able
-        to accept the same set of keyword.
     """
-
-    # construct a list of arrays of values
-    value_estimates = u.Quantity(
-        [self.get(m, distribution=distribution, **kw) for m in methods]
+    a = self._choose_calculation(
+        methods=[
+            "semimajoraxis_from_table",
+            "semimajoraxis_from_period",
+            "semimajoraxis_from_transit_ar",
+        ],
+        distribution=distribution,
     )
-
-    # pick the first option as baseline
-    values = value_estimates[0]
-
-    if how_to_choose == "preference":
-        # loop through options, picking the first finite value
-        for v in value_estimates:
-            isnt_good_yet = np.isfinite(values) == False
-            values[isnt_good_yet] = v[isnt_good_yet]
-    elif how_to_choose == "precision":
-        # calculate (symmetric) fractional uncertainties for all options
-        mu_estimates = u.Quantity(
-            [self.get(m, distribution=False, **kw) for m in methods]
-        )
-        uncertainty_estimates = u.Quantity(
-            [self.get_uncertainty(m, **kw) for m in methods]
-        )
-        fractional_uncertainty_estimates = u.Quantity(
-            [u / v for v, u in zip(mu_estimates, uncertainty_estimates)]
-        )
-
-        fractional_uncertainty_estimates[np.isnan(fractional_uncertainty_estimates)] = (
-            np.inf
-        )
-        current_fractional_uncertainty = fractional_uncertainty_estimates[0]
-
-        # loop through options to select the one with smallest uncertainty
-        for v, f in zip(value_estimates, fractional_uncertainty_estimates):
-            has_smaller_uncertainty = f < current_fractional_uncertainty
-            current_fractional_uncertainty[has_smaller_uncertainty] = f[
-                has_smaller_uncertainty
-            ]
-            values[has_smaller_uncertainty] = v[has_smaller_uncertainty]
-
-
-@property
-def semimajoraxis(self):
-    """
-    Have a safe way to calculate the semimajor axis of planets,
-    that fills in gaps as necessary. Basic strategy:
-
-        First from table.
-        Then from NVK3L.
-        Then from a/R*.
-
-    """
-
-    # pull out the actual values from the table
-    a = self.standard["semimajoraxis"].copy()
-
-    # try to replace bad ones with NVK3L
-    bad = np.isfinite(a) == False
-    self._speak(f"{sum(bad)}/{len(self)} semimajoraxes are missing")
-
-    # calculate from the period and the stellar mass
-    P = self.period[bad]
-    M = self.stellar_mass[bad]
-    G = con.G
-    a[bad] = ((G * M * P**2 / 4 / np.pi**2) ** (1 / 3)).to("AU")
-
-    # replace those that are still bad with the a/R*
-    stillbad = np.isfinite(a) == False
-    self._speak(f"{sum(stillbad)}/{len(self)} are still missing after NVK3L")
-    # (pull from table to avoid potential for recursion)
-    try:
-        a_over_rs = self.standard["transit_ar"][stillbad]
-        rs = self.standard["stellar_radius"][stillbad]
-        a[stillbad] = a_over_rs * rs
-    except KeyError:
-        pass
-
     return a
 
 
