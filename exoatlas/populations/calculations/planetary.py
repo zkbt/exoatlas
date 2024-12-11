@@ -3,7 +3,7 @@ from ...imports import *
 
 def semimajoraxis_from_period(self, distribution=False, **kw):
     """
-    Planet Semi-major Axis (AU)
+    Planet Semi-major Axis (a, AU)
 
     Calculate "a" from the period and stellar mass.
     This might be used if no semi-major axis is
@@ -23,9 +23,9 @@ def semimajoraxis_from_period(self, distribution=False, **kw):
     return a
 
 
-def semimajoraxis_from_transit_ar(self, distribution=False, **kw):
+def semimajoraxis_from_transit_scaled_semimajoraxis(self, distribution=False, **kw):
     """
-    Planet Semi-major Axis (AU)
+    Planet Semi-major Axis (a, AU)
 
     Calculate "a" from the transit-derived a/Rs.
     This might be used if no semi-major axis is
@@ -38,7 +38,7 @@ def semimajoraxis_from_transit_ar(self, distribution=False, **kw):
         If True, return an astropy.uncertainty.Distribution,
         which can be used for error propagation.
     """
-    a_over_R = self.get("transit_ar", distribution=distribution)
+    a_over_R = self.get("transit_scaled_semimajoraxis", distribution=distribution)
     R = self.get("stellar_radius", distribution=distribution)
     a = (a_over_R * R).to("AU")
     return a
@@ -46,7 +46,7 @@ def semimajoraxis_from_transit_ar(self, distribution=False, **kw):
 
 def semimajoraxis(self, distribution=False, **kw):
     """
-    Planet Semi-major Axis (AU)
+    Planet Semi-major Axis (a, AU)
 
     Retrieve "a" first from the standardized table,
     then from period/mass, then from transit a/R.
@@ -58,12 +58,11 @@ def semimajoraxis(self, distribution=False, **kw):
         If True, return an astropy.uncertainty.Distribution,
         which can be used for error propagation.
     """
-    print(kw)
     a = self._choose_calculation(
         methods=[
             "semimajoraxis_from_table",
             "semimajoraxis_from_period",
-            "semimajoraxis_from_transit_ar",
+            "semimajoraxis_from_transit_scaled_semimajoraxis",
         ],
         distribution=distribution,
         **kw,
@@ -71,97 +70,161 @@ def semimajoraxis(self, distribution=False, **kw):
     return a
 
 
-@property
-def a_over_rs(self):
+def scaled_semimajoraxis_from_semimajoraxis(self, distribution=False, **kw):
     """
-    Have a safe way to calculate the scaled semimajor axis of planets,
-    that fills in gaps as necessary. Basic strategy:
+    Planet Scaled Semi-major Axis (a/R*, unitless)
 
-        First from table, mostly derived from transit.
-        Then from the semimajor axis.
+    Calculate "a/Rs" from the semimajor axis a and
+    radius Rs. This might be used if the table has
+    no direct transit-derived value in its table.
+
+    Parameters
+    ----------
+    distribution : bool
+        If False, return a simple array of values.
+        If True, return an astropy.uncertainty.Distribution,
+        which can be used for error propagation.
     """
-
-    # pull out the values from the table
-    a_over_rs = self.standard["transit_ar"].copy()
-
-    # try to replace bad ones with NVK3L
-    bad = np.isfinite(a_over_rs) == False
-    self._speak(f"{sum(bad)}/{len(self)} values for a/R* are missing")
-
-    a = self.semimajoraxis[bad]
-    R = self.stellar_radius[bad]
-    a_over_rs[bad] = a / R
-
-    stillbad = np.isfinite(a_over_rs) == False
-    self._speak(f"{sum(stillbad)}/{len(self)} are still missing after a and R*")
-
-    return a_over_rs
+    a = self.get("semimajoraxis", distribution=distribution)
+    R = self.get("stellar_radius", distribution=distribution)
+    return (a / R).decompose()
 
 
-@property
-def e(self):
+def scaled_semimajoraxis(self, distribution=False, **kw):
     """
-    FIXME -- assumes are missing eccentricities are 0!
+    Planet Scaled Semi-major Axis (a/R*, unitless)
+
+    Retrieve "a/Rs" first from the transit-derived value
+    in the standardized table, then from a and Rs.
+
+    Parameters
+    ----------
+    distribution : bool
+        If False, return a simple array of values.
+        If True, return an astropy.uncertainty.Distribution,
+        which can be used for error propagation.
+    """
+    a_over_Rs = self._choose_calculation(
+        methods=[
+            "transit_scaled_semimajoraxis_from_table",
+            "scaled_semimajoraxis_from_semimajoraxis",
+        ],
+        distribution=distribution,
+        **kw,
+    )
+    return a_over_Rs
+
+
+def eccentricity(self, distribution=False, **kw):
+    """
+    Planet Orbital Eccentricity (e, unitless)
+
+    The eccentricity of the planet's orbit. If eccentricity is
+    `nan` in the standardized table, this method will quietly
+    assume it to be zero.
+
+    Parameters
+    ----------
+    distribution : bool
+        If False, return a simple array of values.
+        If True, return an astropy.uncertainty.Distribution,
+        which can be used for error propagation.
     """
 
     # pull out the actual values from the table
-    e = self.standard["eccentricity"].copy()
+    e = self.get_values_from_table("eccentricity", distribution=distribution)
 
-    # try to replace bad ones with NVK3L
-    bad = np.isfinite(e) == False
-    self._speak(f"{sum(bad)}/{len(self)} eccentricities are missing")
-    self._speak(f"assuming they are all zero")
-    e[bad] = 0
+    # replace nans with 0
+    if distribution == False:
+        bad = np.isfinite(e) == False
+        e[bad] = 0
+    # (by not doing anything to replace nan values with 0 if `distribution==True`,
+    # planets missing original values will end up with `nan` uncertainties)
 
     return e
 
 
-@property
-def omega(self):
+def argument_of_periastron(self, distribution=False, **kw):
     """
-    (FIXME! we need better longitudes of periastron)
-    """
+    Planet Orbital Argument of Periastron ($\omega$, degrees)
 
+    The argument of periastron of the planet's orbit, $\omega$.
+    If it is `nan` (often because eccentricity is zero), then
+    this will be assumed to be 0.
+
+    Parameters
+    ----------
+    distribution : bool
+        If False, return a simple array of values.
+        If True, return an astropy.uncertainty.Distribution,
+        which can be used for error propagation.
+    """
     # pull out the actual values from the table
-    omega = self.standard["omega"].copy()
+    argument_of_periastron = self.standard["argument_of_periastron"].copy()
 
-    # try to replace bad ones with NVK3L
-    bad = np.isfinite(omega) == False
-    self._speak(f"{sum(bad)}/{len(self)} longitudes of periastron are missing")
-    e_zero = self.e == 0
-    self._speak(f"{sum(e_zero)} have eccentricities assumed to be 0")
-    omega[e_zero] = 0 * u.deg
+    # replace nans with 0
+    if distribution == False:
+        bad = np.isfinite(argument_of_periastron) == False
+        argument_of_periastron[bad] = 0 * u.deg
+    # (by not doing anything to replace nan values with 0 if `distribution==True`,
+    # planets missing original values will end up with `nan` uncertainties)
 
-    return omega
+    return argument_of_periastron
 
 
-@property
-def b(self):
+def impact_parameter_from_inclination(self, distribution=False, **kw):
     """
-    Transit impact parameter.
-    (FIXME! split this into transit and occultation)
+    Planet Semi-major Axis (a, AU)
+
+    Calculate "b" from the inclination, scaled semimajor axis,
+    eccentricity, and argument of periastron. This might be
+    used if no direct transit-derived impact parameter is
+    available in the standardized table.
+
+    Parameters
+    ----------
+    distribution : bool
+        If False, return a simple array of values.
+        If True, return an astropy.uncertainty.Distribution,
+        which can be used for error propagation.
     """
+    # extract necessary quantities
+    a_over_Rs = self.scaled_semimajoraxis(distribution=distribution)
+    i = self.inclination(distribution=distribution)
+    e = self.eccentricity(distribution=distribution)
+    omega = self.argument_of_periastron(distribution=distribution)
 
-    # pull out the actual values from the table
-    b = self.standard["transit_b"].copy()
-
-    # try to replace bad ones with NVK3L
-    bad = np.isfinite(b) == False
-    self._speak(f"{sum(bad)}/{len(self)} impact parameters are missing")
-
-    # calculate from the period and the stellar mass
-    a_over_rs = self.a_over_rs[bad]
-    i = self.standard["inclination"][bad]
-    e = self.e[bad]
-    omega = self.omega[bad]
-    b[bad] = a_over_rs * np.cos(i) * ((1 - e**2) / (1 + e * np.sin(omega)))
-
-    # report those that are still bad
-    stillbad = np.isfinite(b) == False
-    self._speak(f"{sum(stillbad)}/{len(self)} are still missing after using i")
-
+    # calculate impact parameter based on instantaneous distance at transit
+    b = a_over_Rs * np.cos(i) * ((1 - e**2) / (1 + e * np.sin(omega)))
     return b
 
+
+def impact_parameter(self, distribution=False, **kw):
+    """
+    Planet Impact Parameter (b)
+
+    Retrieve "b" first from the transit-derived value
+    in the standardized table, then from inclination.
+
+    Parameters
+    ----------
+    distribution : bool
+        If False, return a simple array of values.
+        If True, return an astropy.uncertainty.Distribution,
+        which can be used for error propagation.
+    """
+    b = self._choose_calculation(
+        methods=[
+            "transit_impact_parameter_from_table",
+            "impact_parameter_from_inclination",
+        ],
+        distribution=distribution,
+        **kw,
+    )
+    return b
+
+
+# ZACH NEEDS TO PICK UP FROM HERE!
 
 # the 1360 W/m^2 that Earth receives from the Sun
 earth_insolation = (1 * u.Lsun / 4 / np.pi / u.AU**2).to(u.W / u.m**2)
@@ -295,15 +358,15 @@ def transit_duration(self):
         self._speak(f"{sum(bad)}/{len(self)} transit durations are missing")
 
         P = self.period[bad]
-        a_over_rs = self.a_over_rs[bad]
+        scaled_semimajoraxis = self.scaled_semimajoraxis[bad]
         b = self.impact_parameter[bad]
 
-        T0 = P / np.pi / a_over_rs
+        T0 = P / np.pi / scaled_semimajoraxis
         T = T0 * np.sqrt(1 - b**2)
 
         e = self.e[bad]
-        omega = self.omega[bad]
-        factor = np.sqrt(1 - e**2) / (1 + e * np.sin(omega))
+        argument_of_periastron = self.argument_of_periastron[bad]
+        factor = np.sqrt(1 - e**2) / (1 + e * np.sin(argument_of_periastron))
 
         d[bad] = (T * factor).to(u.day)
 

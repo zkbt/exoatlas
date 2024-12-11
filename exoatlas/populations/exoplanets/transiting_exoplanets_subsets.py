@@ -42,8 +42,8 @@ class Kepler(TransitingExoplanetsSubset):
         )
 
     def to_include(self):
-        foundbykepler = (self.discovery_facility == "Kepler") | (
-            self.discovery_facility == "K2"
+        foundbykepler = (self.discovery_facility() == "Kepler") | (
+            self.discovery_facility() == "K2"
         )
         return foundbykepler
 
@@ -55,8 +55,8 @@ class NonKepler(TransitingExoplanetsSubset):
         )
 
     def to_include(self):
-        foundbykepler = (self.discovery_facility == "Kepler") | (
-            self.discovery_facility == "K2"
+        foundbykepler = (self.discovery_facility() == "Kepler") | (
+            self.discovery_facility() == "K2"
         )
         return foundbykepler == False
 
@@ -69,7 +69,7 @@ class TESS(TransitingExoplanetsSubset):
 
     def to_include(self):
         foundbytess = (
-            self.discovery_facility == "Transiting Exoplanet Survey Satellite (TESS)"
+            self.discovery_facility() == "Transiting Exoplanet Survey Satellite (TESS)"
         )
         return foundbytess == True
 
@@ -82,7 +82,7 @@ class NonTESS(TransitingExoplanetsSubset):
 
     def to_include(self):
         foundbytess = (
-            self.discovery_facility == "Transiting Exoplanet Survey Satellite (TESS)"
+            self.discovery_facility() == "Transiting Exoplanet Survey Satellite (TESS)"
         )
         return foundbytess == False
 
@@ -105,7 +105,7 @@ class Space(TransitingExoplanetsSubset):
     def to_include(self):
         foundfromspace = np.zeros(len(self)).astype(bool)
         for x in space_telescopes:
-            foundfromspace = foundfromspace | (self.discovery_facility == x)
+            foundfromspace = foundfromspace | (self.discovery_facility() == x)
         return foundfromspace
 
 
@@ -131,7 +131,7 @@ def mass_is_good(pop):
         exists = pop.get_uncertainty("mass") > 0
 
         # the uncertainty must be less than a maximum
-        fractional = pop.get_uncertainty("mass") / pop.mass
+        fractional = pop.get_uncertainty("mass") / pop.get("mass")
         small = fractional < pop.maximum_uncertainty
 
         return small & exists

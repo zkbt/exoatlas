@@ -38,10 +38,10 @@ def test_exoplanets():
 
     # check that the background reference population for Exoplanets filters too
     f = p[:10]
-    for x in f.hostname:
-        assert x in f.individual_references.hostname
-    for x in f.individual_references.hostname:
-        assert x in f.hostname
+    for x in f.hostname():
+        assert x in f.individual_references.hostname()
+    for x in f.individual_references.hostname():
+        assert x in f.hostname()
 
 
 def test_transitingexoplanets():
@@ -74,17 +74,17 @@ def test_indexing():
     b = p[5]
     c = p[0:10]
     with np.errstate(invalid="ignore"):
-        d = p[p.stellar_radius < 1.0 * u.Rsun]
+        d = p[p.stellar_radius() < 1.0 * u.Rsun]
     e = p["GJ 1214b"]
     f = p[["GJ 1214b", "LHS 1140b", "GJ 1132b"]]
-    g = p[p.discovery_facility == "Kepler"]
+    g = p[p.discovery_facility() == "Kepler"]
     h = p["TRAPPIST-1b"]
     i = p["TRAPPIST-1"]
     j = e + h
     k = f - e
     l = p.create_subset_by_name("GJ1214b")
     m = p.create_subset_by_hostname("GJ1214")
-    coordinates = SkyCoord(e.ra, e.dec)
+    coordinates = SkyCoord(e.ra(), e.dec())
     n = p.create_subset_by_position(coordinates)
 
 

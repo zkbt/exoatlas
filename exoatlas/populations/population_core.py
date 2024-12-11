@@ -657,7 +657,7 @@ class Population(Talker):
             raise NotImplementedError("No cross-matching with proper motions yet :-(")
 
         # create astropy coordinates for this population
-        population_coords = SkyCoord(ra=self.ra, dec=self.dec)
+        population_coords = SkyCoord(ra=self.ra(), dec=self.dec())
 
         # do a spatial cross match on the sky
         #  (idx gives the index into coordinates,
@@ -1039,7 +1039,7 @@ class Population(Talker):
                 try:
                     n = sum(np.isfinite(self.standard[k]))
                 except TypeError:
-                    n = sum(self.standard[k] != "")
+                    n = sum(np.atleast_1d(self.standard[k] != ""))
             self._speak(f"{k:>25} | {n:4}/{N} rows = {n/N:4.0%} are not empty")
 
     def _find_index(self, name):
@@ -1049,7 +1049,7 @@ class Population(Talker):
         ??? = maybe this could/should be replaced with some table cleverness?
         """
 
-        return np.array([clean(name) in clean(x) for x in self.name]).nonzero()[0]
+        return np.array([clean(name) in clean(x) for x in self.name()]).nonzero()[0]
 
     def update_values(self, planets, **kwargs):
         """
@@ -1321,6 +1321,12 @@ class Population(Talker):
 
     from .calculations.planetary import (
         semimajoraxis_from_period,
-        semimajoraxis_from_transit_ar,
+        semimajoraxis_from_transit_scaled_semimajoraxis,
         semimajoraxis,
+        scaled_semimajoraxis_from_semimajoraxis,
+        scaled_semimajoraxis,
+        eccentricity,
+        argument_of_periastron,
+        impact_parameter_from_inclination,
+        impact_parameter,
     )

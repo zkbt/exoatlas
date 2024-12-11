@@ -402,7 +402,7 @@ class ExoplanetsPSCP(PredefinedPopulation):
         populate_one_or_more_columns("period", "pl_orbper", u.day)
         populate_one_or_more_columns("semimajoraxis", "pl_orbsmax", u.AU)
         populate_one_or_more_columns("eccentricity", "pl_orbeccen")
-        populate_one_or_more_columns("omega", "pl_orblper", u.deg)
+        populate_one_or_more_columns("argument_of_periastron", "pl_orblper", u.deg)
         populate_one_or_more_columns("inclination", "pl_orbincl", u.deg)
 
         # what are the planet properties? (check Jupiter isn't better?!)
@@ -426,8 +426,8 @@ class ExoplanetsPSCP(PredefinedPopulation):
         populate_one_or_more_columns("transit_midpoint", "pl_tranmid", u.day)
         populate_one_or_more_columns("transit_duration", "pl_trandur", u.hour)
         populate_one_or_more_columns("transit_depth", "pl_trandep", 0.01)
-        populate_one_or_more_columns("transit_ar", "pl_ratdor")
-        populate_one_or_more_columns("transit_b", "pl_imppar")
+        populate_one_or_more_columns("transit_scaled_semimajoraxis", "pl_ratdor")
+        populate_one_or_more_columns("transit_impact_parameter", "pl_imppar")
         populate_one_or_more_columns("rv_semiamplitude", "pl_rvamp", u.m / u.s)
         populate_one_or_more_columns("projected_obliquity", "pl_projobliq", u.deg)
         populate_one_or_more_columns("obliquity", "pl_trueobliq", u.deg)
@@ -660,7 +660,7 @@ class Exoplanets(ExoplanetsPSCP):
         # then trim the .ps population to only those (host)names in the subset
         if hasattr(self, "individual_references"):
             subset.individual_references = self.individual_references[
-                list(np.unique(subset.name))
+                list(np.unique(subset.tidyname()))
             ]
             subset.individual_references.label = "Individual References"
 
@@ -691,7 +691,7 @@ class Exoplanets(ExoplanetsPSCP):
             self.individual_references = ExoplanetsPS()
             # then trim the .ps population to only those (host)names in the subset
             self.individual_references = self.individual_references[
-                list(np.unique(self.tidyname))
+                list(np.unique(self.tidyname()))
             ]
 
             self.individual_references.label = "Individual References"

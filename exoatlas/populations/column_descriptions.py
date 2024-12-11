@@ -3,13 +3,14 @@
 # functions. We should try to make that more transparent/easy!
 
 core_basic_descriptions = {
-    "name": "name of the planet/star/object",
-    "ra": "Right Ascension of the system",
-    "dec": "Declination of the system",
-    "distance": "distance to the system",
+    "name": "name of the planet",
+    "hostname": "name of the host star",
 }
 
 core_stellar_descriptions = {
+    "ra": "Right Ascension of the system",
+    "dec": "Declination of the system",
+    "distance": "distance to the system",
     "stellar_teff": "stellar effective temperature",
     "stellar_mass": "stellar mass",
     "stellar_radius": "stellar radius",
@@ -20,7 +21,7 @@ core_stellar_descriptions = {
 #    "period",
 #    "semimajoraxis",
 #    "eccentricity",
-#    "omega",
+#    "argument_of_periastron",
 #    "inclination",
 #    "transit_midpoint",
 #    "transit_duration",
@@ -30,8 +31,8 @@ core_stellar_descriptions = {
 #    "stellar_radius",
 #    "radius",
 #    "mass",
-#    "transit_ar",
-#    "transit_b",
+#    "transit_scaled_semimajoraxis",
+#    "transit_impact_parameter",
 # ]
 
 core_planet_descriptions = {
@@ -39,7 +40,7 @@ core_planet_descriptions = {
     "period": "orbital period of the planet",
     "impact_parameter": "impact parameter b",
     "eccentricity": "eccentricity",
-    "omega": "argument of periastron",
+    "argument_of_periastron": "argument of periastron",
     "radius": "planet radius",
     "mass": "planet mass",
 }
@@ -48,8 +49,8 @@ core_transit_descriptions = {
     "transit_midpoint": "a transit midpoint",
     "transit_duration": "duration of the transit",
     "transit_depth": "fraction of starlight the planet blocks",
-    "transit_ar": "(transit-derived) scaled orbital distance a/R*",
-    "transit_b": "(transit-derived) impact parameter b",
+    "transit_scaled_semimajoraxis": "(transit-derived) scaled orbital distance a/R*",
+    "transit_impact_parameter": "(transit-derived) impact parameter b",
 }
 
 derived_stellar_descriptions = {
@@ -57,7 +58,7 @@ derived_stellar_descriptions = {
     "distance_modulus": "apparent magnitude - absolute magnitude",
 }
 # calculated_columns = [
-#    "a_over_rs",
+#    "scaled_semimajoraxis",
 #    "b",
 #    "insolation",
 #    "relative_insolation",
@@ -75,7 +76,7 @@ derived_stellar_descriptions = {
 derived_planet_descriptions = {
     "inclination": "orbital inclination",
     "semimajoraxis": "the semimajor axis of the planet's orbit",
-    "a_over_rs": "scaled orbital distance a/R*",
+    "scaled_semimajoraxis": "scaled orbital distance a/R*",
     "density": "density of the planet",
     "insolation": "bolometric energy flux the planet receives from its star",
     "relative_insolation": "insolation relative to Earth",
