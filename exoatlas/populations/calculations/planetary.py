@@ -172,7 +172,7 @@ def argument_of_periastron(self, distribution=False, **kw):
     return argument_of_periastron
 
 
-def impact_parameter_from_inclination(self, distribution=False, **kw):
+def transit_impact_parameter_from_inclination(self, distribution=False, **kw):
     """
     Planet Semi-major Axis (a, AU)
 
@@ -199,7 +199,7 @@ def impact_parameter_from_inclination(self, distribution=False, **kw):
     return b
 
 
-def impact_parameter(self, distribution=False, **kw):
+def transit_impact_parameter(self, distribution=False, **kw):
     """
     Planet Impact Parameter (b)
 
@@ -216,7 +216,7 @@ def impact_parameter(self, distribution=False, **kw):
     b = self._choose_calculation(
         methods=[
             "transit_impact_parameter_from_table",
-            "impact_parameter_from_inclination",
+            "transit_impact_parameter_from_inclination",
         ],
         distribution=distribution,
         **kw,
@@ -224,157 +224,262 @@ def impact_parameter(self, distribution=False, **kw):
     return b
 
 
-# ZACH NEEDS TO PICK UP FROM HERE!
-
 # the 1360 W/m^2 that Earth receives from the Sun
 earth_insolation = (1 * u.Lsun / 4 / np.pi / u.AU**2).to(u.W / u.m**2)
 
 
 @property
-def insolation(self):
+def insolation(self, distribution=False, **kw):
     """
-    The insolation the planet receives, in W/m^2.
+    Planet Insolation (S, W/m**2)
+
+    Calculate the insolation the planet receives from its star,
+    given the luminosity of the star and the semimajor axis,
+    expressed in units of W/m**2. (For reference, Earth
+    receives 1360 W/m**2).
+
+    Parameters
+    ----------
+    distribution : bool
+        If False, return a simple array of values.
+        If True, return an astropy.uncertainty.Distribution,
+        which can be used for error propagation.
     """
 
     # calculate the average insolation the planet receives
-    insolation = self.stellar_luminosity / 4 / np.pi / self.semimajoraxis**2
-    return insolation.to(u.W / u.m**2)
+    L = self.stellar_luminosity(distribution=distribution)
+    a = self.semimajoraxis(distribution=distribution)
+    S = L / 4 / np.pi / a**2
+    return S.to(u.W / u.m**2)
 
 
-@property
-def insolation_uncertainty(self):
+def relative_insolation(self, distribution=False, **kw):
     """
-    The insolation the planet receives, in W/m^2.
+    Relative Planet Insolation  (S/S_Earth)
+
+    Calculate the insolation the planet receives from its star,
+    given the luminosity of the star and the semimajor axis,
+    expressed relative to Earth's insolation.
+
+    Parameters
+    ----------
+    distribution : bool
+        If False, return a simple array of values.
+        If True, return an astropy.uncertainty.Distribution,
+        which can be used for error propagation.
     """
-
-    # calculate the average insolation the planet receives
-    dinsolation_dluminosity = 1 / 4 / np.pi / self.semimajoraxis**2
-    dinsolation_dsemimajor = (
-        -2 * self.stellar_luminosity / 4 / np.pi / self.semimajoraxis**3
-    )
-    L_uncertainty = self.get_uncertainty("stellar_luminosity")
-    a_uncertainty = self.get_uncertainty("semimajoraxis")
-    insolation_uncertainty = (
-        dinsolation_dluminosity**2 * L_uncertainty**2
-        + dinsolation_dsemimajor**2 * a_uncertainty**2
-    ) ** 0.5
-    return insolation_uncertainty.to(u.W / u.m**2)
+    return self.insolation(distribution=distribution) / earth_insolation
 
 
-@property
-def relative_insolation(self):
+def log_relative_insolation(self, distribution=False, **kw):
     """
-    The insolation the planet receives, relative to Earth.
+    log(Relative Planet Insolation)
+
+    Calculate log10 of the insolation the planet receives from its star,
+    given the luminosity of the star and the semimajor axis,
+    expressed relative to Earth's insolation.
+
+    Parameters
+    ----------
+    distribution : bool
+        If False, return a simple array of values.
+        If True, return an astropy.uncertainty.Distribution,
+        which can be used for error propagation.
     """
-    return self.insolation / self.earth_insolation
+    return np.log10(self.relative_insolation(distribution=distribution))
 
 
-@property
-def relative_insolation_uncertainty(self):
+def relative_cumulative_xuv_insolation(self, distribution=False, **kw):
     """
-    The insolation the planet receives, relative to Earth.
-    """
-    return self.insolation_uncertainty / self.earth_insolation
+    Relative Cumulative XUV Insolation
 
-
-@property
-def log_relative_insolation(self):
-    return np.log10(self.relative_insolation)
-
-
-@property
-def relative_cumulative_xuv_insolation(self):
-    """
-    A *very very very* approximate estimate for the cumulative XUV flux (J/m**2)
+    Calculate a *very very very* approximate estimate for the cumulative XUV flux (J/m**2)
     felt by a planet over its lifetime. It comes from Zahnle + Catling (2017) Equation 27,
     where they say they did integrals over the Lammer et al. (2009) XUV flux relations.
     This effectively assumes that the early times dominate, so the time integral doesn't
     depend (?!?) on the age of the system. It's very rough!
+
+    Parameters
+    ----------
+    distribution : bool
+        If False, return a simple array of values.
+        If True, return an astropy.uncertainty.Distribution,
+        which can be used for error propagation.
     """
-    xuv_proxy = (self.stellar_luminosity / u.Lsun) ** -0.6
-    return self.relative_insolation * xuv_proxy
+    xuv_proxy = (self.stellar_luminosity(distribution=distribution) / u.Lsun) ** -0.6
+    return self.relative_insolation(distribution=distribution) * xuv_proxy
 
 
-@property
-def teq(self):
+def teq(self, distribution=False, albedo=0, f=1 / 4, **kw):
     """
-    The equilibrium temperature of the planet.
+    Planet Equilibrium Temperature (K)
+
+    Calculate the equilbrium temperature of the planet. With default keywords,
+    this assumes zero-albedo and uniform heat redistribution.
+
+    Parameters
+    ----------
+    albedo : float
+        The planet's Bond albedo, meaning the fraction of incoming
+        stellar light reflected away, integrated over wavelength.
+        The remaining light is absorbed and needs to be emitted
+        as thermal (often infrared) radiation, thus contributing
+        to the equilibrium temperature.
+    f : float
+        The ratio of the effective area collecting light from the star
+        (which is the cross sectional area of the planet's shadow pi*R**2)
+        to the effective area emitting thermal radiation away to space
+        (which depends on how efficiently the planet distributes heat).
+        Higher values of f correspond to a smaller fraction of the planet's
+        surface doing the emitting, and thus a higher temperature.
+        Two limiting values are:
+            f = 1/4 = planet uniformly distributes heat, thus radiating
+                      from a spherical surface with 4*pi*R**2 area
+            f = 2/3 = looking at the dayside of planet that instantly
+                      reradiates absorbed heat, with stronger weighting
+                      toward the substellar point meaning the effective
+                      emission area is only 3/2*pi*R**2 (which is smaller
+                      than the spherical area of the dayside hemisphere,
+                      which would give f=1/2)
+    distribution : bool
+        If False, return a simple array of values.
+        If True, return an astropy.uncertainty.Distribution,
+        which can be used for error propagation.
     """
-    f = self.insolation
+    S = self.insolation(distribution=distribution)
     sigma = con.sigma_sb
-    A = 1
-    return ((f * A / 4 / sigma) ** (1 / 4)).to(u.K)
+    teq = ((S * f * (1 - albedo) / sigma) ** (1 / 4)).to(u.K)
+    return teq
 
 
-@property
-def planet_luminosity(self):
+def planet_luminosity(self, distribution=False, **kw):
     """
-    The bolometric luminosity of the planet (assuming zero albedo).
+    Planet Luminosity (K)
+
+    Calculate total thermal luminosity of the planet,
+    due to reradiation of absorbed starlight.
+
+    Parameters
+    ----------
+    albedo : float
+        The planet's Bond albedo, meaning the fraction of incoming
+        stellar light reflected away, integrated over wavelength.
+        The remaining light is absorbed and needs to be emitted
+        as thermal (often infrared) radiation, thus contributing
+        to the equilibrium temperature.
+    distribution : bool
+        If False, return a simple array of values.
+        If True, return an astropy.uncertainty.Distribution,
+        which can be used for error propagation.
     """
-    return (self.teq**4 * con.sigma_sb * 4 * np.pi * self.radius**2).to(u.W)
+    S = self.insolation(distribution=distribution)
+    R = self.radius(distribution=distribution)
+    L_in = (S * np.pi * R**2).to(u.W)
+    L_out = L_in
+    return L_out
 
 
-@property
-def transit_depth(self):
+def transit_depth_from_radii(self, distribution=False, **kw):
     """
-    The depth of the transit
-    (FIXME, clarify if this is 1.5-3.5 or what)
-    """
+    Transit Depth ((Rp/Rs)**2, unitless)
 
-    # pull out the actual values from the table
-    d = self.standard["transit_depth"].copy()
+    Calculate the transit depth from the planet and star radius.
+    This calculates simply (Rp/Rs)**2; it neglects the effects of
+    limb-darkening and/or grazing transits.
 
-    # try to replace bad ones with NVK3L
-    bad = np.isfinite(d) == False
-    self._speak(f"{sum(bad)}/{len(self)} transit depths are missing")
-
-    Rp = self.radius[bad]
-    Rs = self.stellar_radius[bad]
-
-    d[bad] = (Rp / Rs).decompose() ** 2
-
-    # report those that are still bad
-    stillbad = np.isfinite(d) == False
-    self._speak(f"{sum(stillbad)}/{len(self)} are still missing after Rp/Rs")
-
-    return d
-
-
-@property
-def transit_duration(self):
-    """
-    The duration of the transit
-    (FIXME, clarify if this is 1.5-3.5 or what)
+    Parameters
+    ----------
+    distribution : bool
+        If False, return a simple array of values.
+        If True, return an astropy.uncertainty.Distribution,
+        which can be used for error propagation.
     """
 
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore")
+    Rp = self.radius(distribution=distribution)
+    Rs = self.stellar_radius(distribution=distribution)
+    depth = (Rp / Rs).decompose() ** 2
+    return depth
 
-        # pull out the actual values from the table
-        d = self.standard["transit_duration"].copy()
 
-        # try to replace bad ones with NVK3L
-        bad = np.isfinite(d) == False
-        self._speak(f"{sum(bad)}/{len(self)} transit durations are missing")
+def transit_depth(self, distribution=False, **kw):
+    """
+    Transit Depth ((Rp/Rs)**2, unitless)
 
-        P = self.period[bad]
-        scaled_semimajoraxis = self.scaled_semimajoraxis[bad]
-        b = self.impact_parameter[bad]
+    Retrieve transit depth first from the standardized table,
+    then calculated from planet radius + stellar radius.
 
-        T0 = P / np.pi / scaled_semimajoraxis
-        T = T0 * np.sqrt(1 - b**2)
+    Parameters
+    ----------
+    distribution : bool
+        If False, return a simple array of values.
+        If True, return an astropy.uncertainty.Distribution,
+        which can be used for error propagation.
+    """
+    return self._choose_calculation(
+        methods=[
+            "transit_depth_from_table",
+            "transit_depth_from_radii",
+        ],
+        distribution=distribution,
+        **kw,
+    )
 
-        e = self.e[bad]
-        argument_of_periastron = self.argument_of_periastron[bad]
-        factor = np.sqrt(1 - e**2) / (1 + e * np.sin(argument_of_periastron))
 
-        d[bad] = (T * factor).to(u.day)
+def transit_duration_from_orbit(self, distribution=False, **kw):
+    """
+    Transit Duration (days)
 
-        # report those that are still bad
-        stillbad = np.isfinite(d) == False
-        self._speak(f"{sum(stillbad)}/{len(self)} are still missing after P, a/R*, b")
+    Calculate the total transit duration (= the time between 1st and
+    4th contact, from when first touches the stellar disk to when it
+    last leaves). This calculation might be used if there is no
+    transit duration available in the standardized table.
 
-        return d
+    Parameters
+    ----------
+    distribution : bool
+        If False, return a simple array of values.
+        If True, return an astropy.uncertainty.Distribution,
+        which can be used for error propagation.
+    """
+
+    P = self.period(distribution=distribution)
+    scaled_semimajoraxis = self.scaled_semimajoraxis(distribution=distribution)
+    b = self.transit_impact_parameter(distribution=distribution)
+    k = self.scaled_radius(distribution=distribution)
+    T0 = P / np.pi / scaled_semimajoraxis
+    T = T0 * np.sqrt((1 + k**2) - b**2)
+
+    e = self.eccentricity(distribution=distribution)
+    omega = self.argument_of_periastron(distribution=distribution)
+    factor = np.sqrt(1 - e**2) / (1 + e * np.sin(omega))
+
+    duration = (T * factor).to(u.day)
+
+    return duration
+
+
+def transit_duration(self, distribution=False, **kw):
+    """
+    Transit Duration (days)
+
+    Retrieve transit duration first from the standardized table,
+    then calculated from the orbital parameters
+
+    Parameters
+    ----------
+    distribution : bool
+        If False, return a simple array of values.
+        If True, return an astropy.uncertainty.Distribution,
+        which can be used for error propagation.
+    """
+    return self._choose_calculation(
+        methods=[
+            "transit_duration_from_table",
+            "transit_duration_from_orbit",
+        ],
+        distribution=distribution,
+        **kw,
+    )
 
 
 @property

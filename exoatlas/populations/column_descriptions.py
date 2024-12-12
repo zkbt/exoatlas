@@ -38,7 +38,6 @@ core_stellar_descriptions = {
 core_planet_descriptions = {
     "discovery_facility": "telescope/project that found this planet",
     "period": "orbital period of the planet",
-    "impact_parameter": "impact parameter b",
     "eccentricity": "eccentricity",
     "argument_of_periastron": "argument of periastron",
     "radius": "planet radius",

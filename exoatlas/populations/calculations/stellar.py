@@ -1,32 +1,56 @@
 from ...imports import *
 
 
-@property
-def stellar_luminosity(self):
-    T = self.stellar_teff
-    R = self.stellar_radius
-    sigma = con.sigma_sb
-    return (4 * np.pi * R**2 * sigma * T**4).to(u.Lsun)
-
-
-@property
-def stellar_luminosity_uncertainty(self):
-    T = self.stellar_teff
-    R = self.stellar_radius
-    T_uncertainty = self.get_uncertainty("stellar_teff")
-    R_uncertainty = self.get_uncertainty("stellar_radius")
-
-    sigma = con.sigma_sb
-
-    dLdT = 4 * 4 * np.pi * R**2 * sigma * T**3
-    dLdR = 2 * 4 * np.pi * R**1 * sigma * T**4
-    return ((dLdT**2 * T_uncertainty**2 + dLdR**2 * R_uncertainty**2) ** 0.5).to("Lsun")
-
-
-@property
-def distance_modulus(self):
+def stellar_luminosity_from_radius_and_teff(self, distribution=False, **kw):
     """
-    The distance modulus to the system, in magnitudes.
+    Stellar Luminosity (L*, Lsun)
+
+    Calculate "L*" from the radius and effective temperature.
+    This might be used if no stellar luminosity is provided
+    in the standardized table.
+
+    Parameters
+    ----------
+    distribution : bool
+        If False, return a simple array of values.
+        If True, return an astropy.uncertainty.Distribution,
+        which can be used for error propagation.
     """
-    mu = 5 * np.log10(self.distance / (10 * u.pc))
+    T = self.get("stellar_teff", distribution=distribution)
+    R = self.get("stellar_radius", distribution=distribution)
+    sigma = con.sigma_sb
+    L = (4 * np.pi * R**2 * sigma * T**4).to(u.Lsun)
+    return L
+
+
+def stellar_luminosity(self, distribution=False, **kw):
+    """
+    Stellar Luminosity (L*, Lsun)
+
+    Retrieve "L*" first from the standardized table,
+    then from radius + effective temperature.
+
+    Parameters
+    ----------
+    distribution : bool
+        If False, return a simple array of values.
+        If True, return an astropy.uncertainty.Distribution,
+        which can be used for error propagation.
+    """
+    L = self._choose_calculation(
+        methods=[
+            "stellar_luminosity_from_table",
+            "stellar_luminosity_from_radius_and_teff",
+        ],
+        distribution=distribution,
+        **kw,
+    )
+    return L
+
+
+def distance_modulus(self, distribution=False, **kw):
+    """
+    Distance Modulus ($\mu$, magnitudes)
+    """
+    mu = 5 * np.log10(self.distance() / (10 * u.pc)) * u.mag
     return mu

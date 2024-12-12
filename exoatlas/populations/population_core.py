@@ -1327,6 +1327,15 @@ class Population(Talker):
         scaled_semimajoraxis,
         eccentricity,
         argument_of_periastron,
-        impact_parameter_from_inclination,
-        impact_parameter,
+        transit_impact_parameter_from_inclination,
+        transit_impact_parameter,
+        insolation,
+        relative_insolation,
+        log_relative_insolation,
+    )
+
+    from .calculations.stellar import (
+        stellar_luminosity_from_radius_and_teff,
+        stellar_luminosity,
+        distance_modulus,
     )
