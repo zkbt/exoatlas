@@ -1,4 +1,5 @@
 from ...imports import *
+from ...models.chen import *
 
 
 def semimajoraxis_from_period(self, distribution=False, **kw):
@@ -228,7 +229,6 @@ def transit_impact_parameter(self, distribution=False, **kw):
 earth_insolation = (1 * u.Lsun / 4 / np.pi / u.AU**2).to(u.W / u.m**2)
 
 
-@property
 def insolation(self, distribution=False, **kw):
     """
     Planet Insolation (S, W/m**2)
@@ -306,7 +306,9 @@ def relative_cumulative_xuv_insolation(self, distribution=False, **kw):
         If True, return an astropy.uncertainty.Distribution,
         which can be used for error propagation.
     """
-    xuv_proxy = (self.stellar_luminosity(distribution=distribution) / u.Lsun) ** -0.6
+    xuv_proxy = (
+        self.stellar_luminosity(distribution=distribution).to_value(u.Lsun) ** -0.6
+    )
     return self.relative_insolation(distribution=distribution) * xuv_proxy
 
 
@@ -425,6 +427,52 @@ def transit_depth(self, distribution=False, **kw):
     )
 
 
+def scaled_radius_from_radii(self, distribution=False, **kw):
+    """
+    Scaled Planet Radius ((Rp/Rs), unitless)
+
+    Calculate the radius ratio from the planet and star radius.
+    This simply calculates (Rp/Rs); it might be used if no
+    radius ratio is provided in the table.
+
+    Parameters
+    ----------
+    distribution : bool
+        If False, return a simple array of values.
+        If True, return an astropy.uncertainty.Distribution,
+        which can be used for error propagation.
+    """
+
+    Rp = self.radius(distribution=distribution)
+    Rs = self.stellar_radius(distribution=distribution)
+    ratio = (Rp / Rs).decompose()
+    return ratio
+
+
+def scaled_radius(self, distribution=False, **kw):
+    """
+    Scaled Planet Radius ((Rp/Rs), unitless)
+
+    Retrieve transit depth first from the standardized table,
+    then calculated from planet radius + stellar radius.
+
+    Parameters
+    ----------
+    distribution : bool
+        If False, return a simple array of values.
+        If True, return an astropy.uncertainty.Distribution,
+        which can be used for error propagation.
+    """
+    return self._choose_calculation(
+        methods=[
+            "transit_scaled_radius_from_table",
+            "scaled_radius_from_radii",
+        ],
+        distribution=distribution,
+        **kw,
+    )
+
+
 def transit_duration_from_orbit(self, distribution=False, **kw):
     """
     Transit Duration (days)
@@ -482,171 +530,395 @@ def transit_duration(self, distribution=False, **kw):
     )
 
 
-@property
-def kludge_mass(self):
+def mass_estimated_from_radius(self, distribution=False, **kw):
     """
-    Have a safe way to calculate the mass of planets,
-    that fills in gaps as necessary. Basic strategy:
+    Estimated Planet Mass (Earth masses)
 
-        First from table.
-        Then from msini.
+    Retrieve an estimate of the planet mass from the
+    planet's radius, using a very approximate
+    empirical relation.
+
+    Parameters
+    ----------
+    distribution : bool
+        If False, return a simple array of values.
+        If True, return an astropy.uncertainty.Distribution,
+        which can be used for error propagation.
+
     """
-
-    # pull out the actual values from the table
-    M = self.standard["mass"].copy()
-
-    # try to replace bad ones with NVK3L
-    bad = np.isfinite(M) == False
-    self._speak(f"{sum(bad)}/{len(self)} masses are missing")
-
-    # estimate from the msini
-    try:
-        M[bad] = self.msini[bad]
-    except (KeyError, AssertionError, AtlasError, AttributeError):
-        pass
-
-    # replace those that are still bad with the a/R*
-    stillbad = np.isfinite(M) == False
-    self._speak(f"{sum(stillbad)}/{len(self)} are still missing after msini")
-
-    return M
+    if distribution:
+        raise RuntimeError(
+            "mass_estimated_from_radius does not propagate uncertainties yet; sorry!"
+        )
+    radius = self.get("radius", distribution=False)
+    return use_chen_and_kipping_to_estimate_mass_from_radius(R=radius)
 
 
-@property
-def kludge_radius(self):
+def radius_estimated_from_mass(self, distribution=False, **kw):
     """
-    Have a safe way to calculate the radii of planets,
-    that fills in gaps as necessary. Basic strategy:
+    Estimated Planet Radius (Earth radii)
 
-        First from table.
-        Then from mass, via Chen & Kipping (2017).
+    Retrieve an estimate of the planet radius from the
+    planet's mass, using a very approximate
+    empirical relation.
+
+    Parameters
+    ----------
+    distribution : bool
+        If False, return a simple array of values.
+        If True, return an astropy.uncertainty.Distribution,
+        which can be used for error propagation.
+
     """
+    if distribution:
+        raise RuntimeError(
+            "radius_estimated_from_mass does not propagate uncertainties yet; sorry!"
+        )
 
-    # pull out the actual values from the table
-    R = self.standard["radius"].copy()
+    mass = self.get("mass", distribution=False)
+    return use_chen_and_kipping_to_estimate_mass_from_radius(M=mass)
 
-    # try to replace bad ones with NVK3L
-    bad = np.isfinite(R) == False
-    self._speak(f"{sum(bad)}/{len(self)} radii are missing")
 
-    # estimate from Chen and Kipping
-    try:
-        M = self.kludge_mass
-        R[bad] = estimate_radius(M[bad])
-    except (KeyError, AssertionError, AtlasError, AttributeError):
-        pass
+def kludge_mass(self, distribution=False, **kw):
+    """
+    Planet Mass or msini (Earth masses)
 
-    # replace those that are still bad with the a/R*
-    stillbad = np.isfinite(R) == False
-    self._speak(
-        f"{sum(stillbad)}/{len(self)} are still missing after Chen & Kipping (2017)"
+    Retrieve an estimate of the planet mass,
+    starting first from an actual published table mass,
+    and then from msini assuming sini=1,
+    and then from an emprical radius-mass relation.
+
+    Parameters
+    ----------
+    distribution : bool
+        If False, return a simple array of values.
+        If True, return an astropy.uncertainty.Distribution,
+        which can be used for error propagation.
+
+    """
+    return self._choose_calculation(
+        methods=["mass_from_table", "msini_from_orbit", "mass_estimated_from_radius"],
+        distribution=distribution,
+        **kw,
     )
 
-    return R
 
-
-@property
-def kludge_age(self):
+def kludge_radius(self, distribution=False, **kw):
     """
-    Have a safe way to calculate the age of planets,
-    that fills in gaps as necessary. Basic strategy:
+    Planet Radius or Estimated Planet Radius (Earth radii)
 
-        First from table.
-        Then assume 5 Gyr.
+    Retrieve an estimate of the planet radius,
+    starting first from an actual published table radius,
+    and then from a mass-radius relation.
+
+    Parameters
+    ----------
+    distribution : bool
+        If False, return a simple array of values.
+        If True, return an astropy.uncertainty.Distribution,
+        which can be used for error propagation.
+
+    """
+    return self._choose_calculation(
+        methods=[
+            "radius_from_table",
+            "radius_estimated_from_mass",
+        ],
+        distribution=distribution,
+        **kw,
+    )
+
+
+def kludge_stellar_age(self, distribution=False, **kw):
+    """
+    System Age (Gyr)
+
+    Retrieve an estimate of the system age,
+    starting first from an actual published table age,
+    and then boldy/foolishly assuming it's 5 Gyr.
+
+    Parameters
+    ----------
+    distribution : bool
+        If False, return a simple array of values.
+        If True, return an astropy.uncertainty.Distribution,
+        which can be used for error propagation.
+
     """
 
     # pull out the actual values from the table
-    age = self.standard["stellar_age"].copy()
+    age = self.get("stellar_age", distribution=distribution)
 
     # try to replace bad ones with NVK3L
     bad = np.isfinite(age) == False
-    self._speak(f"{sum(bad)}/{len(self)} ages are missing")
-
-    # estimate from the msini
-    try:
-        age[bad] = 5 * u.Gyr
-    except (KeyError, AssertionError, AtlasError, AttributeError):
-        pass
-
-    # replace those that are still bad with the a/R*
-    stillbad = np.isfinite(age) == False
-    self._speak(
-        f"{sum(stillbad)}/{len(self)} are still missing after blindly assuming 5Gyr for missing ages"
-    )
+    age[bad] = 5 * u.Gyr
 
     return age
 
 
-@property
-def surface_gravity(self):
+def surface_gravity(self, kludge=False, distribution=False, **kw):
     """
-    (FIXME) -- make an assumption for planets without masses
+    Planet Surface Gravity (m/s**2)
+
+    Calculate the planet's surface gravity
+    from its mass and radius.
+
+    TO-DO:
+    Explore if we should choose a different calculation more
+    closely tied to observables to minimize uncertainties.
+
+    Parameters
+    ----------
+    kludge : bool
+        Should we include kludged estimates for mass (from msini and/or
+        empirical mass-radius) and/or radius (from empircal mass-radius)
+        when doing this calculation?
+    distribution : bool
+        If False, return a simple array of values.
+        If True, return an astropy.uncertainty.Distribution,
+        which can be used for error propagation.
     """
+
+    # choose whether or not include estimated masses/radii
+    if kludge:
+        M = self.get("kludge_mass", distribution=distribution)
+        R = self.get("kludge_radius", distribution=distribution)
+    else:
+        M = self.get("mass", distribution=distribution)
+        R = self.get("radius", distribution=distribution)
 
     G = con.G
-    M = self.mass
-    R = self.radius
-
     g = (G * M / R**2).to("m/s**2")
     return g
 
 
-@property
-def density(self):
+def density(self, kludge=False, distribution=False, **kw):
     """
-    The density of the planet.
+    Planet Density (m/s**2)
+
+    Calculate the planet's bulk density
+    from its mass and radius.
+
+    TO-DO:
+    Explore if we should choose a different calculation more
+    closely tied to observables to minimize uncertainties.
+
+    Parameters
+    ----------
+    kludge : bool
+        Should we include kludged estimates for mass (from msini and/or
+        empirical mass-radius) and/or radius (from empircal mass-radius)
+        when doing this calculation?
+    distribution : bool
+        If False, return a simple array of values.
+        If True, return an astropy.uncertainty.Distribution,
+        which can be used for error propagation.
     """
-    mass = self.mass
-    volume = 4 / 3 * np.pi * (self.radius) ** 3
-    return (mass / volume).to("g/cm**3")
+
+    # choose whether or not include estimated masses/radii
+    if kludge:
+        M = self.get("kludge_mass", distribution=distribution)
+        R = self.get("kludge_radius", distribution=distribution)
+    else:
+        M = self.get("mass", distribution=distribution)
+        R = self.get("radius", distribution=distribution)
+
+    V = 4 / 3 * np.pi * R**3
+    density = (M / V).to("g/cm**3")
+    return density
 
 
-@property
-def escape_velocity(self):
+def escape_velocity(self, kludge=False, distribution=False, **kw):
     """
-    The escape velocity of the planet.
+    Planet Escape Velocity (km/s)
+
+    Calculate the planet's escape velocity
+    from its mass and radius.
+
+    TO-DO:
+    Explore if we should choose a different calculation more
+    closely tied to observables to minimize uncertainties.
+
+    Parameters
+    ----------
+    kludge : bool
+        Should we include kludged estimates for mass (from msini and/or
+        empirical mass-radius) and/or radius (from empircal mass-radius)
+        when doing this calculation?
+    distribution : bool
+        If False, return a simple array of values.
+        If True, return an astropy.uncertainty.Distribution,
+        which can be used for error propagation.
     """
+
+    if kludge:
+        M = self.get("kludge_mass", distribution=distribution)
+        R = self.get("kludge_radius", distribution=distribution)
+    else:
+        M = self.get("mass", distribution=distribution)
+        R = self.get("radius", distribution=distribution)
+
     G = con.G
-    M = self.mass
-    R = self.radius
-    return np.sqrt(2 * G * M / R).to("km/s")
+    escape_velocity = np.sqrt(2 * G * M / R).to("km/s")
+    return escape_velocity
 
 
-@property
-def orbital_velocity(self):
-    return (2 * np.pi * self.semimajoraxis / self.period).to("km/s")
-
-
-@property
-def impact_velocity(self):
-    return np.sqrt(self.orbital_velocity**2 + self.escape_velocity**2)
-
-
-@property
-def escape_parameter(self):
+def orbital_velocity(self, distribution=False, **kw):
     """
-    The Jeans atmospheric escape parameter for atomic hydrogen,
-    at the equilibrium temperature of the planet.
+    Planet Orbital Velocity (km/s)
+
+    Calculate the average tangential orbital speed of the
+    the planet in its orbit around its star.
+
+    Parameters
+    ----------
+    distribution : bool
+        If False, return a simple array of values.
+        If True, return an astropy.uncertainty.Distribution,
+        which can be used for error propagation.
     """
+    a = self.semimajoraxis(distribution=distribution)
+    P = self.period(distribution=distribution)
+    return (2 * np.pi * a / P).to("km/s")
+
+
+def impact_velocity(self, distribution=False, **kw):
+    """
+    Very Approximately Estimated Impact Velocity (km/s)
+
+    Calcuate a back-of-the-envelope estimate of the typical
+    impact velocity which which something might hit the planet,
+    as a combination of orbital and escape velocity.
+
+    Parameters
+    ----------
+    distribution : bool
+        If False, return a simple array of values.
+        If True, return an astropy.uncertainty.Distribution,
+        which can be used for error propagation.
+    """
+    v_orbital = self.orbital_velocity(distribution=distribution)
+    v_escape = self.escape_velocity(distribution=distribution)
+    return np.sqrt(v_orbital**2 + v_escape**2)
+
+
+def escape_parameter(
+    self,
+    temperature="teq",
+    mu=1,
+    albedo=0,
+    f=1 / 4,
+    kludge=False,
+    distribution=False,
+    **kw
+):
+    """
+    Jeans Atmospheric Escape Parameter (unitless)
+
+    Calculate the Jeans escape parameter, as the ratio
+    of a particle's gravitational binding energy to its
+    thermal energy. This is a super-approximate tracer
+    for susceptability to atmospheric loss, depending on
+    lots of quantities that we often in truth don't know.
+
+    TO-DO:
+    Think about whether there is an interesting intermediate
+    to assume for exospheric temperature, or whether we should
+    just keep this as a simple relative scaling.
+
+    TO-DO:
+    Should we include a correction factor for different
+    gravitational acceleration at high altitudes?
+
+    Parameters
+    ----------
+    temperature : str, Quantity
+        The temperature to use for the planet's exosphere,
+        in units of Kelvin. The default string `temperature='teq'`
+        will calculate an equilibrium temperature (assuming some
+        albedo and heat redistribution parameter); otherwise
+        something like `temperature=1000*u.K` will assume a
+        constant exospheric temperature. Neither approximation
+        is probably super great.
+    mu : float
+        Mean molecular weight of escaping particle,
+        in atomic mass units. The default of mu=1
+        corresponds to atomic hydrogen.
+    albedo : float
+        Albedo for calculating equilibrium temperature
+        (see docstring for `.teq()` for details)
+    f : float
+        Heat redistribution for calculating equilibrium temperature
+        (see docstring for `.teq()` for details)
+    kludge : bool
+        Should we include kludged estimates for mass (from msini and/or
+        empirical mass-radius) and/or radius (from empircal mass-radius)
+        when doing this calculation?
+    distribution : bool
+        If False, return a simple array of values.
+        If True, return an astropy.uncertainty.Distribution,
+        which can be used for error propagation.
+    """
+    if temperature == "teq":
+        T = self.teq(albedo=albedo, f=f, distributio=distribution)
+    else:
+        T = temperature
+
+    if kludge:
+        M = self.get("kludge_mass", distribution=distribution)
+        R = self.get("kludge_radius", distribution=distribution)
+    else:
+        M = self.get("mass", distribution=distribution)
+        R = self.get("radius", distribution=distribution)
+
     k = con.k_B
-    T = self.teq
-    mu = 1
     m_p = con.m_p
     G = con.G
-    M = self.mass
-    R = self.radius
-
     e_thermal = k * T
     e_grav = G * M * m_p / R
     return (e_grav / e_thermal).decompose()
 
 
-def scale_height(self, mu=2.32):
+def scale_height(self, mu=2.3, albedo=0, f=1 / 4, kludge=False, distribution=False):
     """
-    The scale height of the atmosphere, at equilibrium temperature.
+    Atmospheric Scale Height (km)
+
+    Calculate the scale height of the planet's atmosphere,
+    assuming a mean molecular weight and the
+
+    TO-DO:
+    Consider alternate ways of estimating mean-molecular weight
+    as a function of planet properties, so that (for example),
+    we could use this to calculate scale heights for primary
+    and secondary atmospheres together. There are probably
+    so many unknowns that would need to go into this that
+    we should make people makes those choices themselves.
+
+    Parameters
+    ----------
+    mu : float
+        Mean molecular weight of the atmosphere,
+        in atomic mass units. The default of mu=2.3
+        corresponds approximately to chemical equilibrium
+        of a solar composition atmosphere at fairly
+    albedo : float
+        Albedo for calculating equilibrium temperature
+        (see docstring for `.teq()` for details)
+    f : float
+        Heat redistribution for calculating equilibrium temperature
+        (see docstring for `.teq()` for details)
+    kludge : bool
+        Should we include kludged estimates for mass (from msini and/or
+        empirical mass-radius) and/or radius (from empircal mass-radius)
+        when doing this calculation?
+    distribution : bool
+        If False, return a simple array of values.
+        If True, return an astropy.uncertainty.Distribution,
+        which can be used for error propagation.
     """
     k = con.k_B
-    T = self.teq
+    T = self.teq(albedo=albedo, f=f, distribution=distribution)
     m_p = con.m_p
-    g = self.surface_gravity
-    return (k * T / mu / m_p / g).to("km")
+    g = self.surface_gravity(kludge=kludge, distribution=distribution)
+    H = (k * T / mu / m_p / g).to("km")
+    return H

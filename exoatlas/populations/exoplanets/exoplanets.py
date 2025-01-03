@@ -69,6 +69,7 @@ class ExoplanetsPSCP(PredefinedPopulation):
         "pl_trandur",
         "pl_imppar",
         "pl_ratdor",
+        "pl_ratror",
         "pl_rvamp",
         "pl_projobliq",
         "pl_trueobliq",
@@ -369,6 +370,19 @@ class ExoplanetsPSCP(PredefinedPopulation):
         populate_one_or_more_columns("stellar_age", "st_age", u.Gyr)
         populate_one_or_more_columns("stellar_metallicity", "st_met")
         populate_one_or_more_columns("stellar_luminosity", "st_lum")
+        # convert from table log10(L) to L
+        logL = s["stellar_luminosity"] * 1
+        L = 10**logL * u.Lsun
+        logL_uncertainty_lower = s["stellar_luminosity_uncertainty_lower"] * 1
+        logL_uncertainty_upper = s["stellar_luminosity_uncertainty_upper"] * 1
+        s["stellar_luminosity"] = L
+        s["stellar_luminosity_uncertainty_lower"] = (
+            np.log(10) * L * np.abs(logL_uncertainty_lower)
+        )
+        s["stellar_luminosity_uncertainty_upper"] = (
+            np.log(10) * L * np.abs(logL_uncertainty_upper)
+        )
+
         populate_one_or_more_columns("stellar_logg", "st_logg")
         populate_one_or_more_columns("stellar_density", "st_dens")
         populate_one_or_more_columns("stellar_vsini", "st_vsin")
@@ -425,10 +439,14 @@ class ExoplanetsPSCP(PredefinedPopulation):
         # what are the (often) transit-derived properties?
         populate_one_or_more_columns("transit_midpoint", "pl_tranmid", u.day)
         populate_one_or_more_columns("transit_duration", "pl_trandur", u.hour)
+        populate_one_or_more_columns("transit_scaled_radius", "pl_ratror")
         populate_one_or_more_columns("transit_depth", "pl_trandep", 0.01)
         populate_one_or_more_columns("transit_scaled_semimajoraxis", "pl_ratdor")
         populate_one_or_more_columns("transit_impact_parameter", "pl_imppar")
+
+        # what are the (often) RV-derived properties
         populate_one_or_more_columns("rv_semiamplitude", "pl_rvamp", u.m / u.s)
+        populate_one_or_more_columns("msini", "pl_msinie", u.Mearth)
         populate_one_or_more_columns("projected_obliquity", "pl_projobliq", u.deg)
         populate_one_or_more_columns("obliquity", "pl_trueobliq", u.deg)
 

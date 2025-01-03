@@ -991,18 +991,20 @@ class Population(Talker):
             return sigma_lower, sigma_upper
         except KeyError:
             mu = self.get(key, **kw)
-            d = self.get(key, distribution=True, **kw)
-            lower, upper = d.pdf_percentiles(
-                100
-                * np.array(
-                    [
-                        0.5 - gaussian_central_1sigma / 2,
-                        0.5 + gaussian_central_1sigma / 2,
-                    ]
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore", category=RuntimeWarning)
+                d = self.get(key, distribution=True, **kw)
+                lower, upper = d.pdf_percentiles(
+                    100
+                    * np.array(
+                        [
+                            0.5 - gaussian_central_1sigma / 2,
+                            0.5 + gaussian_central_1sigma / 2,
+                        ]
+                    )
                 )
-            )
-            sigma_lower, sigma_upper = mu - lower, upper - mu
-            return sigma_lower, sigma_upper
+                sigma_lower, sigma_upper = mu - lower, upper - mu
+                return sigma_lower, sigma_upper
 
     def get_uncertainty(self, key, **kw):
         """
@@ -1332,6 +1334,26 @@ class Population(Talker):
         insolation,
         relative_insolation,
         log_relative_insolation,
+        relative_cumulative_xuv_insolation,
+        teq,
+        planet_luminosity,
+        transit_depth_from_radii,
+        scaled_radius_from_radii,
+        scaled_radius,
+        transit_duration_from_orbit,
+        transit_duration,
+        mass_estimated_from_radius,
+        radius_estimated_from_mass,
+        kludge_mass,
+        kludge_radius,
+        kludge_stellar_age,
+        surface_gravity,
+        density,
+        escape_velocity,
+        orbital_velocity,
+        impact_velocity,
+        escape_parameter,
+        scale_height,
     )
 
     from .calculations.stellar import (

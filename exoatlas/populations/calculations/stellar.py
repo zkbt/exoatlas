@@ -1,6 +1,25 @@
 from ...imports import *
 
 
+def stellar_luminosity_from_table(self, distribution=False, **kw):
+    """
+    Stellar Luminosity (L*, Lsun)
+
+    Calculate the stellar luminosity from the quoted table value,
+    which for the NASA Exoplanet Archive is stored as log10(L/Lsun).
+
+    Parameters
+    ----------
+    distribution : bool
+        If False, return a simple array of values.
+        If True, return an astropy.uncertainty.Distribution,
+        which can be used for error propagation.
+    """
+    logL = self.get("stellar_logluminosity", distribution=distribution)
+    L = 10**logL * u.Lsun
+    return L
+
+
 def stellar_luminosity_from_radius_and_teff(self, distribution=False, **kw):
     """
     Stellar Luminosity (L*, Lsun)
@@ -51,6 +70,13 @@ def stellar_luminosity(self, distribution=False, **kw):
 def distance_modulus(self, distribution=False, **kw):
     """
     Distance Modulus ($\mu$, magnitudes)
+
+    Parameters
+    ----------
+    distribution : bool
+        If False, return a simple array of values.
+        If True, return an astropy.uncertainty.Distribution,
+        which can be used for error propagation.
     """
-    mu = 5 * np.log10(self.distance() / (10 * u.pc)) * u.mag
+    mu = 5 * np.log10(self.distance(distribution=distribution) / (10 * u.pc)) * u.mag
     return mu
