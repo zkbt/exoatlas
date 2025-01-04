@@ -1008,7 +1008,7 @@ class Population(Talker):
 
     def get_uncertainty(self, key, **kw):
         """
-        Return an array of symmetric uncertainties on a column.
+        Return an array of symmetric uncertainties on a quantity.
 
         This (very crudely) averages the lower and upper uncertainties
         to make a symmetric errorbar. For quantities with nearly symmetric
@@ -1020,12 +1020,40 @@ class Population(Talker):
         ----------
         key : str
             The quantity for which we want uncertaintes.
+
+        Returns
+        -------
         uncertainty : Quantity
-            The uncertainties, as an array with units.
+            The (symmetrically-averaged) uncertainties, as an array with units.
         """
 
         sigma_lower, sigma_upper = self.get_uncertainty_lowerupper(key, **kw)
         return 0.5 * (sigma_lower + sigma_upper)
+
+    def get_fractional_uncertainty(self, key, **kw):
+        """
+        Return an array of estimates of the fractional uncertainty on a quantity.
+
+        This little wrapper calculates the ratio sigma_x/x, to make it
+        easier to select subsets on the basis of something like
+        "it's been measured to better than 20% precision".
+
+        Parameters
+        ----------
+        key : str
+            The quantity for which we want fractional uncertainty.
+        **kw : dict
+            Additional keywords will be passed to the
+
+        Returns
+        -------
+        fractional_uncertainty : Quantity
+            The (symmetrically-averaged) uncertainties, as an array with units.
+        """
+        x = self.get(key, **kw)
+        sigma_x = self.get_uncertainty(key, **kw)
+        fractional_uncertainty = sigma_x / x
+        return fractional_uncertainty
 
     def _validate_columns(self):
         """
