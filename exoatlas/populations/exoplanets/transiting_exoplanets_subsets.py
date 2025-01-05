@@ -77,12 +77,12 @@ class TESS(TransitingExoplanetsSubset):
 class NonTESS(TransitingExoplanetsSubset):
     def __init__(self, **kw):
         TransitingExoplanetsSubset.__init__(
-            self, label="TESS", color="black", zorder=0, **kw
+            self, label="NonTESS", color="black", zorder=0, **kw
         )
 
     def to_include(self):
         foundbytess = (
-            self.discovery_facility() == "Transiting Exoplanet Survey Satellite (TESS)"
+            self.discovery_facility() != "Transiting Exoplanet Survey Satellite (TESS)"
         )
         return foundbytess == False
 
@@ -118,7 +118,7 @@ class Ground(TransitingExoplanetsSubset):
     def to_include(self):
         foundfromspace = np.zeros(len(self)).astype(bool)
         for x in space_telescopes:
-            foundfromspace = foundfromspace | (self.discovery_facility == x)
+            foundfromspace = foundfromspace | (self.discovery_facility() == x)
         return foundfromspace == False
 
 
@@ -149,7 +149,9 @@ class GoodMass(TransitingExoplanetsSubset):
 class BadMass(TransitingExoplanetsSubset):
     def __init__(self, sigma=sigma, **kw):
         self.maximum_uncertainty = 1 / sigma
-        TransitingExoplanetsSubset.__init__(self, label="Bad Mass", color="gray", **kw)
+        TransitingExoplanetsSubset.__init__(
+            self, label="Bad Mass", color="lightblue", **kw
+        )
 
     def to_include(self):
         return mass_is_good(self) == False

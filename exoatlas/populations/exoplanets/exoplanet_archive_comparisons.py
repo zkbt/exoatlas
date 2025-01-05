@@ -288,7 +288,6 @@ class NASAExoplanetArchiveComparison:
                 x[bad],
                 y[bad],
                 label=f"{k} (no lum/teff/radius uncertainty)",
-                color="red",
                 **kws[k],
                 **kw,
             )
@@ -297,7 +296,7 @@ class NASAExoplanetArchiveComparison:
             plt.legend(frameon=False, bbox_to_anchor=(1, 1), loc="upper left")
 
             plt.sca(ax[1])
-            plt.semilogx(x[bad], (y / x)[bad], color="red", **kws[k], **kw)
+            plt.semilogx(x[bad], (y / x)[bad], **kws[k], **kw)
             plt.axhline(1, color="gray", linestyle="--")
             plt.ylabel("L / [$4\pi R^2 \sigma T_{eff}^4$]")
 
