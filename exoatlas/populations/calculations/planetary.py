@@ -489,19 +489,20 @@ def transit_duration_from_orbit(self, distribution=False, **kw):
         If True, return an astropy.uncertainty.Distribution,
         which can be used for error propagation.
     """
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        P = self.period(distribution=distribution)
+        scaled_semimajoraxis = self.scaled_semimajoraxis(distribution=distribution)
+        b = self.transit_impact_parameter(distribution=distribution)
+        k = self.scaled_radius(distribution=distribution)
+        T0 = P / np.pi / scaled_semimajoraxis
+        T = T0 * np.sqrt((1 + k**2) - b**2)
 
-    P = self.period(distribution=distribution)
-    scaled_semimajoraxis = self.scaled_semimajoraxis(distribution=distribution)
-    b = self.transit_impact_parameter(distribution=distribution)
-    k = self.scaled_radius(distribution=distribution)
-    T0 = P / np.pi / scaled_semimajoraxis
-    T = T0 * np.sqrt((1 + k**2) - b**2)
+        e = self.eccentricity(distribution=distribution)
+        omega = self.argument_of_periastron(distribution=distribution)
+        factor = np.sqrt(1 - e**2) / (1 + e * np.sin(omega))
 
-    e = self.eccentricity(distribution=distribution)
-    omega = self.argument_of_periastron(distribution=distribution)
-    factor = np.sqrt(1 - e**2) / (1 + e * np.sin(omega))
-
-    duration = (T * factor).to(u.day)
+        duration = (T * factor).to(u.day)
 
     return duration
 

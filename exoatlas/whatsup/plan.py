@@ -96,7 +96,7 @@ class Plan(Talker):
         of confirmed transiting planets from the NASA Exoplanet Archive"""
 
         # remove planets that are impossible to see from this latitude
-        zenith = np.abs(self.population.dec - self.observatory.latitude)
+        zenith = np.abs(self.population.dec() - self.observatory.latitude)
         possible = zenith < 60.0 * u.deg
         self._speak(
             "{}/{} targets are visible from {} latitude".format(
@@ -114,7 +114,7 @@ class Plan(Talker):
         )
 
         # KLUDGE
-        bad_duration = np.isfinite(self.population.transit_duration) == False
+        bad_duration = np.isfinite(self.population.transit_duration()) == False
 
         # print('These planets have bad durations!')
         # print(self.population[bad_duration].name)
@@ -132,9 +132,9 @@ class Plan(Talker):
         pop = self.population
 
         # pull out the period and epoch of all the planets
-        P = pop.period.to("day")
-        T0 = pop.transit_midpoint.to("day")
-        coords = SkyCoord(ra=pop.ra, dec=pop.dec)
+        P = pop.period().to("day")
+        T0 = pop.transit_midpoint().to("day")
+        coords = SkyCoord(ra=pop.ra(), dec=pop.dec())
 
         # find the closest exact transit epochs
         pop.standard["closest_epoch_number"] = np.round((now - T0) / P)
