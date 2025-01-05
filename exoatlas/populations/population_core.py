@@ -994,16 +994,21 @@ class Population(Talker):
             with warnings.catch_warnings():
                 warnings.simplefilter("ignore", category=RuntimeWarning)
                 d = self.get(key, distribution=True, **kw)
-                lower, upper = d.pdf_percentiles(
-                    100
-                    * np.array(
-                        [
-                            0.5 - gaussian_central_1sigma / 2,
-                            0.5 + gaussian_central_1sigma / 2,
-                        ]
+                # calculate uncertainties from percentiles if possible...
+                if isinstance(d, Distribution):
+                    lower, upper = d.pdf_percentiles(
+                        100
+                        * np.array(
+                            [
+                                0.5 - gaussian_central_1sigma / 2,
+                                0.5 + gaussian_central_1sigma / 2,
+                            ]
+                        )
                     )
-                )
-                sigma_lower, sigma_upper = mu - lower, upper - mu
+                    sigma_lower, sigma_upper = mu - lower, upper - mu
+                # ...otherwise just force the uncertainties to zero
+                else:
+                    sigma_lower, sigma_upper = 0 * mu, 0 * mu
                 return sigma_lower, sigma_upper
 
     def get_uncertainty(self, key, **kw):
@@ -1192,7 +1197,7 @@ class Population(Talker):
         # FIXME! need to add method support for arguments
 
         # create a dictionary with the desired columns
-        d = {c: getattr(self, c) for c in desired_columns}
+        d = {c: getattr(self, c)() for c in desired_columns}
 
         # turn that into an astropy Table
         t = QTable(d)
@@ -1278,10 +1283,17 @@ class Population(Talker):
             to accept the same set of keyword.
         """
 
+        #
+        errors_indicating_missing_data = (AttributeError, KeyError)
+
         # construct a list of arrays of values
-        value_estimates = [
-            self.get(m, distribution=distribution, **kw) for m in methods
-        ]
+        value_estimates = []
+        for m in methods:
+            try:
+                this = self.get(m, distribution=distribution, **kw)
+                value_estimates.append(this)
+            except errors_indicating_missing_data:
+                pass
 
         if how_to_choose == "preference":
             # loop through options, picking the first finite value
@@ -1292,9 +1304,20 @@ class Population(Talker):
                 values[isnt_good_yet] = v[isnt_good_yet]
         elif how_to_choose == "precision":
             # calculate (symmetric) fractional uncertainties for all options
-            mu_estimates = [self.get(m, distribution=False, **kw) for m in methods]
-
-            uncertainty_estimates = [self.get_uncertainty(m, **kw) for m in methods]
+            mu_estimates = []
+            for m in methods:
+                try:
+                    this = self.get(m, distribution=False, **kw)
+                    mu_estimates.append(this)
+                except errors_indicating_missing_data:
+                    pass
+            uncertainty_estimates = []
+            for m in methods:
+                try:
+                    this = self.get_uncertainty(m, **kw)
+                    uncertainty_estimates.append(this)
+                except errors_indicating_missing_data:
+                    pass
 
             fractional_uncertainty_estimates = [
                 u / v for v, u in zip(mu_estimates, uncertainty_estimates)
@@ -1366,6 +1389,7 @@ class Population(Talker):
         teq,
         planet_luminosity,
         transit_depth_from_radii,
+        transit_depth,
         scaled_radius_from_radii,
         scaled_radius,
         transit_duration_from_orbit,
@@ -1388,4 +1412,20 @@ class Population(Talker):
         stellar_luminosity_from_radius_and_teff,
         stellar_luminosity,
         distance_modulus,
+    )
+
+    from .calculations.observability import (
+        angular_separation,
+        imaging_contrast,
+        transmission_signal,
+        emission_signal,
+        reflection_signal,
+        stellar_brightness,
+        stellar_brightness_in_telescope_units,
+        depth_uncertainty,
+        _get_noise_and_unit,
+        depth_snr,
+        emission_snr,
+        reflection_snr,
+        transmission_snr,
     )

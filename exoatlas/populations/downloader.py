@@ -35,7 +35,7 @@ class Downloader(Talker):
         self._expiration = expiration
         self.timeout = timeout
 
-    def get(self, remake=False):
+    def get_table(self, remake=False):
         """
         Get the table, downloading it from online if necessary.
         If the table is older than the downloader's threshold,

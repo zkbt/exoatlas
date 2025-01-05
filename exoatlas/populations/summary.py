@@ -66,5 +66,5 @@ def summarize_planet(planets):
     Quick tool to print out everything we need about a planet.
     """
     for p in planets:
-        for k in column_descriptions:
+        for k in all_columns:
             print(f"{k:>20} = {getattr(p, k)()}")

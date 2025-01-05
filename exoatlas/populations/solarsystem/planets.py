@@ -60,6 +60,7 @@ class SolarSystem(PredefinedPopulation):
         s["stellar_teff"] = 5780 * u.K
         s["stellar_radius"] = 1.0 * u.Rsun
         s["stellar_mass"] = 1.0 * u.Msun
+        s["stellar_luminosity"] = 1 * u.Lsun
         s["stellar_age"] = 4.57 * u.Gyr
 
         # store the period, by default, in day
@@ -90,14 +91,17 @@ class SolarSystem(PredefinedPopulation):
         add_with_uncertainty(
             "escape_velocity", "escape_velocity", u.km / u.s, u.km / u.s
         )
+        try:
+            add_with_uncertainty("eccentricity", "eccentricity")
+            add_with_uncertainty(
+                "argument_of_periastron", "argument_of_periastron", u.deg, u.deg
+            )
+            s["inclination"] = (90 - t["inclination"]) * u.deg
 
-        # store an eccentricity and longitude of periastron
-        # s["eccentricity"] = np.nan
-        # s["argument_of_periastron"] = np.nan * u.deg
-
-        # hide the stellar magnitudes
-        # s["Jmag"] = np.nan
-        # s["Vmag"] = np.nan
+        except KeyError:
+            s["eccentricity"] = np.nan
+            s["argument_of_periastron"] = np.nan * u.deg
+            s["inclination"] = 90 * u.deg
 
         # use Kepler's (actual) 3rd Law to get semimajor axis
         semimajoraxis = (s["period"].to(u.year).value) ** (2.0 / 3.0) * u.AU
@@ -119,6 +123,8 @@ class SolarSystem(PredefinedPopulation):
         # s["transit_depth"] = (s["radius"] / s["stellar_radius"]).decompose() ** 2
         # s["transit_impact_parameter"] = 0.0
         # s["inclination"] = 90 * u.deg
+
+        s
 
         self.standard = s
         return s

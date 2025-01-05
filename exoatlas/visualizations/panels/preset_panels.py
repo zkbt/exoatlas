@@ -272,9 +272,9 @@ class EmissionBrightness(DepthBrightness):
     xaxis = Emission
 
 
-class JRadius(BubblePanel):
-    xaxis = Jmag
-    yaxis = Radius
+# class JRadius(BubblePanel):
+#    xaxis = Jmag
+#    yaxis = Radius
 
 
 class PeriodRadius(BubblePanel):

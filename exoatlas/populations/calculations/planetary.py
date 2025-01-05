@@ -576,7 +576,7 @@ def radius_estimated_from_mass(self, distribution=False, **kw):
         )
 
     mass = self.get("mass", distribution=False)
-    return use_chen_and_kipping_to_estimate_mass_from_radius(M=mass)
+    return use_chen_and_kipping_to_estimate_radius_from_mass(M=mass)
 
 
 def kludge_mass(self, distribution=False, **kw):

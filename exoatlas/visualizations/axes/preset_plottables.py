@@ -170,11 +170,11 @@ class Period(PlottableAxis):
     lim = [0.15, 365]
 
 
-class Jmag(PlottableAxis):
-    source = "Jmag"
-    label = "J (magnitude)\n"
-    scale = "linear"
-    lim = [3.5, 14.5]
+# class Jmag(PlottableAxis):
+#    source = "magnitude_J"
+#    label = "J (magnitude)\n"
+#    scale = "linear"
+#    lim = [3.5, 14.5]
 
 
 class Depth(PlottableAxis):

@@ -134,5 +134,5 @@ def test_choosing():
     # this could be more informative
     e = TransitingExoplanets()[:10]
     e.semimajoraxis(visualize=True)
-    e.semimajoraxis(distribution=True, visualization=True)
+    e.semimajoraxis(distribution=True, visualize=True)
     e.semimajoraxis_uncertainty()

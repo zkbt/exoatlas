@@ -1,7 +1,7 @@
 from ...imports import *
 
 
-def stellar_luminosity_from_table(self, distribution=False, **kw):
+'''def stellar_luminosity_from_table(self, distribution=False, **kw):
     """
     Stellar Luminosity (L*, Lsun)
 
@@ -17,7 +17,7 @@ def stellar_luminosity_from_table(self, distribution=False, **kw):
     """
     logL = self.get("stellar_logluminosity", distribution=distribution)
     L = 10**logL * u.Lsun
-    return L
+    return L'''
 
 
 def stellar_luminosity_from_radius_and_teff(self, distribution=False, **kw):

@@ -58,6 +58,7 @@ def test_skew(N_data=25):
 
 
 def test_make_astropy_distribution(key="radius"):
+    e = TransitingExoplanets()
     mu = e.get_values_from_table(key)
     lower, upper = e.get_uncertainty_lowerupper_from_table(key)
     inject_kw = dict(color="gray", linewidth=5, alpha=0.2)
@@ -80,7 +81,7 @@ def test_make_astropy_distribution(key="radius"):
 
 def test_uncertainties():
     """
-    Can we pull out c
+    Can we estimate uncertainties for lots of quantities?
     """
 
     p = SolarSystem()

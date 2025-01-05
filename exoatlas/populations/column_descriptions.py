@@ -48,8 +48,9 @@ core_transit_descriptions = {
     "transit_midpoint": "a transit midpoint",
     "transit_duration": "duration of the transit",
     "transit_depth": "fraction of starlight the planet blocks",
-    "transit_scaled_semimajoraxis": "(transit-derived) scaled orbital distance a/R*",
     "transit_impact_parameter": "(transit-derived) impact parameter b",
+    "scaled_semimajoraxis": "(transit-derived) scaled orbital distance a/R*",
+    "scaled_radius": "ratio of planet radius to stellar radius",
 }
 
 derived_stellar_descriptions = {

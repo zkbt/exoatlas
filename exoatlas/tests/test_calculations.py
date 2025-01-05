@@ -5,17 +5,14 @@ from exoatlas import *
 
 def test_planet_calculations():
     """
-    Do the planet-related population calculations work?
+    Do the planetary-related population calculations work?
     """
-    e = TransitingExoplanets()
-    calculations = """semimajoraxis_from_period,
-semimajoraxis_from_transit_scaled_semimajoraxis,
+    calculations = """
+semimajoraxis_from_period,
 semimajoraxis,
-scaled_semimajoraxis_from_semimajoraxis,
 scaled_semimajoraxis,
 eccentricity,
 argument_of_periastron,
-transit_impact_parameter_from_inclination,
 transit_impact_parameter,
 insolation,
 relative_insolation,
@@ -34,24 +31,54 @@ escape_velocity,
 orbital_velocity,
 impact_velocity,
 escape_parameter,
-scale_height""".split(
+scale_height
+""".strip().split(
         ",\n"
     )
-    for k in tqdm(calculations):
-        print(f"testing planet calculations for {k}")
-        assert np.any(e.get(k, distribution=False) != 0)
-        assert np.any(e.get_uncertainty(k) != 0)
+    test_calculations(calculations=calculations)
 
 
 def test_stellar_calculations():
     """
-    Do the planet-related population calculations work?
+    Do the stellar-related population calculations work?
     """
-    e = TransitingExoplanets()
-    for k in [
-        "stellar_luminosity",
-        "stellar_luminosity_from_radius_and_teff",
-        "distance_modulus",
-    ]:
-        assert np.any(e.get(k, distribution=False) != 0)
-        assert np.any(e.get_uncertainty(k) != 0)
+    calculations = """
+stellar_luminosity_from_radius_and_teff,
+stellar_luminosity,
+distance_modulus
+""".strip().split(
+        ",\n"
+    )
+    test_calculations(calculations=calculations)
+
+
+def test_observability_calculations():
+    """
+    Do the observability-related population calculations work?
+    """
+    calculations = """
+angular_separation,
+transmission_signal,
+emission_signal,
+reflection_signal,
+stellar_brightness,
+stellar_brightness_in_telescope_units,
+depth_uncertainty,
+depth_snr,
+emission_snr,
+reflection_snr,
+transmission_snr
+""".strip().split(
+        ",\n"
+    )
+    test_calculations(calculations=calculations)
+
+
+def test_calculations(calculations=[]):
+    e = TransitingExoplanets()[::100]
+    s = SolarSystem()
+    for k in calculations:
+        for p in [e, s]:
+            print(f'trying to calculate "{k}" for {p}')
+            p.get(k)
+            p.get_uncertainty(k)

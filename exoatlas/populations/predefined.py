@@ -105,7 +105,7 @@ class PredefinedPopulation(Population):
         """
 
         #
-        self._raw = self._downloader.get(remake=remake)
+        self._raw = self._downloader.get_table(remake=remake)
 
         # return both, so they can both be turned into standardized tables
         return self._raw
