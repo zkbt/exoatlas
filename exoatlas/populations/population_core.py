@@ -150,6 +150,58 @@ class Population(Talker):
 
         self._populate_column_methods()
 
+    def _create_function_to_access_table_quantity(self, name):
+        """
+        For a given column name "x", add a `.x()` method to this Population.
+
+        This internal wrapper creates a named method to access
+        the data in a particular column of the standardized table.
+        It's a little frivolous, but this mostly makes it easier to
+        see variables via tab completion and for doing error propagation.
+        This will be called at the initial creation of the Population,
+        and whenever new columns are added via `.add_column`.
+
+        Parameters
+        ----------
+        name : str
+            The name of the column to add.
+        """
+
+        assert name in self.standard.colnames
+
+        # create the method to extract a particular column
+        def f(distribution=False, **kw):
+            return self.get_values_from_table(name, distribution=distribution)
+
+        # build a basic docstring for that method.
+        try:
+            unit = self.get_values_from_table(name).unit.to_string()
+            unit_string = f", with units of '{unit}'"
+        except AttributeError:
+            unit_string = ""
+
+        f.__doc__ = f"""
+            The table quantity '{name}'{unit_string}.
+
+            Parameters 
+            ----------
+            distribution : bool 
+                Should we try to return an astropy Distribution, 
+                for uncertainty propagation? If the table contains 
+                quoted uncertainties, a distribution will be returned; 
+                if not, a simple array will be.
+            kw : dict 
+                All other keyword arguments will be ignored.
+
+            Returns 
+            -------
+            values : array-like, or Distribution
+                The values for this table column. 
+                If `distribution==True`, these values will be as an 
+                astropy Distribution, built from the table uncertainties.
+            """
+        return f
+
     def _populate_column_methods(self):
         """
         Populate this object with one method for each table column.
@@ -164,45 +216,11 @@ class Population(Talker):
         attach a docstring to each.
         """
 
-        def create_method_from_table_quantity(name):
-            # create the method to extract a particular column
-            def f(distribution=False, **kw):
-                return self.get_values_from_table(name, distribution=distribution)
-
-            # build a basic docstring for that method.
-            try:
-                unit = self.get_values_from_table(name).unit.to_string()
-                unit_string = f", with units of '{unit}'"
-            except AttributeError:
-                unit_string = ""
-
-            f.__doc__ = f"""
-                The table quantity '{name}'{unit_string}.
-
-                Parameters 
-                ----------
-                distribution : bool 
-                    Should we try to return an astropy Distribution, 
-                    for uncertainty propagation? If the table contains 
-                    quoted uncertainties, a distribution will be returned; 
-                    if not, a simple array will be.
-                kw : dict 
-                    All other keyword arguments will be ignored.
-
-                Returns 
-                -------
-                values : array-like, or Distribution
-                    The values for this table column. 
-                    If `distribution==True`, these values will be as an 
-                    astropy Distribution, built from the table uncertainties.
-                """
-            return f
-
         # add all the basic table quantities as methods to the population
         for k in self._colnames["everything"]:
             # if no other function is defined, populate a table one
             if hasattr(self, k) == False:
-                setattr(self, k, create_method_from_table_quantity(k))
+                setattr(self, k, self._create_function_to_access_table_quantity(k))
 
     def _populate_column_summaries(self):
         """
@@ -257,6 +275,64 @@ class Population(Talker):
                 if ends_with_any_of(x, reference_suffixes)
             ]
         )
+
+    def add_column(
+        self,
+        name="",
+        data=None,
+        uncertainty=None,
+        uncertainty_lower=None,
+        uncertainty_upper=None,
+    ):
+        """
+        Add a column to the existing population.
+
+        This wrapper adds a new column of data to the `.standard` table,
+        populates columns for uncertainties if provided, and registers
+        a new method for accessing that data.
+
+        Parameters
+        ----------
+        name : str
+            The name of this column; it must be able to be a valid Python variable name.
+            If "x", we will add the column `.standard["x"]` and `.x()` as methods.
+        data : astropy.units.Quantity
+            An array of data to be added into this column. It must have the same
+            size at the population, and its entries should be ordered the same
+            as the population.
+        uncertainty : astropy.units.Quantity
+            (optional) Symmetric uncertainties associated with the column.
+            If included
+        uncertainty_lower : astropy.units.Quantity
+            (optional, along with uncertainty_upper) The magnitude of the
+            lower uncertainty, for asymmetric uncertainties.
+        uncertainty_upper : astropy.units.Quantity
+            (optional, along with uncertainty_lower) The magnitude of the
+            upper uncertainty, for asymmetric uncertainties.
+        """
+
+        # warn if overwriting an existing column
+        if name in self.standard.colnames:
+            warnings.warn(
+                f"'{name}' already exists in `.standard`; you're overwriting something!"
+            )
+
+        # put the data into the column
+        self.standard[name] = data
+
+        # add uncertainties, if provided
+        if uncertainty is not None:
+            self.standard[f"{name}_uncertainty"] = uncertainty
+        elif (uncertainty_lower is not None) and (uncertainty_upper is not None):
+            self.standard["{name}_uncertainty_lower"] = uncertainty_lower
+            self.standard["{name}_uncertainty_upper"] = uncertainty_upper
+
+        # register the method for the column
+        if hasattr(self, name):
+            warnings.warn(
+                f"'.{name}()' already exists in `.standard` for this Population; please consider a different name!"
+            )
+        setattr(self, name, self._create_function_to_access_table_quantity(name))
 
     def print_column_summary(self):
         """

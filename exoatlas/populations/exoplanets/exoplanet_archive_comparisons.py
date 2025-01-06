@@ -250,8 +250,8 @@ class NASAExoplanetArchiveComparison:
 
         plt.axis("scaled")
         plt.legend(frameon=False)
-        plt.xlabel("Planet Mass ($M_\oplus$)")
-        plt.ylabel("Planet Radius ($R_\oplus$)")
+        plt.xlabel(r"Planet Mass ($M_\oplus$)")
+        plt.ylabel(r"Planet Radius ($R_\oplus$)")
         plt.savefig(os.path.join(self.plot_directory, f"check-mass-radius.png"))
 
     def do_luminosity_check(self):
@@ -298,10 +298,10 @@ class NASAExoplanetArchiveComparison:
             plt.sca(ax[1])
             plt.semilogx(x[bad], (y / x)[bad], **kws[k], **kw)
             plt.axhline(1, color="gray", linestyle="--")
-            plt.ylabel("L / [$4\pi R^2 \sigma T_{eff}^4$]")
+            plt.ylabel(r"L / [$4\pi R^2 \sigma T_{eff}^4$]")
 
         plt.sca(ax[1])
-        plt.xlabel("$4\pi R^2 \sigma T_{eff}^4$")
+        plt.xlabel(r"$4\pi R^2 \sigma T_{eff}^4$")
         plt.savefig(
             os.path.join(self.plot_directory, f"check-luminosity-radius-teff.png")
         )
