@@ -209,7 +209,7 @@ class Panel(Talker):
         # loop over the elements in the population
         for i in range(len(self.x)):
             # pull out the positions and the name
-            x, y, name = self.x[i], self.y[i], self.pop.name[i]
+            x, y, name = self.x[i], self.y[i], self.pop.name()[i]
 
             # skip over the planets that aren't within limits
             if restrictlimits:
