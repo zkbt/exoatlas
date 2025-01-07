@@ -37,12 +37,12 @@ class BuildablePlot(Talker):
         if self.subplot is None:
             self.figure = plt.figure(figsize=figsize)
             f = plt.matplotlib.gridspec.GridSpec
+            # kwargs["figure"] = self.figure
             return f(*args, **kwargs)
         else:
             for k in ["bottom", "top", "left", "right"]:
                 if k in kwargs:
                     kwargs.pop(k)
-
             f = plt.matplotlib.gridspec.GridSpecFromSubplotSpec
             return f(*args, subplot_spec=self.subplot, **kwargs)
 

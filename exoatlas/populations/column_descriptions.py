@@ -123,7 +123,7 @@ def describe_columns():
     Describe some of the common columns you might want to
     access in an exoplanet population.
     """
-    N = max([len(x) for x in column_descriptions])
+    N = max([len(x) for x in all_descriptions])
     f = "{:>" + str(N) + "} = {}"
-    for k, v in column_descriptions.items():
+    for k, v in all_descriptions.items():
         print(f.format(k, v))

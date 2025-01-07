@@ -963,7 +963,7 @@ class Population(Talker):
             Returns
             -------
             sigma : np.array, u.Quantity
-                The magnitude of the uncertainties (x \pm -sigma)
+                The magnitude of the uncertainties, assumed to be symmetric.
             """
             return f
 
