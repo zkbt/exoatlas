@@ -60,7 +60,7 @@ def imaging_contrast(self, albedo=2 / 3, distribution=False, **kw):
     )
 
 
-def transmission_signal(self, mu=2.3, distribution=False, **kw):
+def transmission_signal(self, mu=2.3, kludge=False, distribution=False, **kw):
     """
     Transmission Transit Signal (2*H*Rp/Rs**2, unitless)
 
@@ -77,12 +77,16 @@ def transmission_signal(self, mu=2.3, distribution=False, **kw):
     mu : float
         Mean molecular weight (default 2.3 for something
         like solar composition in chemical equilibrium)
+    kludge : bool
+        Should we include kludged estimates for mass (from msini and/or
+        empirical mass-radius) and/or radius (from empircal mass-radius)
+        when doing this calculation?
     distribution : bool
         If False, return a simple array of values.
         If True, return an astropy.uncertainty.Distribution,
         which can be used for error propagation.
     """
-    H = self.scale_height(mu=mu, distribution=distribution)
+    H = self.scale_height(mu=mu, kludge=kludge, distribution=distribution)
     Rp = self.radius(distribution=distribution)
     Rs = self.stellar_radius(distribution=distribution)
     depth = (2 * H * Rp / Rs**2).decompose()
@@ -533,7 +537,9 @@ def reflection_snr(self, telescope_name="JWST", albedo=0.1, distribution=False, 
     return signal / noise
 
 
-def transmission_snr(self, telescope_name="JWST", mu=2.3, distribution=False, **kw):
+def transmission_snr(
+    self, telescope_name="JWST", mu=2.3, kludge=False, distribution=False, **kw
+):
     """
     Transmission Spectroscopy Transit Depth S/N
 
@@ -575,6 +581,10 @@ def transmission_snr(self, telescope_name="JWST", mu=2.3, distribution=False, **
     mu : float
         Mean molecular weight (default 2.3 for something
         like solar composition in chemical equilibrium)
+    kludge : bool
+        Should we include kludged estimates for mass (from msini and/or
+        empirical mass-radius) and/or radius (from empircal mass-radius)
+        when doing this calculation?
     distribution : bool
         If False, return a simple array of values.
         If True, return an astropy.uncertainty.Distribution,
@@ -584,5 +594,5 @@ def transmission_snr(self, telescope_name="JWST", mu=2.3, distribution=False, **
     noise, telescope_unit = self._get_noise_and_unit(
         telescope_name=telescope_name, distribution=distribution, **kw
     )
-    signal = self.transmission_signal(mu=mu, distribution=distribution)
+    signal = self.transmission_signal(mu=mu, kludge=kludge, distribution=distribution)
     return signal / noise

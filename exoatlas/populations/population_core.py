@@ -334,6 +334,46 @@ class Population(Talker):
             )
         setattr(self, name, self._create_function_to_access_table_quantity(name))
 
+    def add_calculation(self, name, function):
+        """
+        Add a new calculation to this population.
+
+        This wrapper adds a new method to calculate a new quantity,
+        defining a new function that can be called with access to the
+        population's internal data. Uncertainty propagation can also
+        be applied to any new calculations registered using
+        `.add_calculation`.
+
+        Parameters
+        ----------
+        name : str
+            The name of this calculation; it must be able to be a valid Python variable name.
+            If "x", we will add `.x()` as as a new method.
+        function : function
+            Python function that calculates a quantity. This function
+            should look something like:
+
+                def f(self, distribution=False, **kw):
+                    '''
+                    Brief Name for Quantity (unit)
+
+                    A more detailed description of the quantity,
+                    making the docstring for the function more
+                    readable for everyone who might use it.
+                    '''
+                    x = self.yay(distribution=distribution)
+                    y = self.wow(distribution=distribution)
+                    return x*y
+
+            where the `distribution` keywords enable uncertainty propagation.
+        """
+        if hasattr(self, name):
+            warnings.warn(
+                f"Eep! You're overwriting `.{name}()`. That might be OK, but you should be aware!"
+            )
+
+        setattr(self.__class__, name, function)
+
     def print_column_summary(self):
         """
         Print a summary of columns that come directly from the `.standard` table.

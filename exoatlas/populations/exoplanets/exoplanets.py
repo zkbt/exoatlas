@@ -428,7 +428,7 @@ class ExoplanetsPSCP(PredefinedPopulation):
             "pl_insol",
             (u.Lsun / 4 / np.pi / (1 * u.AU) ** 2).to("W/m**2"),
         )
-        populate_one_or_more_columns("teq", "pl_eqt", u.K)
+        # populate_one_or_more_columns("teq", "pl_eqt", u.K)
 
         # does it have transmission + emission spec?
         populate_one_or_more_columns(
