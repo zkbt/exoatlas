@@ -82,3 +82,32 @@ def test_calculations(calculations=[]):
             print(f'trying to calculate "{k}" for {p}')
             p.get(k)
             p.get_uncertainty(k)
+
+
+def test_add_columns():
+    s = ea.SolarSystem()
+    new_column_name = "is_inhabited"
+    new_column_data = (s.name() == "Earth") * 1
+    new_column_uncertainty = (s.name() != "Earth") * 0.01
+    s.add_column(
+        name=new_column_name, data=new_column_data, uncertainty=new_column_uncertainty
+    )
+    s.is_inhabited()
+    s.is_inhabited_uncertainty()
+
+
+def test_add_calculations():
+    s = SolarSystem()
+
+    def f(self, distribution=False):
+        """
+        Surface Area (m)
+
+        Calculate the surface area of a planet,
+        based on its radius.
+        """
+        return 4 * np.pi * self.radius(distribution=distribution)
+
+    s.add_calculation(name="surface_area", function=f)
+    s.surface_area()
+    s.surface_area_uncertainty()
