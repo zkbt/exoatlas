@@ -3,7 +3,11 @@ A simple cartoon of the Chen & Kipping (2017) forecaster model,
 using the values quoted in their Table 2.
 """
 
-__all__ = ["estimate_radius", "estimate_mass", "plot_chen"]
+__all__ = [
+    "use_chen_and_kipping_to_estimate_radius_from_mass",
+    "use_chen_and_kipping_to_estimate_mass_from_radius",
+    "plot_chen",
+]
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -12,7 +16,7 @@ from astropy.units import Rearth, Mearth, Rjupiter, Mjupiter, Rsun, Msun
 # using log polynomials from https://exoplanetarchive.ipac.caltech.edu/docs/pscp_calc.html
 
 
-def estimate_radius(M):
+def use_chen_and_kipping_to_estimate_radius_from_mass(M):
     """
     Estimate the radii, given an array of masses.
 
@@ -66,7 +70,7 @@ def estimate_radius(M):
     return 10 ** logR.reshape(original_shape) * Rearth
 
 
-def estimate_mass(R):
+def use_chen_and_kipping_to_estimate_mass_from_radius(R):
     """
     Estimate the mass, given an array of raii.
 
@@ -116,11 +120,11 @@ def plot_chen(independent="mass", **kw):
 
     if independent[0].lower() == "m":
         M = np.logspace(-1, 5, 1000) * Mearth
-        R = estimate_radius(M)
+        R = use_chen_and_kipping_to_estimate_radius_from_mass(M)
         plt.loglog(M, R, **kw)
     elif independent[0].lower() == "r":
         R = np.logspace(-1, 5, 1000) * Rearth
-        M = estimate_mass(R)
+        M = use_chen_and_kipping_to_estimate_mass_from_radius(R)
         plt.loglog(M, R, **kw)
 
 
@@ -129,5 +133,5 @@ def plot_chen(independent="mass", **kw):
     # MODIFIES POPULATION IN PLACE!
     population.standard.loc
     mass_is_bad = np.isfinite(population.mass) == False
-    population.mass[mass_is_bad] = estimate_mass(population.radius[mass_is_bad])
+    population.mass[mass_is_bad] = use_chen_and_kipping_to_estimate_mass_from_radius(population.radius[mass_is_bad])
 """

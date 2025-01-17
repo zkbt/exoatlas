@@ -18,7 +18,7 @@ class SolarSystemMoons(PredefinedPopulation):
     label = "Solar System Moons"
 
     # the data in the table probably don't need to be updated
-    expiration = np.inf * u.day
+    _expiration = np.inf * u.day
 
     def __init__(self, **kwargs):
         """
@@ -32,7 +32,7 @@ class SolarSystemMoons(PredefinedPopulation):
         self.exact = True
         self.marker = "s"
 
-    def download_raw_data(self, **kw):
+    def _download_raw_data(self, **kw):
         """
         Load the raw table of data for the Solar System.
         """
@@ -46,11 +46,9 @@ class SolarSystemMoons(PredefinedPopulation):
         # a table of unstandardized planet properties
         return raw
 
-    def create_standardardized(self, raw):
+    def _create_standardized(self, raw):
         """
         Create a standardized table of planet properties.
-        It must at least contain the columns in
-        `attribute_columns`.
         """
 
         # start from the raw trimmed table

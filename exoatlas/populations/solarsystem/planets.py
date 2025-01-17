@@ -12,7 +12,7 @@ class SolarSystem(PredefinedPopulation):
 
     label = "Solar System"
     # the data in the table probably don't need to be updated
-    expiration = np.inf * u.day
+    _expiration = np.inf * u.day
 
     def __init__(self, **kwargs):
         """
@@ -26,7 +26,7 @@ class SolarSystem(PredefinedPopulation):
         self.exact = True
         self.marker = "s"
 
-    def download_raw_data(self, **kw):
+    def _download_raw_data(self, **kw):
         """
         Load the raw table of data for the Solar System.
         """
@@ -43,11 +43,9 @@ class SolarSystem(PredefinedPopulation):
         # a table of unstandardized planet properties
         return raw
 
-    def create_standardardized(self, trimmed):
+    def _create_standardized(self, trimmed):
         """
         Create a standardized table of planet properties.
-        It must at least contain the columns in
-        `attribute_columns`.
         """
 
         # start from the trimmed table
@@ -62,6 +60,7 @@ class SolarSystem(PredefinedPopulation):
         s["stellar_teff"] = 5780 * u.K
         s["stellar_radius"] = 1.0 * u.Rsun
         s["stellar_mass"] = 1.0 * u.Msun
+        s["stellar_luminosity"] = 1 * u.Lsun
         s["stellar_age"] = 4.57 * u.Gyr
 
         # store the period, by default, in day
@@ -92,22 +91,25 @@ class SolarSystem(PredefinedPopulation):
         add_with_uncertainty(
             "escape_velocity", "escape_velocity", u.km / u.s, u.km / u.s
         )
+        try:
+            add_with_uncertainty("eccentricity", "eccentricity")
+            add_with_uncertainty(
+                "argument_of_periastron", "argument_of_periastron", u.deg, u.deg
+            )
+            s["inclination"] = (90 - t["inclination"]) * u.deg
 
-        # store an eccentricity and longitude of periastron
-        # s["eccentricity"] = np.nan
-        # s["omega"] = np.nan * u.deg
-
-        # hide the stellar magnitudes
-        # s["Jmag"] = np.nan
-        # s["Vmag"] = np.nan
+        except KeyError:
+            s["eccentricity"] = np.nan
+            s["argument_of_periastron"] = np.nan * u.deg
+            s["inclination"] = 90 * u.deg
 
         # use Kepler's (actual) 3rd Law to get semimajor axis
-        semimajor_axis = (s["period"].to(u.year).value) ** (2.0 / 3.0) * u.AU
-        s["semimajoraxis"] = semimajor_axis
-        # s["transit_ar"] = (semimajor_axis / u.Rsun).decompose().value
+        semimajoraxis = (s["period"].to(u.year).value) ** (2.0 / 3.0) * u.AU
+        s["semimajoraxis"] = semimajoraxis
+        # s["transit_scaled_semimajoraxis"] = (semimajoraxis / u.Rsun).decompose().value
 
         # equilibrium temperature assuming uniform redistribution + 0 albedo
-        # s["teq"] = s["stellar_teff"] * (0.25 * 1.0 / s["transit_ar"] ** 2) ** 0.25
+        # s["teq"] = s["stellar_teff"] * (0.25 * 1.0 / s["transit_scaled_semimajoraxis"] ** 2) ** 0.25
 
         # some other planet parameters we might not need for the solar system
         # s["rv_semiamplitude"] = np.nan * u.m / u.s
@@ -119,8 +121,10 @@ class SolarSystem(PredefinedPopulation):
         # s["transit_midpoint"] = np.nan * u.day
         # s["transit_duration"] = np.nan * u.day
         # s["transit_depth"] = (s["radius"] / s["stellar_radius"]).decompose() ** 2
-        # s["transit_b"] = 0.0
+        # s["transit_impact_parameter"] = 0.0
         # s["inclination"] = 90 * u.deg
+
+        s
 
         self.standard = s
         return s

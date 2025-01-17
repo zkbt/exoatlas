@@ -33,7 +33,7 @@ class SBDBDownloader(Downloader):
         Download a brand new table from the JPL/SBDB Query API.
         """
 
-        self.speak(
+        self._speak(
             f"""
         Attempting to freshly download data from
         {self.base}
@@ -60,7 +60,7 @@ class SBDBDownloader(Downloader):
             self.base, params=self._parameters, timeout=self.timeout.to_value("second")
         )
         self.url = self._downloaded.url
-        self.speak("Download successful. Processing into a table.")
+        self._speak("Download successful. Processing into a table.")
 
         # process into an astropy Table
         d = json.loads(self._downloaded.text)
@@ -79,7 +79,7 @@ class SBDBDownloader(Downloader):
         self.table.meta["minimum_diameter"] = self.minimum_diameter
         self.table.write(self.path, overwrite=True)
 
-        self.speak(f"Download successful! Saved file to {self.path}")
+        self._speak(f"Download successful! Saved file to {self.path}")
 
     @property
     def path(self):

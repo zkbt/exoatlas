@@ -3,7 +3,7 @@ Tools to summarize a particular population.
 """
 
 from ..imports import *
-from .population_core import attribute_columns, method_columns
+from .column_descriptions import *
 
 __all__ = ["plot_histograms", "summarize_planet"]
 
@@ -11,7 +11,7 @@ __all__ = ["plot_histograms", "summarize_planet"]
 def split_cols(pop):
     # find the columns that aren't strings
     quant, qual = [], []
-    for x in attribute_columns:
+    for x in pop.standard.colnames:
         try:
             pop.standard[x][0] + "a"
             qual.append(x)
@@ -66,9 +66,5 @@ def summarize_planet(planets):
     Quick tool to print out everything we need about a planet.
     """
     for p in planets:
-        for k in attribute_columns:
-            print(f"{k:>20} = {getattr(p, k)}")
-
-        for k in method_columns:
+        for k in all_columns:
             print(f"{k:>20} = {getattr(p, k)()}")
-        print()

@@ -9,6 +9,10 @@ __all__ = ["TransitingExoplanets"]
 
 
 class TransitingExoplanets(Exoplanets):
+    """
+    Transiting Exoplanets from the NASA Exoplanet Archive.
+    """
+
     def __init__(self, **kw):
         Exoplanets.__init__(self, **kw)
 
@@ -17,9 +21,9 @@ class TransitingExoplanets(Exoplanets):
             self.label = "Transiting Exoplanets"
 
         # tidy up this population
-        self.remove_nontransiting()
+        self._remove_nontransiting()
 
-    def remove_nontransiting(self):
+    def _remove_nontransiting(self):
         """
         Remove non-transiting planets from the population.
 
@@ -27,5 +31,6 @@ class TransitingExoplanets(Exoplanets):
         -------
         (modifies the input population in place, but returns nothing)
         """
-        ok = self.detected_in_transit == 1
+        ok = self.detected_in_transit() == 1
+
         self.standard = self.standard[ok]

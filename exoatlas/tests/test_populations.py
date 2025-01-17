@@ -9,9 +9,10 @@ def test_population():
     Can we make a population from scratch from a table?
     """
 
-    fake = QTable({x: [0] * 3 for x in attribute_columns}, masked=True)
+    fake = QTable({x: [0] * 3 for x in core_descriptions}, masked=True)
     p = Population(standard=fake, label="fake")
-    p.validate_columns()
+    p._validate_columns()
+    p.print_column_summary()
 
 
 def test_solarsystem():
@@ -24,7 +25,7 @@ def test_solarsystem():
         SolarSystemMoons,
         SolarSystemMinorPlanets,
     ]:
-        p().validate_columns()
+        p()._validate_columns()
 
 
 def test_exoplanets():
@@ -33,14 +34,14 @@ def test_exoplanets():
     """
     p = Exoplanets(remake=False)
     p.load_individual_references()
-    p.validate_columns()
+    p._validate_columns()
 
     # check that the background reference population for Exoplanets filters too
     f = p[:10]
-    for x in f.hostname:
-        assert x in f.individual_references.hostname
-    for x in f.individual_references.hostname:
-        assert x in f.hostname
+    for x in f.hostname():
+        assert x in f.individual_references.hostname()
+    for x in f.individual_references.hostname():
+        assert x in f.hostname()
 
 
 def test_transitingexoplanets():
@@ -48,7 +49,7 @@ def test_transitingexoplanets():
     Can we make a population of confirmed transiting exoplanets?
     """
     p = TransitingExoplanets(remake=False)
-    p.validate_columns()
+    p._validate_columns()
 
 
 def test_subsets():
@@ -57,7 +58,7 @@ def test_subsets():
     """
     for x in [Kepler, NonKepler, TESS, NonTESS, Space, Ground, GoodMass, BadMass]:
         p = x(remake=False)
-        p.validate_columns()
+        p._validate_columns()
 
     with pytest.raises(NotImplementedError):
         q = TransitingExoplanetsSubset()
@@ -73,17 +74,17 @@ def test_indexing():
     b = p[5]
     c = p[0:10]
     with np.errstate(invalid="ignore"):
-        d = p[p.stellar_radius < 1.0 * u.Rsun]
+        d = p[p.stellar_radius() < 1.0 * u.Rsun]
     e = p["GJ 1214b"]
     f = p[["GJ 1214b", "LHS 1140b", "GJ 1132b"]]
-    g = p[p.discovery_facility == "Kepler"]
+    g = p[p.discovery_facility() == "Kepler"]
     h = p["TRAPPIST-1b"]
     i = p["TRAPPIST-1"]
     j = e + h
     k = f - e
     l = p.create_subset_by_name("GJ1214b")
     m = p.create_subset_by_hostname("GJ1214")
-    coordinates = SkyCoord(e.ra, e.dec)
+    coordinates = SkyCoord(e.ra(), e.dec())
     n = p.create_subset_by_position(coordinates)
 
 
@@ -104,9 +105,9 @@ def test_attributes():
 
     print(p.color)
     p.alpha = 0.5
-    assert p.plotkw["alpha"] == 0.5
+    assert p._plotkw["alpha"] == 0.5
 
-    for k in attribute_columns:
+    for k in basic_columns:
         getattr(p, k)
 
 
@@ -127,3 +128,11 @@ def test_transiting(planet="GJ1214b"):
 
     p.reflection_signal(albedo=0.5)
     p.reflection_snr(albedo=0.5, wavelength=5 * u.micron, telescope_name="JWST")
+
+
+"""def test_choosing():
+    # this could be more informative
+    e = TransitingExoplanets()[:10]
+    e.semimajoraxis(visualize=True)
+    e.semimajoraxis(distribution=True, visualize=True)
+    e.semimajoraxis_uncertainty()"""

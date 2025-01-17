@@ -174,7 +174,7 @@ class ThumbtackPlot(BubblePanel):
                 for thiskey in keys:
                     self.namestars(thiskey)
                 plt.draw()
-                plt.savefig(self.fileprefix(key))
+                plt.savefig(self._fileprefix(key))
         return self
 
     def movie(
@@ -222,7 +222,7 @@ class ThumbtackPlot(BubblePanel):
 
         f = plt.gcf()
         filename = "{}_{}{}.mp4".format(fileprefix, "+".join(keys), highlight)
-        self.speak("writing movie to {0}".format(filename))
+        self._speak("writing movie to {0}".format(filename))
         z = 2.0
 
         with self.writer.saving(f, filename, 1024.0 / figsize):
@@ -238,10 +238,10 @@ class ThumbtackPlot(BubblePanel):
                 #                        self.namestars('kepler')
 
                 self.writer.grab_frame()
-                self.speak("zoomed to {0}".format(z))
+                self._speak("zoomed to {0}".format(z))
                 z *= step
                 # plt.draw()
-            # plt.savefig(self.fileprefix(key))
+            # plt.savefig(self._fileprefix(key))
 
     def zoom(self, distance):
         self.outer = distance
@@ -293,7 +293,7 @@ class ThumbtackPlot(BubblePanel):
                 tolabel = (nottooclose * onplot).nonzero()[0]
             else:
                 tolabel = (nottooclose * onplot * nottoofar).nonzero()[0]
-            # tolabel = self.pop.find('WASP94Ab')
+            # tolabel = self.pop._find_index('WASP94Ab')
             if np.size(tolabel) > 1:
                 tolabel = tolabel[np.unique(self.x[tolabel], return_index=True)[1]]
 
@@ -384,7 +384,7 @@ class ThumbtackPlot(BubblePanel):
         kw["zorder"] = 20000
         handle = self.ax.scatter(self.x[indices], self.y[indices], **kw)
         # self.highlightleg = plt.legend(label, fontsize=10, framealpha=0, markerscale=1.5)
-        self.speak("highlighting {0} points".format(len(self.x[indices])))
+        self._speak("highlighting {0} points".format(len(self.x[indices])))
         t = self.pop.teq[indices]
         r = self.pop.radius[indices]
         # kic = self.pop.standard['kepid'][indices]

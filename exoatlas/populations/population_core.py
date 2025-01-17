@@ -1,74 +1,10 @@
 # general class for exoplanet populations
 from ..imports import *
-from ..telescopes import *
-from ..models import *
 
-import string
-
-basic_columns = ["name", "hostname", "ra", "dec", "distance"]
-
-transit_columns = [
-    "period",
-    "semimajoraxis",
-    "eccentricity",
-    "omega",
-    "inclination",
-    "transit_midpoint",
-    "transit_duration",
-    "transit_depth",
-    "stellar_teff",
-    "stellar_mass",
-    "stellar_radius",
-    "radius",
-    "mass",
-    "transit_ar",
-    "transit_b",
-]
-
-calculated_columns = [
-    "a_over_rs",
-    "b",
-    "insolation",
-    "relative_insolation",
-    "log_relative_insolation",
-    "teq",
-    "planet_luminosity",
-    "density",
-    "surface_gravity",
-    "distance_modulus",
-    "escape_velocity",
-    "escape_parameter",
-    "angular_separation",
-    "imaging_contrast",
-    "stellar_luminosity",
-]
-
-
-table_columns = basic_columns + transit_columns
-attribute_columns = table_columns + calculated_columns
-
-
-method_columns = [
-    "scale_height",
-    "transmission_signal",
-    "transmission_snr",
-    "emission_signal",
-    "emission_snr",
-    "reflection_signal",
-    "reflection_snr",
-    "stellar_brightness",
-    "stellar_brightness_in_telescope_units",
-    "depth_uncertainty",
-]
-
-desired_columns = [
-    "mass_uncertainty_upper",
-    "mass_uncertainty_lower",
-    "radius_uncertainty_upper",
-    "radius_uncertainty_lower",
-    "distance_uncertainty_upper",
-    "distance_uncertainty_lower",
-]
+# from ..telescopes import *
+# from ..models import *
+from .column_descriptions import *
+from .pineda_skew import make_skew_samples_from_lowerupper, gaussian_central_1sigma
 
 # these are keywords that can be set for a population
 default_plotkw = dict(
@@ -100,6 +36,41 @@ allowed_plotkw += [
 ]
 
 
+def _clean_column(raw_column):
+    """
+    Convert a Column into an array disconnected from its original Table.
+
+    Parameters
+    ----------
+    raw_column : astropy.table.column.Column
+        The column to clean.
+
+    Returns
+    -------
+    cleaned_column : array, Quantity, Time, SkyCoord, ...
+        The data as an array-like object, without
+        connection to its original table.
+    """
+    # strip the connection to the table column
+    if isinstance(raw_column, Column):
+        cleaned_column = np.array(raw_column)
+    else:
+        cleaned_column = type(raw_column)(raw_column)
+        # This is equivalent to
+        #
+        # if isinstance(raw_column, u.Quantity):
+        #   cleaned_column = u.Quantity(raw_column)
+        #
+        # I'm not 100% sure why this is necessary, but
+        # in some tests it seems a QTable will return a
+        # Quantity or SkyCoord or Time object, but still
+        # with some sort of connection to being a Column
+        # from a Table (and therefore potentially some
+        # sneaky link that we want to erase). Re-initializing
+        # an object seems to erase that connection.
+    return cleaned_column
+
+
 class Population(Talker):
     """
     Populations of astronomical objects might contain
@@ -108,9 +79,6 @@ class Population(Talker):
         Stars (single or multiples),
     or more!
     """
-
-    # kludge?
-    _pithy = True
 
     def __init__(self, standard, label=None, **plotkw):
         """
@@ -147,13 +115,13 @@ class Population(Talker):
             self.label = label
 
             # keywords to use for plotting
-            self.plotkw = plotkw
+            self._plotkw = plotkw
 
         elif isinstance(standard, str):
             filename = standard
             self.standard = QTable(ascii.read(filename))
             self.label = self.standard.meta["label"]
-            self.plotkw = self.standard.meta["plotkw"]
+            self._plotkw = self.standard.meta["plotkw"]
 
         # define some cleaned names and hostnames, for indexing
         try:
@@ -162,7 +130,6 @@ class Population(Talker):
             self.standard["tidyname"] = [
                 clean(x).lower() for x in self.standard["name"]
             ]
-
         try:
             self.standard["tidyhostname"]
         except KeyError:
@@ -175,36 +142,290 @@ class Population(Talker):
         self._make_sure_index_exists("tidyhostname")
 
         # test that indexing still works
-        name = self.tidyname[0]
+        name = self.standard["tidyname"][0]
         self.standard.loc[name]
+
+        # define internal lists of column names
+        self._populate_column_summaries()
+
+        self._populate_column_methods()
+
+    def _create_function_to_access_table_quantity(self, name):
+        """
+        For a given column name "x", add a `.x()` method to this Population.
+
+        This internal wrapper creates a named method to access
+        the data in a particular column of the standardized table.
+        It's a little frivolous, but this mostly makes it easier to
+        see variables via tab completion and for doing error propagation.
+        This will be called at the initial creation of the Population,
+        and whenever new columns are added via `.add_column`.
+
+        Parameters
+        ----------
+        name : str
+            The name of the column to add.
+        """
+
+        assert name in self.standard.colnames
+
+        # create the method to extract a particular column
+        def f(distribution=False, **kw):
+            return self.get_values_from_table(name, distribution=distribution)
+
+        # build a basic docstring for that method.
+        try:
+            unit = self.get_values_from_table(name).unit.to_string()
+            unit_string = f", with units of '{unit}'"
+        except AttributeError:
+            unit_string = ""
+
+        f.__doc__ = f"""
+            The table quantity '{name}'{unit_string}.
+
+            Parameters 
+            ----------
+            distribution : bool 
+                Should we try to return an astropy Distribution, 
+                for uncertainty propagation? If the table contains 
+                quoted uncertainties, a distribution will be returned; 
+                if not, a simple array will be.
+            kw : dict 
+                All other keyword arguments will be ignored.
+
+            Returns 
+            -------
+            values : array-like, or Distribution
+                The values for this table column. 
+                If `distribution==True`, these values will be as an 
+                astropy Distribution, built from the table uncertainties.
+            """
+        return f
+
+    def _populate_column_methods(self):
+        """
+        Populate this object with one method for each table column.
+
+        This wrapper converts table columns from the internal .standard
+        table into callable methods, so that (for example), the data
+        in `self.standard['radius']` can be retrieved as `self.radius()`.
+        This is necessary for seamlesssly integrating core table quantities
+        with derived quantities (some of which must be callable because
+        they require keyword arguments), for making them appear as hints
+        with tab-completion in ipython/jupyter, and for being able to
+        attach a docstring to each.
+        """
+
+        # add all the basic table quantities as methods to the population
+        for k in self._colnames["everything"]:
+            # if no other function is defined, populate a table one
+            if hasattr(self, k) == False:
+                setattr(self, k, self._create_function_to_access_table_quantity(k))
+
+    def _populate_column_summaries(self):
+        """
+        Populate a dictionary summarizing the types of columns in `.standard`.
+        """
+        uncertainty_suffixes = [
+            "_uncertainty_lower",
+            "_uncertainty_upper",
+            "_uncertainty",
+        ]
+        limit_suffixes = ["_lower_limit", "_upper_limit"]
+        reference_suffixes = ["_reference"]
+        all_suffixes = uncertainty_suffixes + limit_suffixes + reference_suffixes
+
+        def ends_with_any_of(s, suffixes):
+            return np.any([s.endswith(suffix) for suffix in suffixes])
+
+        def remove_suffixes(s):
+            for suffix in all_suffixes:
+                s = s.split(suffix)[0]
+            return s
+
+        self._colnames = {}
+        self._colnames["everything"] = np.unique(
+            [remove_suffixes(x) for x in self.standard.colnames]
+        )
+        self._colnames["with uncertainties"] = np.unique(
+            [
+                remove_suffixes(x)
+                for x in self.standard.colnames
+                if ends_with_any_of(x, uncertainty_suffixes)
+            ]
+        )
+        self._colnames["without uncertainties"] = np.unique(
+            [
+                x
+                for x in self._colnames["everything"]
+                if x not in self._colnames["with uncertainties"]
+            ]
+        )
+        # self._colnames["with limits"] = np.unique(
+        #    [
+        #        remove_suffixes(x)
+        #        for x in self.standard.colnames
+        #        if ends_with_any_of(x, limit_suffixes)
+        #    ]
+        # )
+        self._colnames["with references"] = np.unique(
+            [
+                remove_suffixes(x)
+                for x in self.standard.colnames
+                if ends_with_any_of(x, reference_suffixes)
+            ]
+        )
+
+    def add_column(
+        self,
+        name="",
+        data=None,
+        uncertainty=None,
+        uncertainty_lower=None,
+        uncertainty_upper=None,
+    ):
+        """
+        Add a column to the existing population.
+
+        This wrapper adds a new column of data to the `.standard` table,
+        populates columns for uncertainties if provided, and registers
+        a new method for accessing that data.
+
+        Parameters
+        ----------
+        name : str
+            The name of this column; it must be able to be a valid Python variable name.
+            If "x", we will add the column `.standard["x"]` and `.x()` as methods.
+        data : astropy.units.Quantity
+            An array of data to be added into this column. It must have the same
+            size at the population, and its entries should be ordered the same
+            as the population.
+        uncertainty : astropy.units.Quantity
+            (optional) Symmetric uncertainties associated with the column.
+            If included
+        uncertainty_lower : astropy.units.Quantity
+            (optional, along with uncertainty_upper) The magnitude of the
+            lower uncertainty, for asymmetric uncertainties.
+        uncertainty_upper : astropy.units.Quantity
+            (optional, along with uncertainty_lower) The magnitude of the
+            upper uncertainty, for asymmetric uncertainties.
+        """
+
+        # warn if overwriting an existing column
+        if name in self.standard.colnames:
+            warnings.warn(
+                f"'{name}' already exists in `.standard`; you're overwriting something!"
+            )
+
+        # put the data into the column
+        self.standard[name] = data
+
+        # add uncertainties, if provided
+        if uncertainty is not None:
+            self.standard[f"{name}_uncertainty"] = uncertainty
+        elif (uncertainty_lower is not None) and (uncertainty_upper is not None):
+            self.standard["{name}_uncertainty_lower"] = uncertainty_lower
+            self.standard["{name}_uncertainty_upper"] = uncertainty_upper
+
+        # register the method for the column
+        if hasattr(self, name):
+            warnings.warn(
+                f"'.{name}()' already exists in `.standard` for this Population; please consider a different name!"
+            )
+        setattr(self, name, self._create_function_to_access_table_quantity(name))
+
+    def add_calculation(self, name, function):
+        """
+        Add a new calculation to this population.
+
+        This wrapper adds a new method to calculate a new quantity,
+        defining a new function that can be called with access to the
+        population's internal data. Uncertainty propagation can also
+        be applied to any new calculations registered using
+        `.add_calculation`.
+
+        Parameters
+        ----------
+        name : str
+            The name of this calculation; it must be able to be a valid Python variable name.
+            If "x", we will add `.x()` as as a new method.
+        function : function
+            Python function that calculates a quantity. This function
+            should look something like:
+
+                def f(self, distribution=False, **kw):
+                    '''
+                    Brief Name for Quantity (unit)
+
+                    A more detailed description of the quantity,
+                    making the docstring for the function more
+                    readable for everyone who might use it.
+                    '''
+                    x = self.yay(distribution=distribution)
+                    y = self.wow(distribution=distribution)
+                    return x*y
+
+            where the `distribution` keywords enable uncertainty propagation.
+        """
+        if hasattr(self, name):
+            warnings.warn(
+                f"Eep! You're overwriting `.{name}()`. That might be OK, but you should be aware!"
+            )
+
+        setattr(self.__class__, name, function)
+
+    def print_column_summary(self):
+        """
+        Print a summary of columns that come directly from the `.standard` table.
+        """
+        print(f"The following columns are present in the internal `.standard` table:\n")
+        for k in self._colnames:
+            print(f"{k} =\n{self._colnames[k]}\n")
 
     def _list_table_indices(self):
         """
         Return a list of keys being used as table indices.
+
+        Core populations should likely have just ['tidyname', 'tidyhostname']
+        but internal `.individual_references` populations could have lots,
+        one for each quantity with an reference that might be chosen.
+
+        Returns
+        -------
+        index_keys : list
+            The list of keys that are being used as an index.
         """
         return [x.columns[0].name for x in self.standard.indices]
 
     def _make_sure_index_exists(self, k):
         """
-        Add a key as an index, but don't add it twice.
+        Add a new key as an index, but don't add it twice.
+
+        Parameters
+        ----------
+        k : str
+            The new key to add.
         """
         if k not in self._list_table_indices():
             self.standard.add_index(k)
 
     @property
-    def fileprefix(self):
+    def _fileprefix(self):
         """
         Define a fileprefix for this population, to be used
         for setting the filename of the standardized population.
+
+        Return
+        ------
         """
         return clean(self.label)
 
     @property
-    def standardized_data_path(self):
+    def _standardized_data_path(self):
         """
         Define the filepath for the standardized table.
         """
-        return os.path.join(directories["data"], f"standardized-{self.fileprefix}.txt")
+        return os.path.join(directories["data"], f"standardized-{self._fileprefix}.txt")
 
     def save(self, filename=None, overwrite=True):
         """
@@ -219,7 +440,7 @@ class Population(Talker):
         filename : str
             The filepath to which the population should be saved.
         overwrite : bool
-            Whether
+            Whether to automatically overwrite existing populations.
 
         Examples
         --------
@@ -231,7 +452,7 @@ class Population(Talker):
 
         # be a little fussy about overwriting automatic filenames
         if filename == None:
-            filename = f"exoatlas-population-{self.label}.ecsv"
+            filename = f"exoatlas-population-{self._fileprefix}.ecsv"
             overwrite = False
             if os.path.exists(filename):
                 warnings.warn(
@@ -241,7 +462,7 @@ class Population(Talker):
                 # save the table as an ascii table for humans to read
         to_save = copy.deepcopy(self.standard)
         to_save.meta["label"] = self.label
-        to_save.meta["plotkw"] = self.plotkw
+        to_save.meta["plotkw"] = self._plotkw
 
         to_save.write(filename, format="ascii.ecsv", overwrite=overwrite)
         print(
@@ -257,6 +478,7 @@ class Population(Talker):
 
         This sorts the population in place, meaning that the
         Population object from which it is called will be modified.
+        Nothing will be returned.
 
         Parameters
         ----------
@@ -264,7 +486,7 @@ class Population(Talker):
             The key by which to sort the table.
         reverse : bool
             Whether to reverse the sort order.
-                `reverse = False` means low to high
+                `reverse == False` means low to high
                 `reverse == True` means high to low
         """
 
@@ -315,7 +537,7 @@ class Population(Talker):
         # create and return the new population
         return type(self)(standard=table, label=label)
 
-    def remove_by_key(self, other, key="tidyname"):
+    def _remove_by_key(self, other, key="tidyname"):
         """
         Create a new population by removing some rows from here:
 
@@ -365,7 +587,7 @@ class Population(Talker):
             A subset of `this` population, where some rows
             have been removed.
         """
-        return self.remove_by_key(other)
+        return self._remove_by_key(other)
 
     def __getitem__(self, key):
         """
@@ -388,7 +610,9 @@ class Population(Talker):
                 label = None
             else:
                 label = f"Subset of {self.label}"
-            subset = type(self)(standard=self.standard[key], label=label, **self.plotkw)
+            subset = type(self)(
+                standard=self.standard[key], label=label, **self._plotkw
+            )
 
             # if the key is a column, raise an error
             if type(key) in self.standard.colnames:
@@ -454,7 +678,7 @@ class Population(Talker):
             label = "+".join(key)
 
         # create that new sub-population
-        return type(self)(standard=subset, label=label, **self.plotkw)
+        return type(self)(standard=subset, label=label, **self._plotkw)
 
     def create_subset_by_hostname(self, key):
         """
@@ -496,7 +720,7 @@ class Population(Talker):
             label = "+".join(key)
 
         # create that new sub-population
-        return type(self)(standard=subset, label=label, **self.plotkw)
+        return type(self)(standard=subset, label=label, **self._plotkw)
 
     def create_subset_by_position(
         self,
@@ -508,7 +732,7 @@ class Population(Talker):
         """
         Extract a subset of this population,
         by performing a spatial cross-match by
-        RA and Dec. This will return all plannets
+        RA and Dec. This will return all planets
         from this population that fall within
         the specified radius of at least one of
         the specified coordinates.
@@ -549,7 +773,7 @@ class Population(Talker):
             raise NotImplementedError("No cross-matching with proper motions yet :-(")
 
         # create astropy coordinates for this population
-        population_coords = SkyCoord(ra=self.ra, dec=self.dec)
+        population_coords = SkyCoord(ra=self.ra(), dec=self.dec())
 
         # do a spatial cross match on the sky
         #  (idx gives the index into coordinates,
@@ -568,7 +792,7 @@ class Population(Talker):
         label = f"Spatial Cross-Match ({len(coordinates)} positions, {radius} radius)"
 
         # create that new sub-population
-        new_population = type(self)(standard=subset, label=label, **self.plotkw)
+        new_population = type(self)(standard=subset, label=label, **self._plotkw)
 
         # choose what to return
         if return_indices:
@@ -577,42 +801,225 @@ class Population(Talker):
         else:
             return new_population
 
+    def get_uncertainty_lowerupper_from_table(self, key):
+        """
+        Return two arrays of lower and upper uncertainties, direct from table.
+
+        If no uncertainties of any kind are found, a KeyError should be raised.
+
+        Parameters
+        ----------
+        key : str
+            The quantity for which we want lower + upper uncertaintes.
+
+        Returns
+        -------
+        lower : np.array, u.Quantity
+            The magnitude of the lower uncertainties (x_{-lower}^{+upper})
+        upper : np.array, u.Quantity
+            The magnitude of the upper uncertainties (x_{-lower}^{+upper})
+        """
+
+        # first try for asymmetric table uncertainties
+        try:
+            lower = _clean_column(self.standard[f"{key}_uncertainty_lower"])
+            upper = _clean_column(self.standard[f"{key}_uncertainty_upper"])
+            return np.abs(lower), np.abs(upper)
+        except KeyError:
+            # next try for symmetric table uncertainties
+            sym = _clean_column(self.standard[f"{key}_uncertainty"])
+            return np.abs(sym), np.abs(sym)
+
+        # then give up and return zeroes
+        # unc = 0 * _clean_column(self.standard[key])
+        # return unc, unc
+
+    def get_values_from_table(self, key, distribution=False):
+        """
+        Retrieve values directly from the standardized table.
+
+        This wrapper extracts values from the internal `.standard`
+        table without performing any calculations or filtering.
+        Some quantities might have explicit methods that override
+        direct retrieval from the table, but this provides direct
+        access to the table values no matter what.
+
+        Parameters
+        ----------
+        key : str
+            The quantity to extract. This must exactly match a
+            column in `.standard`; if not, `KeyError` will be raised.
+        distribution : bool
+            Should it be returned as an astropy distribution,
+            for uncertainty propagation?
+
+        Returns
+        -------
+        values : array, astropy.units.Quantity, astropy.uncertainty.Distribution
+            The requested table column.
+                If it has units, it will be an astropy Quantity.
+                If it has no units, it will be an astropy array.
+                If `distribution` is True, it will be an astropy Distribution.
+        """
+
+        # extract the column from self.standard for this key
+        try:
+            raw_column = self.standard[key]
+        except KeyError:
+            raise KeyError(
+                f"The column '{key}' wasn't found in {self}'s internal table."
+            )
+
+        # return a distribution or an array
+        if distribution:
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore")
+                # set the mode of the distribution to be the table value
+                mu = _clean_column(raw_column)
+                try:
+                    # get the lower + upper uncertainties from the table
+                    sigma_lower, sigma_upper = (
+                        self.get_uncertainty_lowerupper_from_table(key)
+                    )
+                    samples = make_skew_samples_from_lowerupper(
+                        mu=mu, sigma_lower=sigma_lower, sigma_upper=sigma_upper
+                    )
+                    return Distribution(samples)
+                except KeyError:
+                    # if uncertainties fail, give up and return simple array
+                    return mu
+        else:
+            return _clean_column(raw_column)
+
     def __getattr__(self, key):
         """
-        If an attribute/method isn't defined for a population,
-        look for it as a column of the standardized table.
+        If an attribute/method isn't explicitly defined for a population,
+        try to access it as `population.something` with this wrapper.
 
-        For example, `population.stellar_radius` will try to
-        access `population.standard['stellar_radius']`.
+        Lots of data is stored inside an exoatlas Population; this hidden
+        method will be called to try to access those data only if no other
+        explicit definition defines that variable first. If we try to access
+        an internal Population variable via `pop.x` or `getattr(pop, 'x')`,
+        here's what happens, shown approximately in order of precedence:
+
+            1) We look for an explicit definition that has been
+            attached to the Population as a method/attribute. This may have been
+            defined either with a `def x()` definition inside a module in
+            `exoatlas/populations/calculations/` or an attribute/method that
+            gets defined anywhere with `pop.x =`, potentially including
+            by a user creating a new quantity function and assigning it.
+            These definitions should show up with `pop.<tab>` in jupyter.
+
+            2) We look for an implicit method definition that was created
+            by `_populate_column_methods()`, where every data column in
+            the `.standard` table gets its own function with basic docstring.
+            These definitions should also show up with `pop.<tab>` in jupyter.
+
+            3) We use this `__getattr__` function. It will be called only if
+            no other definition anywhere overrides it. Practically, this is
+            mostly used for retrieving obvious plotting keywords, which
+            might be hidden inside the `._plotkw` internal dictionary, or
+            to get uncertainties when requesting `.x_uncertainty()` or
+            `.x_uncertainty_lowerupper()`.
 
         Parameters
         ----------
         key : str
             The attribute we're trying to get.
+
+        Returns
+        -------
+        value : any
+            The attribute we're trying to get.
         """
-        if key in ["label", "plotkw", "standard"]:
-            raise RuntimeError(f"Yikes! {key}")
-        try:
-            # extract the column from the standardized table
-            return self.standard[key]
-        except KeyError:
-            # try to get a plotkw from this pop, from the plotting defaults, from None
-            try:
-                assert key in allowed_plotkw
-                return self.plotkw.get(key, default_plotkw[key])
-            except (AssertionError, KeyError):
-                raise AttributeError(
-                    f"""
-                Alas, there seems to be no way to find `.{key}`
-                as an attribute or propetry of {self}.
+
+        # do a quick check that something essential isn't missing
+        if key in ["label", "_plotkw", "standard"]:
+            raise RuntimeError(
+                f"""
+                Yikes! It looks like `.{key}` isn't defined for this Population. 
+                Ideally, this error should never been seen, but if it does, something's 
+                gone dreadfully wrong. 
                 """
-                )  # AtlasError
+            )
+
+        # try to get a plotkw from this pop, from the plotting defaults, from None
+        try:
+            assert key in allowed_plotkw
+            return self._plotkw.get(key, default_plotkw[key])
+        except (AssertionError, KeyError):
+            pass
+
+        # check if we're asking for a quantity explicitly from the table
+        if key.endswith("_from_table"):
+            quantity_key = key.split("_from_table")[0]
+
+            def f(**kw):
+                return self.get_values_from_table(key=quantity_key)
+
+            f.__docstring__ = f"""
+            A function to return the column '.{quantity_key}'. 
+
+            Parameters 
+            ----------
+            distribution : bool 
+                Should this return a Distribution, for uncertainty propagation?
+
+            Returns
+            -------
+            value : np.array, u.Quantity, astropy.uncertainty.Distribution
+                The values, drawn from the table. 
+            """
+            return f
+
+        # check if we're asking for an uncertainty
+        if key.endswith("_uncertainty_lowerupper"):
+            quantity_key = key.split("_uncertainty_lowerupper")[0]
+
+            def f(**kw):
+                return self.get_uncertainty_lowerupper(key=quantity_key, **kw)
+
+            f.__docstring__ = f"""
+            A function to return the two-sided uncertainty on '.{quantity_key}'. 
+
+            Returns
+            -------
+            lower : np.array, u.Quantity
+                The magnitude of the lower uncertainties (x_-lower^+upper)
+            upper : np.array, u.Quantity
+                The magnitude of the upper uncertainties (x_-lower^+upper)              
+            """
+            return f
+
+        if key.endswith("_uncertainty"):
+            quantity_key = key.split("_uncertainty")[0]
+
+            def f(**kw):
+                return self.get_uncertainty(key=quantity_key, **kw)
+
+            f.__docstring__ = f"""
+            A function to return the symmetric uncertainty on '.{quantity_key}'. 
+
+            Returns
+            -------
+            sigma : np.array, u.Quantity
+                The magnitude of the uncertainties, assumed to be symmetric.
+            """
+            return f
+
+        raise AttributeError(
+            f"""
+            Alas, there seems to be no way to find `.{key}`
+            as a table column, attribute, method, or property of {self}.
+            """
+        )
 
     def __setattr__(self, key, value):
         """
         Define what happens when we try to set an attribute via `pop.attr = x`.
+
         If the keyword is a pre-defined "plotting" keyword in `allowed_plotkw`,
-        then we should save it in a special `plotkw` dictionary. Otherwise,
+        then we should save it in a special `_plotkw` dictionary. Otherwise,
         the attribute should be set as normal.
 
         Parameters
@@ -625,7 +1032,7 @@ class Population(Talker):
 
         if key in allowed_plotkw:
             # store plotting keywords in a separate plotting dictionary
-            self.plotkw[key] = value
+            self._plotkw[key] = value
         else:
             # otherwise, store attributes as normal for objects
             self.__dict__[key] = value
@@ -634,57 +1041,57 @@ class Population(Talker):
         """
         How should this object appear as a repr/str?
         """
-        return f"<{self.label} | {self.n} elements>"
+        return f"✨ {self.label} | {len(self)} elements ✨"
 
-    def get(self, key):
+    def get(self, key, **kw):
         """
-        Return an array of values for a column.
-        """
-        return getattr(self, key)
+        Return an array property for a Population.
 
-    def get_uncertainty(self, key):
-        """
-        Return an array of symmetric uncertainties on a column.
+        This returns an array, not a function. For example, stellar
+        radius might be retrieved either as `.stellar_radius()`
+        or as `.get('stellar_radius')`. Quantities that can take
+        keyword arguments can pass those keywords as in
+        `.stellar_brightness(wavelength=5*u.micron)` or
+        `.get('stellar_brightness', wavelength=5*u.micron)`.
+
 
         Parameters
         ----------
         key : str
-            The column for which we want errors.
+            The name of the quantity we're trying to retrieve.
+
+        kw : dict
+            All additional keywords will be passed to the
+            method that retrieves the quantities. One common
+            (internal) use might be to pass `distribution=True`,
+            to be used for uncertainty propagation.
+
+        Returns
+        -------
+        value : Quantity
+            The values, as an array with units.
         """
+        return getattr(self, key)(**kw)
 
-        # first try for an `uncertainty_{key}` column
-        try:
-            return self.get(f"{key}_uncertainty")  # __getattr__
-        except (
-            KeyError,
-            AssertionError,
-            AtlasError,
-            AttributeError,
-        ):  # is including AttributeError a kludge?
-            # this can be removed after debugging
-            self.speak(f'no symmetric uncertainties found for "{key}"')
-
-        # then try for crudely averaging asymmetric uncertainties
-        try:
-            lower = self.get(f"{key}_uncertainty_lower")  # __getattr__
-            upper = self.get(f"{key}_uncertainty_upper")  # __getattr__
-            avg = 0.5 * (np.abs(lower) + np.abs(upper))
-            return avg
-        except (KeyError, AssertionError, AtlasError, AttributeError):
-            # this can be removed after debugging
-            self.speak(f'no asymmetric uncertainties found for "{key}"')
-
-        # then give up and return nans
-        return np.nan * self.standard[key]
-
-    def get_uncertainty_lowerupper(self, key):
+    def get_uncertainty_lowerupper(self, key, **kw):
         """
-        Return two arrays of lower and upper uncertainties on a column.
+        Return two arrays of lower and upper uncertainties.
+
+        For table column quantities with uncertainties, this should
+        return uncertainties direct from `_uncertainty` or
+        `_uncertainty_lower` + `_uncertainty_upper` columns in the table.
+        This returns an array, not a function.
+
+        For derived quantities, this uncertainty will be estimated from
+        central 68% confidence interval of samples from the calculated
+        distribution of the quantity.
 
         Parameters
         ----------
         key : str
-            The column for which we want errors.
+            The quantity for which we want lower + upper uncertaintes.
+        kw : dict
+            All other keywords will be passed to `.get`.
 
         Returns
         -------
@@ -694,63 +1101,106 @@ class Population(Talker):
             The magnitude of the upper uncertainties (x_{-lower}^{+upper})
         """
 
-        # first try for actual asymmetric uncertainties
+        # first try for uncertainties direct from table
         try:
-            lower = self.__getattr__(f"{key}_uncertainty_lower")
-            upper = self.__getattr__(f"{key}_uncertainty_upper")
-            return np.abs(lower), np.abs(upper)
-        except (KeyError, AssertionError, AttributeError):
-            # this can be removed after debugging
-            self.speak(f'no asymmetric uncertainties found for "{key}"')
+            sigma_lower, sigma_upper = self.get_uncertainty_lowerupper_from_table(key)
+            return sigma_lower, sigma_upper
+        except KeyError:
+            mu = self.get(key, **kw)
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore", category=RuntimeWarning)
+                d = self.get(key, distribution=True, **kw)
+                # calculate uncertainties from percentiles if possible...
+                if isinstance(d, Distribution):
+                    lower, upper = d.pdf_percentiles(
+                        100
+                        * np.array(
+                            [
+                                0.5 - gaussian_central_1sigma / 2,
+                                0.5 + gaussian_central_1sigma / 2,
+                            ]
+                        )
+                    )
+                    sigma_lower, sigma_upper = mu - lower, upper - mu
+                # ...otherwise just force the uncertainties to zero
+                else:
+                    sigma_lower, sigma_upper = 0 * mu, 0 * mu
+                return sigma_lower, sigma_upper
 
-        # first try for an `uncertainty_{key}` column
-        try:
-            sym = self.__getattr__(f"{key}_uncertainty")
-            return np.abs(sym), np.abs(sym)
-        except (KeyError, AssertionError, AttributeError):
-            # this can be removed after debugging
-            self.speak(f'no symmetric uncertainties found for "{key}"')
-
-        # then give up and return nans
-        unc = np.nan * self.__getattr__(key)
-        return unc, unc
-
-    def single(self, name):
+    def get_uncertainty(self, key, **kw):
         """
-        Create a subpopulation of a single planet.
+        Return an array of symmetric uncertainties on a quantity.
+
+        This (very crudely) averages the lower and upper uncertainties
+        to make a symmetric errorbar. For quantities with nearly symmetric
+        errors this should be totally fine, but for ones with wildly
+        asymmetric uncertainties, use `.get_uncertainty_lowerupper()`.
+        This returns an array, not a function.
+
+        Parameters
+        ----------
+        key : str
+            The quantity for which we want uncertaintes.
+
+        Returns
+        -------
+        uncertainty : Quantity
+            The (symmetrically-averaged) uncertainties, as an array with units.
         """
 
-        # create a subset of the standardized table
-        subset = self.standard.loc[name]
+        sigma_lower, sigma_upper = self.get_uncertainty_lowerupper(key, **kw)
+        return 0.5 * (sigma_lower + sigma_upper)
 
-        # create a new object, from this subset
-        return type(self)(standard=subset, label=name, **self.plotkw)
+    def get_fractional_uncertainty(self, key, **kw):
+        """
+        Return an array of estimates of the fractional uncertainty on a quantity.
 
-    def validate_columns(self):
+        This little wrapper calculates the ratio sigma_x/x, to make it
+        easier to select subsets on the basis of something like
+        "it's been measured to better than 20% precision".
+
+        Parameters
+        ----------
+        key : str
+            The quantity for which we want fractional uncertainty.
+        **kw : dict
+            Additional keywords will be passed to the
+
+        Returns
+        -------
+        fractional_uncertainty : Quantity
+            The (symmetrically-averaged) uncertainties, as an array with units.
+        """
+        x = self.get(key, **kw)
+        sigma_x = self.get_uncertainty(key, **kw)
+        fractional_uncertainty = sigma_x / x
+        return fractional_uncertainty
+
+    def _validate_columns(self):
         """
         Make sure this standardized table has all the necessary columns.
         Summarize the amount of good data in each.
         """
 
         N = len(self.standard)
-        for k in table_columns:
+        for k in basic_columns:
             try:
                 n = sum(self.standard[k].mask == False)
             except AttributeError:
                 try:
                     n = sum(np.isfinite(self.standard[k]))
                 except TypeError:
-                    n = sum(self.standard[k] != "")
-            self.speak(f"{k:>25} | {n:4}/{N} rows = {n/N:4.0%} are not empty")
+                    n = sum(np.atleast_1d(self.standard[k] != ""))
+            self._speak(f"{k:>25} | {n:4}/{N} rows = {n/N:4.0%} are not empty")
 
-    def find(self, name):
+    def _find_index(self, name):
         """
         Return index of a particular planet in the population.
 
         ??? = maybe this could/should be replaced with some table cleverness?
         """
 
-        return np.array([clean(name) in clean(x) for x in self.name]).nonzero()[0]
+        return np.array([clean(name) in clean(x) for x in self.name()]).nonzero()[0]
 
     def update_values(self, planets, **kwargs):
         """
@@ -823,837 +1273,11 @@ class Population(Talker):
                     f"'{k}' should probably have some uncertainties, which you didn't provide."
                 )
 
-    @property
-    def n(self):
-        """
-        How many planets are in this population?
-        """
-        return len(self.standard)
-
     def __len__(self):
         """
         How many planets are in this population?
         """
         return len(self.standard)
-
-    @property
-    def semimajor_axis(self):
-        """
-        Have a safe way to calculate the semimajor axis of planets,
-        that fills in gaps as necessary. Basic strategy:
-
-            First from table.
-            Then from NVK3L.
-            Then from a/R*.
-
-        """
-
-        # pull out the actual values from the table
-        a = self.standard["semimajoraxis"].copy()
-
-        # try to replace bad ones with NVK3L
-        bad = np.isfinite(a) == False
-        self.speak(f"{sum(bad)}/{self.n} semimajoraxes are missing")
-
-        # calculate from the period and the stellar mass
-        P = self.period[bad]
-        M = self.stellar_mass[bad]
-        G = con.G
-        a[bad] = ((G * M * P**2 / 4 / np.pi**2) ** (1 / 3)).to("AU")
-
-        # replace those that are still bad with the a/R*
-        stillbad = np.isfinite(a) == False
-        self.speak(f"{sum(stillbad)}/{self.n} are still missing after NVK3L")
-        # (pull from table to avoid potential for recursion)
-        try:
-            a_over_rs = self.standard["transit_ar"][stillbad]
-            rs = self.standard["stellar_radius"][stillbad]
-            a[stillbad] = a_over_rs * rs
-        except KeyError:
-            pass
-
-        return a
-
-    @property
-    def semimajor_axis_uncertainty(self):
-        # MASSIVE KLUDGE TO MAKE FLUX ERRORS WORK IN A HURRY!
-        return 0.03 * self.semimajor_axis
-
-    @property
-    def angular_separation(self):
-        """
-        Calculate the angular separation,
-        simply as theta = a/D
-        """
-
-        a = self.semimajor_axis
-        D = self.distance
-
-        theta = np.arctan(a / D).to(u.arcsec)
-
-        return theta
-
-    @property
-    def imaging_contrast(self):
-        """
-        What is the reflected light eclipse depth,
-        for an albedo of 100%?
-
-        But use a kludged radius
-        """
-        return 0.25 * (self.kludge_radius / self.semimajor_axis).decompose() ** 2
-
-    @property
-    def a_over_rs(self):
-        """
-        Have a safe way to calculate the scaled semimajor axis of planets,
-        that fills in gaps as necessary. Basic strategy:
-
-            First from table, mostly derived from transit.
-            Then from the semimajor axis.
-        """
-
-        # pull out the values from the table
-        a_over_rs = self.standard["transit_ar"].copy()
-
-        # try to replace bad ones with NVK3L
-        bad = np.isfinite(a_over_rs) == False
-        self.speak(f"{sum(bad)}/{self.n} values for a/R* are missing")
-
-        a = self.semimajor_axis[bad]
-        R = self.stellar_radius[bad]
-        a_over_rs[bad] = a / R
-
-        stillbad = np.isfinite(a_over_rs) == False
-        self.speak(f"{sum(stillbad)}/{self.n} are still missing after a and R*")
-
-        return a_over_rs
-
-    @property
-    def stellar_luminosity(self):
-        T = self.stellar_teff
-        R = self.stellar_radius
-        sigma = con.sigma_sb
-        return (4 * np.pi * R**2 * sigma * T**4).to(u.Lsun)
-
-    @property
-    def stellar_luminosity_uncertainty(self):
-        T = self.stellar_teff
-        R = self.stellar_radius
-        T_uncertainty = self.get_uncertainty("stellar_teff")
-        R_uncertainty = self.get_uncertainty("stellar_radius")
-
-        sigma = con.sigma_sb
-
-        dLdT = 4 * 4 * np.pi * R**2 * sigma * T**3
-        dLdR = 2 * 4 * np.pi * R**1 * sigma * T**4
-        return (
-            (dLdT**2 * T_uncertainty**2 + dLdR**2 * R_uncertainty**2) ** 0.5
-        ).to("Lsun")
-
-    @property
-    def e(self):
-        """
-        FIXME -- assumes are missing eccentricities are 0!
-        """
-
-        # pull out the actual values from the table
-        e = self.standard["eccentricity"].copy()
-
-        # try to replace bad ones with NVK3L
-        bad = np.isfinite(e) == False
-        self.speak(f"{sum(bad)}/{self.n} eccentricities are missing")
-        self.speak(f"assuming they are all zero")
-        e[bad] = 0
-
-        return e
-
-    @property
-    def omega(self):
-        """
-        (FIXME! we need better longitudes of periastron)
-        """
-
-        # pull out the actual values from the table
-        omega = self.standard["omega"].copy()
-
-        # try to replace bad ones with NVK3L
-        bad = np.isfinite(omega) == False
-        self.speak(f"{sum(bad)}/{self.n} longitudes of periastron are missing")
-        e_zero = self.e == 0
-        self.speak(f"{sum(e_zero)} have eccentricities assumed to be 0")
-        omega[e_zero] = 0 * u.deg
-
-        return omega
-
-    @property
-    def b(self):
-        """
-        Transit impact parameter.
-        (FIXME! split this into transit and occultation)
-        """
-
-        # pull out the actual values from the table
-        b = self.standard["transit_b"].copy()
-
-        # try to replace bad ones with NVK3L
-        bad = np.isfinite(b) == False
-        self.speak(f"{sum(bad)}/{self.n} impact parameters are missing")
-
-        # calculate from the period and the stellar mass
-        a_over_rs = self.a_over_rs[bad]
-        i = self.standard["inclination"][bad]
-        e = self.e[bad]
-        omega = self.omega[bad]
-        b[bad] = a_over_rs * np.cos(i) * ((1 - e**2) / (1 + e * np.sin(omega)))
-
-        # report those that are still bad
-        stillbad = np.isfinite(b) == False
-        self.speak(f"{sum(stillbad)}/{self.n} are still missing after using i")
-
-        return b
-
-    # the 1360 W/m^2 that Earth receives from the Sun
-    earth_insolation = (1 * u.Lsun / 4 / np.pi / u.AU**2).to(u.W / u.m**2)
-
-    @property
-    def insolation(self):
-        """
-        The insolation the planet receives, in W/m^2.
-        """
-
-        # calculate the average insolation the planet receives
-        insolation = self.stellar_luminosity / 4 / np.pi / self.semimajor_axis**2
-        return insolation.to(u.W / u.m**2)
-
-    @property
-    def insolation_uncertainty(self):
-        """
-        The insolation the planet receives, in W/m^2.
-        """
-
-        # calculate the average insolation the planet receives
-        dinsolation_dluminosity = 1 / 4 / np.pi / self.semimajor_axis**2
-        dinsolation_dsemimajor = (
-            -2 * self.stellar_luminosity / 4 / np.pi / self.semimajor_axis**3
-        )
-        L_uncertainty = self.get_uncertainty("stellar_luminosity")
-        a_uncertainty = self.get_uncertainty("semimajor_axis")
-        insolation_uncertainty = (
-            dinsolation_dluminosity**2 * L_uncertainty**2
-            + dinsolation_dsemimajor**2 * a_uncertainty**2
-        ) ** 0.5
-        return insolation_uncertainty.to(u.W / u.m**2)
-
-    @property
-    def relative_insolation(self):
-        """
-        The insolation the planet receives, relative to Earth.
-        """
-        return self.insolation / self.earth_insolation
-
-    @property
-    def relative_insolation_uncertainty(self):
-        """
-        The insolation the planet receives, relative to Earth.
-        """
-        return self.insolation_uncertainty / self.earth_insolation
-
-    @property
-    def log_relative_insolation(self):
-        return np.log10(self.relative_insolation)
-
-    @property
-    def relative_cumulative_xuv_insolation(self):
-        """
-        A *very very very* approximate estimate for the cumulative XUV flux (J/m**2)
-        felt by a planet over its lifetime. It comes from Zahnle + Catling (2017) Equation 27,
-        where they say they did integrals over the Lammer et al. (2009) XUV flux relations.
-        This effectively assumes that the early times dominate, so the time integral doesn't
-        depend (?!?) on the age of the system. It's very rough!
-        """
-        xuv_proxy = (self.stellar_luminosity / u.Lsun) ** -0.6
-        return self.relative_insolation * xuv_proxy
-
-    @property
-    def teq(self):
-        """
-        The equilibrium temperature of the planet.
-        """
-        f = self.insolation
-        sigma = con.sigma_sb
-        A = 1
-        return ((f * A / 4 / sigma) ** (1 / 4)).to(u.K)
-
-    @property
-    def planet_luminosity(self):
-        """
-        The bolometric luminosity of the planet (assuming zero albedo).
-        """
-        return (self.teq**4 * con.sigma_sb * 4 * np.pi * self.radius**2).to(u.W)
-
-    @property
-    def transit_depth(self):
-        """
-        The depth of the transit
-        (FIXME, clarify if this is 1.5-3.5 or what)
-        """
-
-        # pull out the actual values from the table
-        d = self.standard["transit_depth"].copy()
-
-        # try to replace bad ones with NVK3L
-        bad = np.isfinite(d) == False
-        self.speak(f"{sum(bad)}/{self.n} transit depths are missing")
-
-        Rp = self.radius[bad]
-        Rs = self.stellar_radius[bad]
-
-        d[bad] = (Rp / Rs).decompose() ** 2
-
-        # report those that are still bad
-        stillbad = np.isfinite(d) == False
-        self.speak(f"{sum(stillbad)}/{self.n} are still missing after Rp/Rs")
-
-        return d
-
-    @property
-    def transit_duration(self):
-        """
-        The duration of the transit
-        (FIXME, clarify if this is 1.5-3.5 or what)
-        """
-
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore")
-
-            # pull out the actual values from the table
-            d = self.standard["transit_duration"].copy()
-
-            # try to replace bad ones with NVK3L
-            bad = np.isfinite(d) == False
-            self.speak(f"{sum(bad)}/{self.n} transit durations are missing")
-
-            P = self.period[bad]
-            a_over_rs = self.a_over_rs[bad]
-            b = self.b[bad]
-
-            T0 = P / np.pi / a_over_rs
-            T = T0 * np.sqrt(1 - b**2)
-
-            e = self.e[bad]
-            omega = self.omega[bad]
-            factor = np.sqrt(1 - e**2) / (1 + e * np.sin(omega))
-
-            d[bad] = (T * factor).to(u.day)
-
-            # report those that are still bad
-            stillbad = np.isfinite(d) == False
-            self.speak(f"{sum(stillbad)}/{self.n} are still missing after P, a/R*, b")
-
-            return d
-
-    @property
-    def kludge_mass(self):
-        """
-        Have a safe way to calculate the mass of planets,
-        that fills in gaps as necessary. Basic strategy:
-
-            First from table.
-            Then from msini.
-        """
-
-        # pull out the actual values from the table
-        M = self.standard["mass"].copy()
-
-        # try to replace bad ones with NVK3L
-        bad = np.isfinite(M) == False
-        self.speak(f"{sum(bad)}/{self.n} masses are missing")
-
-        # estimate from the msini
-        try:
-            M[bad] = self.msini[bad]
-        except (KeyError, AssertionError, AtlasError, AttributeError):
-            pass
-
-        # replace those that are still bad with the a/R*
-        stillbad = np.isfinite(M) == False
-        self.speak(f"{sum(stillbad)}/{self.n} are still missing after msini")
-
-        return M
-
-    @property
-    def kludge_radius(self):
-        """
-        Have a safe way to calculate the radii of planets,
-        that fills in gaps as necessary. Basic strategy:
-
-            First from table.
-            Then from mass, via Chen & Kipping (2017).
-        """
-
-        # pull out the actual values from the table
-        R = self.standard["radius"].copy()
-
-        # try to replace bad ones with NVK3L
-        bad = np.isfinite(R) == False
-        self.speak(f"{sum(bad)}/{self.n} radii are missing")
-
-        # estimate from Chen and Kipping
-        try:
-            M = self.kludge_mass
-            R[bad] = estimate_radius(M[bad])
-        except (KeyError, AssertionError, AtlasError, AttributeError):
-            pass
-
-        # replace those that are still bad with the a/R*
-        stillbad = np.isfinite(R) == False
-        self.speak(
-            f"{sum(stillbad)}/{self.n} are still missing after Chen & Kipping (2017)"
-        )
-
-        return R
-
-    @property
-    def kludge_age(self):
-        """
-        Have a safe way to calculate the age of planets,
-        that fills in gaps as necessary. Basic strategy:
-
-            First from table.
-            Then assume 5 Gyr.
-        """
-
-        # pull out the actual values from the table
-        age = self.standard["stellar_age"].copy()
-
-        # try to replace bad ones with NVK3L
-        bad = np.isfinite(age) == False
-        self.speak(f"{sum(bad)}/{self.n} ages are missing")
-
-        # estimate from the msini
-        try:
-            age[bad] = 5 * u.Gyr
-        except (KeyError, AssertionError, AtlasError, AttributeError):
-            pass
-
-        # replace those that are still bad with the a/R*
-        stillbad = np.isfinite(age) == False
-        self.speak(
-            f"{sum(stillbad)}/{self.n} are still missing after blindly assuming 5Gyr for missing ages"
-        )
-
-        return age
-
-    @property
-    def surface_gravity(self):
-        """
-        (FIXME) -- make an assumption for planets without masses
-        """
-
-        G = con.G
-        M = self.mass
-        R = self.radius
-
-        g = (G * M / R**2).to("m/s**2")
-        return g
-
-    @property
-    def density(self):
-        """
-        The density of the planet.
-        """
-        mass = self.mass
-        volume = 4 / 3 * np.pi * (self.radius) ** 3
-        return (mass / volume).to("g/cm**3")
-
-    @property
-    def escape_velocity(self):
-        """
-        The escape velocity of the planet.
-        """
-        G = con.G
-        M = self.mass
-        R = self.radius
-        return np.sqrt(2 * G * M / R).to("km/s")
-
-    @property
-    def orbital_velocity(self):
-        return (2 * np.pi * self.semimajor_axis / self.period).to("km/s")
-
-    @property
-    def impact_velocity(self):
-        return np.sqrt(self.orbital_velocity**2 + self.escape_velocity**2)
-
-    @property
-    def escape_parameter(self):
-        """
-        The Jeans atmospheric escape parameter for atomic hydrogen,
-        at the equilibrium temperature of the planet.
-        """
-        k = con.k_B
-        T = self.teq
-        mu = 1
-        m_p = con.m_p
-        G = con.G
-        M = self.mass
-        R = self.radius
-
-        e_thermal = k * T
-        e_grav = G * M * m_p / R
-        return (e_grav / e_thermal).decompose()
-
-    @property
-    def distance_modulus(self):
-        """
-        The distance modulus to the system, in magnitudes.
-        """
-        mu = 5 * np.log10(self.distance / (10 * u.pc))
-        return mu
-
-    def scale_height(self, mu=2.32):
-        """
-        The scale height of the atmosphere, at equilibrium temperature.
-        """
-        k = con.k_B
-        T = self.teq
-        m_p = con.m_p
-        g = self.surface_gravity
-        return (k * T / mu / m_p / g).to("km")
-
-    def transmission_signal(self, mu=2.32, threshold=2):
-        """
-        What is the transit depth of 1 scale height of an
-        atmosphere transiting in front of the star.
-
-        Parameters
-        ----------
-        mu : float
-            Mean molecular weight (default 2.2 for H/He)
-        threshold : float
-            By how many sigma must the planet mass be detected?
-
-        """
-        with np.errstate(invalid="ignore"):
-            H = self.scale_height(mu)
-            Rp = self.radius
-            Rs = self.stellar_radius
-            depth = (2 * H * Rp / Rs**2).decompose()
-
-            dlnm = self.get_uncertainty("mass") / self.mass
-            bad = dlnm > 1 / threshold
-            depth[bad] = np.nan
-            return depth
-
-    def reflection_signal(self, albedo=0.1):
-        """
-        What is the reflected light eclipse depth,
-        for an albedo of 100%?
-        """
-        return albedo * 0.25 * (self.radius / self.semimajor_axis).decompose() ** 2
-
-    def emission_signal(self, wavelength=5 * u.micron):
-        """
-        What is the thermal emission eclipse depth,
-        assuming Planck spectra for both star and planet?
-
-        This calculation assumes a Bond albedo of 0
-        and that heat is uniformly distributed over the planet.
-
-        Parameters
-        ----------
-        wavelength : astropy.unit.Quantity
-            The wavelength at which it should be calculated.
-        """
-
-        # create thermal emission sources for both star and planet
-        import rainbowconnection as rc
-
-        star = rc.Thermal(teff=self.stellar_teff, radius=self.stellar_radius)
-        planet = rc.Thermal(teff=self.teq, radius=self.radius)
-
-        # calculate the depth as the luminosity ratio
-        depths = planet.spectrum(wavelength) / star.spectrum(wavelength)
-
-        return depths
-
-    def stellar_brightness(self, wavelength=5 * u.micron):
-        """
-        How many photons/s/m^2/micron do we receive from the star?
-
-        This is calculated from the distance, radius, and
-        stellar effective temperature of the stars.
-
-        (It could be potentially be improved with PHOENIX
-        model grids and/or cleverness with photometry.)
-
-        Parameters
-        ----------
-        wavelength : astropy.unit.Quantity
-            The wavelength at which it should be calculated.
-        """
-
-        # import some tools for easy cartoon spectra
-        import rainbowconnection as rc
-
-        # create source with right temperature, size, distance
-        teff, radius = self.stellar_teff, self.stellar_radius
-        star = rc.Thermal(teff=teff, radius=radius).at(self.distance)
-
-        # calculate the energy flux
-        flux_in_energy = star.spectrum(wavelength)
-
-        # convert to photon flux
-        photon_energy = con.h * con.c / wavelength / u.ph
-        flux_in_photons = flux_in_energy / photon_energy
-
-        # return the
-        return flux_in_photons.to("ph s^-1 m^-2 micron^-1")
-
-    def stellar_brightness_in_telescope_units(self, telescope_name="JWST", **kw):
-        """
-        The stellar brightness, converted to telescope units.
-
-        Parameters
-        ----------
-        telescope_name : str
-            The name of the telescope.
-
-        wavelength : astropy.unit.Quantity
-            The wavelength at which it should be calculated.
-
-        R : float
-            The spectral resolution at which the
-            telescope will bin wavelengths.
-
-        dt : astropy.units.quantity.Quantity
-            The time over which the telescope exposes.
-        """
-
-        # what counts as 1 "telescope unit" (e.g. JWST at R=20 at 5 microns for 1 hour)
-        telescope_unit = define_telescope_unit_by_name(telescope_name, **kw)
-
-        # what's the photon flux (photons/m**2/s)
-        flux_in_photons = self.stellar_brightness(telescope_unit.wavelength)
-
-        # quote the brightness as (for example) gigaphotons/JWST at R=20 at 5 microns in 1 hour
-        unit = lotsofphotons_unit / telescope_unit
-        return flux_in_photons.to(unit)
-
-    def depth_uncertainty(
-        self, telescope_name="JWST", per_transit=False, dt=1 * u.hour, **kw
-    ):
-        """
-        What is the transit/eclipse depth uncertainty
-        with a particular telescope
-        at a particular wavelength
-        at a particular resolution?
-
-        By default, this will be calculated for one transit.
-        Optionally, it can be calculated for a given amount of time instead.
-
-        Parameters
-        ----------
-        telescope_name : str
-            The name of the telescope.
-
-        per_transit : bool
-            If True, calculate the depth uncertainty for one transit.
-            If False, calculate the depth uncertainty for a certain amount
-            of in-transit time. You likely want to specify `dt` as a
-            keyword argument to set that amount of in-transit time.
-            In either case, an out-of-transit baseline equal to the
-            total in-transit time will be assumed. This means the actual
-            time cost will be twice the transit duration or `dt` chosen,
-            and the depth uncertainty will be a factor sqrt(2) larger
-            than the pure photon noise binned to the relevant timescale.
-
-        wavelength : astropy.unit.Quantity
-            The wavelength at which it should be calculated.
-
-        R : float
-            The spectral resolution at which the
-            telescope will bin wavelengths.
-
-        dt : astropy.units.quantity.Quantity
-            The time over which the telescope exposes. If `per_transit=True`,
-            this will be ignored. Otherwise, it will set the total amount
-            of in-transit time observed, assuming that an equal amount of
-            time will *also* be observed out of transit.
-        """
-
-        # what counts as 1 "telescope unit" (e.g. JWST at R=20 at 5 microns for 1 hour)
-        telescope_unit = define_telescope_unit_by_name(telescope_name, dt=dt, **kw)
-
-        # what's the photon flux (photons/m**2/s)
-        flux_in_photons = self.stellar_brightness(telescope_unit.wavelength)
-
-        # what's the total collecting power?
-        if per_transit:
-            ratio_of_collecting_time = self.transit_duration / dt
-        else:
-            ratio_of_collecting_time = 1
-        collecting_power = 1 * telescope_unit * ratio_of_collecting_time
-
-        # what's the total number of photons collected during transit
-        N = (flux_in_photons * collecting_power).to(u.ph).value
-
-        # what's the flux uncertainty on the time scale of one transit?
-        sigma = 1 / np.sqrt(N)
-
-        # inflate by a factor of sqrt(2) for equal out-of-transit
-        oot = np.sqrt(2)
-        sigma_depth = sigma * oot
-
-        return sigma_depth
-
-    def _get_noise_and_unit(self, telescope_name="JWST", per_transit=False, **kw):
-        """
-        Tiny helper to get the noise and the telescope_unit
-        for a telescope observation of a planet.
-        """
-
-        # figure out the noise
-        noise = self.depth_uncertainty(
-            telescope_name=telescope_name, per_transit=per_transit, **kw
-        )
-
-        # create a telescope unit (mostly to get a default wavelength)
-        telescope_unit = define_telescope_unit_by_name(telescope_name, **kw)
-
-        return noise, telescope_unit
-
-    def depth_snr(self, telescope_name="JWST", **kw):
-        """
-        What's the approximate S/N for the detection of the planet's transit?
-        """
-
-        noise, telescope_unit = self._get_noise_and_unit(
-            telescope_name=telescope_name, **kw
-        )
-        signal = self.transit_depth
-        return signal / noise
-
-    def emission_snr(self, telescope_name="JWST", **kw):
-        """
-        What's the approximate S/N for the detection of the
-        thermal emission eclipse of a planet?
-        """
-
-        noise, telescope_unit = self._get_noise_and_unit(
-            telescope_name=telescope_name, **kw
-        )
-        signal = self.emission_signal(wavelength=telescope_unit.wavelength)
-        return signal / noise
-
-    def reflection_snr(self, telescope_name="JWST", albedo=1, **kw):
-        """
-        What's the approximate S/N for the detection of the
-        reflected light eclipse of a planet?
-        """
-
-        noise, telescope_unit = self._get_noise_and_unit(
-            telescope_name=telescope_name, **kw
-        )
-        signal = self.reflection_signal(albedo=albedo)
-        return signal / noise
-
-    def transmission_snr(self, telescope_name="JWST", mu=2.32, threshold=2, **kw):
-        """
-        What's the approximate S/N for the detection of the
-        reflected light eclipse of a planet?
-        """
-
-        noise, telescope_unit = self._get_noise_and_unit(
-            telescope_name=telescope_name, **kw
-        )
-        signal = self.transmission_signal(mu=mu, threshold=threshold)
-        return signal / noise
-
-    def scatter(
-        self, xname, yname, c=None, s=None, names=True, xlog=True, ylog=True, **kw
-    ):
-        """
-        Quick tool to plot one parameter against another.
-        """
-        plt.ion()
-        x, y = self.__getattr__(xname), self.__getattr__(yname)
-        try:
-            self.ax.cla()
-        except:
-            self.figure = plt.figure("Exoplanet Population")
-            self.ax = plt.subplot()
-
-        self.ax.set_xlabel(xname)
-        self.ax.set_ylabel(yname)
-        self.ax.scatter(x, y, c=c, s=s, **kw)
-        if False:
-            for i in range(len(x)):
-                self.ax.text(x[i], y[i], self.table["NAME"][i])
-        if xlog:
-            plt.xscale("log")
-        if ylog:
-            plt.yscale("log")
-
-        plt.draw()
-
-    def thumbtack(self, maxr=1000, dr=100, labels=False):
-        """Plot the planets as thumbtacks."""
-
-        def scale(d):
-            return np.array(d) ** 1.5
-
-        r = scale(self.distance)
-        x, y = r * np.cos(self.ra * np.pi / 180), r * np.sin(self.ra * np.pi / 180)
-        plt.ion()
-        plt.figure("thumbtacks")
-
-        ax = plt.subplot()
-        ax.cla()
-        ax.set_aspect("equal")
-        theta = np.linspace(0, 2 * np.pi, 1000)
-        angle = -90 * np.pi / 180
-
-        gridkw = dict(alpha=0.25, color="green")
-        for originalradius in np.arange(dr, maxr * 2, dr):
-            radii = scale(originalradius)
-
-            ax.plot(radii * np.cos(theta), radii * np.sin(theta), linewidth=3, **gridkw)
-            ax.text(
-                radii * np.cos(angle),
-                radii * np.sin(angle),
-                "{0:.0f} pc".format(originalradius),
-                rotation=90 + angle * 180 / np.pi,
-                va="bottom",
-                ha="center",
-                size=13,
-                weight="extra bold",
-                **gridkw,
-            )
-
-        ax.plot(
-            x, y, marker="o", alpha=0.5, color="gray", linewidth=0, markeredgewidth=0
-        )
-        close = (self.name == "WASP-94A b").nonzero()[
-            0
-        ]  # (self.distance < maxr).nonzero()[0]
-        if labels:
-            for c in close:
-                plt.text(x[c], y[c], self.name[c])
-        ax.set_xlim(-scale(maxr), scale(maxr))
-        ax.set_ylim(-scale(maxr), scale(maxr))
-
-    def compare(self, x="teq", y="radius", area="depth", color="stellar_radius"):
-        xplot = self.__dict__[x]
-        yplot = self.__dict__[y]
-        sizeplot = self.__dict__[size]
-        colorplot = self.__dict__[color]
-
-        maxarea = 1000
-        area = self.__dict__[area]
-        sizeplot = np.sqrt(area / np.nanmax(area) * maxarea)
-
-        plt.scatter(xplot, yplot, linewidth=0, marker="o", markersize=sizeplot)
 
     def create_table(
         self,
@@ -1689,7 +1313,7 @@ class Population(Talker):
         # FIXME! need to add method support for arguments
 
         # create a dictionary with the desired columns
-        d = {c: getattr(self, c) for c in desired_columns}
+        d = {c: getattr(self, c)() for c in desired_columns}
 
         # turn that into an astropy Table
         t = QTable(d)
@@ -1729,3 +1353,195 @@ class Population(Talker):
             as the Population itself.
         """
         return self.create_table(desired_columns=desired_columns)
+
+    def _choose_calculation(
+        self,
+        methods=[],
+        distribution=False,
+        how_to_choose="preference",
+        visualize=False,
+        **kw,
+    ):
+        """
+        Choose values element-wise from multiple functions.
+
+        This wrapper helps merge together different calculations
+        of the same quantity, choosing sources based on preference,
+        whether the calculation is finite, and/or uncertainties.
+
+        Parameters
+        ----------
+        methods : list of strings
+            The names of methods to consider for calculating
+            the quantity, in order of preference. The order
+            matters most if `how_to_choose=='preference'`
+            (see below); if `how_to_choose=='precision'`
+            then preference doesn't really matter (except
+            in cases where two different options have
+            identical fractional uncertainties).
+        distribution : bool
+            If False, return a simple array of values.
+            If True, return an astropy.uncertainty.Distribution,
+            which can be used for error propagation.
+        how_to_choose : str
+            A string describing how to pick values from
+            among the different possible calculations.
+            Options include:
+                'preference' = pick the highest preference
+                option that produces a finite value
+                'precision' = pick the most precise value,
+                base on the calculated mean uncertainty
+        visualize : bool
+            Should we visualize all the options and what gets chosen?
+        **kw : dict
+            All other keywords will be passed to the functions
+            for calculating quantities. All functions must be able
+            to accept the same set of keyword.
+        """
+
+        #
+        errors_indicating_missing_data = (AttributeError, KeyError)
+
+        # construct a list of arrays of values
+        value_estimates = []
+        for m in methods:
+            try:
+                this = self.get(m, distribution=distribution, **kw)
+                value_estimates.append(this)
+            except errors_indicating_missing_data:
+                pass
+
+        if how_to_choose == "preference":
+            # loop through options, picking the first finite value
+            for i, v in enumerate(value_estimates):
+                if i == 0:
+                    values = v
+                isnt_good_yet = np.isfinite(values) == False
+                values[isnt_good_yet] = v[isnt_good_yet]
+        elif how_to_choose == "precision":
+            # calculate (symmetric) fractional uncertainties for all options
+            mu_estimates = []
+            for m in methods:
+                try:
+                    this = self.get(m, distribution=False, **kw)
+                    mu_estimates.append(this)
+                except errors_indicating_missing_data:
+                    pass
+            uncertainty_estimates = []
+            for m in methods:
+                try:
+                    this = self.get_uncertainty(m, **kw)
+                    uncertainty_estimates.append(this)
+                except errors_indicating_missing_data:
+                    pass
+
+            fractional_uncertainty_estimates = [
+                u / v for v, u in zip(mu_estimates, uncertainty_estimates)
+            ]
+            # loop through options to select the one with smallest uncertainty
+            for i, (v, f) in enumerate(
+                zip(value_estimates, fractional_uncertainty_estimates)
+            ):
+                f[np.isnan(f)] = np.inf
+                if i == 0:
+                    values = v
+                    current_fractional_uncertainty = f
+                has_smaller_uncertainty = f < current_fractional_uncertainty
+                current_fractional_uncertainty[has_smaller_uncertainty] = f[
+                    has_smaller_uncertainty
+                ]
+                values[has_smaller_uncertainty] = v[has_smaller_uncertainty]
+        else:
+            raise ValueError(
+                f"""
+            "{how_to_choose}" is not a valid option choosing from among
+            {methods}
+            Only "preference" or "precision" are currently allowed. 
+            """
+            )
+
+        if visualize:
+            plt.figure(figsize=(8, 3))
+            if distribution:
+                for m, v in zip(methods, value_estimates):
+                    plt.violinplot(
+                        dataset=np.array(v.distribution.T), positions=np.arange(len(v))
+                    )
+                plt.plot(
+                    values.pdf_median(),
+                    color="black",
+                    marker="o",
+                    markerfacecolor="none",
+                )
+            else:
+                for m, v in zip(methods, value_estimates):
+                    plt.plot(v, alpha=0.5, label=m, marker=".")
+                plt.plot(
+                    values,
+                    color="black",
+                    marker="o",
+                    markersize=10,
+                    markerfacecolor="none",
+                    linewidth=0,
+                )
+            plt.legend(frameon=False)
+
+        return values
+
+    from .calculations.planetary import (
+        semimajoraxis_from_period,
+        semimajoraxis_from_transit_scaled_semimajoraxis,
+        semimajoraxis,
+        scaled_semimajoraxis_from_semimajoraxis,
+        scaled_semimajoraxis,
+        eccentricity,
+        argument_of_periastron,
+        transit_impact_parameter_from_inclination,
+        transit_impact_parameter,
+        insolation,
+        relative_insolation,
+        log_relative_insolation,
+        relative_cumulative_xuv_insolation,
+        teq,
+        planet_luminosity,
+        transit_depth_from_radii,
+        transit_depth,
+        scaled_radius_from_radii,
+        scaled_radius,
+        transit_duration_from_orbit,
+        transit_duration,
+        mass_estimated_from_radius,
+        radius_estimated_from_mass,
+        kludge_mass,
+        kludge_radius,
+        kludge_stellar_age,
+        surface_gravity,
+        density,
+        escape_velocity,
+        orbital_velocity,
+        impact_velocity,
+        escape_parameter,
+        scale_height,
+    )
+
+    from .calculations.stellar import (
+        stellar_luminosity_from_radius_and_teff,
+        stellar_luminosity,
+        distance_modulus,
+    )
+
+    from .calculations.observability import (
+        angular_separation,
+        imaging_contrast,
+        transmission_signal,
+        emission_signal,
+        reflection_signal,
+        stellar_brightness,
+        stellar_brightness_in_telescope_units,
+        depth_uncertainty,
+        _get_noise_and_unit,
+        depth_snr,
+        emission_snr,
+        reflection_snr,
+        transmission_snr,
+    )

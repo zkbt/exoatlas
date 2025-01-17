@@ -13,9 +13,12 @@ def test_load_references():
 def test_check_and_update_references():
     e = Exoplanets()
     e.load_individual_references()
-    e.check_individual_references(planets="HD189733b")
+    e.display_individual_references(planets="HD189733b")
     e.update_reference(references="Ivshina + Winn 2022")
-    assert e["HD189733b"].period_reference[0] == "Ivshina + Winn 2022"
+    assert (
+        e["HD189733b"].get_values_from_table("period_reference")[0]
+        == "Ivshina + Winn 2022"
+    )
 
 
 def test_update_values():

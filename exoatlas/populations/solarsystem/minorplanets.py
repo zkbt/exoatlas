@@ -26,7 +26,7 @@ class SolarSystemMinorPlanets(PredefinedPopulation):
         """
         return f'{clean(self.label)}-{self.minimum_diameter.to_value("km")}km'
 
-    def create_standardardized(self, raw):
+    def _create_standardized(self, raw):
         """
         Create a standardized table to make sure that at
         least a few necessary columns are populated.
@@ -63,7 +63,7 @@ class SolarSystemMinorPlanets(PredefinedPopulation):
         s["perihelion"] = raw["q"] * u.AU
         s["inclination"] = raw["i"] * u.deg
         s["Omega"] = raw["om"] * u.deg
-        s["omega"] = raw["w"] * u.deg
+        s["argument_of_periastron"] = raw["w"] * u.deg
         s["mean_anomaly"] = raw["ma"] * u.deg
         s["time_of_perihelion"] = raw["tp"] * u.day
         s["period"] = raw["per"] * u.day

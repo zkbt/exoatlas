@@ -272,9 +272,9 @@ class EmissionBrightness(DepthBrightness):
     xaxis = Emission
 
 
-class JRadius(BubblePanel):
-    xaxis = Jmag
-    yaxis = Radius
+# class JRadius(BubblePanel):
+#    xaxis = Jmag
+#    yaxis = Radius
 
 
 class PeriodRadius(BubblePanel):
@@ -459,17 +459,6 @@ class EscapeFlux(BubblePanel):
             label=r"$v_{thermal} \propto v_{escape}$",
         )
 
-        """        plt.text(
-                    reference_escape_velocity,
-                    reference_relative_insolation,
-                    r"$v_{thermal} \propto v_{escape}$    ",
-                    fontsize=8,
-                    color=color,
-                    alpha=alpha,
-                    ha="right",
-                    **kw
-                )"""
-
     def plot_shoreline(
         self,
         reference_relative_insolation=0.43337238,
@@ -492,16 +481,6 @@ class EscapeFlux(BubblePanel):
             color=color,
             label=r"$I \propto v_{escape}^4$",
         )
-
-        """plt.text(
-            reference_escape_velocity,
-            reference_relative_insolation,
-            r"   $I \propto v_{escape}^4$",
-            fontsize=8,
-            color=color,
-            alpha=alpha,
-            **kw
-        )"""
 
 
 class EscapeCumulativeXUV(EscapeFlux):

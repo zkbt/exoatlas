@@ -8,7 +8,7 @@ class PredefinedPopulation(Population):
     """
 
     label = "?"
-    expiration = 10 * u.day
+    _expiration = 10 * u.day
 
     def __init__(self, remake=False, standard=None, label=None, **plotkw):
         """
@@ -19,9 +19,9 @@ class PredefinedPopulation(Population):
         carefully create a standard table, which can be saved for future use.
         Behind the scenes, this initialization is effectively something like:
 
-        #   .ingest_standardized_data
+        #   ._ingest_standardized_data
         #   ...or...
-        #   ..ingest_raw_data (= .download_raw_data + .create_standardized_data)
+        #   .._ingest_raw_data (= ._download_raw_data + ._create_standardized_data)
 
         Parameters
         ----------
@@ -42,10 +42,10 @@ class PredefinedPopulation(Population):
             try:
                 # try to load the standardized table
                 assert remake == False
-                standard = self.ingest_standardized_data()
+                standard = self._ingest_standardized_data()
             except (IOError, FileNotFoundError, AssertionError):
                 # or create a new standardized table and save it
-                standard = self.ingest_raw_data(remake=remake)
+                standard = self._ingest_raw_data(remake=remake)
 
         assert type(standard) in [QTable, Table, Row]
 
@@ -57,7 +57,7 @@ class PredefinedPopulation(Population):
             **plotkw,
         )
 
-    def ingest_raw_data(self, remake=None):
+    def _ingest_raw_data(self, remake=None):
         """
         Ingest a new population table of arbitrary format,
         and then standardize it, using the tools defined in
@@ -73,18 +73,22 @@ class PredefinedPopulation(Population):
         """
 
         # load the raw table
-        raw = self.download_raw_data(remake=remake)
+        raw = self._download_raw_data(remake=remake)
 
         # create a standardized table from the array
-        standard = self.create_standardardized(raw)
+        standard = self._create_standardized(raw)
 
         # save the standardized table as an ascii table for humans to read
-        standard.write(self.standardized_data_path, format="ascii.ecsv", overwrite=True)
-        self.speak(f"Saved a standardized text table to {self.standardized_data_path}")
+        standard.write(
+            self._standardized_data_path, format="ascii.ecsv", overwrite=True
+        )
+        self._speak(
+            f"Saved a standardized text table to {self._standardized_data_path}"
+        )
 
         return standard
 
-    def download_raw_data(self, remake=False):
+    def _download_raw_data(self, remake=False):
         """
         Load raw data, possibly downloading them if needed.
 
@@ -101,20 +105,20 @@ class PredefinedPopulation(Population):
         """
 
         #
-        self.raw = self._downloader.get(remake=remake)
+        self._raw = self._downloader.get_table(remake=remake)
 
         # return both, so they can both be turned into standardized tables
-        return self.raw
+        return self._raw
 
-    def ingest_standardized_data(self):
+    def _ingest_standardized_data(self):
         """
         Load a standardized population table.
 
         This will *try* to ingest a standardized population table from
-        a local file, probably one created by `create_standardized_table`.
+        a local file, probably one created by `_create_standardized_table`.
         It can/will fail with either an IOError or FileNotFoundError if
         that file doesn't exist, likely prompting the `__init__()` that
-        probably called this to run `.create_standardized_data()` to
+        probably called this to run `._create_standardized_data()` to
         create and save a new standard table.
 
         Returns
@@ -127,7 +131,7 @@ class PredefinedPopulation(Population):
         # keywords for reading a standardized table
         read_kw = dict(format="ecsv", fill_values=[("", np.nan), ("--", np.nan)])
 
-        standard = ascii.read(self.standardized_data_path, **read_kw)
-        self.speak(f"Loaded standardized table from {self.standardized_data_path}")
+        standard = ascii.read(self._standardized_data_path, **read_kw)
+        self._speak(f"Loaded standardized table from {self._standardized_data_path}")
 
         return standard
