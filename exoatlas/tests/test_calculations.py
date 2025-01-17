@@ -85,7 +85,7 @@ def test_calculations(calculations=[]):
 
 
 def test_add_columns():
-    s = ea.SolarSystem()
+    s = SolarSystem()
     new_column_name = "is_inhabited"
     new_column_data = (s.name() == "Earth") * 1
     new_column_uncertainty = (s.name() != "Earth") * 0.01

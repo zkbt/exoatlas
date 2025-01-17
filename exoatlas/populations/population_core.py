@@ -955,7 +955,7 @@ class Population(Talker):
             quantity_key = key.split("_from_table")[0]
 
             def f(**kw):
-                return self.get_values_from_table(key=quantity_key, **kw)
+                return self.get_values_from_table(key=quantity_key)
 
             f.__docstring__ = f"""
             A function to return the column '.{quantity_key}'. 
