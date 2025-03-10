@@ -85,20 +85,20 @@ class Plan(Talker):
     def describe_inputs(self):
         """print text to terminal describing this observing plan"""
 
-        self.speak("Observatory is {}".format(self.observatory))
-        self.speak(
+        self._speak("Observatory is {}".format(self.observatory))
+        self._speak(
             "Time range spans {} to {}".format(self.block.start, self.block.finish)
         )
-        self.speak("Population contains {} objects".format(len(self.population)))
+        self._speak("Population contains {} objects".format(len(self.population)))
 
     def tidy_population(self):
         """load a population of exoplanets, defaulting to the list
         of confirmed transiting planets from the NASA Exoplanet Archive"""
 
         # remove planets that are impossible to see from this latitude
-        zenith = np.abs(self.population.dec - self.observatory.latitude)
+        zenith = np.abs(self.population.dec() - self.observatory.latitude)
         possible = zenith < 60.0 * u.deg
-        self.speak(
+        self._speak(
             "{}/{} targets are visible from {} latitude".format(
                 np.sum(possible), len(possible), self.observatory.latitude
             )
@@ -107,14 +107,14 @@ class Plan(Talker):
         # trim the population
         self.population = self.population[possible]
 
-        self.speak(
+        self._speak(
             "the trimmed population contains {} objects".format(
                 len(self.population.standard)
             )
         )
 
         # KLUDGE
-        bad_duration = np.isfinite(self.population.transit_duration) == False
+        bad_duration = np.isfinite(self.population.transit_duration()) == False
 
         # print('These planets have bad durations!')
         # print(self.population[bad_duration].name)
@@ -124,7 +124,6 @@ class Plan(Talker):
         N = len(self.population)
         c = np.array(colors)[np.arange(N) % len(colors)]
         self.population.standard["observing_color"] = c
-        self.population._pithy = True
 
     def find_planets_transiting_on_night(self, midnight):
         """identify all the transits for all the planets"""
@@ -133,9 +132,9 @@ class Plan(Talker):
         pop = self.population
 
         # pull out the period and epoch of all the planets
-        P = pop.period.to("day")
-        T0 = pop.transit_midpoint.to("day")
-        coords = SkyCoord(ra=pop.ra, dec=pop.dec)
+        P = pop.period().to("day")
+        T0 = pop.transit_midpoint().to("day")
+        coords = SkyCoord(ra=pop.ra(), dec=pop.dec())
 
         # find the closest exact transit epochs
         pop.standard["closest_epoch_number"] = np.round((now - T0) / P)
@@ -217,7 +216,7 @@ class Plan(Talker):
         """print all the observable transits"""
         with open(filename, "w") as f:
             for p in self.planets:
-                p.speak(p.name)
+                p._speak(p.name)
                 for t in p.transits:
                     s = t.details()
                     f.write(s + "\n")
@@ -231,7 +230,7 @@ class Plan(Talker):
         showing all the transits for your population.
         """
 
-        self.speak("plotting transits")
+        self._speak("plotting transits")
         self.find_transits()
         plt.ioff()
 
@@ -277,7 +276,7 @@ class Plan(Talker):
         f = plt.gcf()
         f.autofmt_xdate(rotation=90)
 
-        self.speak("making a movie of transits")
+        self._speak("making a movie of transits")
 
         # initialize the animator
         metadata = dict(
@@ -292,7 +291,7 @@ class Plan(Talker):
             filename = self.directory + "transits-{}planets.mp4".format(
                 len(self.planets)
             )
-        self.speak("trying to save movie to {0}".format(filename))
+        self._speak("trying to save movie to {0}".format(filename))
         with self.writer.saving(self.figure, filename, self.figure.get_dpi()):
             # loop over exposures
             window = 7 / 24.0

@@ -6,6 +6,7 @@ nav:
     - User Guide:
       - creating.ipynb
       - exploring.ipynb
+      - curating.ipynb
       - observing.ipynb
       - filtering.ipynb
       - visualizing.ipynb
@@ -13,6 +14,8 @@ nav:
       - github.ipynb
       - testing.ipynb
       - documentation.ipynb
+    - Details:
+      - compare-nasa-exoplanet-archive-tables.ipynb
 theme:
   name: "material"
   features:

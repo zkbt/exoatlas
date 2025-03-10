@@ -209,7 +209,7 @@ class Panel(Talker):
         # loop over the elements in the population
         for i in range(len(self.x)):
             # pull out the positions and the name
-            x, y, name = self.x[i], self.y[i], self.pop.name[i]
+            x, y, name = self.x[i], self.y[i], self.pop.name()[i]
 
             # skip over the planets that aren't within limits
             if restrictlimits:
@@ -350,9 +350,11 @@ class Panel(Talker):
         # for p in self.pops:
         #    self.point_at(p)
         if self.pop.label_planets:
+            kw = dict(**labelkw)
             if getattr(self.pop, "zorder", None) is not None:
-                labelkw["zorder"] = self.pop.zorder
-            self.label_planets(**labelkw)
+                kw["zorder"] = self.pop.zorder
+            kw.update(**getattr(self.pop, "labelkw", {}))
+            self.label_planets(**kw)
 
     def remove_xlabel(self):
         """

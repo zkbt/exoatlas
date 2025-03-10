@@ -22,7 +22,6 @@ class Transit(Talker):
 
         # store lots of links to other objects
         self.planet = planet
-        self.planet._pithy = True
         self.coord = SkyCoord(self.planet.ra, self.planet.dec)
         self.observatory = observatory
 

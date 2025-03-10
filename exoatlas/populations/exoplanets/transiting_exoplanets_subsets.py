@@ -1,5 +1,10 @@
-from ..imports import *
-from .TransitingExoplanets import *
+"""
+Define some commonly useful subsets of all transiting exoplanets,
+giving them unique names and colors to simplify plotting
+"""
+
+from ...imports import *
+from .transiting_exoplanets import *
 
 __all__ = [
     "TransitingExoplanetsSubset",
@@ -37,8 +42,8 @@ class Kepler(TransitingExoplanetsSubset):
         )
 
     def to_include(self):
-        foundbykepler = (self.discovery_facility == "Kepler") | (
-            self.discovery_facility == "K2"
+        foundbykepler = (self.discovery_facility() == "Kepler") | (
+            self.discovery_facility() == "K2"
         )
         return foundbykepler
 
@@ -50,8 +55,8 @@ class NonKepler(TransitingExoplanetsSubset):
         )
 
     def to_include(self):
-        foundbykepler = (self.discovery_facility == "Kepler") | (
-            self.discovery_facility == "K2"
+        foundbykepler = (self.discovery_facility() == "Kepler") | (
+            self.discovery_facility() == "K2"
         )
         return foundbykepler == False
 
@@ -64,7 +69,7 @@ class TESS(TransitingExoplanetsSubset):
 
     def to_include(self):
         foundbytess = (
-            self.discovery_facility == "Transiting Exoplanet Survey Satellite (TESS)"
+            self.discovery_facility() == "Transiting Exoplanet Survey Satellite (TESS)"
         )
         return foundbytess == True
 
@@ -72,12 +77,12 @@ class TESS(TransitingExoplanetsSubset):
 class NonTESS(TransitingExoplanetsSubset):
     def __init__(self, **kw):
         TransitingExoplanetsSubset.__init__(
-            self, label="TESS", color="black", zorder=0, **kw
+            self, label="NonTESS", color="black", zorder=0, **kw
         )
 
     def to_include(self):
         foundbytess = (
-            self.discovery_facility == "Transiting Exoplanet Survey Satellite (TESS)"
+            self.discovery_facility() != "Transiting Exoplanet Survey Satellite (TESS)"
         )
         return foundbytess == False
 
@@ -98,9 +103,9 @@ class Space(TransitingExoplanetsSubset):
         )
 
     def to_include(self):
-        foundfromspace = np.zeros(self.n).astype(bool)
+        foundfromspace = np.zeros(len(self)).astype(bool)
         for x in space_telescopes:
-            foundfromspace = foundfromspace | (self.discovery_facility == x)
+            foundfromspace = foundfromspace | (self.discovery_facility() == x)
         return foundfromspace
 
 
@@ -111,9 +116,9 @@ class Ground(TransitingExoplanetsSubset):
         )
 
     def to_include(self):
-        foundfromspace = np.zeros(self.n).astype(bool)
+        foundfromspace = np.zeros(len(self)).astype(bool)
         for x in space_telescopes:
-            foundfromspace = foundfromspace | (self.discovery_facility == x)
+            foundfromspace = foundfromspace | (self.discovery_facility() == x)
         return foundfromspace == False
 
 
@@ -123,10 +128,10 @@ sigma = 2.5
 def mass_is_good(pop):
     with np.errstate(invalid="ignore"):
         # the uncertainty must be greater than 0
-        exists = pop.uncertainty("mass") > 0
+        exists = pop.get_uncertainty("mass") > 0
 
         # the uncertainty must be less than a maximum
-        fractional = pop.uncertainty("mass") / pop.mass
+        fractional = pop.get_uncertainty("mass") / pop.get("mass")
         small = fractional < pop.maximum_uncertainty
 
         return small & exists
@@ -144,7 +149,9 @@ class GoodMass(TransitingExoplanetsSubset):
 class BadMass(TransitingExoplanetsSubset):
     def __init__(self, sigma=sigma, **kw):
         self.maximum_uncertainty = 1 / sigma
-        TransitingExoplanetsSubset.__init__(self, label="Bad Mass", color="gray", **kw)
+        TransitingExoplanetsSubset.__init__(
+            self, label="Bad Mass", color="lightblue", **kw
+        )
 
     def to_include(self):
         return mass_is_good(self) == False

@@ -1,8 +1,13 @@
 from .version import *
 
+try:
+    from IPython.display import display
+except ImportError:
+    display = print
+
 # imports that are need by many exoatlas subsections
 from ast import Import
-import os, sys, time, shutil, warnings, copy
+import os, sys, time, shutil, warnings, copy, glob
 from tqdm import tqdm
 
 # (possibly different on Mac, Linux, Windows, even for Python versions 3.8-3.12)
@@ -25,7 +30,8 @@ warnings.simplefilter("ignore", category=AstropyDeprecationWarning)
 # this function downloads a file and returns its filepath
 from astropy.utils.data import download_file
 from astropy.io import ascii
-from astropy.table import Table, vstack, join, setdiff
+from astropy.table import Table, QTable, Row, Column, vstack, join, setdiff
+from astropy.uncertainty import Distribution
 from astropy.visualization import quantity_support
 from astropy.coordinates import SkyCoord
 
@@ -76,7 +82,7 @@ def name2color(name):
 # create a directory structure ()
 try:
     # search for an environment variable
-    base = os.getenv("exoatlas_DATA")
+    base = os.getenv("EXOATLAS_DATA")
     assert base is not None
 except AssertionError:
     # otherwise put it in the local directory
@@ -93,6 +99,13 @@ def locate_local_data():
 directories = dict(data=os.path.join(base, "data/"))
 for k in directories.keys():
     mkdir(directories[k])
+
+
+def reset_standardized_data():
+    files = glob.glob(os.path.join(directories["data"], "standardized-*"))
+    if "y" in input(f"Are you sure you want to wipe {files}? [y/N]"):
+        for f in files:
+            os.remove(f)
 
 
 def reset_local_data():
@@ -115,10 +128,11 @@ def clean(s):
     """
     A wrapper function to clean up complicated strings.
     """
-    bad = """ !@#$%^&*()+-_'",./<>?"""
+    bad = """ !@#$%^&*()+-_'",./<>?;"""
     cleaned = str(s) + ""
     for c in bad:
         cleaned = cleaned.replace(c, "")
+
     return cleaned
 
 
@@ -188,5 +202,5 @@ class AtlasError(ValueError):
 
 import warnings
 
-warnings.catch_warnings()
-warnings.simplefilter("ignore")
+# warnings.catch_warnings()
+# warnings.simplefilter("ignore")

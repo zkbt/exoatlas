@@ -37,12 +37,12 @@ class BuildablePlot(Talker):
         if self.subplot is None:
             self.figure = plt.figure(figsize=figsize)
             f = plt.matplotlib.gridspec.GridSpec
+            # kwargs["figure"] = self.figure
             return f(*args, **kwargs)
         else:
             for k in ["bottom", "top", "left", "right"]:
                 if k in kwargs:
                     kwargs.pop(k)
-
             f = plt.matplotlib.gridspec.GridSpecFromSubplotSpec
             return f(*args, subplot_spec=self.subplot, **kwargs)
 
@@ -75,7 +75,7 @@ class physical_summary(BuildablePlot):
         fr.ticks_simplify_exponents("y")
         fr.add_teqaxis()
         if len(pops) > 1:
-            fr.add_legend(frameon=False)
+            fr.add_legend(frameon=False, bbox_to_anchor=(1, 1), loc="lower left")
         fr.remove_ylabel()
 
         mr = MassRadius()
@@ -95,7 +95,7 @@ class physical_summary(BuildablePlot):
         sr.remove_ylabel()
         mr.ticks_simplify_exponents("y")
 
-        self.panels = {p.nametag: p for p in [fr, mr, er, sr]}
+        self.panels = {p.name: p for p in [fr, mr, er, sr]}
 
 
 class observable_summary(BuildablePlot):

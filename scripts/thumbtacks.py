@@ -7,7 +7,7 @@ It still has some kludges in it.
 """
 
 from exoatlas.ThumbtackPlot import ThumbtackPlot
-from exoatlas.TransitingExoplanets import Kepler, TESS, Others
+from exoatlas.transiting_exoplanets import Kepler, TESS, Others
 import numpy as np, matplotlib.pyplot as plt
 
 
