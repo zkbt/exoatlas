@@ -147,8 +147,11 @@ class Population(Talker):
 
         # define internal lists of column names
         self._populate_column_summaries()
-
         self._populate_column_methods()
+
+        # define how many samples to use for uncertainty propagation
+        self.number_of_uncertainty_samples = 100 
+
 
     def _create_function_to_access_table_quantity(self, name):
         """
@@ -882,7 +885,7 @@ class Population(Talker):
                         self.get_uncertainty_lowerupper_from_table(key)
                     )
                     samples = make_skew_samples_from_lowerupper(
-                        mu=mu, sigma_lower=sigma_lower, sigma_upper=sigma_upper
+                        mu=mu, sigma_lower=sigma_lower, sigma_upper=sigma_upper, N_samples=self.number_of_uncertainty_samples
                     )
                     return Distribution(samples)
                 except KeyError:
