@@ -806,7 +806,7 @@ class Population(Talker):
 
     def get_uncertainty_lowerupper_from_table(self, key):
         """
-        Return two arrays of lower and upper uncertainties, direct from table.
+        Return two arrays of lower and upper uncertainties, directly from table columns.
 
         If no uncertainties of any kind are found, a KeyError should be raised.
 
@@ -823,6 +823,12 @@ class Population(Talker):
             The magnitude of the upper uncertainties (x_{-lower}^{+upper})
         """
 
+        # this is a bit of a kludge, but when doing error propagation it 
+        # might be possible for this to get called with either 'stellar_luminosity' 
+        # or 'stellar_luminosity_from_table'. To avoid triggering a KeyError, 
+        # we should make sure to strip '_from_table' from the key:
+        key = key.replace('_from_table', '')
+
         # first try for asymmetric table uncertainties
         try:
             lower = _clean_column(self.standard[f"{key}_uncertainty_lower"])
@@ -833,9 +839,30 @@ class Population(Talker):
             sym = _clean_column(self.standard[f"{key}_uncertainty"])
             return np.abs(sym), np.abs(sym)
 
-        # then give up and return zeroes
-        # unc = 0 * _clean_column(self.standard[key])
-        # return unc, unc
+    def get_uncertainty_from_table(self, key, **kw):
+        """
+        Return an array of symmetric uncertainties on a quantity,
+        directly from table columns.
+
+        This (very crudely) averages the lower and upper uncertainties
+        to make a symmetric errorbar. For quantities with nearly symmetric
+        errors this should be totally fine, but for ones with wildly
+        asymmetric uncertainties, use `.get_uncertainty_lowerupper_from_table()`.
+        This returns an array, not a function.
+
+        Parameters
+        ----------
+        key : str
+            The quantity for which we want uncertaintes.
+
+        Returns
+        -------
+        uncertainty : Quantity
+            The (symmetrically-averaged) uncertainties, as an array with units.
+        """
+
+        sigma_lower, sigma_upper = self.get_uncertainty_lowerupper_from_table(key, **kw)
+        return 0.5 * (sigma_lower + sigma_upper)
 
     def get_values_from_table(self, key, distribution=False):
         """
@@ -889,6 +916,7 @@ class Population(Talker):
                     )
                     return Distribution(samples)
                 except KeyError:
+                    print(f'{key} could not be made into a Distribution for some weird reason')
                     # if uncertainties fail, give up and return simple array
                     return mu
         else:
@@ -957,8 +985,8 @@ class Population(Talker):
         if key.endswith("_from_table"):
             quantity_key = key.split("_from_table")[0]
 
-            def f(**kw):
-                return self.get_values_from_table(key=quantity_key)
+            def f(distribution=False, **kw):
+                return self.get_values_from_table(key=quantity_key, distribution=distribution)
 
             f.__docstring__ = f"""
             A function to return the column '.{quantity_key}'. 
@@ -1109,6 +1137,7 @@ class Population(Talker):
             sigma_lower, sigma_upper = self.get_uncertainty_lowerupper_from_table(key)
             return sigma_lower, sigma_upper
         except KeyError:
+            print(f'no table uncertainty found for {key}')
             mu = self.get(key, **kw)
             with warnings.catch_warnings():
                 warnings.simplefilter("ignore", category=RuntimeWarning)
