@@ -149,8 +149,11 @@ class Population(Talker):
         self._populate_column_summaries()
         self._populate_column_methods()
 
-        # define how many samples to use for uncertainty propagation
-        self.number_of_uncertainty_samples = 100 
+        # define how many samples and iterations to use for uncertainty propagation
+        self.targeted_fractional_uncertainty_precision = 0.05
+        self._number_of_uncertainty_samples = 100 
+
+
 
 
     def _create_function_to_access_table_quantity(self, name):
@@ -912,7 +915,7 @@ class Population(Talker):
                         self.get_uncertainty_lowerupper_from_table(key)
                     )
                     samples = make_skew_samples_from_lowerupper(
-                        mu=mu, sigma_lower=sigma_lower, sigma_upper=sigma_upper, N_samples=self.number_of_uncertainty_samples
+                        mu=mu, sigma_lower=sigma_lower, sigma_upper=sigma_upper, N_samples=self._number_of_uncertainty_samples
                     )
                     return Distribution(samples)
                 except KeyError:
@@ -1139,23 +1142,34 @@ class Population(Talker):
             mu = self.get(key, **kw)
             with warnings.catch_warnings():
                 warnings.simplefilter("ignore", category=RuntimeWarning)
-                d = self.get(key, distribution=True, **kw)
-                # calculate uncertainties from percentiles if possible...
-                if isinstance(d, Distribution):
-                    lower, upper = d.pdf_percentiles(
-                        100
-                        * np.array(
-                            [
-                                0.5 - gaussian_central_1sigma / 2,
-                                0.5 + gaussian_central_1sigma / 2,
-                            ]
+                f = self.targeted_fractional_uncertainty_precision
+                total_number_of_samples = 1/f**2
+                number_of_iterations = int(np.maximum(np.ceil(total_number_of_samples/self._number_of_uncertainty_samples), 1))
+
+                sigma_lowers, sigma_uppers = [], []
+                for i in range(number_of_iterations):
+                    d = self.get(key, distribution=True, **kw)
+                    # calculate uncertainties from percentiles if possible...
+                    if isinstance(d, Distribution):
+                        lower, upper = d.pdf_percentiles(
+                            100
+                            * np.array(
+                                [
+                                    0.5 - gaussian_central_1sigma / 2,
+                                    0.5 + gaussian_central_1sigma / 2,
+                                ]
+                            )
                         )
-                    )
-                    sigma_lower, sigma_upper = mu - lower, upper - mu
-                # ...otherwise just force the uncertainties to zero
-                else:
-                    sigma_lower, sigma_upper = 0 * mu, 0 * mu
-                return sigma_lower, sigma_upper
+                        sigma_lower, sigma_upper = mu - lower, upper - mu
+                    # ...otherwise just force the uncertainties to zero
+                    else:
+                        sigma_lower, sigma_upper = 0 * mu, 0 * mu
+                    sigma_lowers.append(sigma_lower)
+                    sigma_uppers.append(sigma_upper)
+                average_sigma_lower = np.mean(sigma_lowers, axis=0)
+                average_sigma_upper = np.mean(sigma_uppers, axis=0)
+
+                return average_sigma_lower, average_sigma_upper
 
     def get_uncertainty(self, key, **kw):
         """
