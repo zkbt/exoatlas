@@ -916,7 +916,6 @@ class Population(Talker):
                     )
                     return Distribution(samples)
                 except KeyError:
-                    print(f'{key} could not be made into a Distribution for some weird reason')
                     # if uncertainties fail, give up and return simple array
                     return mu
         else:
@@ -1137,7 +1136,6 @@ class Population(Talker):
             sigma_lower, sigma_upper = self.get_uncertainty_lowerupper_from_table(key)
             return sigma_lower, sigma_upper
         except KeyError:
-            print(f'no table uncertainty found for {key}')
             mu = self.get(key, **kw)
             with warnings.catch_warnings():
                 warnings.simplefilter("ignore", category=RuntimeWarning)
