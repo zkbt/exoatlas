@@ -224,7 +224,7 @@ def estSkewNorm(xin, conf=(0.16, 0.5, 0.84), Guess=None, Mode="Med", Check=True)
     return mu, sigma, alpha, ok
 
 
-def make_skewnormal_parameters_to_interpolate(N=1000):
+def make_skewnormal_parameters_to_interpolate(N=100):
     """
     Make a table to convert from sigma_upper/sigma_lower to skewnormal parameters.
 
@@ -350,7 +350,7 @@ skew_table = ascii.read(interpolation_filename)
 
 
 def make_skew_samples_from_lowerupper(
-    mu=0, sigma_lower=1, sigma_upper=1, N_samples=1000
+    mu=0, sigma_lower=1, sigma_upper=1, N_samples=100
 ):
     """
     Generate a skew-normal distribution from a mode and asymmetric error bars.
