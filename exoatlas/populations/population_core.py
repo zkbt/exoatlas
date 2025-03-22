@@ -1078,7 +1078,7 @@ class Population(Talker):
 
     def get(self, key, **kw):
         """
-        Return an array property for a Population.
+        Return an array quantity for a Population.
 
         This returns an array, not a function. For example, stellar
         radius might be retrieved either as `.stellar_radius()`

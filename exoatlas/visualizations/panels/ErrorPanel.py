@@ -7,12 +7,14 @@ __all__ = ["ErrorPanel"]
 
 def remove_unit(x):
     """
+    Remove astropy units from a variable.
+
     A simple wrapper to help make sure that we're dealing
     just with numerical values, instead of astropy Quantitys
     with units.
     """
 
-    if type(x) == u.quantity.Quantity:
+    if isinstance(x, u.quantity.Quantity):
         return x.value
     else:
         return x

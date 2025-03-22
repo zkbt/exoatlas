@@ -1,7 +1,7 @@
 from ...imports import *
 
 
-class PlottableAxis:
+class Plottable:
     scale = "log"
     lim = [None, None]
     size_normalization = 1
@@ -50,6 +50,21 @@ class PlottableAxis:
         Initialize a plottable axis, connecting it
         to some parent panel that will handle all
         of the population cycling and building.
+
+        Parameters 
+        ----------
+        panel : Panel
+            To which plotting panel is this plottable connected? 
+        orientation : str, None
+            'horizontal' or 'vertical' for x or y,
+            which might be used to format axis labels 
+        kw : dict 
+            All other keywords will be passed to .get()
+            when retrieving values or uncertainties. 
+            For example, for source='teq', we might 
+            consider passing 'albedo' or 'f' keywords, 
+            to therefore get the values and uncertainties 
+            associated with a particular parameters. 
         """
         self.panel = panel
         self.orientation = orientation
@@ -57,12 +72,13 @@ class PlottableAxis:
 
     def __call__(self, panel=None, orientation=None, **kw):
         """
-        As a backup, in case we call something that
-        looks like initializing this PlottableAxis,
-        make sure that we connect to the appropriate
-        panel.
+        As a backup, in case we mistake a Plottable 
+        object that has already been initialized, 
+        this will produce a new independent instance. 
+        Ideally this shouldn't happen, but since the 
+        interface allows a few different ways to 
+        specify a plottable, we want to have this catch.
         """
-
         new_instance = copy.deepcopy(self)
         new_instance.panel = panel
         new_instance.orientation = orientation
@@ -70,74 +86,153 @@ class PlottableAxis:
         return new_instance
 
     def __repr__(self):
-        return f"<Plottable | {self.label}>".replace("\n", " ")
+        '''
+        How should this plottable axis be represented as a string? 
+        '''
+        return f"🧮|{self.label}".replace("\n", " ")
 
     def value(self):
         """
         Extract the values for this plottable axis.
-        By default, this is done by pulling using
-        the string in `source` to pull an attribute
-        from a population.
+
+        This extracts values for population that's
+        currently in focus for a plotting panel. 
+        Generally, plotting panels might loop 
+        through multiple populations to include
+        each on the plot. 
+
+        By default, this is done by using the 
+        string in `self.source` to pull results 
+        from a `Population` method. Any keywords 
+        stored in `self.kw` will also be passed 
+        to the call for that method.
 
         Write over this function in order to make
-        more complicated function calls
+        more complicated function calls, if necessary.
+
+        Returns
+        -------
+        value : Quantity
+            The values for the currently in-focus population,
+            as an astropy Quantity array. 
         """
         return self.panel.pop.get(self.source, **self.kw)
 
-    def value_lowerupper(self):
+    def uncertainty_lowerupper(self):
         """
-        Extract the upper and lower uncertainties
-        for this plottable axis. This function
-        will likely need to be overwritten for
-        any attribute that doesn't directly have
-        an uncertainty defined inside the population.
-        """
+        Extract the upper and lower uncertainties. 
 
+        This extracts values for population that's
+        currently in focus for a plotting panel. 
+        Generally, plotting panels might loop 
+        through multiple populations to include
+        each on the plot. 
+
+        By default, this is done by using the 
+        string in `self.source` to pull uncertainties 
+        from a `Population` method. Any keywords 
+        stored in `self.kw` will also be passed 
+        to the call for that method.
+
+
+        You might want to overwrite this method for 
+        quantities where the uncertainty returned  
+        by the Population's normal uncertainty 
+        propagation is, for whatever reason, not 
+        exactly what you want. 
+
+        Returns 
+        -------
+        lower : np.array
+            The magnitude of the lower uncertainties (x_{-lower}^{+upper}), 
+            for the currently in-focus population, 
+            as an astropy Quantity array. 
+        upper : np.array
+            The magnitude of the upper uncertainties (x_{-lower}^{+upper}),
+            for the currently in-focus population, 
+            as an astropy Quantity array. 
+        """
+        lower, upper = self.panel.pop.get_uncertainty_lowerupper(self.source, **self.kw)
+        return lower, upper
+
+        # FIXME!
+        # this old code might not be necessary with the new uncertainty framework
+        # it can probably be deleted after a bit more testing
+        '''
         try:
             ul = self.panel.pop.get_uncertainty_lowerupper(self.source, **self.kw)
             return ul
         except (AtlasError, AttributeError, KeyError):
             sigma = self.panel.pop.get_uncertainty(self.source, **self.kw)
             return sigma, sigma
+        '''
 
 
-def clean_axis(initial):
+def clean_plottable(initial):
     """
-    Make sure the axis initializer is a PlottableAxis
-    class definition.
+    Make sure the axis initializer is a Plottable class.
+
+    We allow fairly flexible calls to plotting panels,
+    where it's possible that a Plottable might be 
+    requested using a variety of different formats. 
+    This wrapper tries to make sure we get to what we 
+    need, a class definition, no matter what.
 
     Parameters
     ----------
-    initial : PlottableAxis class definition, string
+    initial : Plottable, Plottable class, str, None
+        One of a few ways to flexibly define a Plottable.
+        Here's how the different options will be interpreted:
 
+        Plottable = 
+            If already an instance, the Plottable object itself 
+            will be used for plotting. This would be common for 
+            something like `StellarBrightness(wavelength=5*u.micron)`,
+            where keywords are necessary for what's being plotted.
+        Plottable class = 
+            If a class definition, the Plottable will be 
+            created using the defaults for that class. 
+        str = 
+            If a string, a Plottable will be created using 
+            the method with that name from the populations. 
+            Keywords should (CHECKME?!?!!?) still work, 
+            but it will be more difficult to set bespoke 
+            axis labels and/or plotting defaults. 
+        None = 
+            The parent panel probably has a Plottable 
+            connected to a particular axis; None just means
+            not to overwrite that default. 
     Returns
     -------
-    axis : PlottableAxis class definition
+    plottable : (various)
+        Either a Plottable, or something that can be interpreted 
+        to create plottable when assigned data to plot in 
+        a visualization Panel.
     """
 
-    if initial is None:
-        # pass through None so panel can use its own axis
-        return None
-    elif type(initial) is type:
-        # pass through an actual PlottableAxis definition
+    if isinstance(initial, Plottable):
+        # pass through an actual Plottable object
         return initial
-    elif isinstance(initial, PlottableAxis):
-        # pass through an actual PlottableAxis object
+    elif type(initial) is type:
+        # pass through an actual Plottable definition
         return initial
     elif type(initial) is str:
-        # create a temporary PlottableAxis from this string
-        class GenericPlottableAxis(PlottableAxis):
+        # create a temporary Plottable from this string
+        class GenericPlottable(Plottable):
             source = initial
             label = initial
             scale = "log"
             lim = [None, None]
 
-        return GenericPlottableAxis
+        return GenericPlottable
+    elif initial is None:
+        # pass through None so panel can use its own axis
+        return None
     else:
         # complain otherwise
         raise ValueError(
             f"""
         It' not clear how to turn {initial} into
-        a definition for a PlottableAxis.
+        a definition for a Plottable.
         """
         )

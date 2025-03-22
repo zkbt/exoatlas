@@ -3,7 +3,7 @@ from .plottable import *
 from ...telescopes import *
 
 
-class Flux(PlottableAxis):
+class Flux(Plottable):
     source = "relative_insolation"
     label = "Bolometric Flux Received (relative to Earth)"
     scale = "log"
@@ -15,54 +15,54 @@ class CumulativeXUVFlux(Flux):
     label = "Time-Integrated XUV Flux Received (relative to Earth)"
 
 
-class ImpactVelocity(PlottableAxis):
+class ImpactVelocity(Plottable):
     source = "impact_velocity"
     label = "Estimated Impact Velocity (km/s)"
     scale = "log"
 
 
-class LogFlux(PlottableAxis):
+class LogFlux(Plottable):
     source = "relative_insolation"
     label = "Bolometric Flux Received (relative to Earth)"
     scale = "log"
     lim = [6e4, 2e-4]
 
 
-class Radius(PlottableAxis):
+class Radius(Plottable):
     source = "radius"
     label = "Planet Radius (Earth radii)"
     scale = "log"
     lim = [0.3, 30]
 
-    def value_lowerupper(self):
+    def uncertainty_lowerupper(self):
         return self.panel.pop.get_uncertainty_lowerupper("radius")
 
 
-class Mass(PlottableAxis):
+class Mass(Plottable):
     source = "mass"
     label = "Planet Mass\n(Earth masses)"
     scale = "log"
     lim = [0.03, 3000]
 
-    def value_lowerupper(self):
+    def uncertainty_lowerupper(self):
         return self.panel.pop.get_uncertainty_lowerupper("mass")
 
 
-class SemimajorAxis(PlottableAxis):
+class SemimajorAxis(Plottable):
     source = "semimajoraxis"
     label = "Semimajor Axis (AU)\n"
     scale = "log"
     lim = [0.001, 1000]
 
 
-class AngularSeparation(PlottableAxis):
+class AngularSeparation(Plottable):
     source = "angular_separation"
     label = "Angular Separation (arcsec)\n"
     scale = "log"
     lim = [0.001, 10]
 
 
-class Contrast(PlottableAxis):
+class Contrast(Plottable):
     source = "imaging_contrast"
     label = "Planet-to-Star Contrast"
     scale = "log"
@@ -74,7 +74,7 @@ class Contrast(PlottableAxis):
         eclipse depth will depend on the thermal emission
         spectrum of the planet and star.
         """
-        PlottableAxis.__init__(self, **kw)
+        Plottable.__init__(self, **kw)
         self.phase_function = phase_function
         self.albedo = albedo
         self.label = f"Reflected Light Planet-to-Star Contrast\n(albedo = {albedo:.0%}, phase function = {phase_function:.0%})"
@@ -83,48 +83,48 @@ class Contrast(PlottableAxis):
         return self.panel.pop.imaging_contrast * self.albedo * self.phase_function
 
 
-class KludgedMass(PlottableAxis):
+class KludgedMass(Plottable):
     source = "kludge_mass"
     label = "Planet Mass or msini\n(Earth masses)"
     scale = "log"
     lim = [0.03, 4131]
 
 
-class StellarTeff(PlottableAxis):
+class StellarTeff(Plottable):
     source = "stellar_teff"
     label = "Stellar Temperature (K)"
     scale = "linear"
     lim = [2000, 7000]
 
 
-class StellarLuminosity(PlottableAxis):
+class StellarLuminosity(Plottable):
     source = "stellar_luminosity"
     label = "Stellar Luminosity (L_$\odot$)"
     scale = "log"
     lim = [None, None]
 
 
-class Distance(PlottableAxis):
+class Distance(Plottable):
     source = "distance"
     label = "Distance\n(parsecs)"
     scale = "log"
     lim = [5, 1000]
 
 
-class EscapeVelocity(PlottableAxis):
+class EscapeVelocity(Plottable):
     source = "escape_velocity"
     label = "Escape\nVelocity\n(km/s)"
     scale = "log"
     lim = [2, 500]
 
 
-class Escape(PlottableAxis):
+class Escape(Plottable):
     source = "escape_parameter"
     label = "$\lambda = E_{grav}/E_{thermal}$"
     scale = "log"
     lim = [None, None]
 
-    def value_lowerupper(self):
+    def uncertainty_lowerupper(self):
         """
         Calculate a rough estimate of the uncertainty on the escape
         velocity, simply by propagating the mass and radius uncertainties.
@@ -149,42 +149,42 @@ class Escape(PlottableAxis):
         return sigma, sigma
 
 
-class Density(PlottableAxis):
+class Density(Plottable):
     source = "density"
     label = "Planet Density\n(g/cm$^3$)"
     scale = "log"
     lim = [0.01, 100]
 
 
-class StellarRadius(PlottableAxis):
+class StellarRadius(Plottable):
     source = "stellar_radius"
     label = "Stellar Radius\n(solar radii)"
     scale = "linear"
     lim = [0.0, 2.0]
 
 
-class Period(PlottableAxis):
+class Period(Plottable):
     source = "period"
     label = "Period (days)\n"
     scale = "log"
     lim = [0.15, 365]
 
 
-# class Jmag(PlottableAxis):
+# class Jmag(Plottable):
 #    source = "magnitude_J"
 #    label = "J (magnitude)\n"
 #    scale = "linear"
 #    lim = [3.5, 14.5]
 
 
-class Depth(PlottableAxis):
+class Depth(Plottable):
     source = "transit_depth"
     label = "Transit Depth\nof Planet"
     scale = "log"
     lim = [2e-6, 2e-1]
 
 
-class StellarBrightness(PlottableAxis):
+class StellarBrightness(Plottable):
     # source='stellar_brightness'
     scale = "log"
     lim = [None, None]  # [1e2, 1e8]
@@ -195,7 +195,7 @@ class StellarBrightness(PlottableAxis):
         eclipse depth will depend on the thermal emission
         spectrum of the planet and star.
         """
-        PlottableAxis.__init__(self, **kw)
+        Plottable.__init__(self, **kw)
         self.wavelength = wavelength
 
         # set up the units
@@ -212,7 +212,7 @@ class StellarBrightness(PlottableAxis):
         return self.panel.pop.stellar_brightness(self.wavelength).to(self.unit)
 
 
-class StellarBrightnessTelescope(PlottableAxis):
+class StellarBrightnessTelescope(Plottable):
     scale = "log"
     lim = [None, None]  # [1e-3, 1e3]
 
@@ -246,7 +246,7 @@ class StellarBrightnessTelescope(PlottableAxis):
         """
 
         # initialize the basic plottable axis
-        PlottableAxis.__init__(self, panel=panel, orientation=orientation, **kw)
+        Plottable.__init__(self, panel=panel, orientation=orientation, **kw)
 
         # do all the basic telescope + wavelength setup
         self.setup_telescope(telescope_name=telescope_name, wavelength=wavelength, **kw)
@@ -348,7 +348,7 @@ class Transmission(Depth):
         threshold : float
             By how many sigma must the planet mass be detected?
         """
-        PlottableAxis.__init__(self, **kw)
+        Plottable.__init__(self, **kw)
         self.mu = mu
         self.threshold = threshold
         self.label = rf"Transit Depth\nof 1 Scale Height\n for $\mu$={mu} Atmosphere"
@@ -404,7 +404,7 @@ class Reflection(Depth):
         albedo : float
             What fraction of starlight does the planet reflect?
         """
-        PlottableAxis.__init__(self, **kw)
+        Plottable.__init__(self, **kw)
         self.albedo = albedo
         self.label = f"Reflected Light\nEclipse Depth\n({albedo:.0%} albedo)"
 
@@ -453,7 +453,7 @@ class Emission(Depth):
         eclipse depth will depend on the thermal emission
         spectrum of the planet and star.
         """
-        PlottableAxis.__init__(self, **kw)
+        Plottable.__init__(self, **kw)
         self.wavelength = wavelength
         self.label = f"Thermal Emission\nEclipse Depth\nat $\lambda={self.wavelength.to(u.micron).value}\mu m$"
 

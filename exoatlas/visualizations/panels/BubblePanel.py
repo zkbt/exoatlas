@@ -9,7 +9,9 @@ class BubblePanel(Panel):
     """
     BubblePanel is a general wrapper for making scatter plots
     where planets are represented as bubbles that can have
-    informative sizes and/or colors.
+    informative sizes and/or colors. As bubbles can have 
+    x, y, size, color; a BubblePanel can be a decent way 
+    to represent up to four different dimensions.
     """
 
     def __init__(
@@ -17,8 +19,8 @@ class BubblePanel(Panel):
         xaxis=None,
         yaxis=None,
         size=None,
-        size_normalization=None,
         color=None,
+        size_normalization=None,
         cmap="plasma",
         vmin=None,
         vmax=None,
@@ -26,17 +28,21 @@ class BubblePanel(Panel):
         **kw,
     ):
         """
-        Initialize a plotting panel.
+        Initialize a plotting panel for drawing bubbles.
 
         Parameters
         ----------
-        size : PlottableAxis, str, float, None
+        xaxis : Plottable, str, float, None 
+            What should the x-positions encode? 
+        yaxis : Plottable, str, float, None 
+            What should the y-positions encode? 
+        size : Plottable, str, float, None
             What should the sizes of points be or encode?
+        color : Plottable, str, float, None
+            What should the colors of points be or encode?
         size_normalization : float
             If sizes depend on quantities,
             how should they be normalized?
-        color : PlottableAxis, str, float, None
-            What should the colors of points be or encode?
         cmap : str, cmap from plt.matplotlib.cm
             If the colors depend on quantities,
             what cmap should be used for them?
@@ -47,8 +53,8 @@ class BubblePanel(Panel):
             If the colors depend on quantities,
             what should the top of the cmap be?
         color_normalization : matplotlib.colors.Normalize
-            If color depend on quantities, how should
-            the values be normalized. If color_normalization
+            If color depend on quantities, what function should 
+            be used to normalize values. If color_normalization
             is defined, any values provided here for
             vmin and vmax will be ignored.
         **kw : dict
@@ -60,11 +66,12 @@ class BubblePanel(Panel):
             those panels one-by-one.
         """
 
+
         # initialize the basics of the panel with the plottable axes
         Panel.__init__(self, xaxis=xaxis, yaxis=yaxis, **kw)
 
         # set up how we should scale the sizes of points
-        size = clean_axis(size)
+        size = clean_plottable(size)
         try:
             # try to make a variable size axis
             self.plottable["size"] = size(panel=self, **kw)
@@ -82,7 +89,7 @@ class BubblePanel(Panel):
         self.size_normalization = size_normalization or default_size_normalization
 
         # set up how we should set the colors of points
-        color = clean_axis(color)
+        color = clean_plottable(color)
         try:
             # try to make a variable color axis
             self.plottable["color"] = color(panel=self, **kw)
@@ -135,7 +142,7 @@ class BubblePanel(Panel):
         if self.pop.respond_to_size == False:
             size = self.pop._plotkw.get("s", None)
         # if desired, set variable sizes
-        elif isinstance(self.plottable["size"], PlottableAxis):
+        elif isinstance(self.plottable["size"], Plottable):
             # get the raw values for the sizes
             x = self.plottable["size"].value()
             # calculate the normalized size
@@ -163,7 +170,7 @@ class BubblePanel(Panel):
         if self.pop.respond_to_color == False:
             color = self.pop.color
         # should we use a variable color?
-        elif isinstance(self.plottable["color"], PlottableAxis):
+        elif isinstance(self.plottable["color"], Plottable):
             # get the raw values to go into the color
             x = self.plottable["color"].value()
 

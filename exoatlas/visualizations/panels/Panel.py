@@ -19,7 +19,6 @@ def clean_pops(initial):
     initial : dict, list, Population
         A dictionary containing zero or more populations.
         Or, a list of one or more populations.
-        O
 
     Returns
     -------
@@ -63,10 +62,10 @@ class Panel(Talker):
         self.plottable = {}
 
         # set up the x and y axes
-        xaxis = clean_axis(xaxis) or self.xaxis
+        xaxis = clean_plottable(xaxis) or self.xaxis
         self.plottable["x"] = xaxis(panel=self, orientation="horizontal", **kw)
 
-        yaxis = clean_axis(yaxis) or self.yaxis
+        yaxis = clean_plottable(yaxis) or self.yaxis
         self.plottable["y"] = yaxis(panel=self, orientation="vertical", **kw)
 
         # apply axis labels, scales, limits appropriately
@@ -107,11 +106,11 @@ class Panel(Talker):
 
     @property
     def x_lowerupper(self):
-        return self.plottable["x"].value_lowerupper()
+        return self.plottable["x"].uncertainty_lowerupper()
 
     @property
     def y_lowerupper(self):
-        return self.plottable["y"].value_lowerupper()
+        return self.plottable["y"].uncertainty_lowerupper()
 
     def setup(self, ax=None):
         """

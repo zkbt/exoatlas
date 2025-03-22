@@ -17,8 +17,13 @@ def ink_errorbar(
     **kw
 ):
     """
-    Drop-in replacement for plt.errorbar that can give different
-    colors to each point, using the c= and cmap= keywords.
+    Draw errorbars, allowing each to have its own color.
+    
+    This is meant to be a drop-in replacement for plt.errorbar that 
+    can more easily give different colors to each point, using the c= 
+    and cmap= keywords. It's a little slow because it needs to draw the 
+    individual errorbars one-by-one, but for datasets smaller than a 
+    few thousand elements, it shouldn't be too dreadful.
 
     Parameters
     ----------
@@ -40,7 +45,8 @@ def ink_errorbar(
         The minimumu and maximum values to normalize the cmap.
     alpha : float or array
         The transparency by which *all* points will be multiplied.
-
+    **kw : dict 
+        All other keywords will be passed to plt.errorbar.
 
     """
 
