@@ -102,7 +102,7 @@ class observable_summary(BuildablePlot):
     def plot(
         self,
         pops,
-        observables=["depth", "emission", "reflection", "transmission"],
+        observables=["depth", "emission", "transmission"],
         note="",
         telescope_name="JWST",
         per_transit=False,

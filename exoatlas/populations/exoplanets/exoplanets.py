@@ -652,6 +652,15 @@ class Exoplanets(ExoplanetsPSCP):
         # load standard table(s) or ingest from raw data
         PredefinedPopulation.__init__(self, remake=remake, **plotkw)
 
+        # plotting defaults
+        self.s = 10
+        self.color='black'
+        self.marker='.'
+        self.zorder=0
+        self.respond_to_color=True 
+        self.exact=False
+
+
     def __getitem__(self, key):
         """
         Create a subpopulation of planets by indexing, slicing, or masking.

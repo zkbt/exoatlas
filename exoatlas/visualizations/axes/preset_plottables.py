@@ -179,7 +179,7 @@ class Period(Plottable):
 
 class Depth(Plottable):
     source = "transit_depth"
-    label = "Transit Depth\nof Planet"
+    label = r"Transit Depth\nof Planet"
     scale = "log"
     lim = [2e-6, 2e-1]
 
@@ -294,7 +294,7 @@ class StellarBrightnessTelescope(Plottable):
         # define the label, based on the wavelength and telescope
         w = self.wavelength.to(u.micron).value
         self.label = (
-            rf"Stellar Brightness at Earth at $\lambda={w}\mu$m\n({self.unit_string})"
+            f"Stellar Brightness at Earth at $\lambda={w}\mu$m\n({self.unit_string})"
         )
 
     def value(self):
@@ -351,7 +351,7 @@ class Transmission(Depth):
         Plottable.__init__(self, **kw)
         self.mu = mu
         self.threshold = threshold
-        self.label = rf"Transit Depth\nof 1 Scale Height\n for $\mu$={mu} Atmosphere"
+        self.label = f"Transit Depth\nof 1 Scale Height\n for $\mu$={mu} Atmosphere"
 
     def value(self):
         return self.panel.pop.transmission_signal(mu=self.mu, threshold=self.threshold)
@@ -406,7 +406,7 @@ class Reflection(Depth):
         """
         Plottable.__init__(self, **kw)
         self.albedo = albedo
-        self.label = f"Reflected Light\nEclipse Depth\n({albedo:.0%} albedo)"
+        self.label =rf"Reflected Light\nEclipse Depth\n({albedo:.0%} albedo)"
 
     def value(self):
         return self.panel.pop.reflection_signal(self.albedo)

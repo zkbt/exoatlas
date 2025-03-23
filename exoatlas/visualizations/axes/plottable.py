@@ -223,7 +223,6 @@ def clean_plottable(initial):
             label = initial
             scale = "log"
             lim = [None, None]
-
         return GenericPlottable
     elif initial is None:
         # pass through None so panel can use its own axis

@@ -162,7 +162,9 @@ def emission_signal(
     )
 
     # calculate the depth as the luminosity ratio
-    depths = planet.spectrum(wavelength) / star.spectrum(wavelength)
+    with warnings.catch_warnings():
+        warnings.simplefilter('ignore', RuntimeWarning)
+        depths = planet.spectrum(wavelength) / star.spectrum(wavelength)
 
     return depths
 
