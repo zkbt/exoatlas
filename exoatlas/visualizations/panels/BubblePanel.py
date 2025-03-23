@@ -124,8 +124,7 @@ class BubblePanel(Panel):
                     self, f"{axis}{attribute}", getattr(self.plottable[axis], attribute)
                 )
 
-        # DEBUG
-        self.summarize()
+        print(self)
 
     def get_sizes(self):
         """

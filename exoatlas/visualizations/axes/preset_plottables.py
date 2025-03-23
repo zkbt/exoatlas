@@ -327,7 +327,7 @@ class DepthSNR(StellarBrightnessTelescope):
         """
         # define the label, based on the wavelength and telescope
         w = self.wavelength.to(u.micron).value
-        self.label = rf"S/N for Transit Depth\nat $\lambda={self.wavelength.to(u.micron).value}\mu m$\n(R={self.R})"
+        self.label = f"S/N for Transit Depth\nat $\lambda={self.wavelength.to(u.micron).value}\mu m$\n(R={self.R})"
 
     def value(self):
         """
@@ -383,7 +383,7 @@ class TransmissionSNR(StellarBrightnessTelescope):
         """
         # define the label, based on the wavelength and telescope
         w = self.wavelength.to(u.micron).value
-        self.label = rf"S/N for Transit Depth\nof 1 Scale Height\n for $\mu$={self.mu} Atmosphere\nat $\lambda={w}\mu$m (R={self.R})"
+        self.label = f"S/N for Transit Depth\nof 1 Scale Height\n for $\mu$={self.mu} Atmosphere\nat $\lambda={w}\mu$m (R={self.R})"
 
     def value(self):
         """
@@ -406,7 +406,7 @@ class Reflection(Depth):
         """
         Plottable.__init__(self, **kw)
         self.albedo = albedo
-        self.label =rf"Reflected Light\nEclipse Depth\n({albedo:.0%} albedo)"
+        self.label =f"Reflected Light\nEclipse Depth\n({albedo:.0%} albedo)"
 
     def value(self):
         return self.panel.pop.reflection_signal(self.albedo)

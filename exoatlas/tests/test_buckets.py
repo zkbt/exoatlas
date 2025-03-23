@@ -1,6 +1,8 @@
 from .setup_tests import *
 from exoatlas.imports import *
 from exoatlas import *
+from exoatlas.telescopes import * 
+from exoatlas.visualizations import *
 
 
 def test_telescope_units():

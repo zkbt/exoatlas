@@ -54,7 +54,8 @@ class Plottable:
         Parameters 
         ----------
         panel : Panel
-            To which plotting panel is this plottable connected? 
+            To which plotting panel (if any) is this 
+            plottable connected? 
         orientation : str, None
             'horizontal' or 'vertical' for x or y,
             which might be used to format axis labels 
@@ -89,7 +90,7 @@ class Plottable:
         '''
         How should this plottable axis be represented as a string? 
         '''
-        return f"🧮|{self.label}".replace("\n", " ")
+        return f"🧮 {self.label}".replace('\n', ' ')
 
     def value(self):
         """

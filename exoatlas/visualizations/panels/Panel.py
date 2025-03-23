@@ -4,7 +4,7 @@
 from ...imports import *
 from ..axes.plottable import *
 
-# set the aspect ratios
+# set the default aspect ratios
 aspect = 768 / 1024.0
 figwidth = 7
 
@@ -74,27 +74,15 @@ class Panel(Talker):
                 setattr(
                     self, f"{axis}{attribute}", getattr(self.plottable[axis], attribute)
                 )
-
-    def summarize(self):
-        """
-        How to represent this panel as a string?
-        """
-        x = self.plottable["x"]
-        y = self.plottable["y"]
-        s = self.plottable["size"]
-        c = self.plottable["color"]
-        return f"""
-        <Panel '{self.name}' | {self.__class__.__name__}>
-            x = {x}
-            y = {y}
-            s = {s}
-            c = {c}"""
-
+                
     def __repr__(self):
-        """
-        How to represent this panel as a string?
-        """
-        return f"""<Panel '{self.name}'={id(self)}>"""
+        '''
+        How should this plottable axis be represented as a string? 
+        '''
+        
+        individual_plottable_strings = [f'{k:>6} = {v}' for k, v in self.plottable.items() if v is not None]
+        plottable_string = '\n'.join(individual_plottable_strings)
+        return f'🖼️ {self.__class__.__name__}\n{plottable_string}\n'
 
     @property
     def x(self):

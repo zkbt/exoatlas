@@ -1169,7 +1169,12 @@ class Population(Talker):
                 average_sigma_lower = np.mean(sigma_lowers, axis=0)
                 average_sigma_upper = np.mean(sigma_uppers, axis=0)
 
-                return average_sigma_lower, average_sigma_upper
+                def replace_negative(x):
+                    bad = x < 0 
+                    x[bad] = np.nan 
+                    return x 
+
+                return replace_negative(average_sigma_lower), replace_negative(average_sigma_upper)
 
     def get_uncertainty(self, key, **kw):
         """
