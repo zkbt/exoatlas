@@ -92,7 +92,7 @@ class ErrorPanel(BubblePanel):
         Parameters
         ----------
         key : str
-            The item in the self.pops dictionary to add.
+            The item in the self.populations dictionary to add.
         ax :
             Into what ax should we place this plot?
             If None, use default.
@@ -114,7 +114,7 @@ class ErrorPanel(BubblePanel):
         try:
             plt.sca(self.ax)
         except AttributeError:
-            self.setup(ax=ax)
+            self.setup_axes(ax=ax)
 
         # define the data we're trying to plot
         x = remove_unit(self.x)

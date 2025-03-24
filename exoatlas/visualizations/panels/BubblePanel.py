@@ -13,6 +13,8 @@ class BubblePanel(Panel):
     x, y, size, color; a BubblePanel can be a decent way 
     to represent up to four different dimensions.
     """
+    color = None 
+    size = None 
 
     def __init__(
         self,
@@ -20,11 +22,14 @@ class BubblePanel(Panel):
         yaxis=None,
         size=None,
         color=None,
-        size_normalization=1,
+        size_normalization=100,
+        size_vmin=None, 
+        size_vmax=None, 
+        size_scale=None,
         cmap="plasma",
-        vmin=None,
-        vmax=None,
-        color_normalization=None,
+        color_vmin=None, 
+        color_vmax=None,
+        color_scale=None,
         **kw,
     ):
         """
@@ -41,22 +46,47 @@ class BubblePanel(Panel):
         color : Plottable, str, float, None
             What should the colors of points be or encode?
         size_normalization : float
-            If sizes depend on quantities,
-            how should they be normalized?
+            If sizes depend on quantities, how big should 
+            the symbols be for a `normalized_value` of 1? 
+            Sizes are scaled relative to the default 
+            symbol area in `matplotlib`, so a value of 
+            `size_normalization=1` will give default areas.
+        size_vmin : float, None
+            If the sizes depend on quantities, what 
+            unnormalized data value corresponds to the 
+            a symbol area of 0? (This will overwrite 
+            `lim` set for the size plottable.)
+        size_vmax : float, None
+            If the sizes depend on quantities, what 
+            unnormalized data value corresponds to the 
+            default symbol area? (This will overwrite 
+            `lim` set for the size plottable.)
+        size_scale: float, None
+            If the sizes depend on quantities, what 
+            scaling should be applied when normalizing 
+            values? Options are `linear` and `log`. 
+            (This will overwrite `scale` set for the 
+            size plottable.)
         cmap : str, cmap from plt.matplotlib.cm
-            If the colors depend on quantities,
-            what cmap should be used for them?
-        vmin : float, astropy.units.quantity.Quantity
-            If the colors depend on quantities,
-            what should the bottom of the cmap be?
-        vmax : float, astropy.units.quantity.Quantity
-            If the colors depend on quantities,
-            what should the top of the cmap be?
-        color_normalization : matplotlib.colors.Normalize
-            If color depend on quantities, what function should 
-            be used to normalize values. If color_normalization
-            is defined, any values provided here for
-            vmin and vmax will be ignored.
+            If the colors depend on quantities, what cmap 
+            should be used for them? Colors will be based 
+            on `normalized_value` from the Plottable
+        color_vmin : float, None
+            If the colors depend on quantities, what 
+            unnormalized data value corresponds to the 
+            bottom of the color map? (This will overwrite 
+            `lim` set for the color plottable.)
+        color_vmax : float, None
+            If the colors depend on quantities, what 
+            unnormalized data value corresponds to the 
+            top of the color map? (This will overwrite 
+            `lim` set for the color plottable.)
+        color_scale: float, None
+            If the colors depend on quantities, what 
+            scaling should be applied when normalizing 
+            values? Options are `linear` and `log`. 
+            (This will overwrite `scale` set for the 
+            color plottable.)
         **kw : dict
             Other keywords will be passed on to *all*
             Panel/Plottable initializations (which may
@@ -71,39 +101,42 @@ class BubblePanel(Panel):
         Panel.__init__(self, xaxis=xaxis, yaxis=yaxis, **kw)
 
         # set up how we should scale the sizes of points
-        self.plottable["size"] = clean_plottable(size)
+        size_to_use = clean_plottable(size or self.size, **kw)
+        if isinstance(size_to_use, Plottable):
+            self.plottable["size"] = size_to_use
+            # overwrite plottable defaults, if requested
+            if size_vmin is not None:
+                self.plottable["size"].lim[0] = size_vmin
+            if size_vmax is not None:
+                self.plottable["size"].lim[1] = size_vmax
+            if size_scale is not None:
+                self.plottable["size"].scale = size_scale
+        else:
+            self.static_size = size_to_use
 
         # make sure a size normalization has been defined (relative to default)
         self.size_normalization = size_normalization
 
         # set up how we should set the colors of points
-        color = clean_plottable(color)
-        try:
-            # try to make a variable color axis
-            self.plottable["color"] = color(panel=self, **kw)
-            default_lim = self.plottable["color"].lim
-        except TypeError:
-            # otherwise, use a single color for all points
-            self.plottable["color"] = color
-            default_lim = [None, None]
-
+        color_to_use = clean_plottable(color or self.color, **kw)
+        if isinstance(color_to_use, Plottable):
+            self.plottable['color'] = color_to_use
+            # overwrite plottable defaults, if requested
+            if color_vmin is not None:
+                self.plottable["color"].lim[0] = color_vmin
+            if color_vmax is not None:
+                self.plottable["color"].lim[1] = color_vmax
+            if color_scale is not None:
+                self.plottable["color"].scale = color_scale
+        else:
+            self.static_color = color_to_use
+    
         # if an actual cmap was provided, use it
         if isinstance(cmap, plt.matplotlib.colors.Colormap):
             self.cmap = cmap
         # otherwise, treat the cmap as a string key
         else:
             self.cmap = plt.matplotlib.colormaps[cmap]
-
-        # make sure the color map limits are set
-        self.vmin = vmin or default_lim[0]
-        self.vmax = vmax or default_lim[1]
-
-        # if a custom normalization is used, reset vmin + vmax
-        self.color_normalization = color_normalization
-        if isinstance(self.color_normalization, plt.matplotlib.colors.Normalize):
-            # pull the normalization's min/max for information
-            self.vmin = color_normalization.vmin
-            self.vmax = color_normalization.vmax
 
         # apply (x,y) axis labels, scales, limits appropriately
         for axis in "xy":
@@ -127,15 +160,15 @@ class BubblePanel(Panel):
         if self.pop.respond_to_size == False:
             size = self.pop._plotkw.get("s", None)
         # if desired, set variable sizes
-        elif isinstance(self.plottable["size"], Plottable):
+        elif 'size' in self.plottable:
             # get the raw values for the sizes
-            x = self.plottable["size"].value(self.pop)
+            x = self.plottable["size"].normalized_value(self.pop)
             # calculate the normalized size
-            size = default_size * x / self.size_normalization
+            size = default_size * self.size_normalization * x
         # otherwise, set a single size
         else:
             # get default, first from pop and then from panel
-            size = self.pop._plotkw.get("s", self.plottable["size"])
+            size = self.pop._plotkw.get("s", self.static_size)
 
         # return a valid input to plt.scatter(s=...)
         return size
@@ -155,34 +188,13 @@ class BubblePanel(Panel):
         if self.pop.respond_to_color == False:
             color = self.pop.color
         # should we use a variable color?
-        elif isinstance(self.plottable["color"], Plottable):
-            # get the raw values to go into the color
-            x = self.plottable["color"].value(self.pop)
-
-            # FIXME - make sure to check vmin/vmax are valid
-            # if (self.vmin is None) or (self.vmax is None):
-            #    raise AtlasError(f'''
-            #    It looks like you're trying to use
-            #    {self.plottable['color']} to set variable
-            #    colors for bubbles. To do so, please make
-            #    sure it has finite values defined for its
-            #    .vmin and .vmax attributes.
-            #    ''')
-
-            # make sure we have *some* normalizer defined
-            f = plt.matplotlib.colors.Normalize
-            self.color_normalization = self.color_normalization or f(
-                vmin=self.vmin, vmax=self.vmax
-            )
-
-            normalized = self.color_normalization(x)
+        elif 'color' in self.plottable:
+            normalized = self.plottable["color"].normalized_value(self.pop)
             color = self.cmap(normalized)
         # finally, should we just use a default color?
         else:
             # get default, first from pop and then from panel
-            color = self.pop.color
-            if color is None:
-                color = self.plottable["color"]
+            color = self.pop._plotkw.get("color", self.static_color)
 
         # return a valid input to any one of the following:
         #   plt.scatter(c=...)
@@ -190,7 +202,7 @@ class BubblePanel(Panel):
         #   plt.scatter(facecolors=...)
         return color
 
-    def kw(self, key=None, **kwargs):
+    def kw(self, pop=None, **kwargs):
         """
         Do a little decision-making about the plotting keyword
         arguments, pulling defaults from each population where
@@ -198,19 +210,18 @@ class BubblePanel(Panel):
 
         Parameter
         ---------
-        key : str
-            The population for which we should pull keywords.
-            If None, go with the current population.
+        pop : Population, str, int
+            The population to plot. This could be either an 
+            actual Population object, or a key referring to 
+            an element of the `self.populations` dictionary.
         **kwargs : dict
             All other keywords will be directed toward
             overwriting individual population defaults.
         """
 
-        # identify the population we're working with
-        if key is None:
-            key = self.key
-        # else:
-        self.point_at(key)
+        # make sure we're pointing at the right population
+        if pop != None:        
+            self.point_at(pop)
 
         # define some default keywords, which can be over-written
         default = dict(
@@ -234,19 +245,18 @@ class BubblePanel(Panel):
             default["edgecolors"] = "none"
 
         # if any other keywords are provided, overwrite these defaults
-        for k, v in kwargs.items():
-            default[k] = v
+        default.update(**kwargs)
 
         return default
 
-    def plot(self, key, ax=None, labelkw={}, **kwargs):
+    '''def plot(self, key, ax=None, labelkw={}, **kwargs):
         """
         Add the points for a particular population to this panel.
 
         Parameters
         ----------
         key : str
-            The population (as an item in the self.pops dictionary) to add.
+            The population (as an item in the self.populations dictionary) to add.
         ax :
             Into what ax should we place this plot?
             If None, use default.
@@ -263,10 +273,11 @@ class BubblePanel(Panel):
         try:
             plt.sca(self.ax)
         except AttributeError:
-            self.setup(ax=ax)
+            self.setup_axes(ax=ax)
 
         # add the scattered points
         self.scattered[key] = self.ax.scatter(self.x, self.y, **self.kw(key, **kwargs))
 
         # set the scales, limits, labels
         self.finish_plot(labelkw=labelkw)
+'''

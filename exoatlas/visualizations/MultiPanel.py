@@ -114,11 +114,11 @@ class MultiPanelPlot(Talker):
             Any extra keywords will be passed on to all panels' `build`
         """
 
-        self.pops = clean_pops(pops)
+        self.populations = clean_pops(pops)
 
         # plot each population in each panel
         for i, k in enumerate(self.panel_names):
-            self.panels[k].build(pops=self.pops, ax=self.ax[k], **kw)
+            self.panels[k].build(pops=self.populations, ax=self.ax[k], **kw)
 
         # clean up unnecessary labels
         if self.horizontal:
@@ -129,8 +129,6 @@ class MultiPanelPlot(Talker):
             for k in self.panel_names[:-1]:
                 plt.setp(self.ax[k].get_xticklabels(), visible=False)
                 self.ax[k].set_xlabel("")
-
-        return self
 
 
 FourPanels = MultiPanelPlot

@@ -63,7 +63,7 @@ class ThumbtackPlot(BubblePanel):
         """convert distance and RA to x"""
         return self.stretch(self.pop.distance) * np.sin(self.theta)
 
-    def setup(self):
+    def setup_axes(self):
         """setup the initial plotting window"""
 
         # set the figure's aspect ratio
@@ -165,7 +165,7 @@ class ThumbtackPlot(BubblePanel):
             pass
         plt.cla()
         if keys is None:
-            keys = self.pops.keys()
+            keys = self.populations.keys()
         for key in keys:
             self.plot(key)
             for z in distances:
@@ -175,7 +175,6 @@ class ThumbtackPlot(BubblePanel):
                     self.namestars(thiskey)
                 plt.draw()
                 plt.savefig(self._fileprefix(key))
-        return self
 
     def movie(
         self,
@@ -199,7 +198,7 @@ class ThumbtackPlot(BubblePanel):
             pass
         plt.cla()
         if keys is None:
-            keys = self.pops.keys()
+            keys = self.populations.keys()
         for key in keys:
             self.plot(key)
             if highlight == "completeness":
@@ -252,7 +251,7 @@ class ThumbtackPlot(BubblePanel):
 
         # handle adding and removing names
         self.clearnames()
-        for thiskey in self.pops.keys():
+        for thiskey in self.populations.keys():
             self.namestars(thiskey)
 
         nudge = 0.05 * self.stretch(self.outer)
@@ -332,7 +331,7 @@ class ThumbtackPlot(BubblePanel):
         try:
             self.ax
         except:
-            self.setup()
+            self.setup_axes()
             self.circles(self.circlegrid)
         kw = self.kw()
         kw["facecolors"] = self.pop.color

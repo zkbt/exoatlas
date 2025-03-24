@@ -266,6 +266,9 @@ def clean_plottable(initial, **kw):
     This wrapper tries to make sure we get to what we
     need, a class definition, no matter what.
 
+    (This used to accept a string to initialize a 
+    basic )
+
     Parameters
     ----------
     initial : Plottable, Plottable class, str, None
@@ -280,12 +283,6 @@ def clean_plottable(initial, **kw):
         Plottable class =
             If a class definition, the Plottable will be
             created using the defaults for that class.
-        str =
-            If a string, a Plottable will be created using
-            the method with that name from the populations.
-            Keywords should (CHECKME?!?!!?) still work,
-            but it will be more difficult to set bespoke
-            axis labels and/or plotting defaults.
         None =
             The parent panel probably has a Plottable
             connected to a particular axis; None just means
@@ -295,10 +292,9 @@ def clean_plottable(initial, **kw):
         initializing `Plottable` from a class or a string. 
     Returns
     -------
-    plottable : (various)
-        Either a Plottable, or something that can be interpreted
-        to create plottable when assigned data to plot in
-        a visualization Panel.
+    plottable_or_not : (various)
+        Either an instance of a Plottable object, 
+        or something else entirely. 
     """
 
     if isinstance(initial, Plottable):
@@ -308,17 +304,6 @@ def clean_plottable(initial, **kw):
         if issubclass(initial, Plottable):
             # create an instance from a Plottable class, using defaults
             return initial(**kw)
-    elif type(initial) is str:
-        # create a very minimal plottable based on a source string
-        Plottable(source=initial, **kw)
-    elif initial is None:
-        # pass through None so panel can use its own axis
-        return None
-
-    # complain otherwise
-    raise ValueError(
-        f"""
-    It' not clear how to turn {initial} into
-    a definition for a Plottable.
-    """
-    )
+    else:
+        # pass others through
+        return initial

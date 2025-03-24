@@ -5,10 +5,6 @@ from ...imports import *
 from ..axes.plottable import *
 from ...populations import Population
 
-# set the default aspect ratios
-aspect = 768 / 1024.0
-figwidth = 7
-
 
 def clean_pops(initial):
     """
@@ -41,7 +37,7 @@ class Panel(Talker):
     title = None
     xaxis = None 
     yaxis = None 
-    
+
     def __init__(self, xaxis=None, yaxis=None, label=None, **kw):
         """
         Initialize a plotting panel.
@@ -158,7 +154,7 @@ class Panel(Talker):
             try:
                 self.fi, self.ax
             except AttributeError:
-                self.fi, self.ax = plt.subplots(figsize=(figwidth, figwidth * aspect), dpi=300, constrained_layout=True)
+                self.fi, self.ax = plt.subplots(1, 1, constrained_layout=True)
         else:
             # if an ax is provided, point at that
             self.ax = ax
