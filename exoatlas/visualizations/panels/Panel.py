@@ -38,12 +38,6 @@ def clean_pops(initial):
 class Panel(Talker):
     # define some defaults
     title = ""
-    xlabel = "?"
-    ylabel = "?"
-    xscale = "linear"
-    yscale = "linear"
-    xlim = [None, None]
-    ylim = [None, None]
 
     def __init__(self, xaxis=None, yaxis=None, name="?", **kw):
         """
@@ -56,17 +50,18 @@ class Panel(Talker):
         # store the name of this panel
         self.name = name
 
-        # dictionaries to store access points to items that appear on the plot
-        self.scattered = {}
-        self.labeled = {}
+        # the 2-4 quantities being experssed in this plot
         self.plottable = {}
 
-        # set up the x and y axes
-        xaxis = clean_plottable(xaxis) or self.xaxis
-        self.plottable["x"] = xaxis(panel=self, orientation="horizontal", **kw)
+        # the matplotlib objects to access the plotted points themselves
+        self.scattered = {}
 
-        yaxis = clean_plottable(yaxis) or self.yaxis
-        self.plottable["y"] = yaxis(panel=self, orientation="vertical", **kw)
+        # the matplotlib objects to access text labels in the plot
+        self.labeled = {}
+
+        # set up the x and y axes
+        self.plottable["x"] = clean_plottable(xaxis or self.xaxis, **kw)
+        self.plottable["y"] = clean_plottable(yaxis or self.yaxis)
 
         # apply axis labels, scales, limits appropriately
         for axis in "xy":
@@ -74,31 +69,32 @@ class Panel(Talker):
                 setattr(
                     self, f"{axis}{attribute}", getattr(self.plottable[axis], attribute)
                 )
-                
+
     def __repr__(self):
-        '''
-        How should this plottable axis be represented as a string? 
-        '''
-        
-        individual_plottable_strings = [f'{k:>6} = {v}' for k, v in self.plottable.items() if v is not None]
-        plottable_string = '\n'.join(individual_plottable_strings)
-        return f'🖼️ {self.__class__.__name__}\n{plottable_string}\n'
+        """
+        How should this plottable axis be represented as a string?
+        """
+        individual_plottable_strings = [
+            f"{k:>6} = {v}" for k, v in self.plottable.items() if v is not None
+        ]
+        plottable_string = "\n".join(individual_plottable_strings)
+        return f"🖼️ {self.__class__.__name__}\n{plottable_string}\n"
 
     @property
     def x(self):
-        return self.plottable["x"].value()
+        return self.plottable["x"].value(self.pop)
 
     @property
     def y(self):
-        return self.plottable["y"].value()
+        return self.plottable["y"].value(self.pop)
 
     @property
     def x_lowerupper(self):
-        return self.plottable["x"].uncertainty_lowerupper()
+        return self.plottable["x"].uncertainty_lowerupper(self.pop)
 
     @property
     def y_lowerupper(self):
-        return self.plottable["y"].uncertainty_lowerupper()
+        return self.plottable["y"].uncertainty_lowerupper(self.pop)
 
     def setup(self, ax=None):
         """
@@ -108,6 +104,7 @@ class Panel(Talker):
         ----------
         ax :
             The axes into which this panel should be placed.
+            If no axes are provided, a new figure will be created
         """
 
         # what's the aspect ratio of this plot
@@ -116,7 +113,7 @@ class Panel(Talker):
         # make sure we're pointing at the axes for this panel
         if ax is None:
             # if need be, create a new axes for this panel
-            plt.figure(self.title, figsize=(figwidth, figwidth * self.aspect), dpi=300)
+            fi, ax = plt.figure(self.title, figsize=(figwidth, figwidth * self.aspect), dpi=300)
             gs = plt.matplotlib.gridspec.GridSpec(1, 1, wspace=0, hspace=0)
             self.ax = plt.subplot(gs[0])
         else:
@@ -163,11 +160,12 @@ class Panel(Talker):
                         'transiting':TransitingExoplanets()}
         """
 
-        #
+        # start with a dictionary of populations
         self.pops = clean_pops(pops)
 
         # loop over all the populations
         for key in self.pops.keys():
+
             # plot each population, passing plotting keywords to it
             self.plot(key, **kw)
 

@@ -1,11 +1,13 @@
 from ...imports import *
+from matplotlib.colors import Normalize, LogNorm
 
 
 class Plottable:
+    source = None
+    label = None
     scale = "log"
     lim = [None, None]
-    size_normalization = 1
-
+    unit = None 
     """
     General class definition for a plottable axis,
     which can appear as either an xaxis or yaxis.
@@ -13,170 +15,255 @@ class Plottable:
     The standard items to include in the definition
     of a plottable object are:
 
-        source = Generally a string, indicating a
-                 retrievable population attribute,
-                 which will be used as the value
-                 to plot. The values-getting can
-                 also be over-written by defining
-                 a .value() method, if the desired
-                 values are more complicated than
-                 a simple attribute/property (e.g.
-                 if it depends on an input, like
-                 wavelength).
-
-        label  = Human-friendly string describing
-                 this axis, which will appear as
-                 its label in the plot.
-
-        scale  = String ('linear', 'log', ?) to
-                 indicate what scale should be
-                 used for this axis.
-
-        lim    = Tuple to indicate (lower, upper)
-                 limits for the plot. These might
-                 also be used to set the vmin and
-                 vmax of a color map, if this
-                 plottable is being used to color
-                 points in a BubblePanel.
-
-        size_normalization = (optional) What to multiply
-                 the values by to convert them
-                 into sizes for a scatter plot.
 
     """
 
-    def __init__(self, panel=None, orientation=None, **kw):
+    def __init__(self, source=None, label=None, scale=None, lim=None, unit=None, **kw):
         """
-        Initialize a plottable axis, connecting it
-        to some parent panel that will handle all
-        of the population cycling and building.
+        Initialize a Plottable quantity.
 
-        Parameters 
+        This `Plottable` serves as a helper for plotting 
+        `exoatlas` quantities. It provides functions to 
+        return values and uncertainties for a `Population`, 
+        but it also stores important information about 
+        labels, scales, and limits that are needed for
+        good automatic visualizations (but are not needed 
+        for simply doing calculations).
+
+        Often a `Plottable` will be connected to some kind 
+        of a visualization `Panel`, which will handle rendering 
+        data on plots and cycling through populations. 
+
+        Parameters
         ----------
-        panel : Panel
-            To which plotting panel (if any) is this 
-            plottable connected? 
-        orientation : str, None
-            'horizontal' or 'vertical' for x or y,
-            which might be used to format axis labels 
-        kw : dict 
+        source : str
+            Generally a string, indicating a
+            retrievable population attribute,
+            which will be used as the value
+            to plot. The values-getting can
+            also be over-written by defining
+            a .value() method, if the desired
+            values are more complicated than
+            a simple attribute/property (e.g.
+            if it depends on an input, like
+            wavelength).
+        label : str
+            Human-friendly string describing
+            this axis, which will appear as
+            its label in the plot.
+        scale : str
+            String ('linear', 'log', ?) to
+            indicate what scale should be
+            used for this axis.
+        lim : tuple
+            Tuple to indicate (lower, upper)
+            limits for the plot. These might
+            also be used to set the vmin and
+            vmax of a color map, if this
+            plottable is being used to color
+            points in a BubblePanel. `lim` 
+            should have no units attached.
+            For compariing different populations, 
+            it's probably a very good idea to 
+            explicitly set the limits and not 
+            leave them as None; otherwise 
+            individual populations might normalize 
+            themselves separately. 
+        unit : astropy.units.Unit 
+            The astropy unit to be used for plotting. 
+            It must be something to which the 
+            quantity can be converted.
+        kw : dict
             All other keywords will be passed to .get()
-            when retrieving values or uncertainties. 
-            For example, for source='teq', we might 
-            consider passing 'albedo' or 'f' keywords, 
-            to therefore get the values and uncertainties 
-            associated with a particular parameters. 
+            when retrieving values or uncertainties.
+            For example, for source='teq', we might
+            consider passing 'albedo' or 'f' keywords,
+            to therefore get the values and uncertainties
+            associated with a particular parameters.
         """
-        self.panel = panel
-        self.orientation = orientation
+        self.source = source or self.source
+        self.label = label or self.label
+        self.scale = scale or self.scale
+        self.lim = lim or self.lim
+        self.unit = unit or self.unit
         self.kw = kw
 
-    def __call__(self, panel=None, orientation=None, **kw):
-        """
-        As a backup, in case we mistake a Plottable 
-        object that has already been initialized, 
-        this will produce a new independent instance. 
-        Ideally this shouldn't happen, but since the 
-        interface allows a few different ways to 
-        specify a plottable, we want to have this catch.
-        """
-        new_instance = copy.deepcopy(self)
-        new_instance.panel = panel
-        new_instance.orientation = orientation
-
-        return new_instance
-
     def __repr__(self):
-        '''
-        How should this plottable axis be represented as a string? 
-        '''
-        return f"🧮 {self.label}".replace('\n', ' ')
-
-    def value(self):
         """
-        Extract the values for this plottable axis.
+        How should this plottable axis be represented as a string?
+        """
+        return f"📏 {self.source or self.label or '?'}".replace("\n", " ")
 
-        This extracts values for population that's
-        currently in focus for a plotting panel. 
-        Generally, plotting panels might loop 
+    def _convert_unit(self, x):
+        '''
+        Convert quantity into desired unit,
+        unless units aren't specified. 
+
+        Parameter 
+        --------- 
+        x : quantity
+            The quantity to convert to `self.unit` 
+        '''
+        if self.unit is None:
+            return x 
+        else:
+            return x.to(self.unit)
+
+
+    def value(self, pop):
+        """
+        Extract the values for a population.
+
+        Generally, plotting panels might loop
         through multiple populations to include
-        each on the plot. 
+        each on the plot.
 
-        By default, this is done by using the 
-        string in `self.source` to pull results 
-        from a `Population` method. Any keywords 
-        stored in `self.kw` will also be passed 
+        By default, this is done by using the
+        string in `self.source` to pull results
+        from a `Population` method. Any keywords
+        stored in `self.kw` will also be passed
         to the call for that method.
 
         Write over this function in order to make
         more complicated function calls, if necessary.
 
+        Parameters 
+        ----------
+        pop : Population 
+            The `exoatlas` population for which 
+            values will be retreived.
+
         Returns
         -------
         value : Quantity
-            The values for the currently in-focus population,
-            as an astropy Quantity array. 
+            The value an astropy Quantity array.
         """
-        return self.panel.pop.get(self.source, **self.kw)
+        value = pop.get(self.source, **self.kw)
+        return self._convert_unit(value)
 
-    def uncertainty_lowerupper(self):
+    def uncertainty_lowerupper(self, pop):
         """
-        Extract the upper and lower uncertainties. 
+        Extract the upper and lower uncertainties for a population. 
 
-        This extracts values for population that's
-        currently in focus for a plotting panel. 
-        Generally, plotting panels might loop 
+        Generally, plotting panels might loop
         through multiple populations to include
-        each on the plot. 
+        each on the plot.
 
-        By default, this is done by using the 
-        string in `self.source` to pull uncertainties 
-        from a `Population` method. Any keywords 
-        stored in `self.kw` will also be passed 
+        By default, this is done by using the
+        string in `self.source` to pull uncertainties
+        from a `Population` method. Any keywords
+        stored in `self.kw` will also be passed
         to the call for that method.
 
 
-        You might want to overwrite this method for 
-        quantities where the uncertainty returned  
-        by the Population's normal uncertainty 
-        propagation is, for whatever reason, not 
-        exactly what you want. 
+        You might want to overwrite this method for
+        quantities where the uncertainty returned
+        by the Population's normal uncertainty
+        propagation is, for whatever reason, not
+        exactly what you want.
 
-        Returns 
+        Parameters 
+        ----------
+        pop : Population 
+            The `exoatlas` population for which 
+            values will be retreived.
+
+        Returns
         -------
         lower : np.array
-            The magnitude of the lower uncertainties (x_{-lower}^{+upper}), 
-            for the currently in-focus population, 
-            as an astropy Quantity array. 
+            The magnitude of the lower uncertainties (x_{-lower}^{+upper}),
+            as an astropy Quantity array.
         upper : np.array
             The magnitude of the upper uncertainties (x_{-lower}^{+upper}),
-            for the currently in-focus population, 
-            as an astropy Quantity array. 
+            as an astropy Quantity array.
         """
-        lower, upper = self.panel.pop.get_uncertainty_lowerupper(self.source, **self.kw)
-        return lower, upper
+        lower, upper = pop.get_uncertainty_lowerupper(self.source, **self.kw)
+        return self._convert_unit(lower), self._convert_unit(upper)
 
-        # FIXME!
-        # this old code might not be necessary with the new uncertainty framework
-        # it can probably be deleted after a bit more testing
-        '''
-        try:
-            ul = self.panel.pop.get_uncertainty_lowerupper(self.source, **self.kw)
-            return ul
-        except (AtlasError, AttributeError, KeyError):
-            sigma = self.panel.pop.get_uncertainty(self.source, **self.kw)
-            return sigma, sigma
-        '''
+    def uncertainty(self, pop):
+        """
+        Extract the uncertainties for a population.
 
+        Generally, plotting panels might loop
+        through multiple populations to include
+        each on the plot.
 
-def clean_plottable(initial):
+        By default, this is done by using the
+        string in `self.source` to pull uncertainties
+        from a `Population` method. Any keywords
+        stored in `self.kw` will also be passed
+        to the call for that method.
+
+        You might want to overwrite this method for
+        quantities where the uncertainty returned
+        by the Population's normal uncertainty
+        propagation is, for whatever reason, not
+        exactly what you want.
+
+        Parameters 
+        ----------
+        pop : Population 
+            The `exoatlas` population for which 
+            values will be retreived.
+
+        Returns
+        -------
+        sigma : np.array
+            The uncertainties an astropy Quantity array.
+        """
+        sigma = pop.get_uncertainty(self.source, **self.kw)
+        return self._convert_unit(sigma)
+
+    
+    def normalized_value(self, pop):
+        """
+        Extract the values for a population, 
+        normalized to fall between 0 and 1.
+
+        This normalizes the values for a population 
+        according to scale        
+
+        Write over this function in order to make
+        more complicated function calls, if necessary.
+
+        Parameters 
+        ----------
+        pop : Population 
+            The `exoatlas` population for which 
+            values will be retreived.
+
+        Returns
+        -------
+        normalized_value : Quantity
+            The value, normalized 
+        """
+
+        # get unitless array of values
+        value = self._convert_unit(pop.get(self.source, **self.kw)).value
+
+        # set non-nan limits if none are provided
+        vmin, vmax = self.lim
+        if vmin == None:
+            vmin = np.nanmin(value)
+        if vmax == None:
+            vmax = np.nanmax(value)
+
+        # call different scaling functions
+        kw = dict(vmin=vmin, vmax=vmax)
+        if self.scale == 'linear':
+            normalize = Normalize(**kw)
+        elif self.scale == 'log':
+            normalize = LogNorm(**kw)
+        return normalize(value)
+
+def clean_plottable(initial, **kw):
     """
-    Make sure the axis initializer is a Plottable class.
+    Make sure something is actually a Plottable object.
 
     We allow fairly flexible calls to plotting panels,
-    where it's possible that a Plottable might be 
-    requested using a variety of different formats. 
-    This wrapper tries to make sure we get to what we 
+    where it's possible that a Plottable might be
+    requested using a variety of different formats.
+    This wrapper tries to make sure we get to what we
     need, a class definition, no matter what.
 
     Parameters
@@ -185,54 +272,53 @@ def clean_plottable(initial):
         One of a few ways to flexibly define a Plottable.
         Here's how the different options will be interpreted:
 
-        Plottable = 
-            If already an instance, the Plottable object itself 
-            will be used for plotting. This would be common for 
+        Plottable =
+            If already an instance, the Plottable object itself
+            will be used for plotting. This would be common for
             something like `StellarBrightness(wavelength=5*u.micron)`,
             where keywords are necessary for what's being plotted.
-        Plottable class = 
-            If a class definition, the Plottable will be 
-            created using the defaults for that class. 
-        str = 
-            If a string, a Plottable will be created using 
-            the method with that name from the populations. 
-            Keywords should (CHECKME?!?!!?) still work, 
-            but it will be more difficult to set bespoke 
-            axis labels and/or plotting defaults. 
-        None = 
-            The parent panel probably has a Plottable 
+        Plottable class =
+            If a class definition, the Plottable will be
+            created using the defaults for that class.
+        str =
+            If a string, a Plottable will be created using
+            the method with that name from the populations.
+            Keywords should (CHECKME?!?!!?) still work,
+            but it will be more difficult to set bespoke
+            axis labels and/or plotting defaults.
+        None =
+            The parent panel probably has a Plottable
             connected to a particular axis; None just means
-            not to overwrite that default. 
+            not to overwrite that default.
+    **kw : dict 
+        Extra keywords that should be passed in when 
+        initializing `Plottable` from a class or a string. 
     Returns
     -------
     plottable : (various)
-        Either a Plottable, or something that can be interpreted 
-        to create plottable when assigned data to plot in 
+        Either a Plottable, or something that can be interpreted
+        to create plottable when assigned data to plot in
         a visualization Panel.
     """
 
     if isinstance(initial, Plottable):
         # pass through an actual Plottable object
         return initial
-    elif type(initial) is type:
-        # pass through an actual Plottable definition
-        return initial
+    elif type(initial) == type:
+        if issubclass(initial, Plottable):
+            # create an instance from a Plottable class, using defaults
+            return initial(**kw)
     elif type(initial) is str:
-        # create a temporary Plottable from this string
-        class GenericPlottable(Plottable):
-            source = initial
-            label = initial
-            scale = "log"
-            lim = [None, None]
-        return GenericPlottable
+        # create a very minimal plottable based on a source string
+        Plottable(source=initial, **kw)
     elif initial is None:
         # pass through None so panel can use its own axis
         return None
-    else:
-        # complain otherwise
-        raise ValueError(
-            f"""
-        It' not clear how to turn {initial} into
-        a definition for a Plottable.
-        """
-        )
+
+    # complain otherwise
+    raise ValueError(
+        f"""
+    It' not clear how to turn {initial} into
+    a definition for a Plottable.
+    """
+    )

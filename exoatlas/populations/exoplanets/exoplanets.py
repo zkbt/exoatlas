@@ -654,7 +654,6 @@ class Exoplanets(ExoplanetsPSCP):
 
         # plotting defaults
         self.s = 10
-        self.color='black'
         self.marker='.'
         self.zorder=0
         self.respond_to_color=True 

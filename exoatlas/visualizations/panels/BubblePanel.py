@@ -20,7 +20,7 @@ class BubblePanel(Panel):
         yaxis=None,
         size=None,
         color=None,
-        size_normalization=None,
+        size_normalization=1,
         cmap="plasma",
         vmin=None,
         vmax=None,
@@ -32,9 +32,9 @@ class BubblePanel(Panel):
 
         Parameters
         ----------
-        xaxis : Plottable, str, float, None 
+        xaxis : Plottable, str, None 
             What should the x-positions encode? 
-        yaxis : Plottable, str, float, None 
+        yaxis : Plottable, str, None 
             What should the y-positions encode? 
         size : Plottable, str, float, None
             What should the sizes of points be or encode?
@@ -71,22 +71,10 @@ class BubblePanel(Panel):
         Panel.__init__(self, xaxis=xaxis, yaxis=yaxis, **kw)
 
         # set up how we should scale the sizes of points
-        size = clean_plottable(size)
-        try:
-            # try to make a variable size axis
-            self.plottable["size"] = size(panel=self, **kw)
-            default_size_normalization = self.plottable["size"].size_normalization
+        self.plottable["size"] = clean_plottable(size)
 
-        except TypeError:
-            # otherwise, use a single size for all points
-            self.plottable["size"] = size
-            default_size_normalization = 1
-
-        # self.plottable['x'].panel = self
-        # self.plottable['y'].panel = self
-
-        # make sure a size normalization has been defined
-        self.size_normalization = size_normalization or default_size_normalization
+        # make sure a size normalization has been defined (relative to default)
+        self.size_normalization = size_normalization
 
         # set up how we should set the colors of points
         color = clean_plottable(color)
@@ -124,8 +112,6 @@ class BubblePanel(Panel):
                     self, f"{axis}{attribute}", getattr(self.plottable[axis], attribute)
                 )
 
-        print(self)
-
     def get_sizes(self):
         """
         The sizes of the bubbles.
@@ -143,7 +129,7 @@ class BubblePanel(Panel):
         # if desired, set variable sizes
         elif isinstance(self.plottable["size"], Plottable):
             # get the raw values for the sizes
-            x = self.plottable["size"].value()
+            x = self.plottable["size"].value(self.pop)
             # calculate the normalized size
             size = default_size * x / self.size_normalization
         # otherwise, set a single size
@@ -171,7 +157,7 @@ class BubblePanel(Panel):
         # should we use a variable color?
         elif isinstance(self.plottable["color"], Plottable):
             # get the raw values to go into the color
-            x = self.plottable["color"].value()
+            x = self.plottable["color"].value(self.pop)
 
             # FIXME - make sure to check vmin/vmax are valid
             # if (self.vmin is None) or (self.vmax is None):
