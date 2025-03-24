@@ -48,7 +48,7 @@ if "release" in sys.argv[-1]:
 exec(open("exoatlas/version.py").read())
 
 # run the setup function
-setup(
+setup_axes(
     # the name folks can use to search for this with pip
     name="exoatlas",
     # this package will only be installed if the current version doesn't exist
