@@ -1,8 +1,8 @@
 from .setup_tests import *
 
-from exoatlas import * 
+from exoatlas import *
 from exoatlas.imports import *
-from exoatlas.visualizations import * 
+from exoatlas.visualizations import *
 
 import exoatlas as ex
 import matplotlib.pyplot as plt
@@ -53,10 +53,10 @@ def test_colors():
     physical_summary([t, s])
 
 
-def test_fourpanels():
+def test_multipanel():
     pops = {}
     pops["solarsystem"] = SolarSystem()
-    f = FourPanels()
+    f = MultiPanelPlot()
     f.build(pops)
 
 

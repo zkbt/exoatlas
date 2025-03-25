@@ -65,7 +65,7 @@ observatories["SBO"] = dict(
 )
 
 
-class Observatory(Talker):
+class Observatory:
     """
     The Observatory object, for keeping track of timing calculating alt-az.
 
@@ -86,8 +86,8 @@ class Observatory(Talker):
 
         # make sure an abbreviation is defined
         # if abbreviation is None:
-        #    self._speak("Pick an observatory from following options:")
-        #    self._speak(str(observatories.keys()))
+        #    print("Pick an observatory from following options:")
+        #    print(str(observatories.keys()))
         #    abbreviation = self.input().strip()
 
         # populate the attributes of this observatory
@@ -125,7 +125,7 @@ class Observatory(Talker):
         Plot the alitude of the Sun, for some given times.
         """
 
-        self._speak("plotting the sun")
+        print("plotting the sun")
 
         times = Time(jd, format="jd")
         sunAltAz = self.sun(times)
@@ -205,7 +205,7 @@ class Observatory(Talker):
         Plot the airmass of the object (at some times).
         """
 
-        self._speak("plotting airmass")
+        print("plotting airmass")
         # calculate altaz
         altaz = self.altaz(coord, times)
         airmass = altaz.secz.value

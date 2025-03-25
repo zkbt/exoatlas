@@ -8,7 +8,7 @@ the next week or so.
 from ..imports import *
 
 
-class Block(Talker):
+class Block:
     """
     The Block object, for generating a sequence of nights.
 

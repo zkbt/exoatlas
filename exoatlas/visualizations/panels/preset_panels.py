@@ -10,7 +10,7 @@ class FluxRadius(BubblePanel):
     xaxis = Flux
     yaxis = Radius
 
-    def add_teqaxis(self):
+    def add_teqaxis(self, position=50):
         """
         Add an extra axis along the bottom of this panel,
         quoting the equilibrium temperature associated
@@ -34,7 +34,7 @@ class FluxRadius(BubblePanel):
         ax_temp.xaxis.set_label_position(
             "bottom"
         )  # set the position of the second x-axis to bottom
-        ax_temp.spines["bottom"].set_position(("outward", 40))
+        ax_temp.spines["bottom"].set_position(("outward", position))
         ax_temp.tick_params(axis="x", colors=extra_axis_color, which="both")
         ax_temp.spines["bottom"].set_edgecolor(extra_axis_color)
         ax_temp.xaxis.set_major_formatter(FormatStrFormatter("%dK"))

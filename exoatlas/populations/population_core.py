@@ -71,7 +71,7 @@ def _clean_column(raw_column):
     return cleaned_column
 
 
-class Population(Talker):
+class Population:
     """
     Populations of astronomical objects might contain
         Exoplanets (planets with host stars),
@@ -151,10 +151,7 @@ class Population(Talker):
 
         # define how many samples and iterations to use for uncertainty propagation
         self.targeted_fractional_uncertainty_precision = 0.05
-        self._number_of_uncertainty_samples = 100 
-
-
-
+        self._number_of_uncertainty_samples = 100
 
     def _create_function_to_access_table_quantity(self, name):
         """
@@ -826,11 +823,11 @@ class Population(Talker):
             The magnitude of the upper uncertainties (x_{-lower}^{+upper})
         """
 
-        # this is a bit of a kludge, but when doing error propagation it 
-        # might be possible for this to get called with either 'stellar_luminosity' 
-        # or 'stellar_luminosity_from_table'. To avoid triggering a KeyError, 
+        # this is a bit of a kludge, but when doing error propagation it
+        # might be possible for this to get called with either 'stellar_luminosity'
+        # or 'stellar_luminosity_from_table'. To avoid triggering a KeyError,
         # we should make sure to strip '_from_table' from the key:
-        key = key.replace('_from_table', '')
+        key = key.replace("_from_table", "")
 
         # first try for asymmetric table uncertainties
         try:
@@ -915,7 +912,10 @@ class Population(Talker):
                         self.get_uncertainty_lowerupper_from_table(key)
                     )
                     samples = make_skew_samples_from_lowerupper(
-                        mu=mu, sigma_lower=sigma_lower, sigma_upper=sigma_upper, N_samples=self._number_of_uncertainty_samples
+                        mu=mu,
+                        sigma_lower=sigma_lower,
+                        sigma_upper=sigma_upper,
+                        N_samples=self._number_of_uncertainty_samples,
                     )
                     return Distribution(samples)
                 except KeyError:
@@ -988,7 +988,9 @@ class Population(Talker):
             quantity_key = key.split("_from_table")[0]
 
             def f(distribution=False, **kw):
-                return self.get_values_from_table(key=quantity_key, distribution=distribution)
+                return self.get_values_from_table(
+                    key=quantity_key, distribution=distribution
+                )
 
             f.__docstring__ = f"""
             A function to return the column '.{quantity_key}'. 
@@ -1143,8 +1145,16 @@ class Population(Talker):
             with warnings.catch_warnings():
                 warnings.simplefilter("ignore", category=RuntimeWarning)
                 f = self.targeted_fractional_uncertainty_precision
-                total_number_of_samples = 1/f**2
-                number_of_iterations = int(np.maximum(np.ceil(total_number_of_samples/self._number_of_uncertainty_samples), 1))
+                total_number_of_samples = 1 / f**2
+                number_of_iterations = int(
+                    np.maximum(
+                        np.ceil(
+                            total_number_of_samples
+                            / self._number_of_uncertainty_samples
+                        ),
+                        1,
+                    )
+                )
 
                 sigma_lowers, sigma_uppers = [], []
                 for i in range(number_of_iterations):
@@ -1170,11 +1180,13 @@ class Population(Talker):
                 average_sigma_upper = np.mean(sigma_uppers, axis=0)
 
                 def replace_negative(x):
-                    bad = x < 0 
-                    x[bad] = np.nan 
-                    return x 
+                    bad = x < 0
+                    x[bad] = np.nan
+                    return x
 
-                return replace_negative(average_sigma_lower), replace_negative(average_sigma_upper)
+                return replace_negative(average_sigma_lower), replace_negative(
+                    average_sigma_upper
+                )
 
     def get_uncertainty(self, key, **kw):
         """
@@ -1240,7 +1252,7 @@ class Population(Talker):
                     n = sum(np.isfinite(self.standard[k]))
                 except TypeError:
                     n = sum(np.atleast_1d(self.standard[k] != ""))
-            self._speak(f"{k:>25} | {n:4}/{N} rows = {n/N:4.0%} are not empty")
+            print(f"{k:>25} | {n:4}/{N} rows = {n/N:4.0%} are not empty")
 
     def _find_index(self, name):
         """

@@ -201,5 +201,4 @@ class AtlasError(ValueError):
 
 import warnings
 
-# warnings.catch_warnings()
-# warnings.simplefilter("ignore")
+warnings.filterwarnings("ignore", message="invalid escape sequence")

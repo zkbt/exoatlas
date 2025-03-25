@@ -5,7 +5,7 @@ from ...telescopes import *
 
 class Flux(Plottable):
     source = "relative_insolation"
-    label = "Bolometric Flux Received (relative to Earth)"
+    label = "Bolometric Flux Received\n(relative to Earth)"
     scale = "log"
     lim = [6e4, 2e-4]
 
@@ -21,24 +21,19 @@ class ImpactVelocity(Plottable):
     scale = "log"
 
 
-class LogFlux(Plottable):
-    source = "relative_insolation"
-    label = "Bolometric Flux Received (relative to Earth)"
-    scale = "log"
-    lim = [6e4, 2e-4]
-
-
 class Radius(Plottable):
     source = "radius"
     label = "Planet Radius (Earth radii)"
     scale = "log"
     lim = [0.3, 30]
 
+
 class Mass(Plottable):
     source = "mass"
     label = "Planet Mass\n(Earth masses)"
     scale = "log"
     lim = [0.03, 3000]
+
 
 class SemimajorAxis(Plottable):
     source = "semimajoraxis"
@@ -59,20 +54,6 @@ class Contrast(Plottable):
     label = "Planet-to-Star Contrast"
     scale = "log"
     lim = [1e-10, 1e-3]
-
-    def __init__(self, phase_function=0.25, albedo=0.25, **kw):
-        """
-        Initialize for a particular wavelength, because the
-        eclipse depth will depend on the thermal emission
-        spectrum of the planet and star.
-        """
-        Plottable.__init__(self, **kw)
-        self.phase_function = phase_function
-        self.albedo = albedo
-        self.label = f"Reflected Light Planet-to-Star Contrast\n(albedo = {albedo:.0%}, phase function = {phase_function:.0%})"
-
-    def value(self):
-        return self.panel.pop.imaging_contrast * self.albedo * self.phase_function
 
 
 class KludgedMass(Plottable):
@@ -138,22 +119,22 @@ class Period(Plottable):
     lim = [0.15, 365]
 
 
-# class Jmag(Plottable):
-#    source = "magnitude_J"
-#    label = "J (magnitude)\n"
-#    scale = "linear"
-#    lim = [3.5, 14.5]
+class Gmag(Plottable):
+    source = "magnitude_gaia"
+    label = "G (magnitude)\n"
+    scale = "linear"
+    lim = [3.5, 14.5]
 
 
 class Depth(Plottable):
     source = "transit_depth"
-    label = r"Transit Depth\nof Planet"
+    label = "Transit Depth\nof Planet"
     scale = "log"
     lim = [2e-6, 2e-1]
 
 
 class StellarBrightness(Plottable):
-    source='stellar_brightness'
+    source = "stellar_brightness"
     scale = "log"
     lim = [None, None]  # [1e2, 1e8]
     unit = u.Unit(("ph s^-1 m^-2 micron^-1"))
@@ -368,7 +349,7 @@ class Reflection(Depth):
         """
         Plottable.__init__(self, **kw)
         self.albedo = albedo
-        self.label =f"Reflected Light\nEclipse Depth\n({albedo:.0%} albedo)"
+        self.label = f"Reflected Light\nEclipse Depth\n({albedo:.0%} albedo)"
 
     def value(self):
         return self.panel.pop.reflection_signal(self.albedo)

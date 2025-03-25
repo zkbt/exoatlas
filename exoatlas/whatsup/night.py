@@ -1,6 +1,6 @@
 from ..imports import *
 
 
-class Night(Talker):
+class Night:
     def __init__(self, midnight):
         Talker.__init__(self)

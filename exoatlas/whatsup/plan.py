@@ -34,7 +34,7 @@ colors = [
 ]
 
 
-class Plan(Talker):
+class Plan:
     """a Plan object to keep track of potentially observable transits"""
 
     def __init__(
@@ -85,11 +85,9 @@ class Plan(Talker):
     def describe_inputs(self):
         """print text to terminal describing this observing plan"""
 
-        self._speak("Observatory is {}".format(self.observatory))
-        self._speak(
-            "Time range spans {} to {}".format(self.block.start, self.block.finish)
-        )
-        self._speak("Population contains {} objects".format(len(self.population)))
+        print("Observatory is {}".format(self.observatory))
+        print("Time range spans {} to {}".format(self.block.start, self.block.finish))
+        print("Population contains {} objects".format(len(self.population)))
 
     def tidy_population(self):
         """load a population of exoplanets, defaulting to the list
@@ -98,7 +96,7 @@ class Plan(Talker):
         # remove planets that are impossible to see from this latitude
         zenith = np.abs(self.population.dec() - self.observatory.latitude)
         possible = zenith < 60.0 * u.deg
-        self._speak(
+        print(
             "{}/{} targets are visible from {} latitude".format(
                 np.sum(possible), len(possible), self.observatory.latitude
             )
@@ -107,7 +105,7 @@ class Plan(Talker):
         # trim the population
         self.population = self.population[possible]
 
-        self._speak(
+        print(
             "the trimmed population contains {} objects".format(
                 len(self.population.standard)
             )
@@ -230,7 +228,7 @@ class Plan(Talker):
         showing all the transits for your population.
         """
 
-        self._speak("plotting transits")
+        print("plotting transits")
         self.find_transits()
         plt.ioff()
 
@@ -276,7 +274,7 @@ class Plan(Talker):
         f = plt.gcf()
         f.autofmt_xdate(rotation=90)
 
-        self._speak("making a movie of transits")
+        print("making a movie of transits")
 
         # initialize the animator
         metadata = dict(
@@ -291,7 +289,7 @@ class Plan(Talker):
             filename = self.directory + "transits-{}planets.mp4".format(
                 len(self.planets)
             )
-        self._speak("trying to save movie to {0}".format(filename))
+        print("trying to save movie to {0}".format(filename))
         with self.writer.saving(self.figure, filename, self.figure.get_dpi()):
             # loop over exposures
             window = 7 / 24.0

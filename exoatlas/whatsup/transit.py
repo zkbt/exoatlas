@@ -3,7 +3,7 @@
 from ..imports import *
 
 
-class Transit(Talker):
+class Transit:
     """a Transit object is one transit of one (associated) planet"""
 
     def __init__(

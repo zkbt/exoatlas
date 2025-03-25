@@ -1,12 +1,12 @@
 """
-Define a downloader tool to somewhat politely use a local file and/or 
+Define a downloader tool to somewhat politely use a local file and/or
 download a big one from online, if it's older than some particular date.
 """
 
 from ..imports import *
 
 
-class Downloader(Talker):
+class Downloader:
     """
     ...to aid downloading large archive files, storing them locally,
     and redownloading them only when/if absolutely necessary.
@@ -63,7 +63,7 @@ class Downloader(Talker):
         if should_we_download:
             self.download_fresh()
         else:
-            self._speak(f"Loading local file from {self.path}")
+            print(f"Loading local file from {self.path}")
 
         # read the actual file
         table = Table.read(self.path, **self.read_kw)
@@ -78,7 +78,7 @@ class Downloader(Talker):
         Download a brand new table from the Exoplanet Archive.
         """
 
-        self._speak(
+        print(
             f"""
         Attempting to freshly download data from
         {self.url}
@@ -100,7 +100,7 @@ class Downloader(Talker):
         # copy the file to its new location
         shutil.copyfile(temporary_path, self.path)
 
-        self._speak(f"Download successful! Saved file to {self.path}")
+        print(f"Download successful! Saved file to {self.path}")
 
     def add_metadata(self, table):
         pass

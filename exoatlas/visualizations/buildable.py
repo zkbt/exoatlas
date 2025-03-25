@@ -2,7 +2,7 @@ from ..imports import *
 from .panels import *
 
 
-class BuildablePlot(Talker):
+class BuildablePlot:
     """docstring for BuildablePlot."""
 
     def __init__(self, pops, subplot=None, stepbystep=True, **kw):
@@ -57,8 +57,8 @@ class BuildablePlot(Talker):
 class physical_summary(BuildablePlot):
     def plot(self, pops):
         gs = self.create_gridspec(
-            2,
-            3,
+            nrows=2,
+            ncols=3,
             width_ratios=[1, 4, 1],
             height_ratios=[1, 3],
             wspace=0.04,

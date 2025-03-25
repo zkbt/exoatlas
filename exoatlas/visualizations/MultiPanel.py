@@ -9,21 +9,30 @@ def make_sure_panel_is_iniated(x, **kw):
         return x(**kw)
 
 
-class MultiPanelPlot(Talker):
+class MultiPanelPlot:
     """
     Make and modify row or a column of connected exoatlas plot panels.
     """
 
     def __init__(
         self,
-        panels=[MassRadius, FluxRadius, StellarRadiusPlanetRadius, DistanceRadius],
+        panels=[
+            MassRadius(),
+            FluxRadius(),
+            StellarRadiusPlanetRadius(),
+            DistanceRadius(),
+        ],
         horizontal=True,
-        figsize=(8, 6),
-        **kw
+        figsize=(12, 8),
+        label=None,
+        **kw,
     ):
         """
         Set up the plotting panels.
-        Pause before plotting, in case we want to make any modifications.
+
+        The initialization creates the subplot axes,
+        and then the `.build()` function is used
+        to population those with data.
 
         Parameters
         ----------
@@ -35,6 +44,8 @@ class MultiPanelPlot(Talker):
             False = make a column of panels on top of each other
         figsize : tuple
             What's the (width, height) of the figure to make.
+        label : str
+            What is a label to use for this plot for filenames?
         **kw : dict
             Other keywords will be passed to gridspec to set the
             widths, heights, margins, and spacing of the panels.
@@ -45,26 +56,24 @@ class MultiPanelPlot(Talker):
                 width_ratios, height_ratios
         """
 
+        # set up a dictionary for panels and their matplotlib axes
         self.panels = {}
+        self.ax = {}
 
-        # store list of panel names
-        def get_name(x):
-            try:
-                return x.name
-            except:
-                try:
-                    return x.__name__
-                except AttributeError:
-                    return x.__class__.__name__
+        self.setup_panels()
 
-        # create a dictionary of panel objects
+        # give this MultiPanel plot a label
+        self.label = label or "-".join([p.label for p in self.panels.values()])
+
+    def setup_panels(self):
+        # populate a dictionary of panel objects
         for p in panels:
             this_panel = make_sure_panel_is_iniated(p, **kw)
-            key = get_name(this_panel)
+            key = this_panel.label
             if key in self.panels:
                 key += "+"
             self.panels[key] = this_panel
-        self.panel_names = list(self.panels.keys())
+        self.panel_keys = list(self.panels.keys())
 
         # set up the geometry of the figure
         self.horizontal = horizontal
@@ -92,43 +101,99 @@ class MultiPanelPlot(Talker):
         )
 
         # store the axes in a dictionary, with panel names as keys
-        self.ax = {}
-        for i, k in enumerate(self.panel_names):
+        for i, k in enumerate(self.panel_keys):
             if nrows * ncols == 1:
                 self.ax[k] = axgrid
             else:
                 self.ax[k] = axgrid[i]
 
-    def build(self, pops={}, **kw):
+            # connect this ax to this panel
+            self.panels[k].ax = self.ax[k]
+
+    def plot(self, pop, **kw):
         """
-        Actually make the plot by building up each panel.
+        Add the points for one population to this panel.
+
+        Parameters
+        ----------
+        pop : Population, str, int
+            The population to plot. This could be either an
+            actual Population object, or a key referring to
+            an element of the `self.populations` dictionary.
+        annotate_kw : dict
+            Keywords for labeling the planet names.
+        **kw : dict
+            Any extra keywords will be passed on to
+            each panel's `plot()` method
+        """
+        for k in self.panel_keys:
+            self.panels[k].plot(pop, **kw)
+
+        self.refine_panel_labels()
+
+    def refine_panel_labels(self):
+        """
+        Clean up the look of the panels.
+
+        This mostly removes unnecessary axis labels.
+        """
+
+        # clean up unnecessary labels between panels
+        if self.horizontal:
+            for k in self.panel_keys[1:]:
+                plt.setp(self.ax[k].get_yticklabels(), visible=False)
+                self.ax[k].set_ylabel("")
+        else:
+            for k in self.panel_keys[:-1]:
+                plt.setp(self.ax[k].get_xticklabels(), visible=False)
+                self.ax[k].set_xlabel("")
+
+    def build(
+        self,
+        pops={},
+        save=False,
+        format="png",
+        savefig_kw={},
+        legend=True,
+        legend_kw={},
+        **kw,
+    ):
+        """
+        Build up this panel by plotting every population into it.
 
         Parameters
         ----------
         pops : dict
             A dictionary of populations, with keys as labels values as
             initialized populations. For example,
+
                 pops = {'solarsystem':SolarSystem(),
                         'transiting':TransitingExoplanets()}
+        save : bool
+            Should we save the figure(s) to files?
+        format : str
+            What kind of graphics file should be saved?
+            Any format allowed by `plt.savefig` is fine;
+            we recommend `png` or `pdf`.
+        savefig_kw : dict
+            Keywords to pass to `plt.savefig` for saving figures.
         **kw : dict
-            Any extra keywords will be passed on to all panels' `build`
+            Any extra keywords will be passed on to all panels' `build()`
         """
 
+        # make sure we're working
         self.populations = clean_pops(pops)
 
         # plot each population in each panel
-        for i, k in enumerate(self.panel_names):
-            self.panels[k].build(pops=self.populations, ax=self.ax[k], **kw)
+        for i, k in enumerate(self.panel_keys):
+            self.panels[k].build(
+                pops=self.populations, legend=False, **kw
+            )  # ax=self.ax[k],
 
         # clean up unnecessary labels
-        if self.horizontal:
-            for k in self.panel_names[1:]:
-                plt.setp(self.ax[k].get_yticklabels(), visible=False)
-                self.ax[k].set_ylabel("")
-        else:
-            for k in self.panel_names[:-1]:
-                plt.setp(self.ax[k].get_xticklabels(), visible=False)
-                self.ax[k].set_xlabel("")
+        self.refine_panel_labels()
 
-
-FourPanels = MultiPanelPlot
+        # save the final figure
+        if save:
+            filename = f"{self.label}+" + "+".join(self.populations.keys())
+            plt.savefig(f"{filename}.{format}", **savefig_kw)

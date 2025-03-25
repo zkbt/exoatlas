@@ -27,7 +27,6 @@ class ErrorPanel(BubblePanel):
     their intensity scaled to some overall visual weight.
     """
 
-
     def intensity(self, invisible_fraction=0.75, x_power=2, y_power=2):
         """
         What visual intensity should each datapoint have?
@@ -74,20 +73,20 @@ class ErrorPanel(BubblePanel):
         # return the visual weight
         return remove_unit(weight)
 
-    def plot(self, pop, ax=None, labelkw={}, **kw):
+    def plot(self, pop, ax=None, annotate_kw={}, **kw):
         """
         Add the errorbars for a particular population to this panel.
 
         Parameters
         ----------
         pop : Population, str, int
-            The population to plot. This could be either an 
-            actual Population object, or a key referring to 
+            The population to plot. This could be either an
+            actual Population object, or a key referring to
             an element of the `self.populations` dictionary.
         ax :
             Into what ax should we place this plot?
             If None, create a new plotting axes.
-        labelkw : dict
+        annotate_kw : dict
             Keywords for labeling the planet names.
         **kw : dict
             Any extra keywords will be passed on to `errorbar`
@@ -98,8 +97,8 @@ class ErrorPanel(BubblePanel):
 
         # do a bubble instead, if requested (for drawing individual systems?)
         if getattr(self.pop, "bubble_anyway", False):
-            # FIXME - maybe change to just Panel? 
-            BubblePanel.plot(self, pop=pop, ax=ax, labelkw=labelkw, **kw)
+            # FIXME - maybe change to just Panel?
+            BubblePanel.plot(self, pop=pop, ax=ax, annotate_kw=annotate_kw, **kw)
             return
 
         # make sure we're plotting into the appropriate axes
@@ -161,7 +160,7 @@ class ErrorPanel(BubblePanel):
             )
 
             n_nouncertainty = sum(ok == False)
-            # self._speak(
+            # print(
             #    f"skipping {n_nouncertainty} planets that are missing data or uncertainties"
             # )
 
@@ -177,12 +176,12 @@ class ErrorPanel(BubblePanel):
             # negative.
 
             n_consistentwithzero = sum(ok == False) - n_nouncertainty
-            # self._speak(
+            # print(
             #    f"skipping {n_consistentwithzero} planets that are consistent with zero"
             # )
 
             if (len(x) > 1) & (self.pop._plotkw.get("ink", True)):
-                # self._speak("plotting inked errorbars, this may take a while")
+                # print("plotting inked errorbars, this may take a while")
                 # FIXME, 5/25/2020: We should make the
                 # "invisible" color be something more flexible
                 # than white, in case we're plotting on a dark
@@ -215,4 +214,4 @@ class ErrorPanel(BubblePanel):
         self.refine_axes()
 
         # add planet or hostname labels
-        self.add_system_annotations(labelkw=labelkw)
+        self.add_system_annotations(annotate_kw=annotate_kw)

@@ -32,19 +32,33 @@ def clean_pops(initial):
         return {initial.label: initial}
 
 
-class Panel(Talker):
+class Panel:
     # define some defaults
     title = None
     xaxis = None
     yaxis = None
 
-    def __init__(self, xaxis=None, yaxis=None, label=None, **kw):
+    def __init__(self, xaxis=None, yaxis=None, label=None, ax=None, **kw):
         """
         Initialize a plotting panel.
 
         Parameters
         ----------
+        xaxis : Plottable, str, None
+            What should the x-positions encode?
+        yaxis : Plottable, str, None
+            What should the y-positions encode?
+        label : str
+            What is a label to use for this plot,
+            as a key in dictionaries and for filenames?
+        ax :
+            Into what ax should we place this plot?
+            If None, new plotting axes will be created
+            when necessary.
         """
+
+        # set up empty populations
+        self.populations = {}
 
         # the 2-4 quantities being experssed in this plot
         self.plottable = {}
@@ -55,15 +69,14 @@ class Panel(Talker):
         # the matplotlib objects to access text labels in the plot
         self.labeled = {}
 
-        # the populations that will be plotted in this panel
-        self.populations = {}
-
         # set up the x and y axes
         self.plottable["x"] = clean_plottable(xaxis or self.xaxis, **kw)
         self.plottable["y"] = clean_plottable(yaxis or self.yaxis, **kw)
 
         # store a label for this panel
-        self.label = label or f'{self.plottable["x"].source}'
+        self.label = (
+            label or f'{self.plottable["x"].source}-{self.plottable["y"].source}'
+        )
 
         # apply axis labels, scales, limits appropriately
         for axis in "xy":
@@ -71,6 +84,9 @@ class Panel(Talker):
                 setattr(
                     self, f"{axis}{attribute}", getattr(self.plottable[axis], attribute)
                 )
+
+        # assign a plotting ax to this panel (maybe)
+        self.ax = ax
 
     def __repr__(self):
         """
@@ -160,13 +176,12 @@ class Panel(Talker):
         if ax is None:
             # if need be, create a new axes for this panel
             try:
-                self.fi, self.ax
-            except AttributeError:
-                self.fi, self.ax = plt.subplots(1, 1, constrained_layout=True)
+                self.ax != None
+            except (AttributeError, AssertionError):
+                fi, self.ax = plt.subplots(1, 1, constrained_layout=True)
         else:
             # if an ax is provided, point at that
             self.ax = ax
-            self.fi = ax.figure
         plt.sca(self.ax)
 
     def kw(self, pop=None, **kw):
@@ -202,9 +217,9 @@ class Panel(Talker):
 
         return default
 
-    def plot(self, pop, ax=None, labelkw={}, **kw):
+    def plot(self, pop, ax=None, annotate_kw={}, **kw):
         """
-        Add the points for a particular population to this panel.
+        Add the points for one population to this panel.
 
         Parameters
         ----------
@@ -215,7 +230,7 @@ class Panel(Talker):
         ax :
             Into what ax should we place this plot?
             If None, create a new plotting axes.
-        labelkw : dict
+        annotate_kw : dict
             Keywords for labeling the planet names.
         **kw : dict
             Any extra keywords will be passed on to `scatter`
@@ -245,7 +260,7 @@ class Panel(Talker):
         self.refine_axes()
 
         # add planet or hostname labels
-        self.add_system_annotations(labelkw=labelkw)
+        self.add_system_annotations(annotate_kw=annotate_kw)
 
     def refine_axes(self):
         """
@@ -266,20 +281,17 @@ class Panel(Talker):
         self.ax.set_xlabel(self.xlabel)
         self.ax.set_ylabel(self.ylabel)
 
-    def add_system_annotations(self, labelkw={}):
-        """
-        Add text annotations for planet names.
-        FIXME!
-        """
-        # if requested, label the individual planets in the plot
-        if self.pop.label_planets:
-            kw = dict(**labelkw)
-            if getattr(self.pop, "zorder", None) is not None:
-                kw["zorder"] = self.pop.zorder
-            kw.update(**getattr(self.pop, "labelkw", {}))
-            self.label_planets(self.pop, **kw)
-
-    def build(self, pops={}, **kw):
+    def build(
+        self,
+        pops={},
+        save=False,
+        steps=True,
+        format="png",
+        savefig_kw={},
+        legend=True,
+        legend_kw={},
+        **kw,
+    ):
         """
         Build up this panel by plotting every population into it.
 
@@ -291,16 +303,68 @@ class Panel(Talker):
 
                 pops = {'solarsystem':SolarSystem(),
                         'transiting':TransitingExoplanets()}
+        save : bool
+            Should we save the figure(s) to files?
+        steps : bool
+            Should we save intermediate steps,
+            with subsets of populations, to files?
+        format : str
+            What kind of graphics file should be saved?
+            Any format allowed by `plt.savefig` is fine;
+            we recommend `png` or `pdf`.
+        savefig_kw : dict
+            Keywords to pass to `plt.savefig` for saving figures.
+        legend : bool
+            Should we include a legend?
+        legend_kw : dict
+            Keywords to pass to legend.
         """
 
         # start with a dictionary of populations
         self.populations.update(clean_pops(pops))
+
+        # set up figure saving
+        if save:
+            filename = f"{self.label}"
+            directory = filename
+            mkdir(directory)
+
+        # set up legend defaults
+        lkw = dict(frameon=False)
+        lkw.update(**legend_kw)
 
         # loop over all the populations
         for key in self.populations.keys():
 
             # plot each population, passing plotting keywords to it
             self.plot(key, **kw)
+
+            # make a legend, if requested
+            if legend:
+                plt.legend(**lkw)
+
+            # update filename and save intermediate figures
+            if save:
+                filename += f"+{key}"
+                if steps:
+                    plt.savefig(f"{directory}/{filename}.{format}", **savefig_kw)
+
+        # save the final figure
+        if save and not steps:
+            plt.savefig(f"{directory}/{filename}.{format}", **savefig_kw)
+
+    def add_system_annotations(self, annotate_kw={}):
+        """
+        Add text annotations for planet names.
+        FIXME!
+        """
+        # if requested, label the individual planets in the plot
+        if self.pop.label_planets:
+            kw = dict(**annotate_kw)
+            if getattr(self.pop, "zorder", None) is not None:
+                kw["zorder"] = self.pop.zorder
+            kw.update(**getattr(self.pop, "annotate_kw", {}))
+            self.label_planets(self.pop, **kw)
 
     def label_planets(self, pop, before="\n", after="", restrictlimits=False, **kw):
         """
@@ -506,4 +570,5 @@ class Panel(Talker):
             legendkw["bbox_to_anchor"] = (1, 1)
             legendkw["loc"] = "upper left"
         legendkw.update(**kw)
-        plt.legend(**legendkw)
+        legend = plt.legend(**legendkw)
+        legend.set_in_layout(False)
