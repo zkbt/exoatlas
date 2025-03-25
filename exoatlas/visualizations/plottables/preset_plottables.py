@@ -34,19 +34,11 @@ class Radius(Plottable):
     scale = "log"
     lim = [0.3, 30]
 
-    def uncertainty_lowerupper(self):
-        return self.panel.pop.get_uncertainty_lowerupper("radius")
-
-
 class Mass(Plottable):
     source = "mass"
     label = "Planet Mass\n(Earth masses)"
     scale = "log"
     lim = [0.03, 3000]
-
-    def uncertainty_lowerupper(self):
-        return self.panel.pop.get_uncertainty_lowerupper("mass")
-
 
 class SemimajorAxis(Plottable):
     source = "semimajoraxis"
@@ -124,30 +116,6 @@ class Escape(Plottable):
     scale = "log"
     lim = [None, None]
 
-    def uncertainty_lowerupper(self):
-        """
-        Calculate a rough estimate of the uncertainty on the escape
-        velocity, simply by propagating the mass and radius uncertainties.
-        This could probably be done more cleverly by deriving it from
-        the planetary surface gravity uncertainty, which as fewer hidden
-        covariances because it can be derived directly from transit
-        and RV observables.
-        """
-
-        m = self.panel.pop.mass
-        sigma_m = self.panel.pop.get_uncertainty("mass")
-
-        r = self.panel.pop.radius
-        sigma_r = self.panel.pop.get_uncertainty("radius")
-
-        dlnm = sigma_m / m
-        dlnr = sigma_r / r
-
-        dlne = np.sqrt((dlnm / 2) ** 2 + (dlnr / 2) ** 2)
-        sigma = dlne * self.panel.pop.escape_velocity
-
-        return sigma, sigma
-
 
 class Density(Plottable):
     source = "density"
@@ -185,31 +153,25 @@ class Depth(Plottable):
 
 
 class StellarBrightness(Plottable):
-    # source='stellar_brightness'
+    source='stellar_brightness'
     scale = "log"
     lim = [None, None]  # [1e2, 1e8]
+    unit = u.Unit(("ph s^-1 m^-2 micron^-1"))
 
-    def __init__(self, wavelength=1 * u.micron, **kw):
+    def __init__(self, **kw):
         """
         Initialize for a particular wavelength, because the
         eclipse depth will depend on the thermal emission
         spectrum of the planet and star.
         """
         Plottable.__init__(self, **kw)
-        self.wavelength = wavelength
 
         # set up the units
         self.unit = u.Unit(("ph s^-1 m^-2 micron^-1"))
         self.unit_string = "photons/s/m$^2$/$\mu$m"
 
         # set the label
-        self.label = f'Stellar Brightness at Earth at $\lambda={self.wavelength.to("micron").value:.1f}\mu$m\n({self.unit_string})'
-
-    def value(self):
-        """
-        What data value to plot?
-        """
-        return self.panel.pop.stellar_brightness(self.wavelength).to(self.unit)
+        self.label = f'Stellar Brightness at Earth at $\lambda={self.kw['wavelength'].to("micron").value:.1f}\mu$m\n({self.unit_string})'
 
 
 class StellarBrightnessTelescope(Plottable):

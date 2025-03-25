@@ -1,6 +1,6 @@
 from ...imports import *
 from ...models import plot_both_seager, make_hz
-from ..axes.preset_plottables import *
+from ..plottables.preset_plottables import *
 from .Panel import *
 from .BubblePanel import *
 from .ErrorPanel import *

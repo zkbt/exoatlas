@@ -82,7 +82,7 @@ class NonTESS(TransitingExoplanetsSubset):
 
     def to_include(self):
         foundbytess = (
-            self.discovery_facility() != "Transiting Exoplanet Survey Satellite (TESS)"
+            self.discovery_facility() == "Transiting Exoplanet Survey Satellite (TESS)"
         )
         return foundbytess == False
 
@@ -122,7 +122,7 @@ class Ground(TransitingExoplanetsSubset):
         return foundfromspace == False
 
 
-sigma = 2.5
+sigma = 5
 
 
 def mass_is_good(pop):
@@ -155,48 +155,3 @@ class BadMass(TransitingExoplanetsSubset):
 
     def to_include(self):
         return mass_is_good(self) == False
-
-
-"""
-class lateM(TransitingExoplanetsSubset):
-    def __init__(self, threshold=threshold):
-        TransitingExoplanetsSubset.__init__(self, label="T$_{eff}$<3400K", color='darkred', zorder=-100)
-
-    def toRemove(self):
-        return self.stellar_teff > 3400
-
-class earlyM(TransitingExoplanetsSubset):
-    def __init__(self, threshold=threshold):
-        TransitingExoplanetsSubset.__init__(self, label="3400K<T$_{eff}$<3800K", color='darkred', zorder=-100)
-
-    def toRemove(self):
-        return (self.stellar_teff > 3800) | (self.stellar_teff < 3400)
-
-class M(TransitingExoplanetsSubset):
-    def __init__(self, threshold=threshold):
-        TransitingExoplanetsSubset.__init__(self, label="M", color='darkred', zorder=-100)
-
-    def toRemove(self):
-        return (self.stellar_teff > 3800)
-
-class K(TransitingExoplanetsSubset):
-    def __init__(self, threshold=threshold):
-        TransitingExoplanetsSubset.__init__(self, label="K", color='darkred', zorder=-100)
-
-    def toRemove(self):
-        return (self.stellar_teff > 5300) | (self.stellar_teff < 3800)
-
-class G(TransitingExoplanetsSubset):
-    def __init__(self, threshold=threshold):
-        TransitingExoplanetsSubset.__init__(self, label="G", color='darkred', zorder=-100)
-
-    def toRemove(self):
-        return (self.stellar_teff > 6000) | (self.stellar_teff < 5300)
-
-class F(TransitingExoplanetsSubset):
-    def __init__(self, threshold=threshold):
-        TransitingExoplanetsSubset.__init__(self, label="F", color='darkred', zorder=-100)
-
-    def toRemove(self):
-        return (self.stellar_teff > 7200) | (self.stellar_teff < 6000)
-"""

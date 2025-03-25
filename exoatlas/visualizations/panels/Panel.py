@@ -2,7 +2,7 @@
 # all other panels derive from this one
 
 from ...imports import *
-from ..axes.plottable import *
+from ..plottables.plottable import *
 from ...populations import Population
 
 
@@ -35,8 +35,8 @@ def clean_pops(initial):
 class Panel(Talker):
     # define some defaults
     title = None
-    xaxis = None 
-    yaxis = None 
+    xaxis = None
+    yaxis = None
 
     def __init__(self, xaxis=None, yaxis=None, label=None, **kw):
         """
@@ -45,8 +45,6 @@ class Panel(Talker):
         Parameters
         ----------
         """
-
-  
 
         # the 2-4 quantities being experssed in this plot
         self.plottable = {}
@@ -57,7 +55,7 @@ class Panel(Talker):
         # the matplotlib objects to access text labels in the plot
         self.labeled = {}
 
-        # the populations that will be plotted in this panel 
+        # the populations that will be plotted in this panel
         self.populations = {}
 
         # set up the x and y axes
@@ -92,19 +90,19 @@ class Panel(Talker):
         Parameters
         ----------
         pop : Population, str, int
-            The population to plot. This could be either an 
-            actual Population object, or a key referring to 
+            The population to plot. This could be either an
+            actual Population object, or a key referring to
             an element of the `self.populations` dictionary.
         """
 
         if isinstance(pop, Population):
             # if a Population, focus on it and make sure it is in dictionary
-            needs_to_be_added_to_dictionary = True 
+            needs_to_be_added_to_dictionary = True
             for k, v in self.populations.items():
                 # check whether populations match (= don't trust keys)
                 if pop == v:
-                    self.pop_key = k 
-                    needs_to_be_added_to_dictionary = needs_to_be_added_to_dictionary 
+                    self.pop_key = k
+                    needs_to_be_added_to_dictionary = needs_to_be_added_to_dictionary
             if needs_to_be_added_to_dictionary:
                 self.pop_key = pop.label
                 self.populations[self.pop_key] = pop
@@ -114,12 +112,14 @@ class Panel(Talker):
         elif pop in self.populations:
             # if a key, focus on Population from dictionary
             self.pop = self.populations[pop]
-            self.pop_key = pop 
+            self.pop_key = pop
         else:
-            raise ValueError(f'''
+            raise ValueError(
+                f"""
             It's not clear how to interpret {pop}
             as a population at which we might point 
-            {self}''')
+            {self}"""
+            )
 
     @property
     def x(self):
@@ -178,8 +178,8 @@ class Panel(Talker):
         Parameter
         ---------
         pop : Population, str, int
-            The population to plot. This could be either an 
-            actual Population object, or a key referring to 
+            The population to plot. This could be either an
+            actual Population object, or a key referring to
             an element of the `self.populations` dictionary.
         **kw : dict
             All other keywords will be directed toward
@@ -187,7 +187,7 @@ class Panel(Talker):
         """
 
         # make sure we're pointing at the right population
-        if pop != None:        
+        if pop != None:
             self.point_at(pop)
 
         # define some default keywords, which can be over-written
@@ -209,8 +209,8 @@ class Panel(Talker):
         Parameters
         ----------
         pop : Population, str, int
-            The population to plot. This could be either an 
-            actual Population object, or a key referring to 
+            The population to plot. This could be either an
+            actual Population object, or a key referring to
             an element of the `self.populations` dictionary.
         ax :
             Into what ax should we place this plot?
@@ -230,13 +230,14 @@ class Panel(Talker):
         # add the scattered points
         these_scattered_points = self.ax.scatter(self.x, self.y, **self.kw(**kw))
         if self.pop_key in self.scattered:
-            warnings.warn(f'''
+            warnings.warn(
+                f"""
             Key '{self.pop_key}' already exists. This might be fine for plotting, 
             but if you want to access any of the plotted elements to modify them 
             later, you might not be able to because they may have been overwritten.
             Might we please encourage you to give your populations unique labels 
             via the `population.label = "here's some neat label"`?
-            '''
+            """
             )
         self.scattered[self.pop_key] = these_scattered_points
 
@@ -250,11 +251,11 @@ class Panel(Talker):
         """
         Update the basic axes properties after plotting.
 
-        This applies the default scale, limits, and axis 
-        labels to this Panel, after data have been plotted 
-        in it. Technically, it only needs to be called after 
-        all populations have been added to a plot, but 
-        we call it at the end of each `.plot()` to make 
+        This applies the default scale, limits, and axis
+        labels to this Panel, after data have been plotted
+        in it. Technically, it only needs to be called after
+        all populations have been added to a plot, but
+        we call it at the end of each `.plot()` to make
         sure it happens at least once.
         """
         # implement the default scales, limiets, labels for the axes
@@ -266,10 +267,10 @@ class Panel(Talker):
         self.ax.set_ylabel(self.ylabel)
 
     def add_system_annotations(self, labelkw={}):
-        '''
+        """
         Add text annotations for planet names.
-        FIXME! 
-        '''
+        FIXME!
+        """
         # if requested, label the individual planets in the plot
         if self.pop.label_planets:
             kw = dict(**labelkw)
@@ -308,8 +309,8 @@ class Panel(Talker):
         Parameters
         ----------
         pop : Population, str, int
-            The population to plot. This could be either an 
-            actual Population object, or a key referring to 
+            The population to plot. This could be either an
+            actual Population object, or a key referring to
             an element of the `self.populations` dictionary.
         before : str
             Add the string at the start of each name.
@@ -372,8 +373,8 @@ class Panel(Talker):
         Parameters
         ----------
         pop : Population, str, int
-            The population to plot. This could be either an 
-            actual Population object, or a key referring to 
+            The population to plot. This could be either an
+            actual Population object, or a key referring to
             an element of the `self.populations` dictionary.
         before : str
             Add the string at the start of each name.
@@ -441,8 +442,8 @@ class Panel(Talker):
         Parameters
         ----------
         pop : Population, str, int
-            The population to plot. This could be either an 
-            actual Population object, or a key referring to 
+            The population to plot. This could be either an
+            actual Population object, or a key referring to
             an element of the `self.populations` dictionary.
         **kw : dict
             Any keywords will overwrite the defaults
@@ -469,7 +470,6 @@ class Panel(Talker):
             i = np.argsort(x)
             plt.plot(x[i], y[i], **linekw)
             self.pop = original_pop
-
 
     def remove_xlabel(self):
         """
