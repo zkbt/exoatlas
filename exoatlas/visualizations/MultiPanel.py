@@ -63,7 +63,7 @@ class MultiPanelPlot:
         self.setup_panels()
 
         # give this MultiPanel plot a label
-        self.label = label or "-".join([p.label for p in self.panels.values()])
+        self.label = label or "+".join([p.label for p in self.panels.values()])
 
     def setup_panels(self):
         # populate a dictionary of panel objects

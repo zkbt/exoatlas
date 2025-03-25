@@ -24,14 +24,51 @@ def clean_panels(panels):
 
 class Gallery:
 
-    def __init__(self, panels=[]):
+    def __init__(
+        self,
+        panels=[
+            MassRadius(),
+            FluxRadius(),
+            StellarRadiusPlanetRadius(),
+            DistanceRadius(),
+        ],
+        label=None,
+        **kw,
+    ):
         """
         Initialize a Gallery of Maps.
+
+        The default will display a set of Panels in one
+        row or column. For building more complicated
+        galleries of panels you might want to start
+        from here and overwrite two methods:
+        - `setup_panels()` to connect panels to axes
+        - `refine_panels()` to fuss with details
+        The docstrings for these two methods briefly
+        sketch what each is for.
+
+        Parameters
+        ----------
+        panels : dict, list
+            A dictionary or list of Panels that should be
+            included in this Gallery. If Panels are not
+            specified here, they must be defined inside of
+            `.setup_panels()`.
+        label : str, None
+            A string to label this Gallery, which will
+            mostly appear in filenames for saved plots.
+        **kw : dict
+            All additional keywords will be passed to
+            `.setup_panels()` to decide how the subplots
+            will be arranged.
         """
         self.panels = clean_panels(panels)
 
         # create the figure + axes (but leave them empty)
-        self.setup_panels()
+        self.setup_panels(**kw)
+
+        # make sure this gallery has a label
+        self.label = label or "+".join([p.label for p in self.panels.values()])
 
     def create_subplots(
         self,
@@ -39,7 +76,7 @@ class Gallery:
         ncols=1,
         sharex="col",
         sharey="row",
-        figsize=(12, 8),
+        figsize=(9, 6),
         width_ratios=None,
         height_ratios=None,
         wspace=None,
@@ -97,10 +134,13 @@ class Gallery:
             if is_used == False:
                 a.axis("off")
 
-    def setup_panels(self):
+    def setup_panels(self, horizontal=True, **kw):
         """
         Create the figure + axes, and
         link the axes to Panel objects.
+
+        You might want to write over this for a
+        more complicated Gallery of Maps!
 
         This should create two internal variables:
             `self.fi` = the figure
@@ -110,12 +150,39 @@ class Gallery:
         ax in `self.ax`, either by creating the panel
         with a `ax=...` keyword, or by setting the
         `.ax` attribute of an already existing Panel.
+
+        Parameters
+        ----------
+        horizontal : bool
+            If True, make a row of Panels.
+            If False, make a column of Panels.
+        **kw : dict
+            All other keywords will be passed to
+            `.create_subplots()` for setting up the
+            figure and axes. See its docstring.
         """
-        pass
+
+        # decide rows and columns
+        N = len(self.panels)
+        self.horizontal = horizontal
+        if horizontal:
+            rows, cols = 1, N
+        else:
+            rows, cols = N, 1
+
+        # create the subplots
+        self.fi, self.ax = self.create_subplots(nrows=rows, ncols=cols, **kw)
+
+        # attach panels to each ax
+        for i, k in enumerate(self.panels):
+            self.panels[k].ax = self.ax.flatten()[i]
 
     def refine_panels(self):
         """
         Make small changes to Panels, after data are plotted.
+
+        You might want to write over this for a
+        more complicated Gallery of Maps!
 
         We might want to plot some extra curves on
         a panel, or fuss with its axis labels, or
@@ -123,10 +190,20 @@ class Gallery:
         function gets called after the data have
         been built up into the plot, so those
         modifications can be made.
-        """
-        pass
 
-    def build_panels(self, pops):
+        By default, this simply removes axis labels
+        from
+        """
+        if self.horizontal:
+            for a in self.ax[1:]:
+                # plt.setp(a.get_yticklabels(), visible=False)
+                a.set_ylabel("")
+        else:
+            for a in self.ax[:-1]:
+                # plt.setp(a.get_xticklabels(), visible=False)
+                a.set_xlabel("")
+
+    def build_panels(self, pops, save=False, steps=True, format="png", savefig_kw={}):
         """
         Populate all Panels in a Gallery,
         using a set of populations.
@@ -135,6 +212,14 @@ class Gallery:
         ----------
         pops : dict
             The populations to plot.
+        save : bool
+            Should we save the figure(s) to files?
+        format : str
+            What kind of graphics file should be saved?
+            Any format allowed by `plt.savefig` is fine;
+            we recommend `png` or `pdf`.
+        savefig_kw : dict
+            Keywords to pass to `plt.savefig` for saving figures.
         """
 
         # put data into the axes
@@ -146,3 +231,8 @@ class Gallery:
 
         # make small tweaks to the panels
         self.refine_panels()
+
+        # save figure
+        if save:
+            filename = f"{self.label}"
+            plt.savefig(f"{filename}.{format}", **savefig_kw)

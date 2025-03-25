@@ -173,15 +173,16 @@ class Panel:
         """
 
         # make sure we're pointing at the axes for this panel
-        if ax is None:
-            # if need be, create a new axes for this panel
-            try:
-                self.ax != None
-            except (AttributeError, AssertionError):
-                fi, self.ax = plt.subplots(1, 1, constrained_layout=True)
-        else:
+        if ax is not None:
             # if an ax is provided, point at that
             self.ax = ax
+
+        # if need be, create a new axes for this panel
+        try:
+            self.ax != None
+        except (AttributeError, AssertionError):
+            fi, self.ax = plt.subplots(1, 1, constrained_layout=True)
+
         plt.sca(self.ax)
 
     def kw(self, pop=None, **kw):
