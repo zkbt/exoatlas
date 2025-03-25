@@ -130,11 +130,19 @@ class Panel(Talker):
         return self.plottable["y"].value(self.pop)
 
     @property
-    def x_lowerupper(self):
+    def x_uncertainty(self):
+        return self.plottable["x"].uncertainty(self.pop)
+
+    @property
+    def y_uncertainty(self):
+        return self.plottable["y"].uncertainty(self.pop)
+
+    @property
+    def x_uncertainty_lowerupper(self):
         return self.plottable["x"].uncertainty_lowerupper(self.pop)
 
     @property
-    def y_lowerupper(self):
+    def y_uncertainty_lowerupper(self):
         return self.plottable["y"].uncertainty_lowerupper(self.pop)
 
     def setup_axes(self, ax=None):
@@ -161,7 +169,7 @@ class Panel(Talker):
             self.fi = ax.figure
         plt.sca(self.ax)
 
-    def kw(self, pop=None, **kwargs):
+    def kw(self, pop=None, **kw):
         """
         Do a little decision-making about the plotting keyword
         arguments, pulling defaults from each population where
@@ -173,7 +181,7 @@ class Panel(Talker):
             The population to plot. This could be either an 
             actual Population object, or a key referring to 
             an element of the `self.populations` dictionary.
-        **kwargs : dict
+        **kw : dict
             All other keywords will be directed toward
             overwriting individual population defaults.
         """
@@ -190,11 +198,11 @@ class Panel(Talker):
         )
 
         # if any other keywords are provided, overwrite these defaults
-        default.update(**kwargs)
+        default.update(**kw)
 
         return default
 
-    def plot(self, pop, ax=None, labelkw={}, **kwargs):
+    def plot(self, pop, ax=None, labelkw={}, **kw):
         """
         Add the points for a particular population to this panel.
 
@@ -209,7 +217,7 @@ class Panel(Talker):
             If None, create a new plotting axes.
         labelkw : dict
             Keywords for labeling the planet names.
-        **kwargs : dict
+        **kw : dict
             Any extra keywords will be passed on to `scatter`
         """
 
@@ -220,7 +228,7 @@ class Panel(Talker):
         self.setup_axes(ax=ax)
 
         # add the scattered points
-        these_scattered_points = self.ax.scatter(self.x, self.y, **self.kw(**kwargs))
+        these_scattered_points = self.ax.scatter(self.x, self.y, **self.kw(**kw))
         if self.pop_key in self.scattered:
             warnings.warn(f'''
             Key '{self.pop_key}' already exists. This might be fine for plotting, 
@@ -293,7 +301,7 @@ class Panel(Talker):
             # plot each population, passing plotting keywords to it
             self.plot(key, **kw)
 
-    def label_planets(self, pop, before="\n", after="", restrictlimits=False, **kwargs):
+    def label_planets(self, pop, before="\n", after="", restrictlimits=False, **kw):
         """
         Label the planets in whatever population we're pointed at.
 
@@ -310,7 +318,7 @@ class Panel(Talker):
         restrictlimits : bool
             Should we plot names only for those planets that fall within
             the panel's x and y limits?
-        **kwargs : dict
+        **kw : dict
             Any additional keywords will be passed to the `text` command.
         """
 
@@ -346,7 +354,7 @@ class Panel(Talker):
             )
 
             # think this is just as Python 3 thing
-            textkw.update(**kwargs)
+            textkw.update(**kw)
 
             # store the text plot, so it can be modified
             try:
@@ -356,7 +364,7 @@ class Panel(Talker):
                 pass
 
     def label_hosts(
-        self, pop, before="\n", after="", restrictlimits=False, once=False, **kwargs
+        self, pop, before="\n", after="", restrictlimits=False, once=False, **kw
     ):
         """
         Label the planet hosts in whatever population we're pointed at.
@@ -374,7 +382,7 @@ class Panel(Talker):
         restrictlimits : bool
             Should we plot names only for those planets that fall within
             the panel's x and y limits?
-        **kwargs : dict
+        **kw : dict
             Any additional keywords will be passed to the `text` command.
         """
 
@@ -414,7 +422,7 @@ class Panel(Talker):
             )
 
             # think this is just as Python 3 thing
-            textkw.update(**kwargs)
+            textkw.update(**kw)
 
             # store the text plot, so it can be modified
             try:
@@ -424,7 +432,7 @@ class Panel(Talker):
             except AssertionError:  # (do we need to add other errors?)
                 pass
 
-    def connect_planets(self, pop, **kwargs):
+    def connect_planets(self, pop, **kw):
         """
         Identify all the multiplanet systems,
         and draw lines connecting the planets
@@ -436,7 +444,7 @@ class Panel(Talker):
             The population to plot. This could be either an 
             actual Population object, or a key referring to 
             an element of the `self.populations` dictionary.
-        **kwargs : dict
+        **kw : dict
             Any keywords will overwrite the defaults
             going into the `.plot()` function call.
         """
@@ -450,8 +458,8 @@ class Panel(Talker):
         # define some defaults for the lines
         linekw = dict(color=self.pop.color, alpha=self.pop.alpha * 0.5, zorder=-100)
 
-        # overwrite those defaults if kwargs are provided
-        linekw.update(**kwargs)
+        # overwrite those defaults if kw are provided
+        linekw.update(**kw)
 
         original_pop = self.pop
         for hostname in np.unique(self.pop.hostname()):

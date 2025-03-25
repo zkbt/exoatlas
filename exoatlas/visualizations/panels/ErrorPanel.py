@@ -27,17 +27,6 @@ class ErrorPanel(BubblePanel):
     their intensity scaled to some overall visual weight.
     """
 
-    @property
-    def x_unc(self):
-        l, u = self.x_lowerupper
-        # return np.sqrt(l*u)
-        return 0.5 * (l + u)
-
-    @property
-    def y_unc(self):
-        l, u = self.y_lowerupper
-        # return np.sqrt(l*u)
-        return 0.5 * (l + u)
 
     def intensity(self, invisible_fraction=0.75, x_power=2, y_power=2):
         """
@@ -51,8 +40,8 @@ class ErrorPanel(BubblePanel):
         invisible_fraction : float
             The aproximate 2D fractional uncertainty at which
             a point will fade to invisible. For example, if
-            set to 0.7, then points will disappear when
-              (sigma_x/x)**2 + (sigma_y/y)**2 > 0.7**2
+            set to 0.75, then points will disappear when
+              (sigma_x/x)**2 + (sigma_y/y)**2 > 0.75**2
 
         x_power : float
             The power to which x is raised in the quantity
@@ -73,8 +62,8 @@ class ErrorPanel(BubblePanel):
             By default,
         """
 
-        dlnx = self.x_unc / self.x * np.abs(x_power)
-        dlny = self.y_unc / self.y * np.abs(y_power)
+        dlnx = self.x_uncertainty / self.x * np.abs(x_power)
+        dlny = self.y_uncertainty / self.y * np.abs(y_power)
 
         # things with bigger errors should have lower weight
         weight = 1 - np.sqrt(dlnx**2 + dlny**2) / invisible_fraction
@@ -85,17 +74,19 @@ class ErrorPanel(BubblePanel):
         # return the visual weight
         return remove_unit(weight)
 
-    def plot(self, key, ax=None, labelkw={}, **kw):
+    def plot(self, pop, ax=None, labelkw={}, **kw):
         """
-        Add the points for a particular population to this panel.
+        Add the errorbars for a particular population to this panel.
 
         Parameters
         ----------
-        key : str
-            The item in the self.populations dictionary to add.
+        pop : Population, str, int
+            The population to plot. This could be either an 
+            actual Population object, or a key referring to 
+            an element of the `self.populations` dictionary.
         ax :
             Into what ax should we place this plot?
-            If None, use default.
+            If None, create a new plotting axes.
         labelkw : dict
             Keywords for labeling the planet names.
         **kw : dict
@@ -103,18 +94,16 @@ class ErrorPanel(BubblePanel):
         """
 
         # focus attention on that population
-        self.point_at(key)
+        self.point_at(pop)
 
-        # do a bubble instead, if requested
+        # do a bubble instead, if requested (for drawing individual systems?)
         if getattr(self.pop, "bubble_anyway", False):
-            BubblePanel.plot(self, key=key, ax=ax, labelkw=labelkw, **kw)
+            # FIXME - maybe change to just Panel? 
+            BubblePanel.plot(self, pop=pop, ax=ax, labelkw=labelkw, **kw)
             return
 
         # make sure we're plotting into the appropriate axes
-        try:
-            plt.sca(self.ax)
-        except AttributeError:
-            self.setup_axes(ax=ax)
+        self.setup_axes(ax=ax)
 
         # define the data we're trying to plot
         x = remove_unit(self.x)
@@ -129,10 +118,9 @@ class ErrorPanel(BubblePanel):
         # then don't include any errors when plotting
         if self.pop.exact:
             # define plotting keywords without errorbars
-            plotkw = dict(color=color, edgecolor=color, marker=marker, **kw)
-            plotkw["alpha"] = 1
-            plotkw["zorder"] = 1e9
-            self.scattered[key] = plt.scatter(x, y, **plotkw)
+            scatterkw = self.kw(color=color, marker=marker, **kw)
+
+            self.scattered[self.pop_key] = plt.scatter(x, y, **scatterkw)
             # FIXME, 5/25/20: I think BubblePanel is doing
             # something a little more clever with being able
             # to manage face and edge colors separately.
@@ -140,10 +128,10 @@ class ErrorPanel(BubblePanel):
             # inherit some of this skills here in ErrorPanel
         else:
             # define the error bars to be plotting
-            xl, xu = self.x_lowerupper
+            xl, xu = self.x_uncertainty_lowerupper
             x_unc = remove_unit(np.vstack([xl, xu]))
 
-            yl, yu = self.y_lowerupper
+            yl, yu = self.y_uncertainty_lowerupper
             y_unc = remove_unit(np.vstack([yl, yu]))
 
             width = 1
@@ -202,7 +190,7 @@ class ErrorPanel(BubblePanel):
                 # we use alpha to do the visual weighting for
                 # these errorbars, because it introduces many
                 # more intersecting lines.
-                self.scattered[key] = ink_errorbar(
+                self.scattered[self.pop_key] = ink_errorbar(
                     x[ok],
                     y[ok],
                     yerr=y_unc[:, ok],
@@ -214,7 +202,7 @@ class ErrorPanel(BubblePanel):
                     **kw,
                 )
             else:
-                self.scattered[key] = self.ax.errorbar(
+                self.scattered[self.pop_key] = self.ax.errorbar(
                     x[ok],
                     y[ok],
                     yerr=y_unc[:, ok],
@@ -224,4 +212,7 @@ class ErrorPanel(BubblePanel):
                 )
 
         # set the scales, limits, labels
-        self.finish_plot(labelkw=labelkw)
+        self.refine_axes()
+
+        # add planet or hostname labels
+        self.add_system_annotations(labelkw=labelkw)

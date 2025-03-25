@@ -168,7 +168,7 @@ class BubblePanel(Panel):
         # otherwise, set a single size
         else:
             # get default, first from pop and then from panel
-            size = self.pop._plotkw.get("s", self.static_size)
+            size = getattr(self.pop, 's', None) or self.static_size
 
         # return a valid input to plt.scatter(s=...)
         return size
@@ -194,7 +194,7 @@ class BubblePanel(Panel):
         # finally, should we just use a default color?
         else:
             # get default, first from pop and then from panel
-            color = self.pop._plotkw.get("color", self.static_color)
+            color = getattr(self.pop, 'color', None) or self.static_color
 
         # return a valid input to any one of the following:
         #   plt.scatter(c=...)
@@ -202,7 +202,7 @@ class BubblePanel(Panel):
         #   plt.scatter(facecolors=...)
         return color
 
-    def kw(self, pop=None, **kwargs):
+    def kw(self, pop=None, **kw):
         """
         Do a little decision-making about the plotting keyword
         arguments, pulling defaults from each population where
@@ -214,7 +214,7 @@ class BubblePanel(Panel):
             The population to plot. This could be either an 
             actual Population object, or a key referring to 
             an element of the `self.populations` dictionary.
-        **kwargs : dict
+        **kw : dict
             All other keywords will be directed toward
             overwriting individual population defaults.
         """
@@ -245,11 +245,11 @@ class BubblePanel(Panel):
             default["edgecolors"] = "none"
 
         # if any other keywords are provided, overwrite these defaults
-        default.update(**kwargs)
+        default.update(**kw)
 
         return default
 
-    '''def plot(self, key, ax=None, labelkw={}, **kwargs):
+    '''def plot(self, key, ax=None, labelkw={}, **kw):
         """
         Add the points for a particular population to this panel.
 
@@ -262,7 +262,7 @@ class BubblePanel(Panel):
             If None, use default.
         labelkw : dict
             Keywords for labeling the planet names.
-        **kwargs : dict
+        **kw : dict
             Any extra keywords will be passed on to `scatter`
         """
 
@@ -276,7 +276,7 @@ class BubblePanel(Panel):
             self.setup_axes(ax=ax)
 
         # add the scattered points
-        self.scattered[key] = self.ax.scatter(self.x, self.y, **self.kw(key, **kwargs))
+        self.scattered[key] = self.ax.scatter(self.x, self.y, **self.kw(key, **kw))
 
         # set the scales, limits, labels
         self.finish_plot(labelkw=labelkw)

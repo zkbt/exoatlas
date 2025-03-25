@@ -95,7 +95,7 @@ class physical_summary(BuildablePlot):
         sr.remove_ylabel()
         mr.ticks_simplify_exponents("y")
 
-        self.panels = {p.name: p for p in [fr, mr, er, sr]}
+        self.panels = {p.label: p for p in [fr, mr, er, sr]}
 
 
 class observable_summary(BuildablePlot):
