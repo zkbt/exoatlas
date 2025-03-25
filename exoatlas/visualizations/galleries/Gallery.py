@@ -19,6 +19,8 @@ def clean_panels(panels):
     for p in panels_as_dictionary.values():
         assert isinstance(p, Panel)
 
+    return panels_as_dictionary
+
 
 class Gallery:
 

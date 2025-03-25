@@ -15,7 +15,7 @@ class physical_summary(Gallery):
         link the axes to Panel objects.
         """
         # create the subplots
-        self.create_subplots(
+        self.fi, self.ax = self.create_subplots(
             nrows=2, ncols=3, width_ratios=[2, 4, 1], height_ratios=[1, 3]
         )
 
@@ -39,7 +39,7 @@ class physical_summary(Gallery):
         self.panels["flux-radius"].ticks_simplify_exponents("y")
         self.panels["flux-radius"].add_teqaxis()
         self.panels["flux-radius"].remove_ylabel()
-        self.panels["flux-radius"].add_legend(frameon=False, outside=False)
+        self.panels["flux-radius"].add_legend(frameon=False)
 
         plt.sca(self.panels["mass-radius"].ax)
         self.panels["mass-radius"].plot_both_seager(zorder=1e9)

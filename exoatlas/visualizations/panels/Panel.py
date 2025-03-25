@@ -288,7 +288,7 @@ class Panel:
         steps=True,
         format="png",
         savefig_kw={},
-        legend=True,
+        legend=False,
         legend_kw={},
         **kw,
     ):
@@ -341,7 +341,7 @@ class Panel:
 
             # make a legend, if requested
             if legend:
-                plt.legend(**lkw)
+                self.add_legend(**lkw)
 
             # update filename and save intermediate figures
             if save:
@@ -563,7 +563,7 @@ class Panel:
             loc = LogLocator(base=10, numticks=3)
             self.ax.yaxis.set_major_locator(loc)
 
-    def add_legend(self, outside=True, frameon=False, **kw):
+    def add_legend(self, outside=False, frameon=False, **kw):
         legendkw = dict()
         legendkw["frameon"] = frameon
         if outside:
