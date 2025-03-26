@@ -301,7 +301,7 @@ class Plottable:
         """
 
         # get unitless array of values
-        value = self._convert_unit(pop.get(self.source, **self.kw)).value
+        value = remove_unit(self._convert_unit(pop.get(self.source, **self.kw)))
 
         # set non-nan limits if none are provided
         vmin, vmax = self.lim
@@ -311,12 +311,19 @@ class Plottable:
             vmax = np.nanmax(value)
 
         # call different scaling functions
-        kw = dict(vmin=vmin, vmax=vmax)
+        reversed = vmin > vmax
+        if reversed:
+            kw = dict(vmin=vmax, vmax=vmin)
+        else:
+            kw = dict(vmin=vmin, vmax=vmax)
         if self.scale == "linear":
             normalize = Normalize(**kw)
         elif self.scale == "log":
             normalize = LogNorm(**kw)
-        return normalize(value)
+        if reversed:
+            return 1 - normalize(value)
+        else:
+            return normalize(value)
 
 
 def clean_plottable(initial, **kw):

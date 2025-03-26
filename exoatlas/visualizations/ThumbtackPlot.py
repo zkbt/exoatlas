@@ -304,7 +304,7 @@ class ThumbtackPlot(BubblePanel):
                     downwardnudge = "\n\n"
 
                 text = downwardnudge + r"{}".format(self.pop.name[c].replace(" ", ""))
-                self.standard.labeled[c] = plt.text(
+                self.standard.annotated[c] = plt.text(
                     self.x[c],
                     self.y[c],
                     text,
@@ -320,9 +320,9 @@ class ThumbtackPlot(BubblePanel):
 
     def clearnames(self):
         """Remove system names that have been added to the plot."""
-        for k in self.standard.labeled:
+        for k in self.standard.annotated:
             try:
-                self.standard.labeled[k].remove()
+                self.standard.annotated[k].remove()
             except ValueError:
                 pass
 

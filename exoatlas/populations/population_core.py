@@ -16,7 +16,7 @@ default_plotkw = dict(
     respond_to_color=True,
     respond_to_size=True,
     exact=False,
-    label_planets=False,
+    annotate_planets=False,
     filled=True,
     outlined=False,
 )
@@ -25,6 +25,7 @@ default_plotkw = dict(
 allowed_plotkw = list(default_plotkw.keys())
 allowed_plotkw += [
     "s",
+    "size",
     "c",
     "cmap",
     "norm",
@@ -979,7 +980,10 @@ class Population:
         # try to get a plotkw from this pop, from the plotting defaults, from None
         try:
             assert key in allowed_plotkw
-            return self._plotkw.get(key, default_plotkw[key])
+            value = self._plotkw.get(key, None)
+            if value is None:
+                value = default_plotkw.get(key, None)
+            return value
         except (AssertionError, KeyError):
             pass
 

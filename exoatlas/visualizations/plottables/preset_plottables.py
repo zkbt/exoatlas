@@ -10,6 +10,20 @@ class Flux(Plottable):
     lim = [6e4, 2e-4]
 
 
+class Teq(Plottable):
+    source = "teq"
+    scale = "log"
+    lim = [200, 2000]
+
+    def _update_label(self):
+
+        self.label = (
+            "Planet Equilibrum Temperature (K, f={f}, {albedo:.0%} albedo)".format(
+                **self.kw
+            )
+        )
+
+
 class CumulativeXUVFlux(Flux):
     source = "relative_cumulative_xuv_insolation"
     label = "Time-Integrated XUV Flux Received (relative to Earth)"
@@ -75,6 +89,13 @@ class StellarLuminosity(Plottable):
     label = "Stellar Luminosity (L_$\odot$)"
     scale = "log"
     lim = [None, None]
+
+
+class Distance(Plottable):
+    source = "distance"
+    label = "Distance\n(parsecs)"
+    scale = "log"
+    lim = [5, 1000]
 
 
 class Distance(Plottable):

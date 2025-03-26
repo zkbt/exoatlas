@@ -16,9 +16,11 @@ def clean_panels(panels):
     else:
         # otherwise, assume it's a list
         panels_as_dictionary = {p.label: p for p in panels}
-    for p in panels_as_dictionary.values():
-        assert isinstance(p, Panel)
 
+    # make deepy copies of all panels to avoid connections between galleries
+    for k, v in panels_as_dictionary.items():
+        assert isinstance(v, Panel)
+        panels_as_dictionary[k] = v.copy()
     return panels_as_dictionary
 
 
@@ -129,7 +131,7 @@ class Gallery:
         """
         If any axes aren't connected to panels, remove them.
         """
-        for a in self.ax.flatten():
+        for a in np.atleast_1d(self.ax.flatten()):
             is_used = np.any([a == p.ax for p in self.panels.values()])
             if is_used == False:
                 a.axis("off")
@@ -175,7 +177,7 @@ class Gallery:
 
         # attach panels to each ax
         for i, k in enumerate(self.panels):
-            self.panels[k].ax = self.ax.flatten()[i]
+            self.panels[k].ax = np.atleast_1d(self.ax.flatten())[i]
 
     def refine_panels(self):
         """
@@ -220,6 +222,12 @@ class Gallery:
             we recommend `png` or `pdf`.
         savefig_kw : dict
             Keywords to pass to `plt.savefig` for saving figures.
+
+        Returns
+        -------
+        self : Gallery
+            In case you want to modify the plot after it's
+            generated, this returns the entire Gallery.
         """
 
         # put data into the axes
@@ -236,3 +244,5 @@ class Gallery:
         if save:
             filename = f"{self.label}"
             plt.savefig(f"{filename}.{format}", **savefig_kw)
+
+        return

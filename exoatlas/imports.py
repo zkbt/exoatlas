@@ -199,3 +199,18 @@ class AtlasError(ValueError):
 import warnings
 
 warnings.filterwarnings("ignore", message="invalid escape sequence")
+
+
+def remove_unit(x):
+    """
+    Remove astropy units from a variable.
+
+    A simple wrapper to help make sure that we're dealing
+    just with numerical values, instead of astropy Quantitys
+    with units.
+    """
+
+    if isinstance(x, u.quantity.Quantity):
+        return x.value
+    else:
+        return x

@@ -650,9 +650,10 @@ class Exoplanets(ExoplanetsPSCP):
         PredefinedPopulation.__init__(self, remake=remake, **plotkw)
 
         # plotting defaults
-        self.s = 10
+        self.s = 4
         self.marker = "."
         self.zorder = 0
+        self.color = "black"
         self.respond_to_color = True
         self.exact = False
 

@@ -5,21 +5,6 @@ from ..ink_errorbar import *
 __all__ = ["ErrorPanel"]
 
 
-def remove_unit(x):
-    """
-    Remove astropy units from a variable.
-
-    A simple wrapper to help make sure that we're dealing
-    just with numerical values, instead of astropy Quantitys
-    with units.
-    """
-
-    if isinstance(x, u.quantity.Quantity):
-        return x.value
-    else:
-        return x
-
-
 class ErrorPanel(BubblePanel):
     """
     Error is a general wrapper for making scatter plots

@@ -60,14 +60,14 @@ class Panel:
         # set up empty populations
         self.populations = {}
 
-        # the 2-4 quantities being experssed in this plot
-        self.plottable = {}
-
         # the matplotlib objects to access the plotted points themselves
         self.scattered = {}
 
         # the matplotlib objects to access text labels in the plot
-        self.labeled = {}
+        self.annotated = {}
+
+        # the 2-4 quantities being experssed in this plot
+        self.plottable = {}
 
         # set up the x and y axes
         self.plottable["x"] = clean_plottable(xaxis or self.xaxis, **kw)
@@ -75,7 +75,7 @@ class Panel:
 
         # store a label for this panel
         self.label = (
-            label or f'{self.plottable["x"].source}-{self.plottable["y"].source}'
+            label or f'{self.plottable["x"].source}_x_{self.plottable["y"].source}'
         )
 
         # apply axis labels, scales, limits appropriately
@@ -87,6 +87,33 @@ class Panel:
 
         # assign a plotting ax to this panel (maybe)
         self.ax = ax
+
+    def __deepcopy__(self, memo):
+        """
+        When doing a deepcopy, copy everything except
+        the `populations` dictionary, which we might
+        not want to carry over.
+        """
+        cls = self.__class__
+        result = cls.__new__(cls)
+        memo[id(self)] = result
+        for k, v in self.__dict__.items():
+            if k == "populations":
+                setattr(result, k, {})
+            elif k == "pop":
+                setattr(result, k, None)
+            else:
+                setattr(result, k, copy.deepcopy(v, memo))
+        return result
+
+    def copy(self):
+        """
+        Create a blank copy of this Panel.
+        """
+        new = copy.deepcopy(self)
+        new.scattered = {}
+        new.annotated = {}
+        return new
 
     def __repr__(self):
         """
@@ -172,7 +199,7 @@ class Panel:
             If no axes are provided, a new figure + axes will be created
         """
 
-        self.ax = self.ax or ax
+        self.ax = ax or self.ax
         if self.ax is None:
             fi, self.ax = plt.subplots(1, 1, constrained_layout=True)
         assert self.ax is not None
@@ -328,7 +355,7 @@ class Panel:
         """
 
         # start with a dictionary of populations
-        self.populations.update(clean_pops(pops))
+        self.populations = clean_pops(pops)
 
         # set up figure saving
         if save:
@@ -366,14 +393,14 @@ class Panel:
         FIXME!
         """
         # if requested, label the individual planets in the plot
-        if self.pop.label_planets:
+        if self.pop.annotate_planets:
             kw = dict(**annotate_kw)
             if getattr(self.pop, "zorder", None) is not None:
                 kw["zorder"] = self.pop.zorder
             kw.update(**getattr(self.pop, "annotate_kw", {}))
-            self.label_planets(self.pop, **kw)
+            self.annotate_planets(self.pop, **kw)
 
-    def label_planets(self, pop, before="\n", after="", restrictlimits=False, **kw):
+    def annotate_planets(self, pop, before="\n", after="", restrictlimits=False, **kw):
         """
         Label the planets in whatever population we're pointed at.
 
@@ -431,11 +458,11 @@ class Panel:
             # store the text plot, so it can be modified
             try:
                 assert np.isfinite(x * y)
-                self.labeled[name] = plt.text(x, y, before + name + after, **textkw)
+                self.annotated[name] = plt.text(x, y, before + name + after, **textkw)
             except AssertionError:  # (do we need to add other errors?)
                 pass
 
-    def label_hosts(
+    def annotate_hosts(
         self, pop, before="\n", after="", restrictlimits=False, once=False, **kw
     ):
         """
@@ -470,7 +497,7 @@ class Panel:
             x, y, name = self.x[i], self.y[i], self.pop.hostname()[i]
 
             if once:
-                if name in self.labeled:
+                if name in self.annotated:
                     continue
 
             # skip over the planets that aren't within limits
@@ -499,7 +526,7 @@ class Panel:
             # store the text plot, so it can be modified
             try:
                 assert np.isfinite(x * y)
-                self.labeled[name] = plt.text(x, y, before + name + after, **textkw)
+                self.annotated[name] = plt.text(x, y, before + name + after, **textkw)
 
             except AssertionError:  # (do we need to add other errors?)
                 pass

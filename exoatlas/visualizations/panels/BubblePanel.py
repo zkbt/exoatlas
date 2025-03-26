@@ -23,7 +23,7 @@ class BubblePanel(Panel):
         yaxis=None,
         size=None,
         color=None,
-        size_normalization=100,
+        size_normalization=10,
         size_vmin=None,
         size_vmax=None,
         size_scale=None,
@@ -157,8 +157,11 @@ class BubblePanel(Panel):
         """
 
         # should we ignore any variable size instructions?
+        population_size = self.pop._plotkw.get("size", None) or self.pop._plotkw.get(
+            "s", None
+        )
         if self.pop.respond_to_size == False:
-            size = self.pop._plotkw.get("s", None)
+            size = population_size or self.static_size
         # if desired, set variable sizes
         elif "size" in self.plottable:
             # get the raw values for the sizes
@@ -168,8 +171,7 @@ class BubblePanel(Panel):
         # otherwise, set a single size
         else:
             # get default, first from pop and then from panel
-            size = getattr(self.pop, "s", None) or self.static_size
-
+            size = population_size or self.static_size
         # return a valid input to plt.scatter(s=...)
         return size
 
@@ -185,8 +187,11 @@ class BubblePanel(Panel):
         """
 
         # should we ignore any variable color instructions?
+        population_color = self.pop._plotkw.get("color", None) or self.pop._plotkw.get(
+            "c", None
+        )
         if self.pop.respond_to_color == False:
-            color = self.pop.color
+            color = population_color or self.static_color
         # should we use a variable color?
         elif "color" in self.plottable:
             normalized = self.plottable["color"].normalized_value(self.pop)
@@ -194,7 +199,7 @@ class BubblePanel(Panel):
         # finally, should we just use a default color?
         else:
             # get default, first from pop and then from panel
-            color = getattr(self.pop, "color", None) or self.static_color
+            color = population_color or self.static_color
 
         # return a valid input to any one of the following:
         #   plt.scatter(c=...)
