@@ -1,5 +1,5 @@
 # general class for plotting exoplanet populations
-# all other panels derive from this one
+# all other maps derive from this one
 
 from ...imports import *
 from ..plottables.plottable import *
@@ -39,7 +39,7 @@ def clean_pops(initial):
         return {initial.label: initial}
 
 
-class Panel:
+class Map:
     # define some defaults
     title = None
     xaxis = None
@@ -47,7 +47,7 @@ class Panel:
 
     def __init__(self, xaxis=None, yaxis=None, label=None, ax=None, **kw):
         """
-        Initialize a plotting panel.
+        Initialize a plotting map.
 
         Parameters
         ----------
@@ -80,7 +80,7 @@ class Panel:
         self.plottable["x"] = clean_plottable(xaxis or self.xaxis, **kw)
         self.plottable["y"] = clean_plottable(yaxis or self.yaxis, **kw)
 
-        # store a label for this panel
+        # store a label for this map
         self.label = (
             label or f'{self.plottable["x"].source}_x_{self.plottable["y"].source}'
         )
@@ -92,7 +92,7 @@ class Panel:
                     self, f"{axis}{attribute}", getattr(self.plottable[axis], attribute)
                 )
 
-        # assign a plotting ax to this panel (maybe)
+        # assign a plotting ax to this map (maybe)
         self.ax = ax
 
     def __deepcopy__(self, memo):
@@ -115,7 +115,7 @@ class Panel:
 
     def copy(self):
         """
-        Create a blank copy of this Panel.
+        Create a blank copy of this Map.
         """
         new = copy.deepcopy(self)
         new.scattered = {}
@@ -134,7 +134,7 @@ class Panel:
 
     def point_at(self, pop):
         """
-        Point this panel at a particular population. This will be called
+        Point this map at a particular population. This will be called
         when building up multiple populations on the same plot.
 
         Parameters
@@ -189,12 +189,12 @@ class Panel:
 
     def setup_axes(self, ax=None):
         """
-        Set up the axes for this Panel.
+        Set up the axes for this Map.
 
         Parameters
         ----------
         ax :
-            The axes into which this panel should be placed.
+            The axes into which this map should be placed.
             If no axes are provided, a new figure + axes will be created
         """
 
@@ -204,12 +204,12 @@ class Panel:
         assert self.ax is not None
         plt.sca(self.ax)
 
-        """# make sure we're pointing at the axes for this panel
+        """# make sure we're pointing at the axes for this map
         if ax is not None:
             # if an ax is provided, point at that
             self.ax = ax
 
-        # if need be, create a new axes for this panel
+        # if need be, create a new axes for this map
         try:
             self.ax != None
         except (AttributeError, AssertionError):
@@ -252,7 +252,7 @@ class Panel:
 
     def plot(self, pop, ax=None, annotate_kw={}, **kw):
         """
-        Add the points for one population to this panel.
+        Add the points for one population to this map.
 
         Parameters
         ----------
@@ -300,7 +300,7 @@ class Panel:
         Update the basic axes properties after plotting.
 
         This applies the default scale, limits, and axis
-        labels to this Panel, after data have been plotted
+        labels to this Map, after data have been plotted
         in it. Technically, it only needs to be called after
         all populations have been added to a plot, but
         we call it at the end of each `.plot()` to make
@@ -326,7 +326,7 @@ class Panel:
         **kw,
     ):
         """
-        Build up this panel by plotting every population into it.
+        Build up this map by plotting every population into it.
 
         Parameters
         ----------
@@ -415,7 +415,7 @@ class Panel:
             Add the string at the end of each name.
         restrictlimits : bool
             Should we plot names only for those planets that fall within
-            the panel's x and y limits?
+            the map's x and y limits?
         **kw : dict
             Any additional keywords will be passed to the `text` command.
         """
@@ -479,7 +479,7 @@ class Panel:
             Add the string at the end of each name.
         restrictlimits : bool
             Should we plot names only for those planets that fall within
-            the panel's x and y limits?
+            the map's x and y limits?
         **kw : dict
             Any additional keywords will be passed to the `text` command.
         """
@@ -570,14 +570,14 @@ class Panel:
 
     def remove_xlabel(self):
         """
-        Remove the xlabel and xticklabels from this panel.
+        Remove the xlabel and xticklabels from this map.
         """
         plt.setp(self.ax.get_xticklabels(), visible=False)
         self.ax.set_xlabel("")
 
     def remove_ylabel(self):
         """
-        Remove the ylabel and xticklabels from this panel.
+        Remove the ylabel and xticklabels from this map.
         """
         plt.setp(self.ax.get_yticklabels(), visible=False)
         self.ax.set_ylabel("")

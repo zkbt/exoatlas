@@ -1,2 +1,2 @@
-from .panels import *
+from .maps import *
 from .galleries import *

@@ -1,5 +1,5 @@
 from .imports import *
-from .Panels import BubblePanel
+from .Maps import BubbleMap
 from .transiting_exoplanets import NonKepler, Kepler, TESS
 from .KOI import UnconfirmedKepler
 import datetime
@@ -15,7 +15,7 @@ aspect = 768 / 1024.0
 angle = 30 * np.pi / 180  # 67.5
 
 
-class ThumbtackPlot(BubblePanel):
+class ThumbtackPlot(BubbleMap):
     """Plot exoplanet populations on a (possibly animated) thumbtack plot."""
 
     def __init__(self, pops, lightyears=False, **kwargs):
@@ -27,7 +27,7 @@ class ThumbtackPlot(BubblePanel):
         else:
             self.maxlabeldistance = 30.0
         self.planetfontsize = 6
-        BubblePanel.__init__(self, pops=pops, **kwargs)
+        BubbleMap.__init__(self, pops=pops, **kwargs)
         self.title = "Thumbtacks"
         self.xlabel = ""
         self.ylabel = ""

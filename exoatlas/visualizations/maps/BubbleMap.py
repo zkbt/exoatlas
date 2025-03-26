@@ -1,16 +1,16 @@
-from .Panel import *
+from .Map import *
 
-__all__ = ["BubblePanel"]
+__all__ = ["BubbleMap"]
 
 default_size = plt.matplotlib.rcParams["lines.markersize"] ** 2
 
 
-class BubblePanel(Panel):
+class BubbleMap(Map):
     """
-    BubblePanel is a general wrapper for making scatter plots
+    BubbleMap is a general wrapper for making scatter plots
     where planets are represented as bubbles that can have
     informative sizes and/or colors. As bubbles can have
-    x, y, size, color; a BubblePanel can be a decent way
+    x, y, size, color; a BubbleMap can be a decent way
     to represent up to four different dimensions.
     """
 
@@ -34,7 +34,7 @@ class BubblePanel(Panel):
         **kw,
     ):
         """
-        Initialize a plotting panel for drawing bubbles.
+        Initialize a plotting map for drawing bubbles.
 
         Parameters
         ----------
@@ -90,15 +90,15 @@ class BubblePanel(Panel):
             color plottable.)
         **kw : dict
             Other keywords will be passed on to *all*
-            Panel/Plottable initializations (which may
+            Map/Plottable initializations (which may
             include x, y, size, and color). If you need
             more fine-grained control over which axis
             gets which keyword, consider initializing
-            those panels one-by-one.
+            those maps one-by-one.
         """
 
-        # initialize the basics of the panel with the plottable axes
-        Panel.__init__(self, xaxis=xaxis, yaxis=yaxis, **kw)
+        # initialize the basics of the map with the plottable axes
+        Map.__init__(self, xaxis=xaxis, yaxis=yaxis, **kw)
 
         # set up how we should scale the sizes of points
         size_to_use = clean_plottable(size or self.size, **kw)
@@ -170,7 +170,7 @@ class BubblePanel(Panel):
             size = default_size * self.size_normalization * x
         # otherwise, set a single size
         else:
-            # get default, first from pop and then from panel
+            # get default, first from pop and then from map
             size = population_size or self.static_size
         # return a valid input to plt.scatter(s=...)
         return size
@@ -198,7 +198,7 @@ class BubblePanel(Panel):
             color = self.cmap(normalized)
         # finally, should we just use a default color?
         else:
-            # get default, first from pop and then from panel
+            # get default, first from pop and then from map
             color = population_color or self.static_color
 
         # return a valid input to any one of the following:
@@ -256,7 +256,7 @@ class BubblePanel(Panel):
 
     '''def plot(self, key, ax=None, annotate_kw={}, **kw):
         """
-        Add the points for a particular population to this panel.
+        Add the points for a particular population to this map.
 
         Parameters
         ----------

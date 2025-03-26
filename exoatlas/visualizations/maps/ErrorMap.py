@@ -1,11 +1,11 @@
-from .Panel import *
-from .BubblePanel import BubblePanel
+from .Map import *
+from .BubbleMap import BubbleMap
 from ..ink_errorbar import *
 
-__all__ = ["ErrorPanel"]
+__all__ = ["ErrorMap"]
 
 
-class ErrorPanel(BubblePanel):
+class ErrorMap(BubbleMap):
     """
     Error is a general wrapper for making scatter plots
     where planets are represented with 2D error bars, with
@@ -60,7 +60,7 @@ class ErrorPanel(BubblePanel):
 
     def plot(self, pop, ax=None, annotate_kw={}, **kw):
         """
-        Add the errorbars for a particular population to this panel.
+        Add the errorbars for a particular population to this map.
 
         Parameters
         ----------
@@ -82,8 +82,8 @@ class ErrorPanel(BubblePanel):
 
         # do a bubble instead, if requested (for drawing individual systems?)
         if getattr(self.pop, "bubble_anyway", False):
-            # FIXME - maybe change to just Panel?
-            BubblePanel.plot(self, pop=pop, ax=ax, annotate_kw=annotate_kw, **kw)
+            # FIXME - maybe change to just Map?
+            BubbleMap.plot(self, pop=pop, ax=ax, annotate_kw=annotate_kw, **kw)
             return
 
         # make sure we're plotting into the appropriate axes
@@ -105,11 +105,11 @@ class ErrorPanel(BubblePanel):
             scatterkw = self.kw(color=color, marker=marker, **kw)
 
             self.scattered[self.pop_key] = plt.scatter(x, y, **scatterkw)
-            # FIXME, 5/25/20: I think BubblePanel is doing
+            # FIXME, 5/25/20: I think BubbleMap is doing
             # something a little more clever with being able
             # to manage face and edge colors separately.
             # Perhaps we should set things up so that we might
-            # inherit some of this skills here in ErrorPanel
+            # inherit some of this skills here in ErrorMap
         else:
             # define the error bars to be plotting
             xl, xu = self.x_uncertainty_lowerupper

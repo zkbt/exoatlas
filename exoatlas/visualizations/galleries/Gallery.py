@@ -1,70 +1,70 @@
-from ..panels import *
+from ..maps import *
 
 
-def clean_panels(panels):
+def clean_maps(maps):
     """
-    Make sure that a collection of Panels
+    Make sure that a collection of Maps
     is stored as a dictionary.
 
     Users might sometimes provide a list
     or sometimes a dictionary. This helper
     makes sure it's a dictionary.
     """
-    if isinstance(panels, dict):
+    if isinstance(maps, dict):
         # if it's a dictionary, make su
-        panels_as_dictionary = panels
+        maps_as_dictionary = maps
     else:
         # otherwise, assume it's a list
-        panels_as_dictionary = {p.label: p for p in panels}
+        maps_as_dictionary = {p.label: p for p in maps}
 
-    # make deepy copies of all panels to avoid connections between galleries
-    for k, v in panels_as_dictionary.items():
-        assert isinstance(v, Panel)
-        panels_as_dictionary[k] = v.copy()
-    return panels_as_dictionary
+    # make deepy copies of all maps to avoid connections between galleries
+    for k, v in maps_as_dictionary.items():
+        assert isinstance(v, Map)
+        maps_as_dictionary[k] = v.copy()
+    return maps_as_dictionary
 
 
 class Gallery:
     def __init__(
         self,
-        panels=[],
+        maps=[],
         label=None,
         **kw,
     ):
         """
         Initialize a Gallery of Maps.
 
-        The default will display a set of Panels in one
+        The default will display a set of Maps in one
         row or column. For building more complicated
-        galleries of panels you might want to start
+        galleries of maps you might want to start
         from here and overwrite two methods:
-        - `setup_panels()` to connect panels to axes
-        - `refine_panels()` to fuss with details
+        - `setup_maps()` to connect maps to axes
+        - `refine_maps()` to fuss with details
         The docstrings for these two methods briefly
         sketch what each is for.
 
         Parameters
         ----------
-        panels : dict, list
-            A dictionary or list of Panels that should be
-            included in this Gallery. If Panels are not
+        maps : dict, list
+            A dictionary or list of Maps that should be
+            included in this Gallery. If Maps are not
             specified here, they must be defined inside of
-            `.setup_panels()`.
+            `.setup_maps()`.
         label : str, None
             A string to label this Gallery, which will
             mostly appear in filenames for saved plots.
         **kw : dict
             All additional keywords will be passed to
-            `.setup_panels()` to decide how the subplots
+            `.setup_maps()` to decide how the subplots
             will be arranged.
         """
-        self.panels = clean_panels(panels)
+        self.maps = clean_maps(maps)
 
         # create the figure + axes (but leave them empty)
-        self.setup_panels(**kw)
+        self.setup_maps(**kw)
 
         # make sure this gallery has a label
-        self.label = label or "+".join([p.label for p in self.panels.values()])
+        self.label = label or "+".join([p.label for p in self.maps.values()])
 
     def create_subplots(
         self,
@@ -81,7 +81,7 @@ class Gallery:
         """
         This helper just sets some reasonable defaults
         for constructing the figure and axes into
-        which Panels will be organized.
+        which Maps will be organized.
 
         Parameters
         ----------
@@ -90,10 +90,10 @@ class Gallery:
         ncols : int
             How many columns?
         sharex :
-            How should the x-axis be shared across panels?
+            How should the x-axis be shared across maps?
             (default 'col') shares along columns
         sharey : bool, str
-            How should the y-axis be shared across panels?
+            How should the y-axis be shared across maps?
                 (default 'row') shares along rows
         figsize : tuple
             How big should the figure be?
@@ -123,17 +123,17 @@ class Gallery:
 
     def remove_unused_axes(self):
         """
-        If any axes aren't connected to panels, remove them.
+        If any axes aren't connected to maps, remove them.
         """
         for a in np.atleast_1d(self.ax.flatten()):
-            is_used = np.any([a == p.ax for p in self.panels.values()])
+            is_used = np.any([a == p.ax for p in self.maps.values()])
             if is_used == False:
                 a.axis("off")
 
-    def setup_panels(self, horizontal=True, **kw):
+    def setup_maps(self, horizontal=True, **kw):
         """
         Create the figure + axes, and
-        link the axes to Panel objects.
+        link the axes to Map objects.
 
         You might want to write over this for a
         more complicated Gallery of Maps!
@@ -141,17 +141,17 @@ class Gallery:
         This should create two internal variables:
             `self.fi` = the figure
             `self.ax` = a 1D or 2D grid of axes
-        It should also make sure that every panel
-        to plot in `self.panels` is connected to an
-        ax in `self.ax`, either by creating the panel
+        It should also make sure that every map
+        to plot in `self.maps` is connected to an
+        ax in `self.ax`, either by creating the map
         with a `ax=...` keyword, or by setting the
-        `.ax` attribute of an already existing Panel.
+        `.ax` attribute of an already existing Map.
 
         Parameters
         ----------
         horizontal : bool
-            If True, make a row of Panels.
-            If False, make a column of Panels.
+            If True, make a row of Maps.
+            If False, make a column of Maps.
         **kw : dict
             All other keywords will be passed to
             `.create_subplots()` for setting up the
@@ -159,7 +159,7 @@ class Gallery:
         """
 
         # decide rows and columns
-        N = len(self.panels)
+        N = len(self.maps)
         self.horizontal = horizontal
         if horizontal:
             rows, cols = 1, N
@@ -169,19 +169,19 @@ class Gallery:
         # create the subplots
         self.fi, self.ax = self.create_subplots(nrows=rows, ncols=cols, **kw)
 
-        # attach panels to each ax
-        for i, k in enumerate(self.panels):
-            self.panels[k].ax = np.atleast_1d(self.ax.flatten())[i]
+        # attach maps to each ax
+        for i, k in enumerate(self.maps):
+            self.maps[k].ax = np.atleast_1d(self.ax.flatten())[i]
 
-    def refine_panels(self):
+    def refine_maps(self):
         """
-        Make small changes to Panels, after data are plotted.
+        Make small changes to Maps, after data are plotted.
 
         You might want to write over this for a
         more complicated Gallery of Maps!
 
         We might want to plot some extra curves on
-        a panel, or fuss with its axis labels, or
+        a map, or fuss with its axis labels, or
         nudge its ticks, or add a legend. This
         function gets called after the data have
         been built up into the plot, so those
@@ -201,7 +201,7 @@ class Gallery:
 
     def build(self, pops, save=False, steps=True, format="png", savefig_kw={}):
         """
-        Populate all Panels in a Gallery,
+        Populate all Maps in a Gallery,
         using a set of populations.
 
         Parameters
@@ -225,14 +225,14 @@ class Gallery:
         """
 
         # put data into the axes
-        for k, p in self.panels.items():
+        for k, p in self.maps.items():
             p.build(pops=pops, legend=False)
 
         # remove any empty axes
         self.remove_unused_axes()
 
-        # make small tweaks to the panels
-        self.refine_panels()
+        # make small tweaks to the maps
+        self.refine_maps()
 
         # save figure
         if save:
@@ -245,7 +245,7 @@ class Gallery:
 class TransitGallery(Gallery):
     def __init__(
         self,
-        panels=[
+        maps=[
             Mass_x_Radius(),
             Flux_x_Radius(),
             StellarRadius_x_PlanetRadius(),
@@ -253,4 +253,4 @@ class TransitGallery(Gallery):
         ],
         **kw,
     ):
-        Gallery.__init__(self, panels=panels, **kw)
+        Gallery.__init__(self, maps=maps, **kw)

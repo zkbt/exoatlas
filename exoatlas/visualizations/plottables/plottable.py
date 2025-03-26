@@ -32,7 +32,7 @@ class Plottable:
         for simply doing calculations).
 
         Often a `Plottable` will be connected to some kind
-        of a visualization `Panel`, which will handle rendering
+        of a visualization `Map`, which will handle rendering
         data on plots and cycling through populations.
 
         Parameters
@@ -62,7 +62,7 @@ class Plottable:
             also be used to set the vmin and
             vmax of a color map, if this
             plottable is being used to color
-            points in a BubblePanel. `lim`
+            points in a BubbleMap. `lim`
             should have no units attached.
             For compariing different populations,
             it's probably a very good idea to
@@ -177,7 +177,7 @@ class Plottable:
         """
         Extract the values for a population.
 
-        Generally, plotting panels might loop
+        Generally, plotting maps might loop
         through multiple populations to include
         each on the plot.
 
@@ -208,7 +208,7 @@ class Plottable:
         """
         Extract the upper and lower uncertainties for a population.
 
-        Generally, plotting panels might loop
+        Generally, plotting maps might loop
         through multiple populations to include
         each on the plot.
 
@@ -247,7 +247,7 @@ class Plottable:
         """
         Extract the uncertainties for a population.
 
-        Generally, plotting panels might loop
+        Generally, plotting maps might loop
         through multiple populations to include
         each on the plot.
 
@@ -330,7 +330,7 @@ def clean_plottable(initial, **kw):
     """
     Make sure something is actually a Plottable object.
 
-    We allow fairly flexible calls to plotting panels,
+    We allow fairly flexible calls to plotting maps,
     where it's possible that a Plottable might be
     requested using a variety of different formats.
     This wrapper tries to make sure we get to what we
@@ -354,7 +354,7 @@ def clean_plottable(initial, **kw):
             If a class definition, the Plottable will be
             created using the defaults for that class.
         None =
-            The parent panel probably has a Plottable
+            The parent map probably has a Plottable
             connected to a particular axis; None just means
             not to overwrite that default.
     **kw : dict

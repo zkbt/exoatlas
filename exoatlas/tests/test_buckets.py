@@ -19,15 +19,13 @@ def test_buckets():
 
     t = TransitingExoplanets()[:20]
     Depth_x_Brightness().build([t])
-    BubblePanel(xaxis=StellarBrightness, yaxis=Depth).build([t])
-    BubblePanel(xaxis=StellarBrightness(wavelength=5 * u.micron), yaxis=Depth).build(
-        [t]
-    )
+    BubbleMap(xaxis=StellarBrightness, yaxis=Depth).build([t])
+    BubbleMap(xaxis=StellarBrightness(wavelength=5 * u.micron), yaxis=Depth).build([t])
     for k in telescope_units:
-        BubblePanel(
+        BubbleMap(
             xaxis=StellarBrightnessTelescope(telescope_name=k), yaxis=Depth
         ).build([t])
-    BubblePanel(
+    BubbleMap(
         xaxis=StellarBrightnessTelescope(
             telescope_name="JWST", wavelength=10 * u.micron, R=10
         ),

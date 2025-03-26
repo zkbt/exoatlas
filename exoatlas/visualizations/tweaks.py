@@ -14,11 +14,11 @@ def tidy_radius_ticks():
     return t, s
 
 
-def fusswithticks(panel):
+def fusswithticks(map):
     """
     FIXME -- can probably remove?
     """
-    plt.sca(panel.ax)
+    plt.sca(map.ax)
     t = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 20, 30]
     s = ["1", "2", "3", "4", " ", " ", " ", " ", " ", "10", "20"]
     plt.yticks(t, s)

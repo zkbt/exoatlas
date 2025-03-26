@@ -9,54 +9,54 @@ class physical_summary(Gallery):
     that strongly influence how planets work.
     """
 
-    def setup_panels(self):
+    def setup_maps(self):
         """
         Create the figure + axes, and
-        link the axes to Panel objects.
+        link the axes to Map objects.
         """
         # create the subplots
         self.fi, self.ax = self.create_subplots(
             nrows=2, ncols=3, width_ratios=[2, 4, 1], height_ratios=[1, 3]
         )
 
-        # attach panels to each ax
-        self.panels = {}
-        self.panels["flux_x_radius"] = Flux_x_Radius(ax=self.ax[1, 1])
-        self.panels["mass_x_radius"] = Mass_x_Radius(ax=self.ax[1, 0])
-        self.panels["flux_x_escape"] = Flux_x_EscapeVelocity(ax=self.ax[0, 1])
-        self.panels["radius_x_radius"] = StellarRadius_x_PlanetRadius(ax=self.ax[1, 2])
-        self.panels["mass_x_escape"] = BubblePanel(
+        # attach maps to each ax
+        self.maps = {}
+        self.maps["flux_x_radius"] = Flux_x_Radius(ax=self.ax[1, 1])
+        self.maps["mass_x_radius"] = Mass_x_Radius(ax=self.ax[1, 0])
+        self.maps["flux_x_escape"] = Flux_x_EscapeVelocity(ax=self.ax[0, 1])
+        self.maps["radius_x_radius"] = StellarRadius_x_PlanetRadius(ax=self.ax[1, 2])
+        self.maps["mass_x_escape"] = BubbleMap(
             xaxis=Mass, yaxis=EscapeVelocity, ax=self.ax[0, 0]
         )
 
-    def refine_panels(self):
+    def refine_maps(self):
         """
-        Make small changes to Panels, after data are plotted.
+        Make small changes to Maps, after data are plotted.
         """
 
         #
-        plt.sca(self.panels["flux_x_radius"].ax)
-        self.panels["flux_x_radius"].plot_hz()
-        self.panels["flux_x_radius"].ticks_simplify_exponents("y")
-        self.panels["flux_x_radius"].add_teqaxis()
-        self.panels["flux_x_radius"].remove_ylabel()
-        self.panels["flux_x_radius"].add_legend(frameon=False, fontsize=8)
+        plt.sca(self.maps["flux_x_radius"].ax)
+        self.maps["flux_x_radius"].plot_hz()
+        self.maps["flux_x_radius"].ticks_simplify_exponents("y")
+        self.maps["flux_x_radius"].add_teqaxis()
+        self.maps["flux_x_radius"].remove_ylabel()
+        self.maps["flux_x_radius"].add_legend(frameon=False, fontsize=8)
 
-        plt.sca(self.panels["mass_x_radius"].ax)
-        self.panels["mass_x_radius"].plot_both_seager(zorder=1e9)
-        # self.panels['mass-radius'].ticks_enforce_multiple_oom("x")
-        # self.panels['mass-radius'].ticks_simplify_exponents("xy")
+        plt.sca(self.maps["mass_x_radius"].ax)
+        self.maps["mass_x_radius"].plot_both_seager(zorder=1e9)
+        # self.maps['mass-radius'].ticks_enforce_multiple_oom("x")
+        # self.maps['mass-radius'].ticks_simplify_exponents("xy")
 
-        plt.sca(self.panels["mass_x_escape"].ax)
-        self.panels["mass_x_escape"].remove_xlabel()
+        plt.sca(self.maps["mass_x_escape"].ax)
+        self.maps["mass_x_escape"].remove_xlabel()
 
-        plt.sca(self.panels["flux_x_escape"].ax)
-        self.panels["flux_x_escape"].remove_xlabel()
-        self.panels["flux_x_escape"].remove_ylabel()
-        self.panels["flux_x_escape"].plot_constant_lambda()
+        plt.sca(self.maps["flux_x_escape"].ax)
+        self.maps["flux_x_escape"].remove_xlabel()
+        self.maps["flux_x_escape"].remove_ylabel()
+        self.maps["flux_x_escape"].plot_constant_lambda()
 
-        plt.sca(self.panels["radius_x_radius"].ax)
-        self.panels["radius_x_radius"].remove_ylabel()
+        plt.sca(self.maps["radius_x_radius"].ax)
+        self.maps["radius_x_radius"].remove_ylabel()
 
 
 '''class observable_summary(BuildablePlot):

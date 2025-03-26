@@ -1,18 +1,18 @@
 from ...imports import *
 from ...models import plot_both_seager, make_hz
 from ..plottables.preset_plottables import *
-from .Panel import *
-from .BubblePanel import *
-from .ErrorPanel import *
+from .Map import *
+from .BubbleMap import *
+from .ErrorMap import *
 
 
-class Flux_x_Radius(BubblePanel):
+class Flux_x_Radius(BubbleMap):
     xaxis = Flux
     yaxis = Radius
 
     def add_teqaxis(self, position=50):
         """
-        Add an extra axis along the bottom of this panel,
+        Add an extra axis along the bottom of this map,
         quoting the equilibrium temperature associated
         with a particular bolometric flux received.
         """
@@ -55,7 +55,7 @@ class Flux_x_Radius(BubblePanel):
         (Estimated very roughly by eye from Kopparapu et al.)
         """
 
-        # make sure the plotting happens in this panel
+        # make sure the plotting happens in this map
         plt.sca(self.ax)
 
         # define the functions
@@ -91,7 +91,7 @@ class Flux_x_Mass(Flux_x_Radius):
     yaxis = KludgedMass
 
 
-class Flux_x_Teff(BubblePanel):
+class Flux_x_Teff(BubbleMap):
     xaxis = Flux
     yaxis = StellarTeff
 
@@ -110,7 +110,7 @@ class Flux_x_Teff(BubblePanel):
         (Estimated very roughly by eye from Kopparapu et al.)
         """
 
-        # make sure the plotting happens in this panel
+        # make sure the plotting happens in this map
         plt.sca(self.ax)
 
         # define the functions
@@ -133,7 +133,7 @@ class Flux_x_Teff(BubblePanel):
         )
 
 
-class SemimajorAxis_x_StellarLuminosity(BubblePanel):
+class SemimajorAxis_x_StellarLuminosity(BubbleMap):
     xaxis = SemimajorAxis
     yaxis = StellarLuminosity
 
@@ -152,7 +152,7 @@ class SemimajorAxis_x_StellarLuminosity(BubblePanel):
         (Estimated very roughly by eye from Kopparapu et al.)
         """
 
-        # make sure the plotting happens in this panel
+        # make sure the plotting happens in this map
         plt.sca(self.ax)
 
         # define the functions
@@ -175,57 +175,57 @@ class SemimajorAxis_x_StellarLuminosity(BubblePanel):
         )
 
 
-class Distance_x_Radius(BubblePanel):
+class Distance_x_Radius(BubbleMap):
     xaxis = Distance
     yaxis = Radius
 
 
-class Distance_x_Teff(BubblePanel):
+class Distance_x_Teff(BubbleMap):
     xaxis = Distance
     yaxis = StellarTeff
 
 
-class EscapeParameter_x_Radius(BubblePanel):
+class EscapeParameter_x_Radius(BubbleMap):
     xaxis = EscapeParameter
     yaxis = Radius
 
 
-class Density_x_Radius(BubblePanel):
+class Density_x_Radius(BubbleMap):
     xaxis = Density
     yaxis = Radius
 
 
-class StellarRadius_x_PlanetRadius(BubblePanel):
+class StellarRadius_x_PlanetRadius(BubbleMap):
     xaxis = StellarRadius
     yaxis = Radius
 
 
-class Depth_x_Radius(BubblePanel):
+class Depth_x_Radius(BubbleMap):
     xaxis = Depth
     yaxis = Radius
 
 
-class Transmission_x_Radius(BubblePanel):
+class Transmission_x_Radius(BubbleMap):
     xaxis = Transmission
     yaxis = Radius
 
 
-class Reflection_x_Radius(BubblePanel):
+class Reflection_x_Radius(BubbleMap):
     xaxis = Reflection
     yaxis = Radius
 
 
-class Emission_x_Radius(BubblePanel):
+class Emission_x_Radius(BubbleMap):
     xaxis = Emission
     yaxis = Radius
 
 
-class Distance_x_Brightness(BubblePanel):
+class Distance_x_Brightness(BubbleMap):
     xaxis = Distance
     yaxis = StellarBrightnessTelescope
 
 
-class Depth_x_Brightness(BubblePanel):
+class Depth_x_Brightness(BubbleMap):
     xaxis = Depth
     yaxis = StellarBrightnessTelescope
 
@@ -233,7 +233,7 @@ class Depth_x_Brightness(BubblePanel):
         """
         Plot the 1-sigma uncertainty from photon noise,
         with sigma on the x axis and number of photons on y-axis,
-        in the telescope units associated with the panel.
+        in the telescope units associated with the map.
 
         Parameters
         ----------
@@ -270,12 +270,12 @@ class Emission_x_Brightness(Depth_x_Brightness):
     xaxis = Emission
 
 
-class Period_x_Radius(BubblePanel):
+class Period_x_Radius(BubbleMap):
     xaxis = Period
     yaxis = Radius
 
 
-class SemimajorAxis_x_Radius(BubblePanel):
+class SemimajorAxis_x_Radius(BubbleMap):
     xaxis = SemimajorAxis
     yaxis = Radius
 
@@ -285,7 +285,7 @@ class SemimajorAxis_x_Mass(SemimajorAxis_x_Radius):
     yaxis = KludgedMass
 
 
-class Mass_x_Radius(ErrorPanel):
+class Mass_x_Radius(ErrorMap):
     xaxis = Mass
     yaxis = Radius
 
@@ -309,7 +309,7 @@ class Mass_x_Radius(ErrorPanel):
             )
 
 
-class Flux_x_EscapeVelocity(BubblePanel):
+class Flux_x_EscapeVelocity(BubbleMap):
     xaxis = Flux
     yaxis = EscapeVelocity
 
@@ -424,7 +424,7 @@ class Flux_x_EscapeVelocity(BubblePanel):
         )
 
 
-class EscapeVelocity_x_Flux(BubblePanel):
+class EscapeVelocity_x_Flux(BubbleMap):
     xaxis = EscapeVelocity
     yaxis = Flux
 
@@ -517,13 +517,13 @@ class ImpactVelocity_x_EscapeVelocity(Flux_x_EscapeVelocity):
         )
 
 
-preset_panels = {}
+preset_maps = {}
 local_variables = dict(**locals())
 for k, v in local_variables.items():
     try:
-        assert issubclass(v, Panel)
-        preset_panels[k] = v
+        assert issubclass(v, Map)
+        preset_maps[k] = v
     except (AssertionError, TypeError):
         continue
-for k in ["Panel", "BubblePanel", "ErrorPanel"]:
-    preset_panels.pop(k)
+for k in ["Map", "BubbleMap", "ErrorMap"]:
+    preset_maps.pop(k)

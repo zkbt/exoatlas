@@ -6,7 +6,7 @@ from exoatlas.visualizations import *
 
 import exoatlas as ex
 import matplotlib.pyplot as plt
-from exoatlas.visualizations.panels.preset_panels import preset_panels
+from exoatlas.visualizations.maps.preset_maps import preset_maps
 
 
 def test_plottables():
@@ -20,17 +20,17 @@ def test_plottables():
         print()
 
 
-def test_panels():
+def test_maps():
     pops = {}
     pops["exo"] = TransitingExoplanets()
     pops["solarsystem"] = SolarSystem()
-    for k, p in preset_panels.items():
+    for k, p in preset_maps.items():
         print(k, p)
         p().build(pops=pops)
-        plt.title(f"Panel={k}")
+        plt.title(f"Map={k}")
 
 
-def test_panel_types():
+def test_map_types():
     pops = {}
     pops["solarsystem"] = SolarSystem()
     pops["exo"] = TransitingExoplanets()
@@ -38,12 +38,12 @@ def test_panel_types():
     fr = Flux_x_Radius()
     fr.build(pops=pops)
 
-    fr = BubblePanel(
+    fr = BubbleMap(
         xaxis=Plottable(source="insolation"), yaxis=Plottable(source="radius")
     )
     fr.build(pops=pops)
 
-    fr = ErrorPanel(
+    fr = ErrorMap(
         xaxis=Plottable(source="insolation"), yaxis=Plottable(source="radius")
     )
     fr.build(pops=pops)

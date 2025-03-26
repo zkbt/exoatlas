@@ -1,8 +1,7 @@
 from .setup_tests import *
 
 from exoatlas import *
-from exoatlas.visualizations import * 
-
+from exoatlas.visualizations import *
 
 
 def test_reflection(telescope_name="JWST", wavelength=1 * u.micron):
@@ -12,7 +11,7 @@ def test_reflection(telescope_name="JWST", wavelength=1 * u.micron):
     w = 1 * u.micron
     fi, ax = plt.subplots(1, 2, figsize=(8, 4), constrained_layout=True)
     for i, per_transit in enumerate([True, False]):
-        BubblePanel(
+        BubbleMap(
             xaxis=StellarBrightnessTelescope(
                 wavelength=wavelength, telescope_name=telescope_name
             ),
@@ -35,7 +34,7 @@ def test_emission(telescope_name="JWST", wavelength=5 * u.micron):
     w = 5 * u.micron
     fi, ax = plt.subplots(1, 2, figsize=(8, 4), constrained_layout=True)
     for i, per_transit in enumerate([True, False]):
-        BubblePanel(
+        BubbleMap(
             xaxis=StellarBrightnessTelescope(
                 wavelength=wavelength, telescope_name=telescope_name
             ),
@@ -54,7 +53,7 @@ def test_transmission(telescope_name="JWST", wavelength=5 * u.micron):
     w = 5 * u.micron
     fi, ax = plt.subplots(1, 2, figsize=(8, 4), constrained_layout=True)
     for i, per_transit in enumerate([True, False]):
-        BubblePanel(
+        BubbleMap(
             xaxis=StellarBrightnessTelescope(
                 wavelength=wavelength, telescope_name=telescope_name
             ),
