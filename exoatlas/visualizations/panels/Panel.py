@@ -26,7 +26,14 @@ def clean_pops(initial):
     if type(initial) == dict:
         return initial
     elif type(initial) == list:
-        return {i: p for i, p in enumerate(initial)}
+        d = {}
+        for p in initial:
+            label = p.label
+            if label in d:
+                label += "+"
+            p.label = label
+            d[label] = p
+        return d
     else:
         # (otherwise, assume it's already a single population)
         return {initial.label: initial}
@@ -139,17 +146,9 @@ class Panel:
         """
 
         if isinstance(pop, Population):
-            # if a Population, focus on it and make sure it is in dictionary
-            needs_to_be_added_to_dictionary = True
-            for k, v in self.populations.items():
-                # check whether populations match (= don't trust keys)
-                if pop == v:
-                    self.pop_key = k
-                    needs_to_be_added_to_dictionary = needs_to_be_added_to_dictionary
-            if needs_to_be_added_to_dictionary:
+            if pop.label not in self.populations:
                 self.pop_key = pop.label
                 self.populations[self.pop_key] = pop
-
             self.pop = self.populations[self.pop_key]
 
         elif pop in self.populations:
@@ -598,6 +597,7 @@ class Panel:
             self.ax.yaxis.set_major_locator(loc)
 
     def add_legend(self, outside=False, frameon=False, **kw):
+        plt.sca(self.ax)
         legendkw = dict()
         legendkw["frameon"] = frameon
         if outside:

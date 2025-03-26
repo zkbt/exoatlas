@@ -40,7 +40,7 @@ class physical_summary(Gallery):
         self.panels["flux_x_radius"].ticks_simplify_exponents("y")
         self.panels["flux_x_radius"].add_teqaxis()
         self.panels["flux_x_radius"].remove_ylabel()
-        self.panels["flux_x_radius"].add_legend(frameon=False)
+        self.panels["flux_x_radius"].add_legend(frameon=False, fontsize=8)
 
         plt.sca(self.panels["mass_x_radius"].ax)
         self.panels["mass_x_radius"].plot_both_seager(zorder=1e9)

@@ -25,15 +25,9 @@ def clean_panels(panels):
 
 
 class Gallery:
-
     def __init__(
         self,
-        panels=[
-            Mass_x_Radius(),
-            Flux_x_Radius(),
-            StellarRadius_x_PlanetRadius(),
-            Distance_x_Radius(),
-        ],
+        panels=[],
         label=None,
         **kw,
     ):
@@ -205,7 +199,7 @@ class Gallery:
                 # plt.setp(a.get_xticklabels(), visible=False)
                 a.set_xlabel("")
 
-    def build_panels(self, pops, save=False, steps=True, format="png", savefig_kw={}):
+    def build(self, pops, save=False, steps=True, format="png", savefig_kw={}):
         """
         Populate all Panels in a Gallery,
         using a set of populations.
@@ -246,3 +240,17 @@ class Gallery:
             plt.savefig(f"{filename}.{format}", **savefig_kw)
 
         return
+
+
+class TransitGallery(Gallery):
+    def __init__(
+        self,
+        panels=[
+            Mass_x_Radius(),
+            Flux_x_Radius(),
+            StellarRadius_x_PlanetRadius(),
+            Distance_x_Radius(),
+        ],
+        **kw,
+    ):
+        Gallery.__init__(self, panels=panels, **kw)

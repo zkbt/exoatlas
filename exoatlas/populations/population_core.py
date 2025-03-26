@@ -640,6 +640,10 @@ class Population:
             except KeyError:
                 subset = self.create_subset_by_hostname(key)
 
+        # kind of kludgy, to enforce different colors
+        subset._plotkw["color"] = None
+        subset._plotkw["c"] = None
+
         return subset
 
     def create_subset_by_name(self, key):

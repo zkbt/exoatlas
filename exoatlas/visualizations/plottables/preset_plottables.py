@@ -26,7 +26,7 @@ class Teq(Plottable):
 
 class CumulativeXUVFlux(Flux):
     source = "relative_cumulative_xuv_insolation"
-    label = "Time-Integrated XUV Flux Received (relative to Earth)"
+    label = "Time-Integrated XUV Flux Received\n(relative to Earth)"
 
 
 class ImpactVelocity(Plottable):

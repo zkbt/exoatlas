@@ -29,6 +29,9 @@ class TransitingExoplanetsSubset(TransitingExoplanets):
         # trim to just the data we want
         self.standard = self.standard[self.to_include()]
 
+        self._plotkw["color"] = None
+        self._plotkw["c"] = None
+
     def to_include(self):
         raise NotImplementedError(
             "Please define `.to_include()` for this ExoplanetSubset!"
@@ -122,7 +125,7 @@ class Ground(TransitingExoplanetsSubset):
         return foundfromspace == False
 
 
-sigma = 5
+sigma = 3
 
 
 def mass_is_good(pop):

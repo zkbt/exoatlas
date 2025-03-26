@@ -650,7 +650,7 @@ class Exoplanets(ExoplanetsPSCP):
         PredefinedPopulation.__init__(self, remake=remake, **plotkw)
 
         # plotting defaults
-        self.s = 4
+        self.s = 6
         self.marker = "."
         self.zorder = 0
         self.color = "black"
@@ -686,6 +686,10 @@ class Exoplanets(ExoplanetsPSCP):
                 list(np.unique(subset.tidyname()))
             ]
             subset.individual_references.label = "Individual References"
+
+        # kind of kludgy, to enforce different colors
+        subset._plotkw["color"] = None
+        subset._plotkw["c"] = None
 
         return subset
 

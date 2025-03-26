@@ -52,8 +52,8 @@ def test_panel_types():
 def test_galleries():
     pops = {}
     pops["solarsystem"] = SolarSystem()
-    Gallery().build_panels(pops)
-    physical_summary().build_panels(pops)
+    TransitGallery().build(pops)
+    physical_summary().build(pops)
 
 
 if __name__ == "__main__":  # pragma: no cover
