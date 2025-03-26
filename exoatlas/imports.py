@@ -7,7 +7,7 @@ except ImportError:
 
 # imports that are need by many exoatlas subsections
 from ast import Import
-import os, sys, time, shutil, warnings, copy, glob
+import os, sys, time, shutil, warnings, copy, glob, inspect
 from tqdm import tqdm
 
 # (possibly different on Mac, Linux, Windows, even for Python versions 3.8-3.12)
@@ -36,9 +36,6 @@ from astropy.visualization import quantity_support
 from astropy.coordinates import SkyCoord
 
 quantity_support()
-
-# some general custom utilities from Zach
-from .talker import Talker
 
 # units and constants from astropy
 import astropy.units as u, astropy.constants as con

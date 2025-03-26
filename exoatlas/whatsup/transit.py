@@ -17,9 +17,6 @@ class Transit:
             plan = the Plan object in which this is embedded
         """
 
-        # set up the talking
-        Talker.__init__(self)
-
         # store lots of links to other objects
         self.planet = planet
         self.coord = SkyCoord(self.planet.ra, self.planet.dec)

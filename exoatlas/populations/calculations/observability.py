@@ -331,7 +331,7 @@ def depth_uncertainty(
     oot = np.sqrt(2)
     sigma_depth = sigma * oot
 
-    return sigma_depth
+    return u.Quantity(sigma_depth)
 
 
 def _get_noise_and_unit(

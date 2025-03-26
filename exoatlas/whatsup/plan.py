@@ -53,9 +53,6 @@ class Plan:
     ):
         """initialize, setting the observatory, block, and population"""
 
-        # initialize the talking setup
-        Talker.__init__(self)
-
         # set the maximum airmass and the maximum sun altitude
         self.maxairmass = maxairmass
         self.maxsun = maxsun

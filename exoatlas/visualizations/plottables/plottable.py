@@ -1,4 +1,5 @@
 from ...imports import *
+from ...populations import Population
 from matplotlib.colors import Normalize, LogNorm
 
 
@@ -7,7 +8,7 @@ class Plottable:
     label = None
     scale = "log"
     lim = [None, None]
-    unit = None 
+    unit = None
     """
     General class definition for a plottable axis,
     which can appear as either an xaxis or yaxis.
@@ -22,17 +23,17 @@ class Plottable:
         """
         Initialize a Plottable quantity.
 
-        This `Plottable` serves as a helper for plotting 
-        `exoatlas` quantities. It provides functions to 
-        return values and uncertainties for a `Population`, 
-        but it also stores important information about 
+        This `Plottable` serves as a helper for plotting
+        `exoatlas` quantities. It provides functions to
+        return values and uncertainties for a `Population`,
+        but it also stores important information about
         labels, scales, and limits that are needed for
-        good automatic visualizations (but are not needed 
+        good automatic visualizations (but are not needed
         for simply doing calculations).
 
-        Often a `Plottable` will be connected to some kind 
-        of a visualization `Panel`, which will handle rendering 
-        data on plots and cycling through populations. 
+        Often a `Plottable` will be connected to some kind
+        of a visualization `Panel`, which will handle rendering
+        data on plots and cycling through populations.
 
         Parameters
         ----------
@@ -61,17 +62,17 @@ class Plottable:
             also be used to set the vmin and
             vmax of a color map, if this
             plottable is being used to color
-            points in a BubblePanel. `lim` 
+            points in a BubblePanel. `lim`
             should have no units attached.
-            For compariing different populations, 
-            it's probably a very good idea to 
-            explicitly set the limits and not 
-            leave them as None; otherwise 
-            individual populations might normalize 
-            themselves separately. 
-        unit : astropy.units.Unit 
-            The astropy unit to be used for plotting. 
-            It must be something to which the 
+            For compariing different populations,
+            it's probably a very good idea to
+            explicitly set the limits and not
+            leave them as None; otherwise
+            individual populations might normalize
+            themselves separately.
+        unit : astropy.units.Unit
+            The astropy unit to be used for plotting.
+            It must be something to which the
             quantity can be converted.
         kw : dict
             All other keywords will be passed to .get()
@@ -81,12 +82,75 @@ class Plottable:
             to therefore get the values and uncertainties
             associated with a particular parameters.
         """
+
+        # set properties to be defaults, updated by keywords
         self.source = source or self.source
         self.label = label or self.label
         self.scale = scale or self.scale
         self.lim = lim or self.lim
         self.unit = unit or self.unit
-        self.kw = kw
+
+        # set keywords to be defaults for source, updated by **kw
+        self.kw = self._get_default_keyword_arguments() | kw
+
+        # after .source and .kw have been defined, update label, if necessary
+        self._update_label()
+
+    def _update_label(self):
+        """
+        Update the label.
+
+        Sometimes, we might not know everything
+        we need to write an appropriate label
+        until after the `Plottable` has been
+        created. For example, if a quantity is
+        wavelength-dependent, we need to make
+        an instance of the `Plottable` with a
+        real wavelength, before we know how to
+        set the wavelength label. If so,
+        this method should be overwritten
+        when defining a new `Plottable` class.
+
+        When called, it should change
+        `self.label`, and it can count on
+        `self.source` and `self.kw` already
+        being defined.
+        """
+        pass
+
+    def _get_default_keyword_arguments(self):
+        """
+        Figure out default science keyword arguments.
+
+        For the `source` method that returns the quantities
+        to be plotted, figure out what the default keyword
+        arguments are, so if this `Plottable` gets created
+        without custom keyword values, we can still
+        make use of the keyword inputs.
+        """
+        try:
+            # get method for calculating quantity
+            f = getattr(Population, self.source)
+        except AttributeError:
+            # Table columns that don't have explicit
+            # method definitions probably won't show
+            # up in the Population class until after
+            # an instance is created. That's OK, because
+            # those won't have custom keywords we need
+            # care about.
+            return {}
+
+        # figure out default keywords
+        kw = {
+            k: v.default
+            for k, v in inspect.signature(f).parameters.items()
+            if v.default is not inspect.Parameter.empty
+        }
+        try:
+            kw.pop("distribution")
+        except KeyError:
+            pass
+        return kw
 
     def __repr__(self):
         """
@@ -95,20 +159,19 @@ class Plottable:
         return f"📏 {self.source or self.label or '?'}".replace("\n", " ")
 
     def _convert_unit(self, x):
-        '''
+        """
         Convert quantity into desired unit,
-        unless units aren't specified. 
+        unless units aren't specified.
 
-        Parameter 
-        --------- 
+        Parameter
+        ---------
         x : quantity
-            The quantity to convert to `self.unit` 
-        '''
+            The quantity to convert to `self.unit`
+        """
         if self.unit is None:
-            return x 
+            return x
         else:
             return x.to(self.unit)
-
 
     def value(self, pop):
         """
@@ -127,10 +190,10 @@ class Plottable:
         Write over this function in order to make
         more complicated function calls, if necessary.
 
-        Parameters 
+        Parameters
         ----------
-        pop : Population 
-            The `exoatlas` population for which 
+        pop : Population
+            The `exoatlas` population for which
             values will be retreived.
 
         Returns
@@ -143,7 +206,7 @@ class Plottable:
 
     def uncertainty_lowerupper(self, pop):
         """
-        Extract the upper and lower uncertainties for a population. 
+        Extract the upper and lower uncertainties for a population.
 
         Generally, plotting panels might loop
         through multiple populations to include
@@ -162,10 +225,10 @@ class Plottable:
         propagation is, for whatever reason, not
         exactly what you want.
 
-        Parameters 
+        Parameters
         ----------
-        pop : Population 
-            The `exoatlas` population for which 
+        pop : Population
+            The `exoatlas` population for which
             values will be retreived.
 
         Returns
@@ -200,10 +263,10 @@ class Plottable:
         propagation is, for whatever reason, not
         exactly what you want.
 
-        Parameters 
+        Parameters
         ----------
-        pop : Population 
-            The `exoatlas` population for which 
+        pop : Population
+            The `exoatlas` population for which
             values will be retreived.
 
         Returns
@@ -214,28 +277,27 @@ class Plottable:
         sigma = pop.get_uncertainty(self.source, **self.kw)
         return self._convert_unit(sigma)
 
-    
     def normalized_value(self, pop):
         """
-        Extract the values for a population, 
+        Extract the values for a population,
         normalized to fall between 0 and 1.
 
-        This normalizes the values for a population 
-        according to scale        
+        This normalizes the values for a population
+        according to scale
 
         Write over this function in order to make
         more complicated function calls, if necessary.
 
-        Parameters 
+        Parameters
         ----------
-        pop : Population 
-            The `exoatlas` population for which 
+        pop : Population
+            The `exoatlas` population for which
             values will be retreived.
 
         Returns
         -------
         normalized_value : Quantity
-            The value, normalized 
+            The value, normalized
         """
 
         # get unitless array of values
@@ -250,11 +312,12 @@ class Plottable:
 
         # call different scaling functions
         kw = dict(vmin=vmin, vmax=vmax)
-        if self.scale == 'linear':
+        if self.scale == "linear":
             normalize = Normalize(**kw)
-        elif self.scale == 'log':
+        elif self.scale == "log":
             normalize = LogNorm(**kw)
         return normalize(value)
+
 
 def clean_plottable(initial, **kw):
     """
@@ -266,7 +329,7 @@ def clean_plottable(initial, **kw):
     This wrapper tries to make sure we get to what we
     need, a class definition, no matter what.
 
-    (This used to accept a string to initialize a 
+    (This used to accept a string to initialize a
     basic )
 
     Parameters
@@ -287,14 +350,14 @@ def clean_plottable(initial, **kw):
             The parent panel probably has a Plottable
             connected to a particular axis; None just means
             not to overwrite that default.
-    **kw : dict 
-        Extra keywords that should be passed in when 
-        initializing `Plottable` from a class or a string. 
+    **kw : dict
+        Extra keywords that should be passed in when
+        initializing `Plottable` from a class or a string.
     Returns
     -------
     plottable_or_not : (various)
-        Either an instance of a Plottable object, 
-        or something else entirely. 
+        Either an instance of a Plottable object,
+        or something else entirely.
     """
 
     if isinstance(initial, Plottable):

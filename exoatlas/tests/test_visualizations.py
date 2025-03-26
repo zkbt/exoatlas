@@ -6,58 +6,54 @@ from exoatlas.visualizations import *
 
 import exoatlas as ex
 import matplotlib.pyplot as plt
-from exoatlas.visualizations.panels.preset_panels import predefined_panels
+from exoatlas.visualizations.panels.preset_panels import preset_panels
+
+
+def test_plottables():
+    e = TransitingExoplanets()[:3]
+    for k, v in preset_plottables.items():
+        x = v()
+        print(k)
+        print(x.kw)
+        print(x.label)
+        print(x.value(e))
+        print()
 
 
 def test_panels():
     pops = {}
+    pops["exo"] = TransitingExoplanets()
     pops["solarsystem"] = SolarSystem()
-    for p in predefined_panels:
-        print(p)
-        plt.figure()
+    for k, p in preset_panels.items():
+        print(k, p)
         p().build(pops=pops)
-        plt.close()
+        plt.title(f"Panel={k}")
 
 
 def test_panel_types():
     pops = {}
     pops["solarsystem"] = SolarSystem()
+    pops["exo"] = TransitingExoplanets()
 
-    fr = FluxRadius()
+    fr = Flux_x_Radius()
     fr.build(pops=pops)
 
-    fr = BubblePanel("insolation", "radius")
+    fr = BubblePanel(
+        xaxis=Plottable(source="insolation"), yaxis=Plottable(source="radius")
+    )
     fr.build(pops=pops)
 
-    fr = ErrorPanel("insolation", "radius")
+    fr = ErrorPanel(
+        xaxis=Plottable(source="insolation"), yaxis=Plottable(source="radius")
+    )
     fr.build(pops=pops)
 
 
-def test_multipanel_presets():
-    with mock.patch("builtins.input", return_value=""):
-        t = TransitingExoplanets()
-        s = SolarSystem()
-
-    observable_summary([t, s])
-    physical_summary([t, s])
-
-
-def test_colors():
-    with mock.patch("builtins.input", return_value=""):
-        t = TransitingExoplanets()
-        s = SolarSystem()
-
-    physical_summary([t, s])
-    t.color = None
-    s.color = None
-    physical_summary([t, s])
-
-
-def test_multipanel():
+def test_galleries():
     pops = {}
     pops["solarsystem"] = SolarSystem()
-    f = MultiPanelPlot()
-    f.build(pops)
+    Gallery().build_panels(pops)
+    physical_summary().build_panels(pops)
 
 
 if __name__ == "__main__":  # pragma: no cover

@@ -6,7 +6,7 @@ from .BubblePanel import *
 from .ErrorPanel import *
 
 
-class FluxRadius(BubblePanel):
+class Flux_x_Radius(BubblePanel):
     xaxis = Flux
     yaxis = Radius
 
@@ -53,8 +53,6 @@ class FluxRadius(BubblePanel):
         """
         Add a bar that indicates an approximate habitable zone.
         (Estimated very roughly by eye from Kopparapu et al.)
-
-        Pa
         """
 
         # make sure the plotting happens in this panel
@@ -89,11 +87,11 @@ class FluxRadius(BubblePanel):
         # Teff_outer = 2600
 
 
-class FluxMass(FluxRadius):
+class Flux_x_Mass(Flux_x_Radius):
     yaxis = KludgedMass
 
 
-class FluxTeff(BubblePanel):
+class Flux_x_Teff(BubblePanel):
     xaxis = Flux
     yaxis = StellarTeff
 
@@ -135,7 +133,7 @@ class FluxTeff(BubblePanel):
         )
 
 
-class FluxSemi(BubblePanel):
+class SemimajorAxis_x_StellarLuminosity(BubblePanel):
     xaxis = SemimajorAxis
     yaxis = StellarLuminosity
 
@@ -177,57 +175,57 @@ class FluxSemi(BubblePanel):
         )
 
 
-class DistanceRadius(BubblePanel):
+class Distance_x_Radius(BubblePanel):
     xaxis = Distance
     yaxis = Radius
 
 
-class DistanceTeff(BubblePanel):
+class Distance_x_Teff(BubblePanel):
     xaxis = Distance
     yaxis = StellarTeff
 
 
-class EscapeRadius(BubblePanel):
-    xaxis = Escape
+class EscapeParameter_x_Radius(BubblePanel):
+    xaxis = EscapeParameter
     yaxis = Radius
 
 
-class DensityRadius(BubblePanel):
+class Density_x_Radius(BubblePanel):
     xaxis = Density
     yaxis = Radius
 
 
-class StellarRadiusPlanetRadius(BubblePanel):
+class StellarRadius_x_PlanetRadius(BubblePanel):
     xaxis = StellarRadius
     yaxis = Radius
 
 
-class DepthRadius(BubblePanel):
+class Depth_x_Radius(BubblePanel):
     xaxis = Depth
     yaxis = Radius
 
 
-class TransmissionRadius(BubblePanel):
+class Transmission_x_Radius(BubblePanel):
     xaxis = Transmission
     yaxis = Radius
 
 
-class ReflectionRadius(BubblePanel):
+class Reflection_x_Radius(BubblePanel):
     xaxis = Reflection
     yaxis = Radius
 
 
-class EmissionRadius(BubblePanel):
+class Emission_x_Radius(BubblePanel):
     xaxis = Emission
     yaxis = Radius
 
 
-class DistanceBrightness(BubblePanel):
+class Distance_x_Brightness(BubblePanel):
     xaxis = Distance
     yaxis = StellarBrightnessTelescope
 
 
-class DepthBrightness(BubblePanel):
+class Depth_x_Brightness(BubblePanel):
     xaxis = Depth
     yaxis = StellarBrightnessTelescope
 
@@ -260,39 +258,34 @@ class DepthBrightness(BubblePanel):
         )
 
 
-class TransmissionBrightness(DepthBrightness):
+class Transmission_x_Brightness(Depth_x_Brightness):
     xaxis = Transmission
 
 
-class ReflectionBrightness(DepthBrightness):
+class Reflection_x_Brightness(Depth_x_Brightness):
     xaxis = Reflection
 
 
-class EmissionBrightness(DepthBrightness):
+class Emission_x_Brightness(Depth_x_Brightness):
     xaxis = Emission
 
 
-# class JRadius(BubblePanel):
-#    xaxis = Jmag
-#    yaxis = Radius
-
-
-class PeriodRadius(BubblePanel):
+class Period_x_Radius(BubblePanel):
     xaxis = Period
     yaxis = Radius
 
 
-class SemimajorRadius(BubblePanel):
+class SemimajorAxis_x_Radius(BubblePanel):
     xaxis = SemimajorAxis
     yaxis = Radius
 
 
-class SemimajorMass(SemimajorRadius):
+class SemimajorAxis_x_Mass(SemimajorAxis_x_Radius):
     xaxis = SemimajorAxis
     yaxis = KludgedMass
 
 
-class MassRadius(ErrorPanel):
+class Mass_x_Radius(ErrorPanel):
     xaxis = Mass
     yaxis = Radius
 
@@ -316,7 +309,7 @@ class MassRadius(ErrorPanel):
             )
 
 
-class FluxEscape(BubblePanel):
+class Flux_x_EscapeVelocity(BubblePanel):
     xaxis = Flux
     yaxis = EscapeVelocity
 
@@ -431,7 +424,7 @@ class FluxEscape(BubblePanel):
         )
 
 
-class EscapeFlux(BubblePanel):
+class EscapeVelocity_x_Flux(BubblePanel):
     xaxis = EscapeVelocity
     yaxis = Flux
 
@@ -483,15 +476,15 @@ class EscapeFlux(BubblePanel):
         )
 
 
-class EscapeCumulativeXUV(EscapeFlux):
+class EscapeVelocity_x_CumulativeXUVFlux(EscapeVelocity_x_Flux):
     yaxis = CumulativeXUVFlux
 
 
-class CumulativeXUVEscape(FluxEscape):
+class CumulativeXUVFlux_x_EscapeVelocity(Flux_x_EscapeVelocity):
     xaxis = CumulativeXUVFlux
 
 
-class ImpactVelocityEscape(FluxEscape):
+class ImpactVelocity_x_EscapeVelocity(Flux_x_EscapeVelocity):
     xaxis = ImpactVelocity
 
     def plot_shoreline(
@@ -524,15 +517,13 @@ class ImpactVelocityEscape(FluxEscape):
         )
 
 
-# construct a list of predefined panels
-predefined_panels = []
-options = list(locals().items())
-for k, v in options:
+preset_panels = {}
+local_variables = dict(**locals())
+for k, v in local_variables.items():
     try:
         assert issubclass(v, Panel)
-        assert v != BubblePanel
-        assert v != ErrorPanel
-        assert v != Panel
-        predefined_panels.append(v)
+        preset_panels[k] = v
     except (AssertionError, TypeError):
-        pass
+        continue
+for k in ["Panel", "BubblePanel", "ErrorPanel"]:
+    preset_panels.pop(k)

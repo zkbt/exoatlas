@@ -20,10 +20,10 @@ class physical_summary(Gallery):
         )
 
         # attach panels to each ax
-        self.panels["flux-radius"] = FluxRadius(ax=self.ax[1, 1])
-        self.panels["mass-radius"] = MassRadius(ax=self.ax[1, 0])
-        self.panels["flux-escape"] = FluxEscape(ax=self.ax[0, 1])
-        self.panels["radius-radius"] = StellarRadiusPlanetRadius(ax=self.ax[1, 2])
+        self.panels["flux-radius"] = Flux_x_Radius(ax=self.ax[1, 1])
+        self.panels["mass-radius"] = Mass_x_Radius(ax=self.ax[1, 0])
+        self.panels["flux-escape"] = Flux_x_EscapeVelocity(ax=self.ax[0, 1])
+        self.panels["radius-radius"] = StellarRadius_x_PlanetRadius(ax=self.ax[1, 2])
         self.panels["mass-escape"] = BubblePanel(
             xaxis=Mass, yaxis=EscapeVelocity, ax=self.ax[0, 0]
         )
@@ -56,3 +56,181 @@ class physical_summary(Gallery):
 
         plt.sca(self.panels["radius-radius"].ax)
         self.panels["radius-radius"].remove_ylabel()
+
+
+'''class observable_summary(BuildablePlot):
+    def plot(
+        self,
+        pops,
+        observables=["depth", "emission", "transmission"],
+        note="",
+        telescope_name="JWST",
+        per_transit=False,
+        **wavelengthkw
+    ):
+        gs = self.create_gridspec(
+            2,
+            len(observables) + 2,
+            wspace=0.05,
+            hspace=0.05,
+            bottom=0.21,
+            top=0.98,
+            right=0.98,
+            left=0.08,
+            figsize=(10, 8),
+        )
+
+        if note == "trim":
+            for k, p in pops.items():
+                pops[k] = p[p.radius < 2 * u.Rearth]
+
+        kw = dict()
+        if note != "bw":
+            kw["color"] = "log_relative_insolation"
+            kw["vmin"] = -1
+            kw["vmax"] = 5
+            for k, x in pops.items():
+                if k == "solarsystem":
+                    x.alpha = 1
+                else:
+                    x.alpha = 0.5
+
+        hidealpha = 0.05
+        showalpha = 1.0
+
+        """if 'highlight' in note:
+            for k in pops:
+                if k in note:
+                    pops[k].alpha = showalpha
+                else:
+                    pops[k].alpha = hidealpha
+
+        if 'toi' in note:
+            for k in pops:
+                pops[k].alpha = hidealpha
+            pops['toi'].alpha = showalpha
+        else:
+            pops['toi'].alpha = 0.
+
+        if 'all-together' in note:
+            pops['toi'].alpha=0.5
+            pops['tess'].alpha=0.5
+            pops['nontess'].alpha=0.5
+        """
+
+        column = 0
+
+        if True:
+            pr = Distance_x_Radius(**kw, **wavelengthkw)
+            pr.build(pops=pops, ax=plt.subplot(gs[1, column]))
+
+            db = Distance_x_Brightness(
+                telescope_name=telescope_name, **kw, **wavelengthkw
+            )
+            db.build(pops=pops, ax=plt.subplot(gs[0, column]))
+            db.remove_xlabel()
+            column += 1
+
+        if "depth" in observables:
+            dr = Depth_x_Radius(
+                size=DepthSNR(telescope_name=telescope_name, per_transit=per_transit),
+                **kw,
+                **wavelengthkw
+            )
+            dr.build(pops=pops, ax=plt.subplot(gs[1, column]))
+            dr.remove_ylabel()
+
+            x = Depth_x_Brightness(
+                telescope_name=telescope_name,
+                size=DepthSNR(telescope_name=telescope_name, per_transit=per_transit),
+                **kw,
+                **wavelengthkw
+            )
+            x.build(pops=pops, ax=plt.subplot(gs[0, column]))
+            x.plot_sigma()
+            x.remove_xlabel()
+            x.remove_ylabel()
+            column += 1
+
+        if "emission" in observables:
+            er = Emission_x_Radius(
+                size=EmissionSNR(
+                    telescope_name=telescope_name, per_transit=per_transit
+                ),
+                **kw,
+                **wavelengthkw
+            )
+            er.build(pops=pops, ax=plt.subplot(gs[1, column]))
+            er.remove_ylabel()
+
+            x = Emission_x_Brightness(
+                telescope_name=telescope_name,
+                size=EmissionSNR(
+                    telescope_name=telescope_name, per_transit=per_transit
+                ),
+                **kw,
+                **wavelengthkw
+            )
+            x.build(pops=pops, ax=plt.subplot(gs[0, column]))
+            x.plot_sigma()
+            x.remove_xlabel()
+            x.remove_ylabel()
+            column += 1
+
+        if "reflection" in observables:
+            rr = Reflection_x_Radius(
+                size=ReflectionSNR(
+                    telescope_name=telescope_name, per_transit=per_transit
+                ),
+                **kw,
+                **wavelengthkw
+            )
+            rr.build(pops=pops, ax=plt.subplot(gs[1, column]))
+            rr.remove_ylabel()
+
+            x = Reflection_x_Brightness(
+                telescope_name=telescope_name,
+                size=ReflectionSNR(
+                    telescope_name=telescope_name, per_transit=per_transit
+                ),
+                **kw,
+                **wavelengthkw
+            )
+            x.build(pops=pops, ax=plt.subplot(gs[0, column]))
+            x.plot_sigma()
+            x.remove_xlabel()
+            x.remove_ylabel()
+            column += 1
+
+        if "transmission" in observables:
+            tr = Transmission_x_Radius(
+                size=TransmissionSNR(
+                    telescope_name=telescope_name, per_transit=per_transit
+                ),
+                **kw,
+                **wavelengthkw
+            )
+            tr.build(pops=pops, ax=plt.subplot(gs[1, column]))
+            tr.remove_ylabel()
+
+            x = Transmission_x_Brightness(
+                telescope_name=telescope_name,
+                size=TransmissionSNR(
+                    telescope_name=telescope_name, per_transit=per_transit
+                ),
+                **kw,
+                **wavelengthkw
+            )
+            x.build(pops=pops, ax=plt.subplot(gs[0, column]))
+            x.plot_sigma()
+            x.remove_xlabel()
+            x.remove_ylabel()
+            column += 1
+
+        if True:
+            fr = Flux_x_Radius(**kw)
+            fr.xlabel = "Bolometric Flux Received\n(relative to Earth)"
+            fr.build(pops=pops, ax=plt.subplot(gs[1, column]))
+            fr.remove_ylabel()
+            column += 1
+'''

@@ -33,8 +33,6 @@ class Block:
             A descriptive name for this time range.
         """
 
-        Talker.__init__(self)
-
         # store the connection to the plan
         self.plan = plan
 

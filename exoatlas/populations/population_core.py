@@ -1176,8 +1176,8 @@ class Population:
                         sigma_lower, sigma_upper = 0 * mu, 0 * mu
                     sigma_lowers.append(sigma_lower)
                     sigma_uppers.append(sigma_upper)
-                average_sigma_lower = np.mean(sigma_lowers, axis=0)
-                average_sigma_upper = np.mean(sigma_uppers, axis=0)
+                average_sigma_lower = np.mean(u.Quantity(sigma_lowers), axis=0)
+                average_sigma_upper = np.mean(u.Quantity(sigma_uppers), axis=0)
 
                 def replace_negative(x):
                     bad = x < 0

@@ -82,8 +82,6 @@ class Observatory:
         Initialize an observatory.
         """
 
-        Talker.__init__(self)
-
         # make sure an abbreviation is defined
         # if abbreviation is None:
         #    print("Pick an observatory from following options:")

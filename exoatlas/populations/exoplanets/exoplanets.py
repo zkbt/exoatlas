@@ -423,11 +423,8 @@ class ExoplanetsPSCP(PredefinedPopulation):
         populate_one_or_more_columns("radius", "pl_rade", u.Rearth)
         populate_one_or_more_columns("mass", "pl_bmasse", u.Mearth)
         populate_one_or_more_columns("density", "pl_dens", u.g / u.cm**3)
-        populate_one_or_more_columns(
-            "insolation",
-            "pl_insol",
-            (u.Lsun / 4 / np.pi / (1 * u.AU) ** 2).to("W/m**2"),
-        )
+        flux_unit = (1 * u.Lsun / 4 / np.pi / (1 * u.AU) ** 2).to("W/m**2")
+        # populate_one_or_more_columns("insolation", "pl_insol", flux_unit)
         # populate_one_or_more_columns("teq", "pl_eqt", u.K)
 
         # does it have transmission + emission spec?
@@ -654,11 +651,10 @@ class Exoplanets(ExoplanetsPSCP):
 
         # plotting defaults
         self.s = 10
-        self.marker='.'
-        self.zorder=0
-        self.respond_to_color=True 
-        self.exact=False
-
+        self.marker = "."
+        self.zorder = 0
+        self.respond_to_color = True
+        self.exact = False
 
     def __getitem__(self, key):
         """

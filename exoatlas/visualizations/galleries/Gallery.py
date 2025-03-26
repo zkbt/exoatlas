@@ -27,10 +27,10 @@ class Gallery:
     def __init__(
         self,
         panels=[
-            MassRadius(),
-            FluxRadius(),
-            StellarRadiusPlanetRadius(),
-            DistanceRadius(),
+            Mass_x_Radius(),
+            Flux_x_Radius(),
+            StellarRadius_x_PlanetRadius(),
+            Distance_x_Radius(),
         ],
         label=None,
         **kw,
