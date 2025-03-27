@@ -5,7 +5,7 @@ from ...telescopes import *
 
 class Flux(Plottable):
     source = "relative_insolation"
-    label = "Bolometric Flux Received\n(relative to Earth)"
+    label = "Planet Bolometric Flux Received\n(relative to Earth)"
     scale = "log"
     lim = [6e4, 2e-4]
 
@@ -157,7 +157,7 @@ class Depth(Plottable):
 class StellarBrightness(Plottable):
     source = "stellar_brightness"
     scale = "log"
-    lim = [None, None]  # [1e2, 1e8]
+    lim = [1e2, 1e8]
     unit = u.Unit("ph s^-1 m^-2 micron^-1")
 
     def _update_label(self):
@@ -167,7 +167,7 @@ class StellarBrightness(Plottable):
 class StellarBrightnessTelescope(Plottable):
     source = "stellar_brightness_in_telescope_units"
     scale = "log"
-    lim = [None, None]  # [1e-3, 1e3]
+    lim = [1e-3, 1e3]
 
     def _update_label(self):
         self.label = (
@@ -252,7 +252,7 @@ class StellarBrightnessTelescope(Plottable):
 class DepthSNR(StellarBrightnessTelescope):
     source = "depth_snr"
     scale = "log"
-    size_normalization = 10
+    lim = [1e-3, 1e3]
 
     def setup_unit(self):
         # kludge to undo telescope brightness unit
@@ -265,7 +265,7 @@ class DepthSNR(StellarBrightnessTelescope):
         """
         # define the label, based on the wavelength and telescope
         w = self.wavelength.to(u.micron).value
-        self.label = f"S/N for Transit Depth\nat $\lambda={self.wavelength.to(u.micron).value}\mu m$\n(R={self.R})"
+        self.label = f"S/N for Transit Depth\n{self.telescope_unit}"
 
 
 class Transmission(Depth):
@@ -285,7 +285,7 @@ class TransmissionSNR(DepthSNR):
         mu = self.kw["mu"]
         w = self.wavelength.to(u.micron).value
         R = self.R
-        self.label = f"S/N for Transit Depth\nof 1 Scale Height\n for $\mu$={mu} Atmosphere\nat $\lambda={w}\mu$m (R={R})"
+        self.label = f"S/N for Transit Depth\nof 1 Scale Height\n for $\mu$={mu} Atmosphere\n{self.telescope_unit}"
 
 
 class Reflection(Depth):
@@ -305,7 +305,7 @@ class ReflectionSNR(DepthSNR):
         albedo = self.kw["albedo"]
         w = self.wavelength.to(u.micron).value
         R = self.R
-        self.label = f"S/N for Reflected Light\nEclipse Depth\n({albedo:.0%} albedo)\nat $\lambda={w}\mu$m (R={R})"
+        self.label = f"S/N for Reflected Light\nEclipse Depth\n({albedo:.0%} albedo)\n{self.telescope_unit}"
 
 
 class Emission(Depth):
@@ -315,7 +315,7 @@ class Emission(Depth):
         albedo = self.kw["albedo"]
         f = self.kw["f"]
         w = self.kw["wavelength"].to_value("micron")
-        self.label = f"Thermal Emission\nEclipse Depth\nat $\lambda={w}\mu m$\n(f={f:.2f}, {albedo:.0%} albedo)"
+        self.label = f"Thermal Eclipse Depth\nat $\lambda={w}\mu m$\n(f={f:.2f}, {albedo:.0%} albedo)"
 
 
 class EmissionSNR(DepthSNR):
@@ -328,7 +328,23 @@ class EmissionSNR(DepthSNR):
         f = self.kw["f"]
         w = self.wavelength.to(u.micron).value
         R = self.R
-        self.label = f"S/N for Thermal Emission\nEclipse Depth\nat $\lambda={w}\mu m$\n(R={self.R}, f={f:.2f}, {albedo:.0%} albedo)"
+        self.label = f"S/N for Thermal\nEclipse Depth\n( f={f:.2f}, {albedo:.0%} albedo)\n{self.telescope_unit}"
+
+
+class RightAscension(Plottable):
+    source = "ra"
+    label = "Right Ascension (hours)"
+    scale = "linear"
+    lim = [24, 0]
+    unit = u.hourangle
+
+
+class Declination(Plottable):
+    source = "dec"
+    label = "Declination (˚)"
+    scale = "linear"
+    lim = [-90, 90]
+    unit = u.deg
 
 
 preset_plottables = {}

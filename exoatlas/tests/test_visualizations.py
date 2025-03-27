@@ -52,8 +52,8 @@ def test_map_types():
 def test_galleries():
     pops = {}
     pops["solarsystem"] = SolarSystem()
-    TransitGallery().build(pops)
-    physical_summary().build(pops)
+    FourPanelTransitGallery().build(pops)
+    PlanetGallery().build(pops)
 
 
 if __name__ == "__main__":  # pragma: no cover

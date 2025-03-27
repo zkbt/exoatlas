@@ -1,7 +1,8 @@
 from .Gallery import *
+from .GridGallery import *
 
 
-class physical_summary(Gallery):
+class PlanetGallery(Gallery):
     """
     This Gallery is designed to give a quick
     look at populations of transiting exoplanets,
@@ -57,6 +58,69 @@ class physical_summary(Gallery):
 
         plt.sca(self.maps["radius_x_radius"].ax)
         self.maps["radius_x_radius"].remove_ylabel()
+
+
+def add_size_explainer(ax=None, label="", x=0.95, y=0.95, ha="right", va="top", **kw):
+    try:
+        plt.sca(ax)
+    except AttributeError:
+        ax = plt.gca()
+
+    plt.text(
+        x, y, f"area $\propto$ {label}", ha=ha, va=va, transform=ax.transAxes, **kw
+    )
+
+
+class ObservableGallery(GridGallery):
+    def __init__(self, **kw):
+        GridGallery.__init__(
+            self,
+            rows=[
+                Radius(),
+                StellarBrightness(wavelength=1 * u.micron, lim=[0.5e4, 2e9]),
+                Depth(),
+                Transmission(),
+                Emission(wavelength=7.5 * u.micron),
+                Declination(),
+            ],
+            cols=[Flux(lim=[0.5e4, 2e-2]), Distance(lim=[5, 2000]), RightAscension()],
+            **kw,
+        )
+
+    def setup_maps(self, *args, **kw):
+        GridGallery.setup_maps(self, *args, **kw)
+
+        snr_kw = dict(lim=[1, 1e2], scale="linear")
+        for k, m in self.maps.items():
+            if "depth" in k:
+                m.plottable["size"] = DepthSNR(
+                    telescope_name="SBO", wavelength=0.75 * u.micron, **snr_kw
+                )
+            if "transmission" in k:
+                m.plottable["size"] = TransmissionSNR(
+                    telescope_name="APO", wavelength=0.75 * u.micron, **snr_kw
+                )
+            if "emission" in k:
+                m.plottable["size"] = EmissionSNR(
+                    telescope_name="JWST", wavelength=7.5 * u.micron, **snr_kw
+                )
+            m.plottable["color"] = Flux(scale="log", lim=[1, 1e4])
+            m.size_normalization = 4
+
+    def refine_maps(self):
+        GridGallery.refine_maps(self)
+        self.maps["ra_x_dec"].ax.set_xticks([18, 12, 6, 0])
+        RA_x_Dec.add_monthaxis(self, ax=self.maps["ra_x_dec"].ax, position=40)
+
+        kw = dict(fontsize=6)
+        m = self.maps["relative_insolation_x_transit_depth"]
+        add_size_explainer(ax=m.ax, label=m.plottable["size"].label, **kw)
+
+        m = self.maps["relative_insolation_x_transmission_signal"]
+        add_size_explainer(ax=m.ax, label=m.plottable["size"].label, **kw)
+
+        m = self.maps["relative_insolation_x_emission_signal"]
+        add_size_explainer(ax=m.ax, label=m.plottable["size"].label, **kw)
 
 
 '''class observable_summary(BuildablePlot):

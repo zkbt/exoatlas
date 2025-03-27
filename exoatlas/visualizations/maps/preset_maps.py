@@ -517,6 +517,25 @@ class ImpactVelocity_x_EscapeVelocity(Flux_x_EscapeVelocity):
         )
 
 
+class RA_x_Dec(BubbleMap):
+    xaxis = RightAscension
+    yaxis = Declination
+
+    def add_monthaxis(self, ax=None, position=40):
+        """
+        Add an extra axis along the bottom of this map,
+        quoting the month when things are best to observe
+        """
+        ax_month = ax.twiny()
+        ax_month.set_xticks([24, 18, 12, 6, 0], ["Sep", "Jun", "Mar", "Dec", "Sep"])
+        extra_axis_color = "gray"
+        ax_month.xaxis.set_ticks_position("bottom")
+        ax_month.xaxis.set_label_position("bottom")
+        ax_month.spines["bottom"].set_position(("outward", position))
+        ax_month.tick_params(axis="x", colors=extra_axis_color, which="both")
+        ax_month.spines["bottom"].set_edgecolor(extra_axis_color)
+
+
 preset_maps = {}
 local_variables = dict(**locals())
 for k, v in local_variables.items():

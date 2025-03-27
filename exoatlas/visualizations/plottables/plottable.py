@@ -171,7 +171,10 @@ class Plottable:
         if self.unit is None:
             return x
         else:
-            return x.to(self.unit)
+            try:
+                return x.to(self.unit)
+            except AttributeError:
+                return x
 
     def value(self, pop):
         """

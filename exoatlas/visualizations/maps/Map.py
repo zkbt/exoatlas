@@ -276,7 +276,10 @@ class Map:
         self.setup_axes(ax=ax)
 
         # add the scattered points
-        these_scattered_points = self.ax.scatter(self.x, self.y, **self.kw(**kw))
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            these_scattered_points = self.ax.scatter(self.x, self.y, **self.kw(**kw))
+
         if self.pop_key in self.scattered:
             warnings.warn(
                 f"""

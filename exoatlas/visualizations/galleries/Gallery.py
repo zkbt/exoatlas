@@ -49,7 +49,7 @@ class Gallery:
             A dictionary or list of Maps that should be
             included in this Gallery. If Maps are not
             specified here, they must be defined inside of
-            `.setup_maps()`.
+            `.setup_maps()`. If it's a
         label : str, None
             A string to label this Gallery, which will
             mostly appear in filenames for saved plots.
@@ -58,6 +58,8 @@ class Gallery:
             `.setup_maps()` to decide how the subplots
             will be arranged.
         """
+
+        # convert the maps into a dictionary
         self.maps = clean_maps(maps)
 
         # create the figure + axes (but leave them empty)
@@ -242,7 +244,7 @@ class Gallery:
         return
 
 
-class TransitGallery(Gallery):
+class FourPanelTransitGallery(Gallery):
     def __init__(
         self,
         maps=[
