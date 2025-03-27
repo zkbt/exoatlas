@@ -1,61 +1,59 @@
 from .setup_tests import *
 
+from exoatlas import *
 from exoatlas.imports import *
+from exoatlas.visualizations import *
 
 import exoatlas as ex
 import matplotlib.pyplot as plt
-from exoatlas.visualizations.panels.preset_panels import predefined_panels
+from exoatlas.visualizations.maps.preset_maps import preset_maps
 
 
-def test_panels():
+def test_plottables():
+    e = TransitingExoplanets()[:3]
+    for k, v in preset_plottables.items():
+        x = v()
+        print(k)
+        print(x.kw)
+        print(x.label)
+        print(x.value(e))
+        print()
+
+
+def test_maps():
     pops = {}
-    pops["solarsystem"] = ex.SolarSystem()
-    for p in predefined_panels:
-        print(p)
-        plt.figure()
+    pops["exo"] = TransitingExoplanets()
+    pops["solarsystem"] = SolarSystem()
+    for k, p in preset_maps.items():
+        print(k, p)
         p().build(pops=pops)
-        plt.close()
+        plt.title(f"Map={k}")
 
 
-def test_panel_types():
+def test_map_types():
     pops = {}
-    pops["solarsystem"] = ex.SolarSystem()
+    pops["solarsystem"] = SolarSystem()
+    pops["exo"] = TransitingExoplanets()
 
-    fr = ex.FluxRadius()
+    fr = Flux_x_Radius()
     fr.build(pops=pops)
 
-    fr = ex.BubblePanel("insolation", "radius")
+    fr = BubbleMap(
+        xaxis=Plottable(source="insolation"), yaxis=Plottable(source="radius")
+    )
     fr.build(pops=pops)
 
-    fr = ex.ErrorPanel("insolation", "radius")
+    fr = ErrorMap(
+        xaxis=Plottable(source="insolation"), yaxis=Plottable(source="radius")
+    )
     fr.build(pops=pops)
 
 
-def test_multipanel_presets():
-    with mock.patch("builtins.input", return_value=""):
-        t = ex.TransitingExoplanets()
-        s = ex.SolarSystem()
-
-    ex.observable_summary([t, s])
-    ex.physical_summary([t, s])
-
-
-def test_colors():
-    with mock.patch("builtins.input", return_value=""):
-        t = ex.TransitingExoplanets()
-        s = ex.SolarSystem()
-
-    ex.physical_summary([t, s])
-    t.color = None
-    s.color = None
-    ex.physical_summary([t, s])
-
-
-def test_fourpanels():
+def test_galleries():
     pops = {}
-    pops["solarsystem"] = ex.SolarSystem()
-    f = ex.FourPanels()
-    f.build(pops)
+    pops["solarsystem"] = SolarSystem()
+    FourPanelTransitGallery().build(pops)
+    PlanetGallery().build(pops)
 
 
 if __name__ == "__main__":  # pragma: no cover

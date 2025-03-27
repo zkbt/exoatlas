@@ -35,7 +35,7 @@ pops = {'solar':solar,
         'exo':exo}
 
 # use a default visualization to summarize these populations
-physical_summary(pops)
+PlanetGallery(pops)
 ```
 
 ### Authors

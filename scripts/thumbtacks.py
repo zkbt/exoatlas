@@ -11,7 +11,7 @@ from exoatlas.transiting_exoplanets import Kepler, TESS, Others
 import numpy as np, matplotlib.pyplot as plt
 
 
-# make versions with different planets labeled out to different radii (in pc)
+# make versions with different planets annotated out to different radii (in pc)
 for label in [0, 20, 30, 50, np.inf]:
     # construct a dictionary of populations of confirmed planets
     pops = dict(kepler=Kepler(), tess=TESS(), others=Others())
@@ -58,7 +58,7 @@ for label in [0, 20, 30, 50, np.inf]:
         # redefine the planet names to have only one (grouped one) per system
         pops[k].standard["name"] = planetnames
 
-    # specifiy the radius out to which planets should be labeled
+    # specifiy the radius out to which planets should be annotated
     t.maxlabeldistance = label
 
     # create a movie

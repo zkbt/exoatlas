@@ -3,7 +3,7 @@
 from ..imports import *
 
 
-class Transit(Talker):
+class Transit:
     """a Transit object is one transit of one (associated) planet"""
 
     def __init__(
@@ -16,9 +16,6 @@ class Transit(Talker):
             phasefrommidtransit = set this to 0.5 for eclipses (for circular)
             plan = the Plan object in which this is embedded
         """
-
-        # set up the talking
-        Talker.__init__(self)
 
         # store lots of links to other objects
         self.planet = planet
