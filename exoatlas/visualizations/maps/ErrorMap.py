@@ -195,6 +195,7 @@ class ErrorMap(BubbleMap):
                     **kw,
                 )
 
+            fake_errorbar = plt.errorbar([], [], [], color=color, label=self.pop.label)
         # set the scales, limits, labels
         self.refine_axes()
 

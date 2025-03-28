@@ -9,6 +9,15 @@ from .exoplanets import *
 from .solarsystem import *
 
 
+def get_transiting_and_nontransiting_exoplanets():
+    e = Exoplanets()
+    transit = e[e.detected_in_transit() != 0]
+    transit.label = "Transiting Exoplanets"
+    nontransit = e[e.detected_in_transit() == 0]
+    nontransit.label = "Non-transiting Exoplanets"
+    return dict(nontransit=nontransit, transit=transit)
+
+
 def get_exoplanets_by_method(methods="all", include_solar_system=True):
     """
     Create a dictionary that contains a collection of exoplanet
@@ -44,7 +53,7 @@ def get_exoplanets_by_method(methods="all", include_solar_system=True):
     return pops
 
 
-def get_all_solar_system_objects():
+def get_solar_system_objects():
     """
     Create a dictionary that contains a collection of
     Solar System populations, grouped by category.
@@ -58,8 +67,8 @@ def get_all_solar_system_objects():
     pops = dict(
         major=SolarSystem(),
         dwarf=SolarSystemDwarfPlanets(),
-        minor=SolarSystemMinorPlanets(),
         moons=SolarSystemMoons(),
+        minor=SolarSystemMinorPlanets(),
     )
     return pops
 
@@ -129,3 +138,12 @@ def get_exoplanets_by_teff():
     items = list(pops.items())
     items.reverse()
     return dict(items)
+
+
+def get_all_planets():
+    p = get_transiting_and_nontransiting_exoplanets() | get_solar_system_objects()
+    p["transit"].color = "black"
+    p["nontransit"].color = "coral"
+    p["major"].annotate_planets = True
+    p["dwarf"].annotate_planets = True
+    return p

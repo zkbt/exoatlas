@@ -6,14 +6,14 @@ from .sbdb_downloader import *
 class SolarSystemMinorPlanets(PredefinedPopulation):
     label = "Solar System Minor Planets"
 
-    def __init__(self, minimum_diameter=100 * u.km, **kw):
+    def __init__(self, minimum_diameter=10 * u.km, **kw):
         self.minimum_diameter = minimum_diameter
         self._downloader = SBDBDownloader(minimum_diameter=minimum_diameter)
         PredefinedPopulation.__init__(self, **kw)
 
         self.color = "midnightblue"
         self.zorder = 1
-        self.s = 20
+        self.s = 4
         self.respond_to_color = False
         self.exact = True
         self.marker = "s"
@@ -79,6 +79,9 @@ class SolarSystemMinorPlanets(PredefinedPopulation):
         s["stellar_radius"] = 1 * u.Rsun
         s["stellar_mass"] = 1 * u.Msun
         s["stellar_age"] = 4.5 * u.Gyr
+        s["distance"] = np.nan * u.pc
+        s["ra"] = np.nan * 0.0 * u.deg
+        s["dec"] = np.nan * 0.0 * u.deg
 
         # for k in ["mass", "radius"]:
         #    for side in ["lower", "upper"]:

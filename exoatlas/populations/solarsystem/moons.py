@@ -27,7 +27,7 @@ class SolarSystemMoons(PredefinedPopulation):
         PredefinedPopulation.__init__(self, **kwargs)
         self.color = "mediumblue"
         self.zorder = None
-        self.s = 20
+        self.s = 16
         self.respond_to_color = False
         self.exact = True
         self.marker = "s"
@@ -73,7 +73,9 @@ class SolarSystemMoons(PredefinedPopulation):
         for k in ["mass", "radius", "teff", "age"]:
             s[f"stellar_{k}"] = solar.get(f"stellar_{k}")[0]
         s["hostname"] = "Sun"
-
+        s["distance"] = np.nan * u.pc
+        s["ra"] = np.nan * 0.0 * u.deg
+        s["dec"] = np.nan * 0.0 * u.deg
         # get orbit properties from the Solar System planet hosts
         planets = solar.standard["name", "period", "semimajoraxis"]
         planets.columns[0].name = "planet"
