@@ -403,7 +403,7 @@ class Map:
             if getattr(self.pop, "zorder", None) is not None:
                 kw["zorder"] = self.pop.zorder
             kw.update(**getattr(self.pop, "annotate_kw", {}))
-            self.annotate_planets(self.pop, **kw)
+            self.annotate_planets(self.pop_key, **kw)
 
     def annotate_planets(self, pop, before="\n", after="", restrictlimits=False, **kw):
         """
@@ -455,6 +455,7 @@ class Map:
                 color=self.pop.color,
                 alpha=self.pop.alpha,
                 clip_on=True,
+                zorder=self.pop.zorder,
             )
 
             # think this is just as Python 3 thing

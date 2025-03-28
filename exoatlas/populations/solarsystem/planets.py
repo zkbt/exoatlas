@@ -21,7 +21,7 @@ class SolarSystem(PredefinedPopulation):
         PredefinedPopulation.__init__(self, **kwargs)
         self.color = "cornflowerblue"
         self.zorder = 1e10
-        self.s = 80
+        self.s = 64
         self.respond_to_color = False
         self.exact = True
         self.marker = "s"
@@ -142,7 +142,7 @@ class SolarSystemDwarfPlanets(SolarSystem):
         """
         PredefinedPopulation.__init__(self, **kwargs)
         self.color = "royalblue"
-        self.s = 40
+        self.s = 32
         self.respond_to_color = False
         self.exact = True
         self.marker = "s"

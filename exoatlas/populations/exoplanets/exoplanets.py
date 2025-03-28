@@ -690,7 +690,7 @@ class Exoplanets(ExoplanetsPSCP):
         # kind of kludgy, to enforce different colors
         subset._plotkw["color"] = None
         subset._plotkw["c"] = None
-
+        subset._plotkw["zorder"] = subset._plotkw.get("zorder", 1) + 1
         return subset
 
     def load_individual_references(self):

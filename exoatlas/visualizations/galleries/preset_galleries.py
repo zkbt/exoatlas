@@ -23,12 +23,14 @@ class PlanetGallery(Gallery):
         # attach maps to each ax
         self.maps = {}
         self.maps["flux_x_radius"] = Flux_x_Radius(ax=self.ax[1, 1])
+        # ErrorMap( xaxis=Flux, yaxis=Radius, ax=self.ax[1, 1])  #
         self.maps["mass_x_radius"] = Mass_x_Radius(ax=self.ax[1, 0])
         self.maps["flux_x_escape"] = Flux_x_EscapeVelocity(ax=self.ax[0, 1])
+        # ErrorMap(xaxis=Flux, yaxis=EscapeVelocity, ax=self.ax[0, 1])
         self.maps["radius_x_radius"] = StellarRadius_x_PlanetRadius(ax=self.ax[1, 2])
-        self.maps["mass_x_escape"] = BubbleMap(
-            xaxis=Mass, yaxis=EscapeVelocity, ax=self.ax[0, 0]
-        )
+        # ErrorMap(xaxis=StellarRadius, yaxis=Radius, ax=self.ax[1, 2])  #
+        self.maps["mass_x_escape"] = Mass_x_EscapeVelocity(ax=self.ax[0, 0])
+        # ErrorMap(xaxis=Mass, yaxis=EscapeVelocity, ax=self.ax[0, 0])
 
     def refine_maps(self):
         """
@@ -122,6 +124,31 @@ class ObservableGallery(GridGallery):
 
         m = self.maps["relative_insolation_x_emission_signal"]
         add_size_explainer(ax=m.ax, label=m.plottable["size"].label, **kw)
+
+
+class EverythingGallery(GridGallery):
+    def __init__(self):
+        GridGallery.__init__(
+            self,
+            cols=[Flux(lim=[5e4, 2e-5])],
+            rows=[
+                Radius(lim=[0.01, 30]),
+                Mass(lim=[0.0001, 4100]),
+                EscapeVelocity(lim=[0.01, 1e3]),
+                Density,
+                Depth(lim=[1e-8, 1]),
+                Transmission(lim=[1e-8, 1]),
+                Emission(lim=[1e-8, 1], wavelength=5 * u.micron),
+                Distance,
+            ],
+            # StellarBrightness(telescope_name='JWST', wavelength=1*u.micron)],
+            map_type=ErrorMap,
+            mapsize=(7, 2),
+        )
+
+    def refine_maps(self):
+        GridGallery.refine_maps(self)
+        self.maps["relative_insolation_x_radius"].add_legend(fontsize=5)
 
 
 '''class ObservableGallery(BuildablePlot):

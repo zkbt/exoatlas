@@ -16,11 +16,13 @@ class GridGallery(Gallery):
     def setup_maps(self, rows=[], cols=[], map_type=BubbleMap, **kw):
 
         # create the subplots
-
+        nrows, ncols = len(rows), len(cols)
         figsize = (self.mapsize[0] * len(cols), self.mapsize[1] * len(rows))
         self.fi, self.ax = self.create_subplots(
-            nrows=len(rows), ncols=len(cols), figsize=figsize, **kw
+            nrows=nrows, ncols=ncols, figsize=figsize, **kw
         )
+
+        self.ax = np.atleast_2d(self.ax).reshape((nrows, ncols))
 
         # attach maps to each ax
         self.maps = {}

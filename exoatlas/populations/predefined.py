@@ -10,7 +10,9 @@ class PredefinedPopulation(Population):
     label = "?"
     _expiration = 10 * u.day
 
-    def __init__(self, remake=False, standard=None, label=None, **plotkw):
+    def __init__(
+        self, remake=False, standard=None, label=None, verbose=False, **plotkw
+    ):
         """
         Initialize a predefined population.
 
@@ -34,10 +36,13 @@ class PredefinedPopulation(Population):
             object each time.
         label : str
             A custom label to apply to this population.
+        verbose : bool
+            Say where the data were loaded from?
         **plotkw : dict
             All other keywords are stored as plotting suggestions.
         """
 
+        self.verbose = verbose
         if standard is None:
             try:
                 # try to load the standardized table
@@ -130,6 +135,6 @@ class PredefinedPopulation(Population):
         read_kw = dict(format="ecsv", fill_values=[("", np.nan), ("--", np.nan)])
 
         standard = ascii.read(self._standardized_data_path, **read_kw)
-        print(f"Loaded standardized table from {self._standardized_data_path}")
-
+        if self.verbose:
+            print(f"Loaded standardized table from {self._standardized_data_path}")
         return standard
