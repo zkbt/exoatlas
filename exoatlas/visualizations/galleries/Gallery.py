@@ -79,6 +79,7 @@ class Gallery:
         height_ratios=None,
         wspace=None,
         hspace=None,
+        **kw,
     ):
         """
         This helper just sets some reasonable defaults
@@ -226,20 +227,23 @@ class Gallery:
             generated, this returns the entire Gallery.
         """
 
-        # put data into the axes
-        for k, p in self.maps.items():
-            p.build(pops=pops, legend=False)
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
 
-        # remove any empty axes
-        self.remove_unused_axes()
+            # put data into the axes
+            for k, p in self.maps.items():
+                p.build(pops=pops, legend=False)
 
-        # make small tweaks to the maps
-        self.refine_maps()
+            # remove any empty axes
+            self.remove_unused_axes()
 
-        # save figure
-        if save:
-            filename = f"{self.label}"
-            plt.savefig(f"{filename}.{format}", **savefig_kw)
+            # make small tweaks to the maps
+            self.refine_maps()
+
+            # save figure
+            if save:
+                filename = f"{self.label}"
+                plt.savefig(f"{filename}.{format}", **savefig_kw)
 
         return
 

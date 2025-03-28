@@ -10,6 +10,7 @@ nav:
       - curating.ipynb
       - filtering.ipynb
       - visualizing.ipynb
+      - observing.ipynb
       - uncertainties.ipynb
     - Developer Guide:
       - github.ipynb
@@ -17,6 +18,8 @@ nav:
       - documentation.ipynb
     - Details:
       - compare-nasa-exoplanet-archive-tables.ipynb
+      - using-skewnormal-for-asymmetric-uncertainties.ipynb
+
 theme:
   name: "material"
   features:
