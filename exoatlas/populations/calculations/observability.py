@@ -28,14 +28,13 @@ def angular_separation(self, distribution=False, **kw):
     return theta
 
 
-def imaging_contrast(self, albedo=2 / 3, distribution=False, **kw):
+def imaging_contrast(self, albedo=2 / 3, phase_function=0.25, distribution=False, **kw):
     """
     Reflected Light Imaging Contrast (unitless)
 
     Calculate an estimated imaging contrast for reflected light.
 
-    TO-DO:
-    Include phase angle. Check math!
+    (FIXME - check math + explanation on albedo + phase_function!)
 
     Parameters
     ----------
@@ -43,6 +42,9 @@ def imaging_contrast(self, albedo=2 / 3, distribution=False, **kw):
         What's the geometric albedo? Default is 2/3, which (I think)
         is reasonably the maximum for Lambertian scattering from
         a face-on planet.
+    phase_function : float
+        What fraction of reflected light comes toward us, compared
+        to the immediate dayside reflection from direct illumination.
     distribution : bool
         If False, return a simple array of values.
         If True, return an astropy.uncertainty.Distribution,
@@ -50,7 +52,8 @@ def imaging_contrast(self, albedo=2 / 3, distribution=False, **kw):
     """
 
     return (
-        albedo
+        phase_function
+        * albedo
         * 0.25
         * (
             self.kludge_radius(distribution=distribution)
@@ -162,7 +165,9 @@ def emission_signal(
     )
 
     # calculate the depth as the luminosity ratio
-    depths = planet.spectrum(wavelength) / star.spectrum(wavelength)
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", RuntimeWarning)
+        depths = planet.spectrum(wavelength) / star.spectrum(wavelength)
 
     return depths
 
@@ -326,7 +331,7 @@ def depth_uncertainty(
     oot = np.sqrt(2)
     sigma_depth = sigma * oot
 
-    return sigma_depth
+    return u.Quantity(sigma_depth)
 
 
 def _get_noise_and_unit(

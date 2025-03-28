@@ -1,6 +1,8 @@
 from .setup_tests import *
 from exoatlas.imports import *
 from exoatlas import *
+from exoatlas.telescopes import *
+from exoatlas.visualizations import *
 
 
 def test_telescope_units():
@@ -15,18 +17,19 @@ def test_buckets():
     with their various possible telescope units.
     """
 
-    with mock.patch("builtins.input", return_value=""):
-        t = TransitingExoplanets()
-    DepthBrightness().build([t])
-    BubblePanel(StellarBrightness, Depth).build([t])
-    BubblePanel(StellarBrightness(5 * u.micron), Depth).build([t])
+    t = TransitingExoplanets()[:20]
+    Depth_x_Brightness().build([t])
+    BubbleMap(xaxis=StellarBrightness, yaxis=Depth).build([t])
+    BubbleMap(xaxis=StellarBrightness(wavelength=5 * u.micron), yaxis=Depth).build([t])
     for k in telescope_units:
-        BubblePanel(StellarBrightnessTelescope(telescope_name=k), Depth).build([t])
-    BubblePanel(
-        StellarBrightnessTelescope(
+        BubbleMap(
+            xaxis=StellarBrightnessTelescope(telescope_name=k), yaxis=Depth
+        ).build([t])
+    BubbleMap(
+        xaxis=StellarBrightnessTelescope(
             telescope_name="JWST", wavelength=10 * u.micron, R=10
         ),
-        Depth,
+        yaxis=Depth,
     ).build([t])
 
 

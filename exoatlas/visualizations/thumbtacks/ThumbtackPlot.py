@@ -1,5 +1,7 @@
+# FIXME!
+
 from .imports import *
-from .Panels import BubblePanel
+from .Maps import BubbleMap
 from .transiting_exoplanets import NonKepler, Kepler, TESS
 from .KOI import UnconfirmedKepler
 import datetime
@@ -15,7 +17,7 @@ aspect = 768 / 1024.0
 angle = 30 * np.pi / 180  # 67.5
 
 
-class ThumbtackPlot(BubblePanel):
+class ThumbtackPlot(BubbleMap):
     """Plot exoplanet populations on a (possibly animated) thumbtack plot."""
 
     def __init__(self, pops, lightyears=False, **kwargs):
@@ -27,7 +29,7 @@ class ThumbtackPlot(BubblePanel):
         else:
             self.maxlabeldistance = 30.0
         self.planetfontsize = 6
-        BubblePanel.__init__(self, pops=pops, **kwargs)
+        BubbleMap.__init__(self, pops=pops, **kwargs)
         self.title = "Thumbtacks"
         self.xlabel = ""
         self.ylabel = ""
@@ -63,7 +65,7 @@ class ThumbtackPlot(BubblePanel):
         """convert distance and RA to x"""
         return self.stretch(self.pop.distance) * np.sin(self.theta)
 
-    def setup(self):
+    def setup_axes(self):
         """setup the initial plotting window"""
 
         # set the figure's aspect ratio
@@ -165,7 +167,7 @@ class ThumbtackPlot(BubblePanel):
             pass
         plt.cla()
         if keys is None:
-            keys = self.pops.keys()
+            keys = self.populations.keys()
         for key in keys:
             self.plot(key)
             for z in distances:
@@ -175,7 +177,6 @@ class ThumbtackPlot(BubblePanel):
                     self.namestars(thiskey)
                 plt.draw()
                 plt.savefig(self._fileprefix(key))
-        return self
 
     def movie(
         self,
@@ -199,7 +200,7 @@ class ThumbtackPlot(BubblePanel):
             pass
         plt.cla()
         if keys is None:
-            keys = self.pops.keys()
+            keys = self.populations.keys()
         for key in keys:
             self.plot(key)
             if highlight == "completeness":
@@ -222,7 +223,7 @@ class ThumbtackPlot(BubblePanel):
 
         f = plt.gcf()
         filename = "{}_{}{}.mp4".format(fileprefix, "+".join(keys), highlight)
-        self._speak("writing movie to {0}".format(filename))
+        print("writing movie to {0}".format(filename))
         z = 2.0
 
         with self.writer.saving(f, filename, 1024.0 / figsize):
@@ -238,7 +239,7 @@ class ThumbtackPlot(BubblePanel):
                 #                        self.namestars('kepler')
 
                 self.writer.grab_frame()
-                self._speak("zoomed to {0}".format(z))
+                print("zoomed to {0}".format(z))
                 z *= step
                 # plt.draw()
             # plt.savefig(self._fileprefix(key))
@@ -252,7 +253,7 @@ class ThumbtackPlot(BubblePanel):
 
         # handle adding and removing names
         self.clearnames()
-        for thiskey in self.pops.keys():
+        for thiskey in self.populations.keys():
             self.namestars(thiskey)
 
         nudge = 0.05 * self.stretch(self.outer)
@@ -305,7 +306,7 @@ class ThumbtackPlot(BubblePanel):
                     downwardnudge = "\n\n"
 
                 text = downwardnudge + r"{}".format(self.pop.name[c].replace(" ", ""))
-                self.standard.labeled[c] = plt.text(
+                self.standard.annotated[c] = plt.text(
                     self.x[c],
                     self.y[c],
                     text,
@@ -321,9 +322,9 @@ class ThumbtackPlot(BubblePanel):
 
     def clearnames(self):
         """Remove system names that have been added to the plot."""
-        for k in self.standard.labeled:
+        for k in self.standard.annotated:
             try:
-                self.standard.labeled[k].remove()
+                self.standard.annotated[k].remove()
             except ValueError:
                 pass
 
@@ -332,7 +333,7 @@ class ThumbtackPlot(BubblePanel):
         try:
             self.ax
         except:
-            self.setup()
+            self.setup_axes()
             self.circles(self.circlegrid)
         kw = self.kw()
         kw["facecolors"] = self.pop.color
@@ -384,7 +385,7 @@ class ThumbtackPlot(BubblePanel):
         kw["zorder"] = 20000
         handle = self.ax.scatter(self.x[indices], self.y[indices], **kw)
         # self.highlightleg = plt.legend(label, fontsize=10, framealpha=0, markerscale=1.5)
-        self._speak("highlighting {0} points".format(len(self.x[indices])))
+        print("highlighting {0} points".format(len(self.x[indices])))
         t = self.pop.teq[indices]
         r = self.pop.radius[indices]
         # kic = self.pop.standard['kepid'][indices]

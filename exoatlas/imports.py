@@ -7,7 +7,7 @@ except ImportError:
 
 # imports that are need by many exoatlas subsections
 from ast import Import
-import os, sys, time, shutil, warnings, copy, glob
+import os, sys, time, shutil, warnings, copy, glob, inspect
 from tqdm import tqdm
 
 # (possibly different on Mac, Linux, Windows, even for Python versions 3.8-3.12)
@@ -36,9 +36,6 @@ from astropy.visualization import quantity_support
 from astropy.coordinates import SkyCoord
 
 quantity_support()
-
-# some general custom utilities from Zach
-from .talker import Talker
 
 # units and constants from astropy
 import astropy.units as u, astropy.constants as con
@@ -128,11 +125,10 @@ def clean(s):
     """
     A wrapper function to clean up complicated strings.
     """
-    bad = """ !@#$%^&*()+-_'",./<>?;"""
+    bad = """ !@#$%^&*()+-_'",./<>?;\n\r\t"""
     cleaned = str(s) + ""
     for c in bad:
         cleaned = cleaned.replace(c, "")
-
     return cleaned
 
 
@@ -202,5 +198,19 @@ class AtlasError(ValueError):
 
 import warnings
 
-# warnings.catch_warnings()
-# warnings.simplefilter("ignore")
+warnings.filterwarnings("ignore", message="invalid escape sequence")
+
+
+def remove_unit(x):
+    """
+    Remove astropy units from a variable.
+
+    A simple wrapper to help make sure that we're dealing
+    just with numerical values, instead of astropy Quantitys
+    with units.
+    """
+
+    if isinstance(x, u.quantity.Quantity):
+        return x.value
+    else:
+        return x

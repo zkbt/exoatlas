@@ -115,8 +115,8 @@ class SolarSystem(PredefinedPopulation):
         # s["rv_semiamplitude"] = np.nan * u.m / u.s
         s["radius_ratio"] = (s["radius"] / s["stellar_radius"]).decompose().value
         s["distance"] = np.nan * u.pc
-        s["ra"] = 0.0 * u.deg
-        s["dec"] = 0.0 * u.deg
+        s["ra"] = np.nan * 0.0 * u.deg
+        s["dec"] = np.nan * 0.0 * u.deg
         # s["discovery_facility"] = "humans"
         # s["transit_midpoint"] = np.nan * u.day
         # s["transit_duration"] = np.nan * u.day
