@@ -72,40 +72,41 @@ def add_size_explainer(ax=None, label="", x=0.95, y=0.95, ha="right", va="top", 
 
 
 class ObservableGallery(GridGallery):
-    def __init__(self, **kw):
+    def __init__(self, wavelength=5 * u.micron, **kw):
         GridGallery.__init__(
             self,
             rows=[
                 Radius(),
-                StellarBrightness(wavelength=1 * u.micron, lim=[0.5e4, 2e9]),
+                StellarBrightness(wavelength=wavelength, lim=[0.5e4, 2e9]),
                 Depth(),
                 Transmission(),
-                Emission(wavelength=7.5 * u.micron),
+                Emission(wavelength=wavelength),
                 Declination(),
             ],
             cols=[Flux(lim=[0.5e4, 2e-2]), Distance(lim=[5, 2000]), RightAscension()],
+            wavelength=wavelength,
             **kw,
         )
 
-    def setup_maps(self, *args, **kw):
+    def setup_maps(self, *args, telescope_name="JWST", wavelength=5 * u.micron, **kw):
         GridGallery.setup_maps(self, *args, **kw)
 
-        snr_kw = dict(lim=[1, 1e2], scale="linear")
+        snr_kw = dict(lim=[0, 1e2], scale="linear")
         for k, m in self.maps.items():
             if "depth" in k:
                 m.plottable["size"] = DepthSNR(
-                    telescope_name="SBO", wavelength=0.75 * u.micron, **snr_kw
+                    telescope_name=telescope_name, wavelength=wavelength, **snr_kw, **kw
                 )
             if "transmission" in k:
                 m.plottable["size"] = TransmissionSNR(
-                    telescope_name="APO", wavelength=0.75 * u.micron, **snr_kw
+                    telescope_name=telescope_name, wavelength=wavelength, **snr_kw, **kw
                 )
             if "emission" in k:
                 m.plottable["size"] = EmissionSNR(
-                    telescope_name="JWST", wavelength=7.5 * u.micron, **snr_kw
+                    telescope_name=telescope_name, wavelength=wavelength, **snr_kw, **kw
                 )
             m.plottable["color"] = Flux(scale="log", lim=[1, 1e4])
-            m.size_normalization = 4
+            m.size_normalization = 6
 
     def refine_maps(self):
         GridGallery.refine_maps(self)
@@ -123,7 +124,7 @@ class ObservableGallery(GridGallery):
         add_size_explainer(ax=m.ax, label=m.plottable["size"].label, **kw)
 
 
-'''class observable_summary(BuildablePlot):
+'''class ObservableGallery(BuildablePlot):
     def plot(
         self,
         pops,

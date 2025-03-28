@@ -21,22 +21,22 @@ pip install -e .
 The `pip install -e .` command will link the installed version of the package to the directory of your local repository. Changes you make to the code in that directory should be reflected in the version Python sees when it tries to `import exoatlas`.
 
 ### Usage
-Here's a quick preview:
+Here's a very quick preview:
 
 
 ```python
 # import some population definitions and plotting tool
-from exoatlas import *
+from exoatlas import TransitingExoplanets, SolarSystem
+from exoatlas.visualizations import PlanetGallery
 
 # create a dictionary of populations
 exo = TransitingExoplanets()
 solar = SolarSystem()
-pops = {'solar':solar,
-        'exo':exo}
 
 # use a default visualization to summarize these populations
-PlanetGallery(pops)
+PlanetGallery().build([solar, exo])
 ```
+For a slightly less quick preview, which will hopefully entice you to keep reading through the rest of the documentation, please 
 
 ### Authors
 This toolkit was made by [Zach Berta-Thompson](http://casa.colorado.edu/~bertathompson/). It relies heavily on the incredible work done by the folks over at the [NASA Exoplanet Archive](https://exoplanetarchive.ipac.caltech.edu), and their generously designed API.

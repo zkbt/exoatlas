@@ -268,35 +268,36 @@ class Map:
         **kw : dict
             Any extra keywords will be passed on to `scatter`
         """
-
-        # focus attention on that population
-        self.point_at(pop)
-
-        # make sure we're plotting into the appropriate axes
-        self.setup_axes(ax=ax)
-
-        # add the scattered points
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
+
+            # focus attention on that population
+            self.point_at(pop)
+
+            # make sure we're plotting into the appropriate axes
+            self.setup_axes(ax=ax)
+
+            # add the scattered points
+
             these_scattered_points = self.ax.scatter(self.x, self.y, **self.kw(**kw))
 
-        if self.pop_key in self.scattered:
-            warnings.warn(
-                f"""
-            Key '{self.pop_key}' already exists. This might be fine for plotting, 
-            but if you want to access any of the plotted elements to modify them 
-            later, you might not be able to because they may have been overwritten.
-            Might we please encourage you to give your populations unique labels 
-            via the `population.label = "here's some neat label"`?
-            """
-            )
-        self.scattered[self.pop_key] = these_scattered_points
+            if self.pop_key in self.scattered:
+                warnings.warn(
+                    f"""
+                Key '{self.pop_key}' already exists. This might be fine for plotting, 
+                but if you want to access any of the plotted elements to modify them 
+                later, you might not be able to because they may have been overwritten.
+                Might we please encourage you to give your populations unique labels 
+                via the `population.label = "here's some neat label"`?
+                """
+                )
+            self.scattered[self.pop_key] = these_scattered_points
 
-        # set the scales, limits, labels
-        self.refine_axes()
+            # set the scales, limits, labels
+            self.refine_axes()
 
-        # add planet or hostname labels
-        self.add_system_annotations(annotate_kw=annotate_kw)
+            # add planet or hostname labels
+            self.add_system_annotations(annotate_kw=annotate_kw)
 
     def refine_axes(self):
         """
@@ -355,39 +356,41 @@ class Map:
         legend_kw : dict
             Keywords to pass to legend.
         """
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
 
-        # start with a dictionary of populations
-        self.populations = clean_pops(pops)
+            # start with a dictionary of populations
+            self.populations = clean_pops(pops)
 
-        # set up figure saving
-        if save:
-            filename = f"{self.label}"
-            directory = filename
-            mkdir(directory)
-
-        # set up legend defaults
-        lkw = dict(frameon=False)
-        lkw.update(**legend_kw)
-
-        # loop over all the populations
-        for key in self.populations.keys():
-
-            # plot each population, passing plotting keywords to it
-            self.plot(key, **kw)
-
-            # make a legend, if requested
-            if legend:
-                self.add_legend(**lkw)
-
-            # update filename and save intermediate figures
+            # set up figure saving
             if save:
-                filename += f"+{key}"
-                if steps:
-                    plt.savefig(f"{directory}/{filename}.{format}", **savefig_kw)
+                filename = f"{self.label}"
+                directory = filename
+                mkdir(directory)
 
-        # save the final figure
-        if save and not steps:
-            plt.savefig(f"{directory}/{filename}.{format}", **savefig_kw)
+            # set up legend defaults
+            lkw = dict(frameon=False)
+            lkw.update(**legend_kw)
+
+            # loop over all the populations
+            for key in self.populations.keys():
+
+                # plot each population, passing plotting keywords to it
+                self.plot(key, **kw)
+
+                # make a legend, if requested
+                if legend:
+                    self.add_legend(**lkw)
+
+                # update filename and save intermediate figures
+                if save:
+                    filename += f"+{key}"
+                    if steps:
+                        plt.savefig(f"{directory}/{filename}.{format}", **savefig_kw)
+
+            # save the final figure
+            if save and not steps:
+                plt.savefig(f"{directory}/{filename}.{format}", **savefig_kw)
 
     def add_system_annotations(self, annotate_kw={}):
         """

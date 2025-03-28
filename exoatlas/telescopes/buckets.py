@@ -58,7 +58,7 @@ def define_telescope_unit(
     return unit
 
 
-def define_JWST_unit(wavelength=5 * u.micron, efficiency=0.5, **kw):
+def define_JWST_unit(wavelength=5 * u.micron, efficiency=0.3, **kw):
     """
     Create a JWST telescope unit.
 
