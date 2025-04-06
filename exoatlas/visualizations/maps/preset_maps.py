@@ -1,5 +1,5 @@
 from ...imports import *
-from ...models import plot_both_seager, make_hz
+from ...models import plot_seager, make_hz
 from ..plottables.preset_plottables import *
 from .Map import *
 from .BubbleMap import *
@@ -285,9 +285,9 @@ class Mass_x_Radius(ErrorMap):
     xaxis = Mass
     yaxis = Radius
 
-    def plot_both_seager(self, **kw):
+    def plot_seager(self, **kw):
         plt.sca(self.ax)
-        plot_both_seager(**kw)
+        plot_seager(color="black", linewidth=4, alpha=0.25, zorder=1.0)
 
     def plot_constant_density(
         self,

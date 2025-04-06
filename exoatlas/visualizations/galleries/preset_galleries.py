@@ -46,7 +46,7 @@ class PlanetGallery(Gallery):
         self.maps["flux_x_radius"].add_legend(frameon=False, fontsize=8)
 
         plt.sca(self.maps["mass_x_radius"].ax)
-        self.maps["mass_x_radius"].plot_both_seager(zorder=1e9)
+        self.maps["mass_x_radius"].plot_seager(zorder=1e9)
         # self.maps['mass-radius'].ticks_enforce_multiple_oom("x")
         # self.maps['mass-radius'].ticks_simplify_exponents("xy")
 
@@ -71,6 +71,60 @@ def add_size_explainer(ax=None, label="", x=0.95, y=0.95, ha="right", va="top", 
     plt.text(
         x, y, f"area $\propto$ {label}", ha=ha, va=va, transform=ax.transAxes, **kw
     )
+
+
+class SimplePlanetGallery(Gallery):
+    """
+    This Gallery is designed to give a quick
+    look at populations of transiting exoplanets,
+    focusing on some of the physical attributes
+    that strongly influence how planets work.
+    """
+
+    def setup_maps(self, figsize=(10, 5), **kw):
+        """
+        Create the figure + axes, and
+        link the axes to Map objects.
+        """
+        # create the subplots
+        self.fi, self.ax = self.create_subplots(
+            nrows=1,
+            ncols=3,
+            width_ratios=[2, 4, 1],
+            figsize=figsize,
+            **kw,
+        )
+
+        # attach maps to each ax
+        self.maps = {}
+        self.maps["flux_x_radius"] = Flux_x_Radius(ax=self.ax[1])
+        self.maps["mass_x_radius"] = Mass_x_Radius(ax=self.ax[0])
+        self.maps["radius_x_radius"] = StellarRadius_x_PlanetRadius(ax=self.ax[2])
+
+    def refine_maps(self):
+        """
+        Make small changes to Maps, after data are plotted.
+        """
+
+        #
+        plt.sca(self.maps["flux_x_radius"].ax)
+        plt.xlim(5e4, 2e-5)
+
+        self.maps["flux_x_radius"].plot_hz()
+        self.maps["flux_x_radius"].ticks_simplify_exponents("y")
+        self.maps["flux_x_radius"].add_teqaxis()
+        self.maps["flux_x_radius"].remove_ylabel()
+        self.maps["flux_x_radius"].add_legend(
+            frameon=False, fontsize=8, loc="lower right"
+        )
+
+        plt.sca(self.maps["mass_x_radius"].ax)
+        self.maps["mass_x_radius"].plot_seager(zorder=1e9)
+        # self.maps['mass-radius'].ticks_enforce_multiple_oom("x")
+        # self.maps['mass-radius'].ticks_simplify_exponents("xy")
+
+        plt.sca(self.maps["radius_x_radius"].ax)
+        self.maps["radius_x_radius"].remove_ylabel()
 
 
 class ObservableGallery(GridGallery):
@@ -133,13 +187,13 @@ class EverythingGallery(GridGallery):
             cols=[Flux(lim=[5e4, 2e-5])],
             rows=[
                 Radius(lim=[0.01, 30]),
-                Mass(lim=[0.0001, 4100]),
+                Mass(lim=[5e-5, 4100]),
                 EscapeVelocity(lim=[0.01, 1e3]),
                 Density,
-                Depth(lim=[1e-8, 1]),
-                Transmission(lim=[1e-8, 1]),
-                Emission(lim=[1e-8, 1], wavelength=5 * u.micron),
-                Distance,
+                Depth(lim=[1e-8, 0.2]),
+                Transmission(lim=[1e-8, 0.2]),
+                Emission(lim=[1e-8, 0.2], wavelength=5 * u.micron),
+                Distance(lim=[1, 2e3]),
             ],
             # StellarBrightness(telescope_name='JWST', wavelength=1*u.micron)],
             map_type=ErrorMap,
