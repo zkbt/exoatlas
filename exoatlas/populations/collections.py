@@ -143,7 +143,7 @@ def get_exoplanets_by_teff():
 def get_all_planets():
     p = get_transiting_and_nontransiting_exoplanets() | get_solar_system_objects()
     p["transit"].color = "black"
-    p["nontransit"].color = "coral"
+    p["nontransit"].color = "darkorchid"
     p["major"].annotate_planets = True
     p["dwarf"].annotate_planets = True
     return p

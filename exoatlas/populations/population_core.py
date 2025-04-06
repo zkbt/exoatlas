@@ -19,6 +19,7 @@ default_plotkw = dict(
     annotate_planets=False,
     filled=True,
     outlined=False,
+    bubble_anyway=False,
 )
 
 # what keywords can we set for the population plotkw?
@@ -30,7 +31,8 @@ allowed_plotkw += [
     "cmap",
     "norm",
     "vmin",
-    "vmax" "outlined",
+    "vmax",
+    "outlined",
     "filled",
     "markeredgewidth",
     "markeredgecolor",
@@ -644,6 +646,12 @@ class Population:
         subset._plotkw["color"] = None
         subset._plotkw["c"] = None
         subset._plotkw["zorder"] = subset._plotkw.get("zorder", 1) + 1
+
+        # KLUDGE to put tiny subsets on top; FIXME?!
+        if len(subset) < 10:
+            subset._plotkw["bubble_anyway"] = True
+            subset._plotkw["s"] = 256
+            subset._plotkw["zorder"] = 10000
 
         return subset
 
