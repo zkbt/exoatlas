@@ -208,6 +208,7 @@ class StellarBrightnessTelescope(Plottable):
         self.setup_unit()
 
         # initialize the basic plottable axis
+        kw["telescope_name"] = telescope_name
         Plottable.__init__(self, **kw)
 
     def setup_telescope(self, telescope_name=None, **kw):
@@ -249,10 +250,10 @@ class StellarBrightnessTelescope(Plottable):
         )
 
 
-class DepthSNR(StellarBrightnessTelescope):
-    source = "depth_snr"
+class DepthUncertainty(StellarBrightnessTelescope):
+    source = "depth_uncertainty"
     scale = "log"
-    lim = [1e-3, 1e3]
+    lim = [1e-6, 1]
 
     def setup_unit(self):
         # kludge to undo telescope brightness unit
@@ -263,8 +264,20 @@ class DepthSNR(StellarBrightnessTelescope):
         """
         How should this plottable be labled on an axis?
         """
-        # define the label, based on the wavelength and telescope
-        w = self.wavelength.to(u.micron).value
+        # define the label, based on the telescope
+        self.label = f"Depth Uncertainty\n{self.telescope_unit}"
+
+
+class DepthSNR(DepthUncertainty):
+    source = "depth_snr"
+    scale = "log"
+    lim = [1e-3, 1e3]
+
+    def _update_label(self):
+        """
+        How should this plottable be labled on an axis?
+        """
+        # define the label, based on the telescope
         self.label = f"S/N for Transit Depth\n{self.telescope_unit}"
 
 
