@@ -1614,6 +1614,7 @@ class Population:
         transmission_signal,
         emission_signal,
         reflection_signal,
+        reflection_to_emission_ratio,
         stellar_brightness,
         stellar_brightness_in_telescope_units,
         depth_uncertainty,

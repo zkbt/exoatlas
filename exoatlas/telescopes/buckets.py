@@ -84,7 +84,7 @@ def define_JWST_unit(wavelength=5 * u.micron, efficiency=0.3, **kw):
     )
 
 
-def define_HST_unit(wavelength=1.4 * u.micron, efficiency=0.3, **kw):
+def define_HST_unit(wavelength=1.4 * u.micron, efficiency=0.05, **kw):
     """
     Create a HST telescope unit.
 
@@ -101,6 +101,12 @@ def define_HST_unit(wavelength=1.4 * u.micron, efficiency=0.3, **kw):
     dt : astropy.units.quantity.Quantity
         The time over which the telescope exposes.
         (Ignored if telescope is None.)
+
+    efficiency : float
+        What fraction of photons get recorded.
+        For HST, this should include a 0.5x
+        for Earth occultations meaning we
+        only observe for half the time.
     """
     return define_telescope_unit(
         telescope_name="HST",

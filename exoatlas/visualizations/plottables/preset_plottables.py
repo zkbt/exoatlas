@@ -18,7 +18,7 @@ class Teq(Plottable):
     def _update_label(self):
 
         self.label = (
-            "Planet Equilibrum Temperature (K, f={f}, {albedo:.0%} albedo)".format(
+            "Planet Equilibrum Temperature (K, f={f}, $A_B$={albedo_bond:.0%})".format(
                 **self.kw
             )
         )
@@ -305,8 +305,8 @@ class Reflection(Depth):
     source = "reflection_signal"
 
     def _update_label(self):
-        albedo = self.kw["albedo"]
-        self.label = f"Reflected Light\nEclipse Depth\n({albedo:.0%} albedo)"
+        albedo_geometric = self.kw["albedo_geometric"]
+        self.label = f"Reflected Light\nEclipse Depth\n(A$_g$={albedo_geometric:.0%})"
 
 
 class ReflectionSNR(DepthSNR):
@@ -315,20 +315,32 @@ class ReflectionSNR(DepthSNR):
     source = "reflection_snr"
 
     def _update_label(self):
-        albedo = self.kw["albedo"]
+        albedo_geometric = self.kw["albedo_geometric"]
         w = self.wavelength.to(u.micron).value
         R = self.R
-        self.label = f"S/N for Reflected Light\nEclipse Depth\n({albedo:.0%} albedo)\n{self.telescope_unit}"
+        self.label = f"S/N for Reflected Light\nEclipse Depth\n(A$_g$={albedo_geometric:.0%})\n{self.telescope_unit}"
 
 
 class Emission(Depth):
     source = "emission_signal"
 
     def _update_label(self):
-        albedo = self.kw["albedo"]
+        albedo_bond = self.kw["albedo_bond"]
         f = self.kw["f"]
         w = self.kw["wavelength"].to_value("micron")
-        self.label = f"Thermal Eclipse Depth\nat $\lambda={w}\mu m$\n(f={f:.2f}, {albedo:.0%} albedo)"
+        self.label = f"Thermal Eclipse Depth\n($A_B$={albedo_bond:.0%}, f={f:.2f}, $\lambda={w}\mu m$)"
+
+
+class ReflectionToEmissionRatio(Depth):
+    source = "reflection_to_emission_ratio"
+    lim = [1e-2, 1e2]
+
+    def _update_label(self):
+        albedo_geometric = self.kw["albedo_geometric"]
+        albedo_bond = self.kw["albedo_bond"]
+        f = self.kw["f"]
+        w = self.kw["wavelength"].to_value("micron")
+        self.label = f"Reflected/Emitted\n($A_g$={albedo_geometric:.0%}, $A_B$={albedo_bond:.0%},\nf={f:.2f}, $\lambda={w}\mu m$)"
 
 
 class EmissionSNR(DepthSNR):
@@ -337,11 +349,11 @@ class EmissionSNR(DepthSNR):
     source = "emission_snr"
 
     def _update_label(self):
-        albedo = self.kw["albedo"]
+        albedo_bond = self.kw["albedo_bond"]
         f = self.kw["f"]
         w = self.wavelength.to(u.micron).value
         R = self.R
-        self.label = f"S/N for Thermal\nEclipse Depth\n( f={f:.2f}, {albedo:.0%} albedo)\n{self.telescope_unit}"
+        self.label = f"S/N for Thermal\nEclipse Depth\n( f={f:.2f}, $A_B$={albedo_bond:.0%})\n{self.telescope_unit}"
 
 
 class RightAscension(Plottable):
