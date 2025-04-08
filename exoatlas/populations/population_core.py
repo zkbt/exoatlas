@@ -1624,3 +1624,5 @@ class Population:
         reflection_snr,
         transmission_snr,
     )
+
+    from .tess import attach_tess_sectors, split_into_tess_sectors

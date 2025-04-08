@@ -89,6 +89,7 @@ setup(
         "PyYAML",
         "tqdm",
         "pytz",
+        "tess-point",
     ],
     extras_require={
         "develop": [
