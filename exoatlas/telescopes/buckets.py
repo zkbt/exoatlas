@@ -40,7 +40,7 @@ def define_telescope_unit(
 
     dw = wavelength / R
     unit = u.def_unit(
-        f"[{telescope_name} | {wavelength} | {dt} | R={R}]",
+        f"[{telescope_name}|{wavelength.to_string(format="latex")}|{dt}|R={R}]",
         dt * area * dw,
         doc=f"""
                       This custom unit represents the

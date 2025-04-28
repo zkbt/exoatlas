@@ -31,13 +31,13 @@ class CumulativeXUVFlux(Flux):
 
 class ImpactVelocity(Plottable):
     source = "impact_velocity"
-    label = "Estimated Impact Velocity (km/s)"
+    label = "Estimated Impact Velocity\n(km/s)"
     scale = "log"
 
 
 class Radius(Plottable):
     source = "radius"
-    label = "Planet Radius (Earth radii)"
+    label = "Planet Radius\n(Earth radii)"
     scale = "log"
     lim = [0.3, 30]
 
@@ -51,14 +51,14 @@ class Mass(Plottable):
 
 class SemimajorAxis(Plottable):
     source = "semimajoraxis"
-    label = "Semimajor Axis (AU)\n"
+    label = "Semimajor Axis\n(AU)"
     scale = "log"
     lim = [0.001, 1000]
 
 
 class AngularSeparation(Plottable):
     source = "angular_separation"
-    label = "Angular Separation (arcsec)\n"
+    label = "Angular Separation\n(arcsec)"
     scale = "log"
     lim = [0.001, 10]
 
@@ -79,14 +79,14 @@ class KludgedMass(Plottable):
 
 class StellarTeff(Plottable):
     source = "stellar_teff"
-    label = "Stellar Temperature (K)"
+    label = "Stellar Temperature\n(K)"
     scale = "linear"
     lim = [2000, 7000]
 
 
 class StellarLuminosity(Plottable):
     source = "stellar_luminosity"
-    label = "Stellar Luminosity (L_$\odot$)"
+    label = "Stellar Luminosity\n(L_$\odot$)"
     scale = "log"
     lim = [None, None]
 
@@ -107,7 +107,7 @@ class Distance(Plottable):
 
 class EscapeVelocity(Plottable):
     source = "escape_velocity"
-    label = "Escape\nVelocity\n(km/s)"
+    label = "Escape Velocity\n(km/s)"
     scale = "log"
     lim = [2, 500]
 
@@ -278,7 +278,7 @@ class DepthSNR(DepthUncertainty):
         How should this plottable be labled on an axis?
         """
         # define the label, based on the telescope
-        self.label = f"S/N for Transit Depth\n{self.telescope_unit}"
+        self.label = f"S/N for Transit\n{self.telescope_unit}"
 
 
 class Transmission(Depth):
@@ -306,7 +306,7 @@ class Reflection(Depth):
 
     def _update_label(self):
         albedo_geometric = self.kw["albedo_geometric"]
-        self.label = f"Reflected Light\nEclipse Depth\n(A$_g$={albedo_geometric:.0%})"
+        self.label = f"Reflected Eclipse Depth\n(A$_g$={albedo_geometric:.0%})"
 
 
 class ReflectionSNR(DepthSNR):
@@ -318,7 +318,7 @@ class ReflectionSNR(DepthSNR):
         albedo_geometric = self.kw["albedo_geometric"]
         w = self.wavelength.to(u.micron).value
         R = self.R
-        self.label = f"S/N for Reflected Light\nEclipse Depth\n(A$_g$={albedo_geometric:.0%})\n{self.telescope_unit}"
+        self.label = f"S/N for Reflected Eclipse\n(A$_g$={albedo_geometric:.0%})\n{self.telescope_unit}"
 
 
 class Emission(Depth):
@@ -340,7 +340,7 @@ class ReflectionToEmissionRatio(Depth):
         albedo_bond = self.kw["albedo_bond"]
         f = self.kw["f"]
         w = self.kw["wavelength"].to_value("micron")
-        self.label = f"Reflected/Emitted\n($A_g$={albedo_geometric:.0%}, $A_B$={albedo_bond:.0%},\nf={f:.2f}, $\lambda={w}\mu m$)"
+        self.label = f"Reflected/Thermal\n($A_g$={albedo_geometric:.0%}, $A_B$={albedo_bond:.0%},\nf={f:.2f}, $\lambda={w}\mu m$)"
 
 
 class EmissionSNR(DepthSNR):
@@ -353,7 +353,7 @@ class EmissionSNR(DepthSNR):
         f = self.kw["f"]
         w = self.wavelength.to(u.micron).value
         R = self.R
-        self.label = f"S/N for Thermal\nEclipse Depth\n( f={f:.2f}, $A_B$={albedo_bond:.0%})\n{self.telescope_unit}"
+        self.label = f"S/N for Thermal Eclipse Depth\n( f={f:.2f}, $A_B$={albedo_bond:.0%})\n{self.telescope_unit}"
 
 
 class RightAscension(Plottable):
