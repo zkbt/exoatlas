@@ -642,15 +642,18 @@ class Population:
             except KeyError:
                 subset = self.create_subset_by_hostname(key)
 
-        # kind of kludgy, to enforce different colors
+        # kind of kludgy, to enforce different colors and sitting on top
         subset._plotkw["color"] = None
         subset._plotkw["c"] = None
-        subset._plotkw["zorder"] = subset._plotkw.get("zorder", 1) + 1
+        zorder = subset._plotkw.get("zorder", 1)
+        if zorder is not None:
+            zorder += 1
+        subset._plotkw["zorder"] = zorder
 
         # KLUDGE to put tiny subsets on top; FIXME?!
         if len(subset) < 10:
             subset._plotkw["bubble_anyway"] = True
-            subset._plotkw["s"] = 256
+            # subset._plotkw["s"] = 256
             subset._plotkw["zorder"] = 10000
 
         return subset
@@ -1588,14 +1591,16 @@ class Population:
         scaled_radius,
         transit_duration_from_orbit,
         transit_duration,
-        mass_estimated_from_radius,
-        radius_estimated_from_mass,
+        mass_estimated_from_radius_assuming_rockyish,
+        mass_estimated_from_radius_assuming_chen_and_kipping,
+        radius_estimated_from_mass_assuming_chen_and_kipping,
         kludge_mass,
         kludge_radius,
         kludge_stellar_age,
         surface_gravity,
         density,
         escape_velocity,
+        relative_escape_velocity,
         orbital_velocity,
         impact_velocity,
         escape_parameter,
