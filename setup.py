@@ -68,7 +68,7 @@ setup(
     # are there directories of data that should be accessible when installed?
     include_package_data=True,
     # where are those data directories?
-    package_data={},
+    package_data={"": ["*.txt", "*.ecsv"]},
     # any scripts will be copied into your $PATH, to run from the command line
     scripts=[],
     # some descriptions about this package (for searchability?)

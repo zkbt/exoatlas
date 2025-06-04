@@ -8,7 +8,7 @@ the next week or so.
 from ..imports import *
 
 
-class Block(Talker):
+class Block:
     """
     The Block object, for generating a sequence of nights.
 
@@ -32,8 +32,6 @@ class Block(Talker):
         name : str
             A descriptive name for this time range.
         """
-
-        Talker.__init__(self)
 
         # store the connection to the plan
         self.plan = plan

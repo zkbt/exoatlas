@@ -41,7 +41,6 @@ def parse_reflink(x):
         return ""
 
 
-# apply some kludges to correct bad planet properties
 class ExoplanetsPSCP(PredefinedPopulation):
     """
     Exoplanets from the NASA Exoplanet Archive.
@@ -55,7 +54,7 @@ class ExoplanetsPSCP(PredefinedPopulation):
     label = "ExoplanetsPSCP"
 
     # define columns to ingest with and without errors/limits
-    raw_columns_with_errors_and_limits = [
+    _raw_columns_with_errors_and_limits = [
         "pl_orbper",
         "pl_orbsmax",
         "pl_rade",
@@ -70,6 +69,7 @@ class ExoplanetsPSCP(PredefinedPopulation):
         "pl_trandur",
         "pl_imppar",
         "pl_ratdor",
+        "pl_ratror",
         "pl_rvamp",
         "pl_projobliq",
         "pl_trueobliq",
@@ -87,7 +87,7 @@ class ExoplanetsPSCP(PredefinedPopulation):
         "st_rotp",
         "st_radv",
     ]
-    raw_columns_with_errors = [
+    _raw_columns_with_errors = [
         "sy_dist",
         "sy_plx",
         "sy_bmag",
@@ -109,7 +109,7 @@ class ExoplanetsPSCP(PredefinedPopulation):
         "sy_kepmag",
         "sy_icmag",
     ]
-    raw_columns_without_errors = [
+    _raw_columns_without_errors = [
         "pl_name",
         "hostname",
         "pl_letter",
@@ -177,65 +177,7 @@ class ExoplanetsPSCP(PredefinedPopulation):
             if "_reference" in k:
                 self._make_sure_index_exists(k)
 
-    def download_raw_data(self, remake=False):
-        """
-        Load the raw Exoplanet Archive tables, possibly downloading them if needed.
-
-        Parameters
-        ----------
-        remake : bool
-            Should the raw tables be re-made/re-downloaded,
-            even if recent local ones exist?
-
-        Returns
-        -------
-        raw : astropy.table.QTable
-            A raw, untrimmed, unstandardized table.
-        """
-
-        #
-        self.raw = self._downloader.get(remake=remake)
-
-        # return both, so they can both be turned into standardized tables
-        return self.raw
-
-        '''    def trim_raw(self, raw):
-        """
-        Trim the raw table down to ones with reasonable values.
-
-        Parameters
-        ----------
-        raw : astropy.table.QTable
-            A raw, untrimmed, unstandardized table.
-
-        Returns
-        -------
-        trimmed : astropy.table.QTable
-            A raw, trimmed, unstandardized table.
-        """
-
-        masks = {}
-
-        ok = np.ones(len(raw)).astype(bool)
-        for k in masks:
-            ok *= masks[k]
-            N = sum(ok == True)
-            self.speak(f"{N} planets pass the `{k}` filter")
-
-        # trim down the table to just those that are OK
-        trimmed = raw[ok]
-
-        # for debugging, hang onto the trimmed table as a hidden attribute
-        self._trimmed = trimmed
-
-        # report how many points got trimmed away
-        ntotal = len(raw)
-        ntrimmed = len(trimmed)
-        self.speak(f"trimmed down to {ntrimmed}/{ntotal} rows")
-
-        return trimmed'''
-
-    def create_standardardized(self, raw):
+    def _create_standardized(self, raw):
         """
         Create a standardized table to make sure that at
         least a few necessary columns are populated.
@@ -249,7 +191,7 @@ class ExoplanetsPSCP(PredefinedPopulation):
         Parameters
         ----------
         raw : astropy.table.QTable
-            A raw unstandardized table downloaded from the archive.
+            A raw unstandardized table from `ExoplanetArchiveDownloader`.
 
         Returns
         -------
@@ -304,12 +246,12 @@ class ExoplanetsPSCP(PredefinedPopulation):
                 warnings.warn(f"⚠️ No {k_original} found!")
                 return
 
-            if k_original in self.raw_columns_without_errors:
+            if k_original in self._raw_columns_without_errors:
                 # easy, just record the column itself with no error
                 s[k_new] = attach_unit(r[k_original], unit)
                 print(f"📕 populated {k_original} > {k_new}")
 
-            elif k_original in self.raw_columns_with_errors:
+            elif k_original in self._raw_columns_with_errors:
                 # record the column itself
                 s[k_new] = attach_unit(r[k_original], unit)
 
@@ -322,7 +264,7 @@ class ExoplanetsPSCP(PredefinedPopulation):
                 )
                 print(f"📏 populated {k_new} and errors with {k_original}")
 
-            elif k_original in self.raw_columns_with_errors_and_limits:
+            elif k_original in self._raw_columns_with_errors_and_limits:
                 # from playing with table, I think lim = +1 is upper limit, -1 is lower limit
 
                 # record the upper and lower errorbars
@@ -362,11 +304,11 @@ class ExoplanetsPSCP(PredefinedPopulation):
                 print(f"🙋 populated {k_original} > {k_new} , but not 100% sure...")
 
             # keep track of reference for measurements
-            if (k_original in self.raw_columns_with_errors_and_limits) or (
-                k_original in self.raw_columns_with_errors
+            if (k_original in self._raw_columns_with_errors_and_limits) or (
+                k_original in self._raw_columns_with_errors
             ):
                 try:
-                    s[f"{k_new}_reference"] = self.ingest_references(r, k_original)
+                    s[f"{k_new}_reference"] = self._ingest_references(r, k_original)
                     print(
                         f"⚠️ ingested reference information for {k_original} > {k_new}"
                     )
@@ -387,8 +329,10 @@ class ExoplanetsPSCP(PredefinedPopulation):
         # what's the history?
         populate_one_or_more_columns("discovery_method", "discoverymethod")
         populate_one_or_more_columns("discovery_year", "disc_year")
-        populate_one_or_more_columns("discovery_reference", "disc_refname")
-        s["discovery_reference"] = [parse_reflink(x) for x in s["discovery_reference"]]
+        populate_one_or_more_columns("discovery_publication", "disc_refname")
+        s["discovery_publication"] = [
+            parse_reflink(x) for x in s["discovery_publication"]
+        ]
         populate_one_or_more_columns("discovery_facility", "disc_facility")
 
         # what are the host positions and kinematics?
@@ -426,6 +370,19 @@ class ExoplanetsPSCP(PredefinedPopulation):
         populate_one_or_more_columns("stellar_age", "st_age", u.Gyr)
         populate_one_or_more_columns("stellar_metallicity", "st_met")
         populate_one_or_more_columns("stellar_luminosity", "st_lum")
+        # convert from table log10(L) to L
+        logL = s["stellar_luminosity"] * 1
+        L = 10**logL * u.Lsun
+        logL_uncertainty_lower = s["stellar_luminosity_uncertainty_lower"] * 1
+        logL_uncertainty_upper = s["stellar_luminosity_uncertainty_upper"] * 1
+        s["stellar_luminosity"] = L
+        s["stellar_luminosity_uncertainty_lower"] = (
+            np.log(10) * L * np.abs(logL_uncertainty_lower)
+        )
+        s["stellar_luminosity_uncertainty_upper"] = (
+            np.log(10) * L * np.abs(logL_uncertainty_upper)
+        )
+
         populate_one_or_more_columns("stellar_logg", "st_logg")
         populate_one_or_more_columns("stellar_density", "st_dens")
         populate_one_or_more_columns("stellar_vsini", "st_vsin")
@@ -453,25 +410,22 @@ class ExoplanetsPSCP(PredefinedPopulation):
             "kep",
         ]
         for b in bands:
-            populate_one_or_more_columns(f"{b}mag", f"sy_{b.lower()}mag", u.mag)
+            populate_one_or_more_columns(f"magnitude_{b}", f"sy_{b.lower()}mag", u.mag)
 
         # what are some basic orbital parameters
         populate_one_or_more_columns("period", "pl_orbper", u.day)
         populate_one_or_more_columns("semimajoraxis", "pl_orbsmax", u.AU)
         populate_one_or_more_columns("eccentricity", "pl_orbeccen")
-        populate_one_or_more_columns("omega", "pl_orblper", u.deg)
+        populate_one_or_more_columns("argument_of_periastron", "pl_orblper", u.deg)
         populate_one_or_more_columns("inclination", "pl_orbincl", u.deg)
 
         # what are the planet properties? (check Jupiter isn't better?!)
         populate_one_or_more_columns("radius", "pl_rade", u.Rearth)
         populate_one_or_more_columns("mass", "pl_bmasse", u.Mearth)
         populate_one_or_more_columns("density", "pl_dens", u.g / u.cm**3)
-        populate_one_or_more_columns(
-            "insolation",
-            "pl_insol",
-            (u.Lsun / 4 / np.pi / (1 * u.AU) ** 2).to("W/m**2"),
-        )
-        populate_one_or_more_columns("teq", "pl_eqt", u.K)
+        flux_unit = (1 * u.Lsun / 4 / np.pi / (1 * u.AU) ** 2).to("W/m**2")
+        # populate_one_or_more_columns("insolation", "pl_insol", flux_unit)
+        # populate_one_or_more_columns("teq", "pl_eqt", u.K)
 
         # does it have transmission + emission spec?
         populate_one_or_more_columns(
@@ -482,10 +436,14 @@ class ExoplanetsPSCP(PredefinedPopulation):
         # what are the (often) transit-derived properties?
         populate_one_or_more_columns("transit_midpoint", "pl_tranmid", u.day)
         populate_one_or_more_columns("transit_duration", "pl_trandur", u.hour)
+        populate_one_or_more_columns("transit_scaled_radius", "pl_ratror")
         populate_one_or_more_columns("transit_depth", "pl_trandep", 0.01)
-        populate_one_or_more_columns("transit_ar", "pl_ratdor")
-        populate_one_or_more_columns("transit_b", "pl_imppar")
+        populate_one_or_more_columns("transit_scaled_semimajoraxis", "pl_ratdor")
+        populate_one_or_more_columns("transit_impact_parameter", "pl_imppar")
+
+        # what are the (often) RV-derived properties
         populate_one_or_more_columns("rv_semiamplitude", "pl_rvamp", u.m / u.s)
+        populate_one_or_more_columns("msini", "pl_msinie", u.Mearth)
         populate_one_or_more_columns("projected_obliquity", "pl_projobliq", u.deg)
         populate_one_or_more_columns("obliquity", "pl_trueobliq", u.deg)
 
@@ -504,12 +462,12 @@ class ExoplanetsPSCP(PredefinedPopulation):
         standard = s.filled()
 
         #
-        trimmed = self.trim_bad_data(standard)
+        trimmed = self._trim_bad_data(standard)
 
         # return that standardized table
         return trimmed
 
-    def trim_bad_data(self, standard):
+    def _trim_bad_data(self, standard):
         """
         Mask bad data from the '.standard' table.
 
@@ -550,7 +508,12 @@ class ExoplanetsPSCP(PredefinedPopulation):
             N_has_value = np.sum(ok)
             for w in ["lower", "upper"]:
                 ok *= np.isfinite(standard[f"{k}_uncertainty_{w}"])
-                ok *= standard[f"{k}_uncertainty_{w}"] != 0
+                # this comment is a potentially harmless or potentially troublesome KLUDGE!
+                # see https://github.com/zkbt/exoatlas/issues/58
+                # ok *= standard[f"{k}_uncertainty_{w}"] != 0
+                print(
+                    f"🚨😳🔔‼️ some values with zero-uncertainty might have snuck through for {k} 🚨😳🔔‼️🚨😳🔔‼️"
+                )
             N_has_uncertainty = np.sum(ok)
             bad = ok == False
             print(
@@ -561,7 +524,7 @@ class ExoplanetsPSCP(PredefinedPopulation):
         print("values without reasonable uncertainties have been trimmed")
         return trimmed
 
-    def ingest_references(self, r, k):
+    def _ingest_references(self, r, k):
         """
         Try to get the reference for a particular measurement.
 
@@ -616,7 +579,7 @@ class ExoplanetsPS(ExoplanetsPSCP):
         ExoplanetsPSCP.__init__(self, *args, **kwargs)
         self._add_references_as_indices()
 
-    def ingest_references(self, r, k):
+    def _ingest_references(self, r, k):
         """
         Try to get the reference for a particular measurement.
 
@@ -686,6 +649,14 @@ class Exoplanets(ExoplanetsPSCP):
         # load standard table(s) or ingest from raw data
         PredefinedPopulation.__init__(self, remake=remake, **plotkw)
 
+        # plotting defaults
+        self.s = 6
+        self.marker = "."
+        self.zorder = 0
+        self.color = "black"
+        self.respond_to_color = True
+        self.exact = False
+
     def __getitem__(self, key):
         """
         Create a subpopulation of planets by indexing, slicing, or masking.
@@ -712,7 +683,7 @@ class Exoplanets(ExoplanetsPSCP):
         # then trim the .ps population to only those (host)names in the subset
         if hasattr(self, "individual_references"):
             subset.individual_references = self.individual_references[
-                list(np.unique(subset.name))
+                list(np.unique(subset.tidyname()))
             ]
             subset.individual_references.label = "Individual References"
 
@@ -743,7 +714,7 @@ class Exoplanets(ExoplanetsPSCP):
             self.individual_references = ExoplanetsPS()
             # then trim the .ps population to only those (host)names in the subset
             self.individual_references = self.individual_references[
-                list(np.unique(self.tidyname))
+                list(np.unique(self.tidyname()))
             ]
 
             self.individual_references.label = "Individual References"
@@ -776,7 +747,7 @@ class Exoplanets(ExoplanetsPSCP):
         plt.ylabel(y)
         plt.legend()
 
-    def check_individual_references(
+    def display_individual_references(
         self,
         keys=["mass", "radius", "stellar_mass", "stellar_radius", "stellar_teff"],
         planets=None,
@@ -851,7 +822,7 @@ class Exoplanets(ExoplanetsPSCP):
         1.  Run `.load_individual_references()` to make sure that the
             data for individual references are loaded and stored in the
             `.individul_references` attribute.
-        2.  Run `.check_individual_references()` to see what references
+        2.  Run `.display_individual_references()` to see what references
             have useful data you might want to use for a particular planet.
         3.  Run `.update_reference()` to use a reference to update the
             parameters in the standardized population table.
@@ -923,14 +894,15 @@ class Exoplanets(ExoplanetsPSCP):
 
             # extract a table of just these references, or give up
             try:
+                # print(f"{k}_reference", references)
                 these_references = QTable(
                     self.individual_references.standard.loc[
                         f"{k}_reference", references
                     ]
                 )
             except KeyError:
-                if verbose:
-                    print(f'No reference(s) "{references}" found for key "{k}"')
+                # if verbose:
+                #    print(f'No reference(s) "{references}" found for key "{k}"')
                 continue
 
             # extract a (possibly even smaller) table of just these planets, or give up
@@ -947,32 +919,58 @@ class Exoplanets(ExoplanetsPSCP):
 
             # find where there is a real new measurement for this key
             is_finite = np.isfinite(these_planets[f"{k}"])
-            if verbose:
-                print(
-                    k,
-                    planets_to_index,
-                    is_finite,
-                    type(is_finite).__name__,
-                    (type(these_planets).__name__),
-                )
-            new = these_planets[is_finite]
+            # if verbose:
+            #    print(
+            #        k,
+            #        planets_to_index,
+            #        is_finite,
+            #        type(is_finite).__name__,
+            #        (type(these_planets).__name__),
+            #    )
+            new = copy.deepcopy(these_planets[is_finite])
+            new.add_index("tidyname")
+
+            # if verbose:
+            #    print("The new properties to be adopted:")
+            #    display(new)
 
             # construct a new table of the references we want to update for this key
             if len(new) > 0:
                 for tidyname in np.unique(new["tidyname"]):
-                    old = self.standard.loc["tidyname", tidyname]
                     if verbose:
-                        old_for_display = copy.deepcopy(old)
+                        print(f"'{k}' for '{tidyname}'")
+                    old_for_this_planet = self.standard.loc["tidyname", tidyname]
+                    new_for_this_planet = new.loc["tidyname", tidyname]
+                    # if verbose:
+                    # print("old", old_for_this_planet["tidyname"])
+                    # print("new", new_for_this_planet["tidyname"])
+                    assert (
+                        old_for_this_planet["tidyname"]
+                        == new_for_this_planet["tidyname"]
+                    )
+
                     keys_to_display = ["tidyname"]
+                    if verbose:
+                        old_for_display = copy.deepcopy(old_for_this_planet)
+
                     for s in suffixes:
                         try:
-                            old[f"{k}{s}"] = new[f"{k}{s}"][0]
+                            if verbose:
+                                old_value = old_for_this_planet[f"{k}{s}"]
+                                new_value = new_for_this_planet[f"{k}{s}"]
+                                # print(f"{k}{s}: {old_value} > {new_value}")
+                            old_for_this_planet[f"{k}{s}"] = new_for_this_planet[
+                                f"{k}{s}"
+                            ]
                             keys_to_display.append(f"{k}{s}")
                         except (IndexError, KeyError):
                             pass
                     if verbose:
                         change_summary = vstack(
-                            [old_for_display[keys_to_display], new[keys_to_display][0]]
+                            [
+                                old_for_display[keys_to_display],
+                                new_for_this_planet[keys_to_display],
+                            ]
                         )
                         change_summary.add_column(
                             ["old", "new"], index=0, name="version"

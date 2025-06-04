@@ -8,3 +8,4 @@ from .test_visualizations import *
 from .test_whatsup import *
 from .test_snr import *
 from .test_curation import *
+from .test_calculations import *

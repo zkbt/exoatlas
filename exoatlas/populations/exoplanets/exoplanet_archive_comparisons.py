@@ -54,8 +54,10 @@ class NASAExoplanetArchiveComparison:
         self.tables = {}
 
         # download both tables from NASA Exoplanet Archive
-        self.tables["pscp"] = ExoplanetArchiveDownloader("pscomppars").get(**downloadkw)
-        self.tables["ps"] = ExoplanetArchiveDownloader("ps").get(**downloadkw)
+        self.tables["pscp"] = ExoplanetArchiveDownloader("pscomppars").get_table(
+            **downloadkw
+        )
+        self.tables["ps"] = ExoplanetArchiveDownloader("ps").get_table(**downloadkw)
 
         # trim down to just default solutions
         is_default = self.tables["ps"]["default_flag"] == 1
@@ -248,8 +250,8 @@ class NASAExoplanetArchiveComparison:
 
         plt.axis("scaled")
         plt.legend(frameon=False)
-        plt.xlabel("Planet Mass ($M_\oplus$)")
-        plt.ylabel("Planet Radius ($R_\oplus$)")
+        plt.xlabel(r"Planet Mass ($M_\oplus$)")
+        plt.ylabel(r"Planet Radius ($R_\oplus$)")
         plt.savefig(os.path.join(self.plot_directory, f"check-mass-radius.png"))
 
     def do_luminosity_check(self):
@@ -286,7 +288,6 @@ class NASAExoplanetArchiveComparison:
                 x[bad],
                 y[bad],
                 label=f"{k} (no lum/teff/radius uncertainty)",
-                color="red",
                 **kws[k],
                 **kw,
             )
@@ -295,12 +296,12 @@ class NASAExoplanetArchiveComparison:
             plt.legend(frameon=False, bbox_to_anchor=(1, 1), loc="upper left")
 
             plt.sca(ax[1])
-            plt.semilogx(x[bad], (y / x)[bad], color="red", **kws[k], **kw)
+            plt.semilogx(x[bad], (y / x)[bad], **kws[k], **kw)
             plt.axhline(1, color="gray", linestyle="--")
-            plt.ylabel("L / [$4\pi R^2 \sigma T_{eff}^4$]")
+            plt.ylabel(r"L / [$4\pi R^2 \sigma T_{eff}^4$]")
 
         plt.sca(ax[1])
-        plt.xlabel("$4\pi R^2 \sigma T_{eff}^4$")
+        plt.xlabel(r"$4\pi R^2 \sigma T_{eff}^4$")
         plt.savefig(
             os.path.join(self.plot_directory, f"check-luminosity-radius-teff.png")
         )

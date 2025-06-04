@@ -14,7 +14,9 @@ class ExoplanetArchiveDownloader(Downloader):
     base = "https://exoplanetarchive.ipac.caltech.edu/TAP/sync?"
 
     # class-specific keywords to aid reading raw downloaded files into tables
-    read_kw = dict(delimiter=",", fill_values=[("", np.nan), ("--", np.nan)])
+    read_kw = dict(
+        format="ascii", delimiter=",", fill_values=[("", np.nan), ("--", np.nan)]
+    )
 
     # class-specific names of supported tables
     supported_tables = ["ps", "pscomppars"]
