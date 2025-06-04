@@ -36,7 +36,6 @@ plugins:
         - "*.pdf"
         - "*.fits"
         - "*.npy"
-        - "*.ecsv"
 markdown_extensions:
     - toc:
         permalink: "#"
