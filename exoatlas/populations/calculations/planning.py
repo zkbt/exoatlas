@@ -1,4 +1,4 @@
-from ..imports import *
+from ...imports import *
 import astroplan as ap
 from astroplan.plots import plot_airmass
 
@@ -9,6 +9,65 @@ sbo = ap.Observer(
     name="Sommers-Bausch Observatory",
     timezone="US/Mountain",
 )
+
+
+def altaz(self, where=sbo, when="tonight", **kw):
+    """
+    Altitude, Azimuth (astropy.coordinates.SkyCoord)
+
+    This returns an `astropy.coordinates.SkyCoord` object
+    representing the altitude and azimuth of the objects
+    in the population from a particular observer's
+    location on Earth (`where`) at a particular moment (`when`).
+
+    Caveats:
+    It's (currently) meaningless for Solar System objects.
+    It doesn't propagate uncertainties.
+    It doesn't include proper motions or parallax.
+
+    Parameters
+    ----------
+    where : astroplan.Observer
+        This must be an astroplan Observer object
+        encoding the location (and timezone) of an
+        Earth-bound observatory.
+    when : str, astropy.time.Time
+        This can be a Time object specifying the moment at
+        which the altitude and azimuth should be calculated.
+        Or, it can be the string "tonight" meaning to use
+        the closest local midnight to the current time.
+    """
+
+    if when == "tonight":
+        when = where.midnight(Time.now())
+    coordinates = SkyCoord(ra=self.ra(), dec=self.dec())
+    altaz = where.altaz(when, coordinates)
+    return altaz
+
+
+def airmass(self, where=sbo, when="tonight", **kw):
+    """
+    Airmass (unitless)
+
+    Calculate the airmass of a target from a particular observer's
+    location on Earth (`where`) at a particular moment (`when`).
+
+    Parameters
+    ----------
+    where : astroplan.Observer
+        This must be an astroplan Observer object
+        encoding the location (and timezone) of an
+        Earth-bound observatory.
+    when : str, astropy.time.Time
+        This can be a Time object specifying the moment at
+        which the altitude and azimuth should be calculated.
+        Or, it can be the string "tonight" meaning to use
+        the closest local midnight to the current time.
+    """
+
+    secz = self.altaz(where=where, when=when).secz
+    airmass = np.where(secz > 0, secz, np.nan)
+    return airmass
 
 
 def plot_airmass_for_transit(row, max_airmass=2.0, savefig=False):
@@ -212,6 +271,10 @@ def show_upcoming_transits(
                 )
                 tables_for_individual_planets.append(table_of_transits_for_this_planet)
 
+    if len(tables_for_individual_planets) == 0:
+        print("📭 No transits were found. Sorry! 📭")
+        return None
+
     # stack and join individual planets into one giant table with metadata
     table_of_all_transits = vstack(tables_for_individual_planets)
     transit_planning_table = join(table_of_all_transits, initial_planning_table)
@@ -222,5 +285,6 @@ def show_upcoming_transits(
     if visualize:
         for row in transit_planning_table:
             plot_airmass_for_transit(row, savefig=True)
+            plt.show()
 
     return transit_planning_table

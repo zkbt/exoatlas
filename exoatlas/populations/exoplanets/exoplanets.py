@@ -981,8 +981,3 @@ class Exoplanets(ExoplanetsPSCP):
 
         if nothing_happened:
             warnings.warn(warning_message)
-
-    from ...observing.transits import (
-        show_upcoming_transits,
-        plot_airmass_for_transit,
-    )

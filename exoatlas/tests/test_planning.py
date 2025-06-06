@@ -25,3 +25,9 @@ def test_airmass():
     plt.colorbar()
     plt.xlim(0, 360)
     plt.ylim(-90, 90)
+
+
+def test_show_upcoming_transits():
+    e = TransitingExoplanets()
+    nearby = e[e.distance() < 15 * u.pc]
+    transits = nearby.show_upcoming_transits(window=10 * u.day)

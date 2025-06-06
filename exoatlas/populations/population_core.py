@@ -1622,6 +1622,5 @@ class Population:
         emission_snr,
         reflection_snr,
         transmission_snr,
-        altaz,
-        airmass,
     )
+    from .calculations.planning import show_upcoming_transits, altaz, airmass
