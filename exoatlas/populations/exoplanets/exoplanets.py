@@ -983,6 +983,6 @@ class Exoplanets(ExoplanetsPSCP):
             warnings.warn(warning_message)
 
     from ...observing.transits import (
-        find_all_observable_transits,
-        find_observable_transits,
+        show_upcoming_transits,
+        plot_airmass_for_transit,
     )

@@ -41,13 +41,9 @@ def altaz(self, where=sbo, when="tonight", **kw):
     """
 
     if when == "tonight":
-        today = Time.now()
-        time = where.midnight(today)
-    else:
-        time = when
-
+        when = where.midnight(Time.now())
     coordinates = SkyCoord(ra=self.ra(), dec=self.dec())
-    altaz = where.altaz(time, coordinates)
+    altaz = where.altaz(when, coordinates)
     return altaz
 
 
