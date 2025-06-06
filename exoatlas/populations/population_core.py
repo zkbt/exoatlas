@@ -1622,4 +1622,6 @@ class Population:
         emission_snr,
         reflection_snr,
         transmission_snr,
+        altaz,
+        airmass,
     )
