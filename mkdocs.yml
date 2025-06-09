@@ -9,8 +9,10 @@ nav:
       - creating.ipynb
       - curating.ipynb
       - filtering.ipynb
+      - planning.ipynb
       - visualizing.ipynb
       - observing.ipynb
+      - planning.ipynb
       - uncertainties.ipynb
     - Developer Guide:
       - github.ipynb
