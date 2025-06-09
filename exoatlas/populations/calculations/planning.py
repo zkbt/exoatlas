@@ -66,6 +66,7 @@ def airmass(self, where=sbo, when="tonight", **kw):
     """
 
     secz = self.altaz(where=where, when=when).secz
+
     airmass = np.where(secz > 0, secz, np.nan)
     return airmass
 
@@ -89,7 +90,7 @@ def plot_airmass_for_transit(row, max_airmass=2.0, savefig=False):
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
 
-        plt.cla()
+        plt.figure()
 
         # use astroplan to do most of the work
         plot_airmass(
@@ -115,7 +116,7 @@ def plot_airmass_for_transit(row, max_airmass=2.0, savefig=False):
 
         # add title
         plt.title(
-            f'{row.meta["where"].name}\n{row["name"]} | {row["midpoint"].iso} UTC'
+            f'{row["name"]}\n{row.meta["where"].name} | {row["midpoint"].iso} UTC'
         )
 
         # set xlimit to be exactly sunset to sunrise
@@ -285,6 +286,5 @@ def show_upcoming_transits(
     if visualize:
         for row in transit_planning_table:
             plot_airmass_for_transit(row, savefig=True)
-            plt.show()
 
     return transit_planning_table

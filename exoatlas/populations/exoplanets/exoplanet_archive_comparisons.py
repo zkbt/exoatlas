@@ -217,8 +217,6 @@ class NASAExoplanetArchiveComparison:
             plt.legend(frameon=False)
             plt.savefig(os.path.join(self.plot_directory, f"check-units-{p}.png"))
 
-            plt.show()
-
     def do_mass_radius_check(self):
         """
         Check that theoretical masses/radii get removed.
