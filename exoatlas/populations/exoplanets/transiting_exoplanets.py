@@ -1,5 +1,5 @@
 """
-Define a subset of all exoplanets for only those known to transit. 
+Define a subset of all exoplanets for only those known to transit.
 """
 
 from ...imports import *

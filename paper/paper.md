@@ -9,13 +9,16 @@ authors:
   - name: Zach K. Berta-Thompson
     orcid: 0000-0002-3321-4924
     affiliation: 1
-  - name: ???
-    affiliation: ???
+  - name: Girish M. Duvvuri
+    orcid: 0000-0002-7119-2543
+    affiliation: 2
 affiliations:
  - name: Department of Astrophysical and Planetary Sciences, University of Colorado Boulder, USA
    index: 1
    ror: 02ttsq026
-
+ - name: Department of Physics and Astronomy, Vanderbilt University, USA
+   index: 2
+   ror: 02vm5rt34
 date: 16 June 2025?
 bibliography: paper.bib
 

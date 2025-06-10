@@ -1,26 +1,26 @@
 site_name: exoatlas
 site_url: https://zkbt.github.com/exoatlas
 nav:
-    - index.md
-    - installation.ipynb
-    - quickstart.ipynb
-    - User Guide:
-      - populations.ipynb
-      - creating.ipynb
-      - curating.ipynb
-      - filtering.ipynb
-      - planning.ipynb
-      - visualizing.ipynb
-      - observing.ipynb
-      - planning.ipynb
-      - uncertainties.ipynb
-    - Developer Guide:
-      - github.ipynb
-      - testing.ipynb
-      - documentation.ipynb
-    - Details:
-      - compare-nasa-exoplanet-archive-tables.ipynb
-      - using-skewnormal-for-asymmetric-uncertainties.ipynb
+- index.md
+- installation.ipynb
+- quickstart.ipynb
+- User Guide:
+  - populations.ipynb
+  - creating.ipynb
+  - curating.ipynb
+  - filtering.ipynb
+  - visualizing.ipynb
+  - observing.ipynb
+  - planning.ipynb
+  - uncertainties.ipynb
+- Developer Guide:
+  - github.ipynb
+  - testing.ipynb
+  - documentation.ipynb
+- Details:
+  - compare-nasa-exoplanet-archive-tables.ipynb
+  - using-skewnormal-for-asymmetric-uncertainties.ipynb
+- acknowledgements.ipynb
 
 theme:
   name: "material"
@@ -32,6 +32,13 @@ plugins:
   - mkdocs-jupyter:
       execute : True
       include_source : True
+  - mkdocs-autoapi:
+      autoapi_file_patterns:
+        - "*.py"
+      autoapi_dir: exoatlas/
+      autoapi_add_nav_entry: Reference
+  - mkdocstrings
+
   - exclude:
       glob:     
         - "downloads-for-exoatlas/*"
