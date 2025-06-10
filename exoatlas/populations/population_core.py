@@ -642,8 +642,8 @@ class Population:
             except KeyError:
                 subset = self.create_subset_by_hostname(key)
 
-        # kind of kludgy, to enforce different colors
-        subset._plotkw["color"] = None
+        # kind of kludgy, to enforce a different color
+        subset._plotkw["color"] = "orangered"
         subset._plotkw["c"] = None
         subset._plotkw["zorder"] = subset._plotkw.get("zorder", 1) + 1
 
