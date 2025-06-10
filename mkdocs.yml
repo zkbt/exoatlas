@@ -37,8 +37,14 @@ plugins:
         - "*.py"
       autoapi_dir: exoatlas/
       autoapi_add_nav_entry: Reference
-  - mkdocstrings
-
+  - mkdocstrings:
+      default_handler: python
+      handlers:
+        python:
+          paths: exoatlas/
+          options:
+            docstring_style: numpy
+            docstring_section_style: table
   - exclude:
       glob:     
         - "downloads-for-exoatlas/*"
