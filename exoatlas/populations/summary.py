@@ -4,7 +4,7 @@ Tools to summarize a particular population.
 
 from ..imports import *
 
-__all__ = ["plot_histograms", "summarize_planet"]
+__all__ = ["plot_histograms"]
 
 
 def split_cols(pop):
@@ -58,12 +58,3 @@ def plot_histograms(pop):
         plt.axvspan(*plt.xlim(), 0, badfraction, color="red", alpha=0.5, zorder=-1)
         plt.xlabel(x)
         plt.title(f"{x} lacks {sum(bad)}/{len(bad)} ({badfraction:.0%})")
-
-
-def summarize_planet(planets):
-    """
-    Quick tool to print out everything we need about a planet.
-    """
-    for p in planets:
-        for k in all_columns:
-            print(f"{k:>20} = {getattr(p, k)()}")

@@ -9,7 +9,7 @@ def test_population():
     Can we make a population from scratch from a table?
     """
 
-    fake = QTable({x: [0] * 3 for x in core_descriptions}, masked=True)
+    fake = QTable({x: [0] * 3 for x in ["name", "hostname"]}, masked=True)
     p = Population(standard=fake, label="fake")
     p._validate_columns()
     p.print_column_summary()
@@ -107,7 +107,7 @@ def test_attributes():
     p.alpha = 0.5
     assert p._plotkw["alpha"] == 0.5
 
-    for k in self._required_columns:
+    for k in p._required_columns:
         getattr(p, k)
 
 
@@ -115,8 +115,6 @@ def test_transiting(planet="GJ1214b"):
     with mock.patch("builtins.input", return_value=""):
         t = TransitingExoplanets()
         p = t[planet]
-
-    summarize_planet(p)
 
     p.transmission_signal(mu=5, threshold=3)
     p.transmission_snr(
