@@ -33,4 +33,4 @@ class TransitingExoplanets(Exoplanets):
         """
         ok = self.detected_in_transit() == 1
 
-        self.standard = self.standard[ok]
+        self.table = self.table[ok]

@@ -10,9 +10,9 @@ __all__ = ["plot_histograms"]
 def split_cols(pop):
     # find the columns that aren't strings
     quant, qual = [], []
-    for x in pop.standard.colnames:
+    for x in pop.table.colnames:
         try:
-            pop.standard[x][0] + "a"
+            pop.table[x][0] + "a"
             qual.append(x)
         except TypeError:
             quant.append(x)
@@ -30,7 +30,7 @@ def plot_histograms(pop):
 
     cols = []
     for x in string_cols:
-        if len(np.unique(pop.standard[x])) < 50:
+        if len(np.unique(pop.table[x])) < 50:
             cols.append(x)
     cols += quant_cols
 
@@ -47,14 +47,14 @@ def plot_histograms(pop):
 
     for i, x in enumerate(cols):
         if x in quant_cols:
-            good = np.isfinite(pop.standard[x])
+            good = np.isfinite(pop.table[x])
         else:
-            good = np.ones(len(pop.standard)).astype(bool)
+            good = np.ones(len(pop.table)).astype(bool)
         bad = good == False
         badfraction = sum(bad) / len(bad)
 
         plt.sca(ax.flatten()[i])
-        plt.hist(pop.standard[x][good], color="black")
+        plt.hist(pop.table[x][good], color="black")
         plt.axvspan(*plt.xlim(), 0, badfraction, color="red", alpha=0.5, zorder=-1)
         plt.xlabel(x)
         plt.title(f"{x} lacks {sum(bad)}/{len(bad)} ({badfraction:.0%})")

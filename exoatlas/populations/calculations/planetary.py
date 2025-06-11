@@ -161,7 +161,7 @@ def argument_of_periastron(self, distribution=False, **kw):
         which can be used for error propagation.
     """
     # pull out the actual values from the table
-    argument_of_periastron = self.standard["argument_of_periastron"].copy()
+    argument_of_periastron = self.table["argument_of_periastron"].copy()
 
     # replace nans with 0
     if distribution == False:
