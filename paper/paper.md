@@ -9,9 +9,21 @@ authors:
   - name: Zach K. Berta-Thompson
     orcid: 0000-0002-3321-4924
     affiliation: 1
+  - name: Patcharapol Wachiraphan
+    orcid: 0000-0001-6484-7559
+    affiliation: 1
+  - name: Autumn Stephens
+    orcid: ???
+    affiliation: 1
+  - name: Mirielle Caradonna
+    orcid: ???
+    affiliation: 1
   - name: Girish M. Duvvuri
     orcid: 0000-0002-7119-2543
     affiliation: 2
+  - name: Sebastian Pineda? 
+    orcid: 
+    affiliation: 3
 affiliations:
  - name: Department of Astrophysical and Planetary Sciences, University of Colorado Boulder, USA
    index: 1
