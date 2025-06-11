@@ -126,7 +126,7 @@ class SolarSystem(PredefinedPopulation):
 
         s
 
-        self.standard = s
+        self.table = s
         return s
 
 
