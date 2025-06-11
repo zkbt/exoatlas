@@ -5,27 +5,32 @@ nav:
 - installation.ipynb
 - quickstart.ipynb
 - User Guide:
-  - populations.ipynb
-  - creating.ipynb
-  - curating.ipynb
-  - filtering.ipynb
-  - visualizing.ipynb
-  - observing.ipynb
-  - planning.ipynb
-  - uncertainties.ipynb
+  - user/index.md
+  - user/populations.ipynb
+  - user/creating.ipynb
+  - user/curating.ipynb
+  - user/filtering.ipynb
+  - user/visualizing.ipynb
+  - user/observing.ipynb
+  - user/planning.ipynb
+  - user/uncertainties.ipynb
 - Developer Guide:
-  - github.ipynb
-  - testing.ipynb
-  - documentation.ipynb
+  - developer/index.md
+  - developer/github.ipynb
+  - developer/testing.ipynb
+  - developer/documentation.ipynb
 - Details:
-  - compare-nasa-exoplanet-archive-tables.ipynb
-  - using-skewnormal-for-asymmetric-uncertainties.ipynb
+  - details/index.md
+  - details/compare-nasa-exoplanet-archive-tables.ipynb
+  - details/using-skewnormal-for-asymmetric-uncertainties.ipynb
 - acknowledgements.ipynb
 
 theme:
   name: "material"
   features:
-      - navigation.tracking
+    - navigation.tracking
+    - navigation.path
+    - navigation.indexes
 repo_url: https://github.com/zkbt/exoatlas/
 plugins:
   - search
@@ -41,7 +46,7 @@ plugins:
       default_handler: python
       handlers:
         python:
-          paths: exoatlas/
+          paths: .
           options:
             docstring_style: numpy
             docstring_section_style: table
