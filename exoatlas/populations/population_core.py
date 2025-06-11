@@ -1,9 +1,5 @@
 # general class for exoplanet populations
 from ..imports import *
-
-# from ..telescopes import *
-# from ..models import *
-from .column_descriptions import *
 from .pineda_skew import make_skew_samples_from_lowerupper, gaussian_central_1sigma
 
 # these are keywords that can be set for a population
@@ -83,6 +79,40 @@ class Population:
     or more!
     """
 
+    # columns that are required for all populations
+    _required_columns = ["name", "hostname"]
+
+    # general methods (all others will be interpreted as quantities)
+    _population_methods = [
+        "add_calculation",
+        "add_column",
+        "create_planning_table",
+        "create_subset_by_hostname",
+        "create_subset_by_name",
+        "create_subset_by_position",
+        "create_table",
+        "display_individual_references",
+        "get",
+        "get_available_quantities",
+        "get_fractional_uncertainty",
+        "get_uncertainty",
+        "get_uncertainty_from_table",
+        "get_uncertainty_lowerupper",
+        "get_uncertainty_lowerupper_from_table",
+        "get_values_from_table",
+        "help",
+        "label",
+        "standard",
+        "load_individual_references",
+        "plot_measurements_from_individual_references",
+        "print_column_summary",
+        "save",
+        "show_upcoming_transits",
+        "sort",
+        "update_reference",
+        "update_values",
+    ]
+
     def __init__(self, standard, label=None, **plotkw):
         """
         Initialize a Population of exoplanets from a standardized table.
@@ -114,7 +144,7 @@ class Population:
             #  so that astropy.table doesn't try to track slices across
             #  too many subsets, because it was getting lost in weird ways)
 
-            # store a label for this population
+            # store a label for this `Population`
             self.label = label
 
             # keywords to use for plotting
@@ -158,7 +188,7 @@ class Population:
 
     def _create_function_to_access_table_quantity(self, name):
         """
-        For a given column name "x", add a `.x()` method to this Population.
+        For a given column name "x", add a `.x()` method to this `Population`.
 
         This internal wrapper creates a named method to access
         the data in a particular column of the standardized table.
@@ -336,13 +366,13 @@ class Population:
         # register the method for the column
         if hasattr(self, name):
             warnings.warn(
-                f"'.{name}()' already exists in `.standard` for this Population; please consider a different name!"
+                f"'.{name}()' already exists in `.standard` for this `Population`; please consider a different name!"
             )
         setattr(self, name, self._create_function_to_access_table_quantity(name))
 
     def add_calculation(self, name, function):
         """
-        Add a new calculation to this population.
+        Add a new calculation to this `Population`.
 
         This wrapper adds a new method to calculate a new quantity,
         defining a new function that can be called with access to the
@@ -418,7 +448,7 @@ class Population:
     @property
     def _fileprefix(self):
         """
-        Define a fileprefix for this population, to be used
+        Define a fileprefix for this `Population`, to be used
         for setting the filename of the standardized population.
 
         Return
@@ -435,9 +465,9 @@ class Population:
 
     def save(self, filename=None, overwrite=True):
         """
-        Save this population out to a file.
+        Save this `Population` out to a file.
 
-        This saves the standardized data table from this population
+        This saves the standardized data table from this `Population`
         out to a file, along with metadata needed to be loaded
         back into as a drop-in replacement for a live population.
 
@@ -480,7 +510,7 @@ class Population:
 
     def sort(self, x, reverse=False):
         """
-        Sort this population by some key or attribute.
+        Sort this `Population` by some key or attribute.
 
         This sorts the population in place, meaning that the
         Population object from which it is called will be modified.
@@ -657,7 +687,7 @@ class Population:
 
     def create_subset_by_name(self, key):
         """
-        Extract a subset of this population,
+        Extract a subset of this `Population`,
         based on one or more planet names.
 
         Parameters
@@ -699,7 +729,7 @@ class Population:
 
     def create_subset_by_hostname(self, key):
         """
-        Extract a subset of this population,
+        Extract a subset of this `Population`,
         based on one or more planet hostnames.
 
         Parameters
@@ -747,10 +777,10 @@ class Population:
         return_indices=False,
     ):
         """
-        Extract a subset of this population,
+        Extract a subset of this `Population`,
         by performing a spatial cross-match by
         RA and Dec. This will return all planets
-        from this population that fall within
+        from this `Population` that fall within
         the specified radius of at least one of
         the specified coordinates.
 
@@ -789,7 +819,7 @@ class Population:
         if use_proper_motions:
             raise NotImplementedError("No cross-matching with proper motions yet :-(")
 
-        # create astropy coordinates for this population
+        # create astropy coordinates for this `Population`
         population_coords = SkyCoord(ra=self.ra(), dec=self.dec())
 
         # do a spatial cross match on the sky
@@ -984,7 +1014,7 @@ class Population:
         if key in ["label", "_plotkw", "standard"]:
             raise RuntimeError(
                 f"""
-                Yikes! It looks like `.{key}` isn't defined for this Population. 
+                Yikes! It looks like `.{key}` isn't defined for this `Population`. 
                 Ideally, this error should never been seen, but if it does, something's 
                 gone dreadfully wrong. 
                 """
@@ -1261,7 +1291,7 @@ class Population:
         """
 
         N = len(self.standard)
-        for k in basic_columns:
+        for k in self._required_columns:
             try:
                 n = sum(self.standard[k].mask == False)
             except AttributeError:
@@ -1353,9 +1383,41 @@ class Population:
 
     def __len__(self):
         """
-        How many planets are in this population?
+        How many planets are in this `Population`?
         """
         return len(self.standard)
+
+    def get_available_quantities(self):
+        """
+        Get a list of all available quantities for this `Population`.
+        """
+        return [
+            k
+            for k in dir(self)
+            if (k[0] != "_") and (k not in self._population_methods)
+        ]
+
+    def help(self, what_to_help_with=["methods", "quantities"]):
+        """
+        Describe the methods available in this `Population`.
+        """
+
+        # categories of methods to describe
+        lists = dict(
+            methods=self._population_methods,
+            quantities=self.get_available_quantities(),
+        )
+        emoji = dict(methods="🧶", quantities="⚖️")
+        for w in what_to_help_with:
+            e = emoji[w]
+            print(f"{e} The available {w} are:")
+            for k in lists[w]:
+                try:
+                    summary = getattr(self, k).__doc__.splitlines()[1].strip()
+                except (IndexError, AttributeError):
+                    summary = ""
+                print(f" {k} = {summary}")
+            print()
 
     def create_table(
         self,
@@ -1371,7 +1433,7 @@ class Population:
         ],
     ):
         """
-        Create an astropy table based on this population,
+        Create an astropy table based on this `Population`,
         using a subset of columns, which may include ones
         that have been calculated as Population properties.
 

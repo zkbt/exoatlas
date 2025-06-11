@@ -107,7 +107,7 @@ def test_attributes():
     p.alpha = 0.5
     assert p._plotkw["alpha"] == 0.5
 
-    for k in basic_columns:
+    for k in self._required_columns:
         getattr(p, k)
 
 
