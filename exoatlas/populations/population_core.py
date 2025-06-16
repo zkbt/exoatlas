@@ -638,11 +638,13 @@ class Population:
 
         try:
             # if the key is an index/slice/mask, return it
-            if self.label is None:
-                label = None
-            else:
-                label = f"Subset of {self.label}"
-            subset = type(self)(standard=self.table[key], label=label, **self._plotkw)
+            # if self.label is None:
+            #    label = None
+            # else:
+            #    label = f"Subset of {self.label}"
+            subset = type(self)(
+                standard=self.table[key], label=self.label, **self._plotkw
+            )
 
             # if the key is a column, raise an error
             if type(key) in self.table.colnames:
@@ -667,20 +669,27 @@ class Population:
                 subset = self.create_subset_by_hostname(key)
 
         # kind of kludgy, to enforce a different color
-        subset._plotkw["color"] = "orangered"
-        subset._plotkw["c"] = None
-        zorder = subset._plotkw.get("zorder", 1)
-        if zorder is not None:
-            zorder += 1
-        subset._plotkw["zorder"] = zorder
-
-        # KLUDGE to put tiny subsets on top; FIXME?!
-        if len(subset) < 10:
-            subset._plotkw["bubble_anyway"] = True
-            # subset._plotkw["s"] = 256
-            subset._plotkw["zorder"] = 10000
+        # subset._plotkw["color"] = None
+        # subset._plotkw["c"] = None
+        # zorder = subset._plotkw.get("zorder", 1)
+        # if zorder is not None:
+        #    zorder += 1
+        # subset._plotkw["zorder"] = zorder
 
         return subset
+
+    def _make_visually_distinct(self):
+        """
+        Make a (likely small) Population stand out visually.
+
+        This function is called when the Population is
+        indexed by name to isolate a small set of individual
+        systems.
+        """
+        self._plotkw["color"] = "orangered"
+        self._plotkw["zorder"] = 10000
+        self._plotkw["bubble_anyway"] = self._plotkw.get("bubble_anyway", True)
+        self._plotkw["s"] = np.maximum(self._plotkw.get("s", 1), 64)
 
     def create_subset_by_name(self, key):
         """
@@ -722,7 +731,9 @@ class Population:
             label = "+".join(key)
 
         # create that new sub-population
-        return type(self)(standard=subset, label=label, **self._plotkw)
+        new = type(self)(standard=subset, label=label, **self._plotkw)
+        new._make_visually_distinct()
+        return new
 
     def create_subset_by_hostname(self, key):
         """
@@ -764,7 +775,9 @@ class Population:
             label = "+".join(key)
 
         # create that new sub-population
-        return type(self)(standard=subset, label=label, **self._plotkw)
+        new = type(self)(standard=subset, label=label, **self._plotkw)
+        new._make_visually_distinct()
+        return new
 
     def create_subset_by_position(
         self,
@@ -1428,6 +1441,7 @@ class Population:
             "dec",
             "distance",
         ],
+        **kw,
     ):
         """
         Create an astropy table based on this `Population`,
@@ -1440,7 +1454,11 @@ class Population:
             The columns you want to include. Anything that
             can be accessed via Population.??? can be provided
             here as a string.
-
+        **kw : dict
+            All additional keywords will be passed to all
+            methods. For example, `wavelength=` will be passed
+            to all quantity methods, and those that will do
+            something with a `wavelength=` keyword will notice it.
         Returns
         -------
         table : astropy.table.QTable
@@ -1450,7 +1468,7 @@ class Population:
         # FIXME! need to add method support for arguments
 
         # create a dictionary with the desired columns
-        d = {c: getattr(self, c)() for c in desired_columns}
+        d = {c: getattr(self, c)(**kw) for c in desired_columns}
 
         # turn that into an astropy Table
         t = QTable(d)

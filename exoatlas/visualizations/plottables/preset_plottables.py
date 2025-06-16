@@ -116,7 +116,7 @@ class RelativeEscapeVelocity(Plottable):
     source = "relative_escape_velocity"
     label = "Escape Velocity\n(relative to Earth)"
     scale = "log"
-    lim = [2, 500]
+    lim = [0.1, 100]
 
 
 class EscapeParameter(Plottable):
