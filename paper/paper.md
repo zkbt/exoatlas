@@ -77,7 +77,7 @@ e = TransitingExoplanets()
 s = SolarSystem()
 h = e["HD209458b"]
 
-PlanetGallery().build([e, s, h])
+PlanetGalleryWithEscape().build([e, s, h])
 ```
 ![Example `exoatlas` visualization placing the first discovered transiting exoplanet HD209458b in context with other transiting exoplanets and the eight major Solar System planets. Errorbars use a color intensity that scales inversely with quantity uncertainties, to avoid giving undue visual weight to the least precise data. \label{fig:exoatlas}](joss-exoatlas-example.png)
 

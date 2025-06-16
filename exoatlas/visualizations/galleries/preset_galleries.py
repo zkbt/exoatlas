@@ -2,7 +2,7 @@ from .Gallery import *
 from .GridGallery import *
 
 
-class PlanetGallery(Gallery):
+class PlanetGalleryWithEscape(Gallery):
     """
     This Gallery is designed to give a quick
     look at populations of transiting exoplanets,
@@ -72,7 +72,7 @@ def add_size_explainer(ax=None, label="", x=0.95, y=0.95, ha="right", va="top", 
     )
 
 
-class SimplePlanetGallery(Gallery):
+class PlanetGallery(Gallery):
     """
     This Gallery is designed to give a quick
     look at populations of transiting exoplanets,
