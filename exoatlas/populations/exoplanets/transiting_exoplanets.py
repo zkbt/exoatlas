@@ -1,5 +1,5 @@
 """
-Define a subset of all exoplanets for only those known to transit. 
+Define a subset of all exoplanets for only those known to transit.
 """
 
 from ...imports import *
@@ -33,4 +33,4 @@ class TransitingExoplanets(Exoplanets):
         """
         ok = self.detected_in_transit() == 1
 
-        self.standard = self.standard[ok]
+        self.table = self.table[ok]

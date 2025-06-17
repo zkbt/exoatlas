@@ -28,11 +28,13 @@ def clean_pops(initial):
     elif type(initial) == list:
         d = {}
         for p in initial:
-            label = p.label
-            if label in d:
-                label += "+"
-            p.label = label
-            d[label] = p
+            key = getattr(p, "_temporary_key", p.label)
+            if key is None:
+                key = "+"
+            if key in d:
+                key += "+"  # FIXME! THIS IS SUCH KLUDGE!
+            p._temporary_key = key
+            d[key] = p
         return d
     else:
         # (otherwise, assume it's already a single population)

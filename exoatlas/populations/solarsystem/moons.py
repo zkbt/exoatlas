@@ -77,7 +77,7 @@ class SolarSystemMoons(PredefinedPopulation):
         s["ra"] = np.nan * 0.0 * u.deg
         s["dec"] = np.nan * 0.0 * u.deg
         # get orbit properties from the Solar System planet hosts
-        planets = solar.standard["name", "period", "semimajoraxis"]
+        planets = solar.table["name", "period", "semimajoraxis"]
         planets.columns[0].name = "planet"
 
         merged = join(planets, s, keys="planet")

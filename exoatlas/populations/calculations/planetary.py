@@ -161,7 +161,7 @@ def argument_of_periastron(self, distribution=False, **kw):
         which can be used for error propagation.
     """
     # pull out the actual values from the table
-    argument_of_periastron = self.standard["argument_of_periastron"].copy()
+    argument_of_periastron = self.table["argument_of_periastron"].copy()
 
     # replace nans with 0
     if distribution == False:
@@ -531,13 +531,67 @@ def transit_duration(self, distribution=False, **kw):
     )
 
 
-def mass_estimated_from_radius(self, distribution=False, **kw):
+def mass_estimated_from_radius_assuming_rockyish(self, distribution=False, **kw):
+    """
+    Planet Mass (M_earth)
+
+    Estimate a planet's mass from its radius assuming it's rocky,
+    following the mass-radius relation with intrinsic scatter
+    from Berta-Thompson et al. (2025).
+
+    Parameters
+    ----------
+    distribution : bool
+        If False, return a simple array of values.
+        If True, return an astropy.uncertainty.Distribution,
+        which can be used for error propagation.
+    """
+    mu = np.array([3.377, 0.053, -0.172, -1.018])
+    m, b, m_sigma, b_sigma = mu
+    covariance_matrix = np.array(
+        [
+            [8.11697658e-04, 7.94668946e-05, -2.85573628e-04, -5.03067330e-04],
+            [7.94668946e-05, 1.16297907e-03, 1.05364126e-04, 5.94249835e-04],
+            [-2.85573628e-04, 1.05364126e-04, 1.24167859e-03, 2.33621940e-03],
+            [-5.03067330e-04, 5.94249835e-04, 2.33621940e-03, 1.04721141e-02],
+        ]
+    )
+    rocky_radius_cutoff = 1.8 * u.Rearth
+
+    if distribution:
+        n_samples = self._number_of_uncertainty_samples
+        parameters = np.random.multivariate_normal(
+            mu, covariance_matrix, size=n_samples
+        ).T
+        m, b, m_log_lambda, b_log_lambda = [Distribution(p) for p in parameters]
+
+    R = self.get("radius", distribution=distribution)
+    logR = np.log10(R.to_value("R_earth"))
+    logM = m * logR + b
+
+    if distribution:
+        lnsigma = m_log_lambda * logR + b_log_lambda
+        sigma = np.exp(lnsigma)
+        delta_logM_from_intrinsic_scatter = np.random.normal(
+            0, sigma.distribution
+        )  # , n_samples=R.n_samples)
+        logM = Distribution(logM.distribution + delta_logM_from_intrinsic_scatter)
+    M = 10**logM * u.Mearth
+
+    out_of_range = self.radius() > rocky_radius_cutoff
+    M[out_of_range] = np.nan
+    return M
+
+
+def mass_estimated_from_radius_assuming_chen_and_kipping(
+    self, distribution=False, **kw
+):
     """
     Estimated Planet Mass (Earth masses)
 
     Retrieve an estimate of the planet mass from the
     planet's radius, using a very approximate
-    empirical relation.
+    empirical relation from Chen and Kipping (2017)
 
     Parameters
     ----------
@@ -549,13 +603,15 @@ def mass_estimated_from_radius(self, distribution=False, **kw):
     """
     if distribution:
         raise RuntimeError(
-            "mass_estimated_from_radius does not propagate uncertainties yet; sorry!"
+            "mass_estimated_from_radius_assuming_chen_and_kipping does not propagate uncertainties yet; sorry!"
         )
     radius = self.get("radius", distribution=False)
     return use_chen_and_kipping_to_estimate_mass_from_radius(R=radius)
 
 
-def radius_estimated_from_mass(self, distribution=False, **kw):
+def radius_estimated_from_mass_assuming_chen_and_kipping(
+    self, distribution=False, **kw
+):
     """
     Estimated Planet Radius (Earth radii)
 
@@ -573,7 +629,7 @@ def radius_estimated_from_mass(self, distribution=False, **kw):
     """
     if distribution:
         raise RuntimeError(
-            "radius_estimated_from_mass does not propagate uncertainties yet; sorry!"
+            "radius_estimated_from_mass_assuming_chen_and_kipping does not propagate uncertainties yet; sorry!"
         )
 
     mass = self.get("mass", distribution=False)
@@ -598,7 +654,12 @@ def kludge_mass(self, distribution=False, **kw):
 
     """
     return self._choose_calculation(
-        methods=["mass_from_table", "msini_from_orbit", "mass_estimated_from_radius"],
+        methods=[
+            "mass_from_table",
+            "msini_from_orbit",
+            "mass_estimated_from_radius_assuming_rockyish",
+            #            "mass_estimated_from_radius_assuming_chen_and_kipping",
+        ],
         distribution=distribution,
         **kw,
     )
@@ -623,7 +684,7 @@ def kludge_radius(self, distribution=False, **kw):
     return self._choose_calculation(
         methods=[
             "radius_from_table",
-            "radius_estimated_from_mass",
+            # "radius_estimated_from_mass_assuming_chen_and_kipping",
         ],
         distribution=distribution,
         **kw,
@@ -762,6 +823,35 @@ def escape_velocity(self, kludge=False, distribution=False, **kw):
     G = con.G
     escape_velocity = np.sqrt(2 * G * M / R).to("km/s")
     return escape_velocity
+
+
+def relative_escape_velocity(self, kludge=False, distribution=False, **kw):
+    """
+    Planet Escape Velocity (relative to Earth)
+
+    Calculate the planet's escape velocity
+    from its mass and radius, divided
+    by Earth's escape velocity.
+
+    Parameters
+    ----------
+    kludge : bool
+        Should we include kludged estimates for mass (from msini and/or
+        empirical mass-radius) and/or radius (from empircal mass-radius)
+        when doing this calculation?
+    distribution : bool
+        If False, return a simple array of values.
+        If True, return an astropy.uncertainty.Distribution,
+        which can be used for error propagation.
+    """
+
+    escape_velocity = self.get(
+        "escape_velocity", kludge=kludge, distribution=distribution
+    )
+
+    G = con.G
+    earth_escape_velocity = np.sqrt(2 * G * u.Mearth / u.Rearth)
+    return (escape_velocity / earth_escape_velocity).decompose()
 
 
 def orbital_velocity(self, distribution=False, **kw):

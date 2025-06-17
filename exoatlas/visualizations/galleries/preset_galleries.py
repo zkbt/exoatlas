@@ -2,7 +2,7 @@ from .Gallery import *
 from .GridGallery import *
 
 
-class PlanetGallery(Gallery):
+class PlanetGalleryWithEscape(Gallery):
     """
     This Gallery is designed to give a quick
     look at populations of transiting exoplanets,
@@ -40,7 +40,6 @@ class PlanetGallery(Gallery):
         #
         plt.sca(self.maps["flux_x_radius"].ax)
         self.maps["flux_x_radius"].plot_hz()
-        self.maps["flux_x_radius"].ticks_simplify_exponents("y")
         self.maps["flux_x_radius"].add_teqaxis()
         self.maps["flux_x_radius"].remove_ylabel()
         self.maps["flux_x_radius"].add_legend(frameon=False, fontsize=8)
@@ -56,7 +55,7 @@ class PlanetGallery(Gallery):
         plt.sca(self.maps["flux_x_escape"].ax)
         self.maps["flux_x_escape"].remove_xlabel()
         self.maps["flux_x_escape"].remove_ylabel()
-        self.maps["flux_x_escape"].plot_constant_lambda()
+        # self.maps["flux_x_escape"].plot_constant_lambda()
 
         plt.sca(self.maps["radius_x_radius"].ax)
         self.maps["radius_x_radius"].remove_ylabel()
@@ -73,7 +72,7 @@ def add_size_explainer(ax=None, label="", x=0.95, y=0.95, ha="right", va="top", 
     )
 
 
-class SimplePlanetGallery(Gallery):
+class PlanetGallery(Gallery):
     """
     This Gallery is designed to give a quick
     look at populations of transiting exoplanets,

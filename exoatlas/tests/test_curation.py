@@ -7,7 +7,7 @@ def test_load_references():
     e = Exoplanets()
     e.load_individual_references()
     p = e["GJ1132b"]
-    assert len(p.individual_references.standard) > len(p.standard)
+    assert len(p.individual_references.table) > len(p.table)
 
 
 def test_check_and_update_references():
