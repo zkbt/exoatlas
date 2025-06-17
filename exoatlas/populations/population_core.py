@@ -1371,13 +1371,13 @@ class Population:
                 for suffix, sign in zip(["_lower", "_upper"], [-1, 1]):
                     old = self.table[i][k + suffix] * 1
                     new = sign * np.abs(v)
-                    self.table[i][k + suffix] = new
+                    self.table[k + suffix][i] = new
                     print(f"{planets_to_index} | {k+suffix}: {old} > {new}")
             else:
                 # update value in table
-                old = self.table[i][k] * 1
+                old = self.table[k][i] * 1
                 new = v
-                self.table[i][k] = new
+                self.table[k][i] = new
                 print(f"{planets_to_index} | {k}: {old} > {new}")
 
             # warn if uncertainties should have been provided but weren't
