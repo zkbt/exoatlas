@@ -689,7 +689,7 @@ class Population:
         self._plotkw["color"] = "orangered"
         self._plotkw["zorder"] = 10000
         self._plotkw["bubble_anyway"] = self._plotkw.get("bubble_anyway", True)
-        self._plotkw["s"] = np.maximum(self._plotkw.get("s", 1), 64)
+        self._plotkw["s"] = np.maximum(self._plotkw.get("s", 1), 256)
 
     def create_subset_by_name(self, key):
         """
