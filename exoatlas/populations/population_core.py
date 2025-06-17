@@ -1196,8 +1196,18 @@ class Population:
         # first try for uncertainties direct from table
         try:
             sigma_lower, sigma_upper = self.get_uncertainty_lowerupper_from_table(key)
+
+            # KLUDGE for stellar_luminosity, which has a calculation choice *and* appears in table
+            # (FIXME - we should be more explicit about how we overwrite table columns)
+            assert np.isfinite(sigma_lower * sigma_upper).all()
+            # This assertion will force a Distribution-based uncertainty estimate if
+            # *any* of the uncertainties in the table columns are nan; that means
+            # practically that if there's a calculation choice (like stellar_luminosity)
+            # the uncertainties will propagate through there. This *might* be what
+            # we want, but I'm not 100% positive of that yet.
+
             return sigma_lower, sigma_upper
-        except KeyError:
+        except (AssertionError, KeyError):
             mu = self.get(key, **kw)
             with warnings.catch_warnings():
                 warnings.simplefilter("ignore", category=RuntimeWarning)
