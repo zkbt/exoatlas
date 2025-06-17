@@ -129,7 +129,7 @@ def plot_airmass_for_transit(row, max_airmass=2.0, savefig=False):
     if savefig:
         mkdir("airmass-plots")
         plt.savefig(
-            f"airmass-plots/{clean(row["name"])}-{row["midpoint"].iso.split()[0]}.png",
+            f'airmass-plots/{clean(row["name"])}-{row["midpoint"].iso.split()[0]}.png',
             bbox_inches="tight",
         )
 
