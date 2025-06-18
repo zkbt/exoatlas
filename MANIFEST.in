@@ -1,0 +1,2 @@
+recursive-include exoatlas *.txt
+recursive-include exoatlas *.ecsv
