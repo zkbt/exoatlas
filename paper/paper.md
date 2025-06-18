@@ -43,7 +43,7 @@ affiliations:
  - name: Laboratory for Atmospheric and Space Physics, University of Colorado Boulder, USA
    index: 3 
    ror: 01fcjzv38
-date: 16 June 2025?
+date: 20 June 2025?
 bibliography: paper.bib
 
 # Optional fields if submitting to a AAS journal too, see this blog post:
