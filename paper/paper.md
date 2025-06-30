@@ -66,7 +66,7 @@ Planets are complicated. Understanding how they work requires connecting individ
 - 🔭 planning future telescope observations of known exoplanet systems
 - 🧑‍🏫 making beautiful and up-to-date planet data visualizations
 
-Online planetary data archives merge incredible curatorial efforts with powerful tools for data access and visualization, including the NASA Exoplanet Archive [@exo-archive], exoplanet.eu [@???], exo.MAST [@???], and Open Exoplanet Catalog [@open-exo] for exoplanets and the JPL Solar System Dynamics [@???], IAU Minor Planet Center [@???], the NSSDCA Planetary Facts sheets [@???] for Solar System objects. `exoatlas` does not intend to replace any of these important archival efforts (it pulls nearly all its data from them); rather, `exoatlas` aims to provide an approachable interface for exploratory analysis and illuminating visualizations to help the community make better use of these resources. 
+Online planetary data archives merge incredible curatorial efforts with powerful tools for data access and visualization, including the NASA Exoplanet Archive [@exo-archive], exoplanet.eu [@???], exo.MAST [@???], TEPCat [@tepcat], Open Exoplanet Catalog [@open-exo] for exoplanets and the JPL Solar System Dynamics [@???], IAU Minor Planet Center [@???], the NSSDCA Planetary Facts sheets [@???] for Solar System objects. `exoatlas` does not intend to replace any of these important archival efforts (it pulls nearly all its data from them); rather, `exoatlas` aims to provide an approachable interface for exploratory analysis and illuminating visualizations to help the community make better use of these resources. 
 
 # Mapping populations with `exoatlas` 
 
