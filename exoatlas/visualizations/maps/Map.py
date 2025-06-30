@@ -416,6 +416,7 @@ class Map:
         ha="left",
         va="center",
         format="   {}",
+        names=[],
         **kw,
     ):
         """
@@ -432,6 +433,9 @@ class Map:
         restrictlimits : bool
             Should we plot names only for those planets that fall within
             the map's x and y limits?
+        names : list
+            Only label planet names or host names that appear in this
+            list. If empty, no limits on names.
         **kw : dict
             Any additional keywords will be passed to the `text` command.
         """
@@ -452,14 +456,20 @@ class Map:
         )
         textkw.update(**kw)
 
-        if adjust:
-            ha = "left"
-            va = "center"
+        # searchable list
+        tidynames = [clean(x).lower() for x in names]
 
         # loop over the elements in the population
         for i in range(len(self.x)):
+
             # pull out the positions and the name
             x, y, name = self.x[i], self.y[i], self.pop.name()[i]
+
+            tidyname = self.pop.tidyname()[i]
+            tidyhost = self.pop.tidyname()[i]
+            if len(tidynames) > 0:
+                if (tidyname not in tidynames) and (tidyhost not in tidynames):
+                    continue
 
             # skip over the planets that aren't within limits
             if restrictlimits:

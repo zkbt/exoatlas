@@ -183,7 +183,7 @@ class ErrorMap(BubbleMap):
                     #    bottom="white", top=color, alphabottom=1.0, alphatop=1.0
                     # ),
                     cmap=one2another(
-                        bottom=color, top=color, alphabottom=0.0, alphatop=1.0
+                        bottom=color, top=color, alphabottom=0.3, alphatop=1.0
                     ),
                     zorder=self.pop._plotkw.get("zorder", None),
                     **kw,
