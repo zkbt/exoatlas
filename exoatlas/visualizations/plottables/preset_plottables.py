@@ -86,7 +86,7 @@ class StellarTeff(Plottable):
 
 class StellarLuminosity(Plottable):
     source = "stellar_luminosity"
-    label = "Stellar Luminosity (L_$\odot$)"
+    label = "Stellar Luminosity (L$_\odot$)"
     scale = "log"
     lim = [None, None]
 

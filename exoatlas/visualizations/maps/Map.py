@@ -4,6 +4,7 @@
 from ...imports import *
 from ..plottables.plottable import *
 from ...populations import Population
+from adjustText import adjust_text
 
 
 def clean_pops(initial):
@@ -407,9 +408,19 @@ class Map:
             kw.update(**getattr(self.pop, "annotate_kw", {}))
             self.annotate_planets(self.pop_key, **kw)
 
-    def annotate_planets(self, pop, before="\n", after="", restrictlimits=False, **kw):
+    def annotate_planets(
+        self,
+        pop,
+        restrictlimits=False,
+        adjust=False,
+        ha="left",
+        va="center",
+        format="   {}",
+        names=[],
+        **kw,
+    ):
         """
-        Label the planets in whatever population we're pointed at.
+        Label the planet hosts in whatever population we're pointed at.
 
         Parameters
         ----------
@@ -417,13 +428,14 @@ class Map:
             The population to plot. This could be either an
             actual Population object, or a key referring to
             an element of the `self.populations` dictionary.
-        before : str
-            Add the string at the start of each name.
-        after : str
-            Add the string at the end of each name.
+        adjust : bool
+            Should we try to adjust the annotations to avoid overlap?
         restrictlimits : bool
             Should we plot names only for those planets that fall within
             the map's x and y limits?
+        names : list
+            Only label planet names or host names that appear in this
+            list. If empty, no limits on names.
         **kw : dict
             Any additional keywords will be passed to the `text` command.
         """
@@ -434,10 +446,30 @@ class Map:
         # make sure we're set to the current axes
         plt.sca(self.ax)
 
+        # define some defaults for the text
+        textkw = dict(
+            fontsize=6,
+            color=self.pop.color,
+            alpha=self.pop.alpha,
+            zorder=self.pop.zorder,
+            clip_on=True,
+        )
+        textkw.update(**kw)
+
+        # searchable list
+        tidynames = [clean(x).lower() for x in names]
+
         # loop over the elements in the population
         for i in range(len(self.x)):
+
             # pull out the positions and the name
             x, y, name = self.x[i], self.y[i], self.pop.name()[i]
+
+            tidyname = self.pop.tidyname()[i]
+            tidyhost = self.pop.tidyname()[i]
+            if len(tidynames) > 0:
+                if (tidyname not in tidynames) and (tidyhost not in tidynames):
+                    continue
 
             # skip over the planets that aren't within limits
             if restrictlimits:
@@ -449,30 +481,26 @@ class Map:
                 except TypeError:  # (are there other errors we need to add?)
                     pass
 
-            # define some defaults for the text
-            textkw = dict(
-                ha="center",
-                va="top",
-                fontsize=6,
-                color=self.pop.color,
-                alpha=self.pop.alpha,
-                clip_on=True,
-                zorder=self.pop.zorder,
-            )
-
-            # think this is just as Python 3 thing
-            textkw.update(**kw)
-
             # store the text plot, so it can be modified
             try:
                 assert np.isfinite(x * y)
-                self.annotated[name] = plt.text(x, y, before + name + after, **textkw)
+                self.annotated[name] = plt.text(
+                    x, y, format.format(name), ha=ha, va=va, **textkw
+                )
+
             except AssertionError:  # (do we need to add other errors?)
                 pass
 
-    def annotate_hosts(
-        self, pop, before="\n", after="", restrictlimits=False, once=False, **kw
-    ):
+        if adjust:
+            adjust_text(
+                list(self.annotated.values()),
+                arrowprops=dict(
+                    arrowstyle="-", color=textkw["color"], alpha=textkw["alpha"] * 0.5
+                ),
+                ax=self.ax,
+            )
+
+    def annotate_hosts(self, pop, restrictlimits=False, once=False, adjust=False, **kw):
         """
         Label the planet hosts in whatever population we're pointed at.
 
@@ -482,13 +510,14 @@ class Map:
             The population to plot. This could be either an
             actual Population object, or a key referring to
             an element of the `self.populations` dictionary.
-        before : str
-            Add the string at the start of each name.
-        after : str
-            Add the string at the end of each name.
         restrictlimits : bool
             Should we plot names only for those planets that fall within
             the map's x and y limits?
+        once : bool
+            Should we limit the number of times a host appears
+            in the annotations to just once?
+        adjust : bool
+            Should we try to adjust the annotations to avoid overlap?
         **kw : dict
             Any additional keywords will be passed to the `text` command.
         """
@@ -498,6 +527,23 @@ class Map:
 
         # make sure we're set to the current axes
         plt.sca(self.ax)
+
+        # define some defaults for the text
+        textkw = dict(
+            fontsize=6,
+            color=self.pop.color,
+            alpha=self.pop.alpha,
+            zorder=self.pop.zorder,
+            clip_on=True,
+        )
+        textkw.update(**kw)
+
+        if adjust:
+            format = "{}"
+            textkw.update(ha="left", va="center")
+        else:
+            format = "\n{}"
+            textkw.update(ha="center", va="top")
 
         # loop over the elements in the population
         for i in range(len(self.x)):
@@ -518,26 +564,22 @@ class Map:
                 except TypeError:  # (are there other errors we need to add?)
                     pass
 
-            # define some defaults for the text
-            textkw = dict(
-                ha="center",
-                va="top",
-                fontsize=6,
-                color=self.pop.color,
-                alpha=self.pop.alpha,
-                clip_on=True,
-            )
-
-            # think this is just as Python 3 thing
-            textkw.update(**kw)
-
             # store the text plot, so it can be modified
             try:
                 assert np.isfinite(x * y)
-                self.annotated[name] = plt.text(x, y, before + name + after, **textkw)
+                self.annotated[name] = plt.text(x, y, format.format(name), **textkw)
 
             except AssertionError:  # (do we need to add other errors?)
                 pass
+
+        if adjust:
+            adjust_text(
+                list(self.annotated.values()),
+                arrowprops=dict(
+                    arrowstyle="-", color=textkw["color"], alpha=textkw["alpha"] * 0.5
+                ),
+                ax=self.ax,
+            )
 
     def connect_planets(self, pop, **kw):
         """
@@ -576,6 +618,25 @@ class Map:
             i = np.argsort(x)
             plt.plot(x[i], y[i], **linekw)
             self.pop = original_pop
+
+    def adjust_annotations(self):
+        """
+        Try to adjust annotations to minimize overlaps.
+
+        (experimental)
+
+        This will adjust all annotations,
+        trying to prevent overlaps,
+        drawing lines from text back to points.
+        """
+
+        from adjustText import adjust_text
+
+        adjust_text(
+            list(self.annotated.values()),
+            arrowprops=dict(arrowstyle="-", color="grey", alpha=0.5),
+            ax=self.ax,
+        )
 
     def remove_xlabel(self):
         """
