@@ -83,7 +83,7 @@ class Downloader:
         Attempting to freshly download data from
         {self.url}
         
-        This may take a long time, and we're dreadully 
+        This may take a long time, and we're dreadfully 
         sorry that we haven't coded in a clever way to 
         tell you how long. Archive tables might be up to
         a few 100MB, so however long it takes your computer
