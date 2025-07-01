@@ -98,6 +98,6 @@ PlanetGallery().build([e, s, h])
 
 # Acknowledgements
 
-We acknowledge the long commitment federally-funded archives have made to preserving and sharing data with the scientific community, and the heroic efforts of the people who build, maintain, and continually improve those archives. This material is based upon work supported by the National Science Foundation under Grant No. This material is based upon work supported by the National Science Foundation under Grant No. 1945633.
+We acknowledge the long commitment federally-funded archives have made to preserving and sharing data with the scientific community, and the heroic efforts of the people who build, maintain, and continually improve those archives. This material is based upon work supported by the National Science Foundation under Grant No. 1945633.
 
 # References
