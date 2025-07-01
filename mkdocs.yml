@@ -48,11 +48,12 @@ plugins:
             docstring_section_style: table
   - exclude:
       glob:     
-        - "downloads-for-exoatlas"
-        - "details/downloads-for-exoatlas"
+        - "downloads-for-exoatlas/*"
+        - "details/downloads-for-exoatlas/*"
         - "*.pdf"
         - "*.fits"
         - "*.npy"
+        - "*.ecsv"
 markdown_extensions:
     - toc:
         permalink: "#"
