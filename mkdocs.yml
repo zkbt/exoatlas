@@ -1,42 +1,61 @@
 site_name: exoatlas
 site_url: https://zkbt.github.com/exoatlas
 nav:
-    - index.md
-    - installation.ipynb
-    - quickstart.ipynb
-    - User Guide:
-      - populations.ipynb
-      - creating.ipynb
-      - curating.ipynb
-      - filtering.ipynb
-      - visualizing.ipynb
-      - observing.ipynb
-      - uncertainties.ipynb
-    - Developer Guide:
-      - github.ipynb
-      - testing.ipynb
-      - documentation.ipynb
-    - Details:
-      - compare-nasa-exoplanet-archive-tables.ipynb
-      - using-skewnormal-for-asymmetric-uncertainties.ipynb
+- index.md
+- installation.ipynb
+- quickstart.ipynb
+- User Guide:
+  - user/index.md
+  - user/populations.ipynb
+  - user/creating.ipynb
+  - user/curating.ipynb
+  - user/filtering.ipynb
+  - user/visualizing.ipynb
+  - user/observing.ipynb
+  - user/planning.ipynb
+  - user/uncertainties.ipynb
+- Developer Guide:
+  - developer/index.md
+  - developer/github.ipynb
+  - developer/testing.ipynb
+  - developer/documentation.ipynb
+- Details:
+  - details/index.md
+  - details/compare-nasa-exoplanet-archive-tables.ipynb
+  - details/using-skewnormal-for-asymmetric-uncertainties.ipynb
+- acknowledgements.ipynb
 
 theme:
   name: "material"
   features:
-      - navigation.tracking
+    - navigation.tracking
+    - navigation.path
+    - navigation.indexes
 repo_url: https://github.com/zkbt/exoatlas/
 plugins:
   - search
   - mkdocs-jupyter:
       execute : True
       include_source : True
+  - mkdocs-autoapi:
+      autoapi_file_patterns:
+        - "*.py"
+      autoapi_dir: exoatlas/
+      autoapi_add_nav_entry: Reference
+  - mkdocstrings:
+      default_handler: python
+      handlers:
+        python:
+          paths: .
+          options:
+            docstring_style: numpy
+            docstring_section_style: table
   - exclude:
       glob:     
         - "downloads-for-exoatlas/*"
         - "*.pdf"
         - "*.fits"
         - "*.npy"
-        - "*.ecsv"
 markdown_extensions:
     - toc:
         permalink: "#"

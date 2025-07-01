@@ -21,7 +21,7 @@ class SolarSystem(PredefinedPopulation):
         PredefinedPopulation.__init__(self, **kwargs)
         self.color = "cornflowerblue"
         self.zorder = 1e10
-        self.s = 80
+        self.s = 64
         self.respond_to_color = False
         self.exact = True
         self.marker = "s"
@@ -57,7 +57,10 @@ class SolarSystem(PredefinedPopulation):
         s["hostname"] = "Sun"
 
         # set up the Sun
-        s["stellar_teff"] = 5780 * u.K
+        s["stellar_luminosity"] = 1 * u.Lsun
+        s["stellar_teff"] = (
+            (1 * u.Lsun / (4 * np.pi * (1 * u.Rsun) ** 2) / con.sigma_sb) ** (1 / 4)
+        ).to(u.K)
         s["stellar_radius"] = 1.0 * u.Rsun
         s["stellar_mass"] = 1.0 * u.Msun
         s["stellar_luminosity"] = 1 * u.Lsun
@@ -126,7 +129,7 @@ class SolarSystem(PredefinedPopulation):
 
         s
 
-        self.standard = s
+        self.table = s
         return s
 
 
@@ -142,7 +145,7 @@ class SolarSystemDwarfPlanets(SolarSystem):
         """
         PredefinedPopulation.__init__(self, **kwargs)
         self.color = "royalblue"
-        self.s = 40
+        self.s = 32
         self.respond_to_color = False
         self.exact = True
         self.marker = "s"

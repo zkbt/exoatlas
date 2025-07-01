@@ -125,7 +125,7 @@ def clean(s):
     """
     A wrapper function to clean up complicated strings.
     """
-    bad = """ !@#$%^&*()+-_'",./<>?;\n\r\t"""
+    bad = """ =!@#$%^&*()+-_'",./<>?;\n\r\t"""
     cleaned = str(s) + ""
     for c in bad:
         cleaned = cleaned.replace(c, "")

@@ -27,14 +27,14 @@ Here's a very quick preview:
 ```python
 # import some population definitions and plotting tool
 from exoatlas import TransitingExoplanets, SolarSystem
-from exoatlas.visualizations import PlanetGallery
+from exoatlas.visualizations import PlanetGalleryWithEscape
 
 # create a dictionary of populations
 exo = TransitingExoplanets()
 solar = SolarSystem()
 
 # use a default visualization to summarize these populations
-PlanetGallery().build([solar, exo])
+PlanetGalleryWithEscape().build([solar, exo])
 ```
 For a slightly less quick preview, which will hopefully entice you to keep reading through the rest of the documentation, please 
 

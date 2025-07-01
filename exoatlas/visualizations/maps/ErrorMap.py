@@ -122,7 +122,7 @@ class ErrorMap(BubbleMap):
             kw = dict(  # marker='o',
                 linewidth=0,
                 elinewidth=width,
-                alpha=1.0,
+                alpha=self.pop._plotkw.get("alpha", None) or 1.0,
                 # capthick=width,
                 # capsize=2,
                 # markersize=3)
@@ -164,7 +164,6 @@ class ErrorMap(BubbleMap):
             # print(
             #    f"skipping {n_consistentwithzero} planets that are consistent with zero"
             # )
-
             if (len(x) > 1) & (self.pop._plotkw.get("ink", True)):
                 # print("plotting inked errorbars, this may take a while")
                 # FIXME, 5/25/2020: We should make the
@@ -180,9 +179,13 @@ class ErrorMap(BubbleMap):
                     yerr=y_unc[:, ok],
                     xerr=x_unc[:, ok],
                     c=weights[ok],
+                    # cmap=one2another(
+                    #    bottom="white", top=color, alphabottom=1.0, alphatop=1.0
+                    # ),
                     cmap=one2another(
-                        bottom="white", top=color, alphabottom=1.0, alphatop=1.0
+                        bottom=color, top=color, alphabottom=0.3, alphatop=1.0
                     ),
+                    zorder=self.pop._plotkw.get("zorder", None),
                     **kw,
                 )
             else:
@@ -195,6 +198,7 @@ class ErrorMap(BubbleMap):
                     **kw,
                 )
 
+            fake_errorbar = plt.errorbar([], [], [], color=color, label=self.pop.label)
         # set the scales, limits, labels
         self.refine_axes()
 

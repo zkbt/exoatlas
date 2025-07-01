@@ -1,12 +1,12 @@
 from ...imports import *
-from ...models import plot_both_seager, make_hz
+from ...models import plot_seager, make_hz
 from ..plottables.preset_plottables import *
 from .Map import *
 from .BubbleMap import *
 from .ErrorMap import *
 
 
-class Flux_x_Radius(BubbleMap):
+class Flux_x_Radius(ErrorMap):
     xaxis = Flux
     yaxis = Radius
 
@@ -85,10 +85,6 @@ class Flux_x_Radius(BubbleMap):
 
         # Teff_inner = 5780
         # Teff_outer = 2600
-
-
-class Flux_x_Mass(Flux_x_Radius):
-    yaxis = KludgedMass
 
 
 class Flux_x_Teff(BubbleMap):
@@ -195,7 +191,7 @@ class Density_x_Radius(BubbleMap):
     yaxis = Radius
 
 
-class StellarRadius_x_PlanetRadius(BubbleMap):
+class StellarRadius_x_PlanetRadius(ErrorMap):
     xaxis = StellarRadius
     yaxis = Radius
 
@@ -289,9 +285,9 @@ class Mass_x_Radius(ErrorMap):
     xaxis = Mass
     yaxis = Radius
 
-    def plot_both_seager(self, **kw):
+    def plot_seager(self, **kw):
         plt.sca(self.ax)
-        plot_both_seager(**kw)
+        plot_seager(color="black", linewidth=4, alpha=0.25, zorder=1.0)
 
     def plot_constant_density(
         self,
@@ -309,12 +305,17 @@ class Mass_x_Radius(ErrorMap):
             )
 
 
-class Flux_x_EscapeVelocity(BubbleMap):
+class Mass_x_EscapeVelocity(ErrorMap):
+    xaxis = Mass
+    yaxis = EscapeVelocity
+
+
+class Flux_x_EscapeVelocity(ErrorMap):
     xaxis = Flux
     yaxis = EscapeVelocity
 
     def plot_constant_lambda(
-        self, alpha=0.5, color="gray", x=0.01, y=100, rotation=-4.5, **kw
+        self, alpha=0.5, color="gray", x=0.01, y=100, rotation=-4.5, zorder=-100, **kw
     ):
         """
         Plot the escape velocity vs insolation for
@@ -364,6 +365,7 @@ class Flux_x_EscapeVelocity(BubbleMap):
                 escape_velocity(teq, lam=lam),
                 color=color,
                 alpha=alpha,
+                zorder=zorder,
                 **kw
             )
 

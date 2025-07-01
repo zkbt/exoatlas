@@ -86,7 +86,7 @@ class StellarTeff(Plottable):
 
 class StellarLuminosity(Plottable):
     source = "stellar_luminosity"
-    label = "Stellar Luminosity (L_$\odot$)"
+    label = "Stellar Luminosity (L$_\odot$)"
     scale = "log"
     lim = [None, None]
 
@@ -107,9 +107,16 @@ class Distance(Plottable):
 
 class EscapeVelocity(Plottable):
     source = "escape_velocity"
-    label = "Escape\nVelocity\n(km/s)"
+    label = "Escape Velocity\n(km/s)"
     scale = "log"
     lim = [2, 500]
+
+
+class RelativeEscapeVelocity(Plottable):
+    source = "relative_escape_velocity"
+    label = "Escape Velocity\n(relative to Earth)"
+    scale = "log"
+    lim = [0.1, 100]
 
 
 class EscapeParameter(Plottable):
@@ -161,7 +168,7 @@ class StellarBrightness(Plottable):
     unit = u.Unit("ph s^-1 m^-2 micron^-1")
 
     def _update_label(self):
-        self.label = f'Stellar Brightness at Earth at $\lambda={self.kw['wavelength'].to("micron").value:.1f}\mu$m\n({self.unit.to_string("latex_inline")})'
+        self.label = f'Stellar Brightness at Earth at $\lambda={self.kw["wavelength"].to("micron").value:.1f}\mu$m\n({self.unit.to_string("latex_inline")})'
 
 
 class StellarBrightnessTelescope(Plottable):

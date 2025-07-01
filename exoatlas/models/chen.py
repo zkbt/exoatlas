@@ -128,10 +128,10 @@ def plot_chen(independent="mass", **kw):
         plt.loglog(M, R, **kw)
 
 
-"""def update_masses_with_chen_and_kipping(population, planets):
+"""def update_masses_assuming_chen_and_kipping(population, planets):
     # KLUDGE!?!?!
     # MODIFIES POPULATION IN PLACE!
-    population.standard.loc
+    population.table.loc
     mass_is_bad = np.isfinite(population.mass) == False
     population.mass[mass_is_bad] = use_chen_and_kipping_to_estimate_mass_from_radius(population.radius[mass_is_bad])
 """
