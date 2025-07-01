@@ -19,10 +19,6 @@ nav:
   - developer/github.ipynb
   - developer/testing.ipynb
   - developer/documentation.ipynb
-- Details:
-  - details/index.md
-  - details/compare-nasa-exoplanet-archive-tables.ipynb
-  - details/using-skewnormal-for-asymmetric-uncertainties.ipynb
 - acknowledgements.ipynb
 
 theme:
@@ -52,7 +48,8 @@ plugins:
             docstring_section_style: table
   - exclude:
       glob:     
-        - "downloads-for-exoatlas/*"
+        - "downloads-for-exoatlas"
+        - "details/downloads-for-exoatlas"
         - "*.pdf"
         - "*.fits"
         - "*.npy"
