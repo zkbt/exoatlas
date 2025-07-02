@@ -173,6 +173,8 @@ class ErrorMap(BubbleMap):
                 # we use alpha to do the visual weighting for
                 # these errorbars, because it introduces many
                 # more intersecting lines.
+                # FIXME, June 2025: We needed to switch to alpha,
+                # but I don't like how it looks....
                 self.scattered[self.pop_key] = ink_errorbar(
                     x[ok],
                     y[ok],
@@ -183,7 +185,10 @@ class ErrorMap(BubbleMap):
                     #    bottom="white", top=color, alphabottom=1.0, alphatop=1.0
                     # ),
                     cmap=one2another(
-                        bottom=color, top=color, alphabottom=0.3, alphatop=1.0
+                        bottom=color,
+                        top=color,
+                        alphabottom=0.25 * kw["alpha"],
+                        alphatop=kw["alpha"],
                     ),
                     zorder=self.pop._plotkw.get("zorder", None),
                     **kw,
