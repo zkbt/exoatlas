@@ -247,6 +247,36 @@ class Gallery:
 
         return
 
+    def add_panel_labels(self, preset="inside", **kw):
+        """
+        Add (a), (b), (c) labels to the axes
+
+        Parameters
+        ----------
+        ax : list, AxesSubplot
+            The axes into which the labels should be drawn.
+        preset : str
+            A few presets for where to put the labels relative to
+            upper left corner of each panel. Options are ['inside', 'above']
+        kw : dict
+            All addition keywords will be passed to `plt.text`,
+            and they will overwrite defaults.
+        """
+
+        axes = [m.ax for m in self.maps.values()]
+        textkw = dict(x=0.02, y=0.98, va="top", ha="left")
+        if preset == "inside":
+            textkw.update(x=0.02, y=0.98, va="top")
+        elif preset == "outside":
+            textkw.update(x=0, y=1.02, va="bottom")
+        textkw.update(**kw)
+
+        letters = "abcdefghijklmnopqrstuvwxyz"
+        for i, a in enumerate(axes):
+            textkw["s"] = f"({letters[i]})"
+            textkw["transform"] = a.transAxes
+            a.text(**textkw)
+
 
 class FourPanelTransitGallery(Gallery):
     def __init__(
