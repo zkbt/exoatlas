@@ -4,6 +4,13 @@ from exoatlas.models import *
 from exoatlas.imports import *
 
 
+def test_mamajek():
+    m = Mamajek()
+    m.plot(["logT", "logL", "logR", "logM"])
+    logL = np.linspace(-6, 6)
+    logT = m.tofrom("logT")("logL")(logL)
+
+
 def test_seager():
     """
     Test the Seager mass-radius relations.
