@@ -89,6 +89,7 @@ setup(
         "PyYAML",
         "tqdm",
         "pytz",
+        "adjusttext",
     ],
     extras_require={
         "develop": [
