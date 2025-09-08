@@ -149,12 +149,13 @@ class Population:
 
             # keywords to use for plotting
             self._plotkw = plotkw
-
         elif isinstance(standard, str):
             filename = standard
             self.table = QTable(ascii.read(filename))
             self.label = self.table.meta["label"]
             self._plotkw = self.table.meta["plotkw"]
+        elif standard is None:
+            standard = Table(dict(name=[], hostname=[]))
 
         # define some cleaned names and hostnames, for indexing
         try:
@@ -173,8 +174,8 @@ class Population:
         self._make_sure_index_exists("tidyhostname")
 
         # test that indexing still works
-        name = self.table["tidyname"][0]
-        self.table.loc[name]
+        # name = self.table["tidyname"][0]
+        # self.table.loc[name]
 
         # define internal lists of column names
         self._populate_column_summaries()

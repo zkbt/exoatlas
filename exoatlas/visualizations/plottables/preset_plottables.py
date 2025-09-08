@@ -8,6 +8,7 @@ class Flux(Plottable):
     label = "Planet Bolometric Flux Received\n(relative to Earth)"
     scale = "log"
     lim = [6e4, 2e-4]
+    symbol = r"$\sf f/f_\oplus$"
 
 
 class Teq(Plottable):
@@ -89,6 +90,7 @@ class StellarLuminosity(Plottable):
     label = "Stellar Luminosity (L$_\odot$)"
     scale = "log"
     lim = [None, None]
+    symbol = r"$\sf L_\star/L_\odot$"
 
 
 class Distance(Plottable):
@@ -117,6 +119,7 @@ class RelativeEscapeVelocity(Plottable):
     label = "Escape Velocity\n(relative to Earth)"
     scale = "log"
     lim = [0.1, 100]
+    symbol = r"$\sf v_{\rm esc}/v_{esc,\oplus}$"
 
 
 class EscapeParameter(Plottable):

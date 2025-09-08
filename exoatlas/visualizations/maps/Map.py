@@ -47,8 +47,11 @@ class Map:
     title = None
     xaxis = None
     yaxis = None
+    sliceaxis = None
 
-    def __init__(self, xaxis=None, yaxis=None, label=None, ax=None, **kw):
+    def __init__(
+        self, xaxis=None, yaxis=None, sliceaxis=None, label=None, ax=None, **kw
+    ):
         """
         Initialize a plotting map.
 
@@ -82,6 +85,7 @@ class Map:
         # set up the x and y axes
         self.plottable["x"] = clean_plottable(xaxis or self.xaxis, **kw)
         self.plottable["y"] = clean_plottable(yaxis or self.yaxis, **kw)
+        self.plottable["sliceaxis"] = clean_plottable(sliceaxis or self.sliceaxis, **kw)
 
         # store a label for this map
         self.label = (
@@ -165,6 +169,17 @@ class Map:
             as a population at which we might point 
             {self}"""
             )
+
+        # slice (limit values along some dimension) if desired
+        how_to_slice = self.plottable.get("sliceaxis", None)
+        if how_to_slice is not None:
+            x = how_to_slice.value(self.pop)
+            lim = how_to_slice.lim
+            ok = (x >= min(lim)) * (x <= max(lim))
+            try:
+                self.pop = self.pop[ok]
+            except IndexError:
+                self.pop = None
 
     @property
     def x(self):
