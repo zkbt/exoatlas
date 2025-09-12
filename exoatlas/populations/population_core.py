@@ -1445,7 +1445,7 @@ class Population:
         desired_columns=[
             "name",
             "radius",
-            "relative_insolation",
+            "relative_instellation",
             "stellar_radius",
             "stellar_teff",
             "ra",
@@ -1496,7 +1496,7 @@ class Population:
             "transit_midpoint",
             "transit_duration",
             "radius",
-            "relative_insolation",
+            "relative_instellation",
             "stellar_radius",
             "stellar_teff",
             "distance",
@@ -1665,8 +1665,8 @@ class Population:
         transit_impact_parameter_from_inclination,
         transit_impact_parameter,
         insolation,
-        relative_insolation,
-        log_relative_insolation,
+        relative_instellation,
+        log_relative_instellation,
         relative_cumulative_xuv_insolation,
         teq,
         planet_luminosity,
@@ -1690,6 +1690,9 @@ class Population:
         impact_velocity,
         escape_parameter,
         scale_height,
+        log_relative_escape_velocity,
+        log_relative_radius,
+        log_relative_stellar_luminosity,
     )
 
     from .calculations.stellar import (

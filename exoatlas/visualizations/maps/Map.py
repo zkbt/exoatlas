@@ -144,6 +144,10 @@ class Map:
         Point this map at a particular population. This will be called
         when building up multiple populations on the same plot.
 
+        If a "slice" axis has been defined, this will also
+        create a temporary population that has been limited
+        down to a specific data range along that slice.
+
         Parameters
         ----------
         pop : Population, str, int

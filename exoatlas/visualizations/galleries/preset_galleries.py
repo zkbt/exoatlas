@@ -169,13 +169,13 @@ class ObservableGallery(GridGallery):
         RA_x_Dec.add_monthaxis(self, ax=self.maps["ra_x_dec"].ax, position=40)
 
         kw = dict(fontsize=6)
-        m = self.maps["relative_insolation_x_transit_depth"]
+        m = self.maps["relative_instellation_x_transit_depth"]
         add_size_explainer(ax=m.ax, label=m.plottable["size"].label, **kw)
 
-        m = self.maps["relative_insolation_x_transmission_signal"]
+        m = self.maps["relative_instellation_x_transmission_signal"]
         add_size_explainer(ax=m.ax, label=m.plottable["size"].label, **kw)
 
-        m = self.maps["relative_insolation_x_emission_signal"]
+        m = self.maps["relative_instellation_x_emission_signal"]
         add_size_explainer(ax=m.ax, label=m.plottable["size"].label, **kw)
 
 
@@ -201,7 +201,7 @@ class EverythingGallery(GridGallery):
 
     def refine_maps(self):
         GridGallery.refine_maps(self)
-        self.maps["relative_insolation_x_radius"].add_legend(fontsize=5)
+        self.maps["relative_instellation_x_radius"].add_legend(fontsize=5)
 
 
 '''class ObservableGallery(BuildablePlot):
@@ -232,7 +232,7 @@ class EverythingGallery(GridGallery):
 
         kw = dict()
         if note != "bw":
-            kw["color"] = "log_relative_insolation"
+            kw["color"] = "log_relative_instellation"
             kw["vmin"] = -1
             kw["vmax"] = 5
             for k, x in pops.items():
