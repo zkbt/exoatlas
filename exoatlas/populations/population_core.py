@@ -16,6 +16,7 @@ default_plotkw = dict(
     filled=True,
     outlined=False,
     bubble_anyway=False,
+    annotate_kw={},
 )
 
 # what keywords can we set for the population plotkw?
