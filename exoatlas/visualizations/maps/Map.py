@@ -85,7 +85,7 @@ class Map:
         # set up the x and y axes
         self.plottable["x"] = clean_plottable(xaxis or self.xaxis, **kw)
         self.plottable["y"] = clean_plottable(yaxis or self.yaxis, **kw)
-        self.plottable["sliceaxis"] = clean_plottable(sliceaxis or self.sliceaxis, **kw)
+        self.plottable["slice"] = clean_plottable(sliceaxis or self.sliceaxis, **kw)
 
         # store a label for this map
         self.label = (
@@ -175,7 +175,7 @@ class Map:
             )
 
         # slice (limit values along some dimension) if desired
-        how_to_slice = self.plottable.get("sliceaxis", None)
+        how_to_slice = self.plottable.get("slice", None)
         if how_to_slice is not None:
             x = how_to_slice.value(self.pop)
             lim = how_to_slice.lim
@@ -339,6 +339,14 @@ class Map:
         self.ax.set_xlim(*self.xlim)
         self.ax.set_xlabel(self.xlabel)
         self.ax.set_ylabel(self.ylabel)
+
+        # if this is a slice, title the axis with the slice limits
+        if self.plottable.get("slice", None) is not None:
+            s = self.plottable["slice"]
+            lim = u.Quantity(s.lim)
+            lower = min(lim).to_string(format="latex", precision=2)
+            upper = max(lim).to_string(format="latex", precision=2)
+            plt.title(f"{lower} < {s.symbol} < {upper}")
 
     def build(
         self,

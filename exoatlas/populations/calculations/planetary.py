@@ -342,7 +342,7 @@ def log_relative_stellar_luminosity(self, **kw):
         If True, return an astropy.uncertainty.Distribution,
         which can be used for error propagation.
     """
-    return np.log10(self.stellar_luminosity(**kw))
+    return np.log10(self.stellar_luminosity(**kw).to_value(u.Lsun))
 
 
 def relative_cumulative_xuv_insolation(self, distribution=False, **kw):
