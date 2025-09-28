@@ -75,7 +75,10 @@ class SolarSystemMinorPlanets(PredefinedPopulation):
         s["rotational_period"] = raw["rot_per"] * u.hour
         s["albedo"] = raw["albedo"]
         s["hostname"] = "Sun"
-        s["stellar_teff"] = 5780 * u.K
+        s["stellar_luminosity"] = 1 * u.Lsun
+        s["stellar_teff"] = (
+            (1 * u.Lsun / (4 * np.pi * (1 * u.Rsun) ** 2) / con.sigma_sb) ** (1 / 4)
+        ).to(u.K)
         s["stellar_radius"] = 1 * u.Rsun
         s["stellar_mass"] = 1 * u.Msun
         s["stellar_age"] = 4.5 * u.Gyr

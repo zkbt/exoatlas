@@ -173,7 +173,7 @@ class ExoplanetsPSCP(PredefinedPopulation):
         """
         Add all keys that look like references as table indices for faster lookup.
         """
-        for k in self.standard.colnames:
+        for k in self.table.colnames:
             if "_reference" in k:
                 self._make_sure_index_exists(k)
 
@@ -469,7 +469,7 @@ class ExoplanetsPSCP(PredefinedPopulation):
 
     def _trim_bad_data(self, standard):
         """
-        Mask bad data from the '.standard' table.
+        Mask bad data from the '.table' table.
 
         Planetary Systems Composite Parameters contains lots of quantities
         that aren't quite reliable empircal measurements that we want to use.
@@ -480,12 +480,12 @@ class ExoplanetsPSCP(PredefinedPopulation):
         Parameters
         ----------
         standard : astropy.table.QTable
-            The filled table that will populate the `.standard` table.
+            The filled table that will populate the `.table` table.
 
         Returns
         -------
         trimmed : astropy.table.QTable
-            The .standard table with bad data tidied away.
+            The .table table with bad data tidied away.
         """
 
         print("✂️ trimming weird data")
@@ -788,7 +788,7 @@ class Exoplanets(ExoplanetsPSCP):
         columns_to_include = ["name"]
 
         # add all columns relevant to the requested key(s)
-        available_colnames = pop.standard.colnames
+        available_colnames = pop.table.colnames
         for k in keys:
             if f"{k}_reference" in available_colnames:
                 for suffix in suffixes:
@@ -798,8 +798,8 @@ class Exoplanets(ExoplanetsPSCP):
         # construct a subset table with just those columns, first row as actual, others as all available options
         table = vstack(
             [
-                pop.standard[columns_to_include],
-                pop.individual_references.standard[columns_to_include],
+                pop.table[columns_to_include],
+                pop.individual_references.table[columns_to_include],
             ]
         )
         table.add_column(["🏷️"] * len(table), index=0, name="is_being_used")
@@ -827,7 +827,7 @@ class Exoplanets(ExoplanetsPSCP):
         3.  Run `.update_reference()` to use a reference to update the
             parameters in the standardized population table.
 
-        Running this method will permanently modify the `.standard` table
+        Running this method will permanently modify the `.table` table
         inside the `Exoplanets` population. The only way to be sure to
         undo the effect is to create a new `Exoplanets` population.
 
@@ -871,10 +871,10 @@ class Exoplanets(ExoplanetsPSCP):
         if keys == None:
             keys_with_reference = [
                 x.split("_reference")[0]
-                for x in self.standard.colnames
+                for x in self.table.colnames
                 if "_reference" in x
             ]
-            keys = [k for k in keys_with_reference if k in self.standard.colnames]
+            keys = [k for k in keys_with_reference if k in self.table.colnames]
         elif isinstance(keys, str):
             keys = [keys]
 
@@ -896,9 +896,7 @@ class Exoplanets(ExoplanetsPSCP):
             try:
                 # print(f"{k}_reference", references)
                 these_references = QTable(
-                    self.individual_references.standard.loc[
-                        f"{k}_reference", references
-                    ]
+                    self.individual_references.table.loc[f"{k}_reference", references]
                 )
             except KeyError:
                 # if verbose:
@@ -939,7 +937,7 @@ class Exoplanets(ExoplanetsPSCP):
                 for tidyname in np.unique(new["tidyname"]):
                     if verbose:
                         print(f"'{k}' for '{tidyname}'")
-                    old_for_this_planet = self.standard.loc["tidyname", tidyname]
+                    old_for_this_planet = self.table.loc["tidyname", tidyname]
                     new_for_this_planet = new.loc["tidyname", tidyname]
                     # if verbose:
                     # print("old", old_for_this_planet["tidyname"])

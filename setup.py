@@ -90,6 +90,7 @@ setup(
         "tqdm",
         "pytz",
         "tess-point",
+        "adjusttext",
     ],
     extras_require={
         "develop": [

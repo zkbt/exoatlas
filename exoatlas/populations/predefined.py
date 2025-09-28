@@ -42,7 +42,7 @@ class PredefinedPopulation(Population):
             All other keywords are stored as plotting suggestions.
         """
 
-        self.verbose = verbose
+        self._verbose = verbose
         if standard is None:
             try:
                 # try to load the standardized table
@@ -135,6 +135,6 @@ class PredefinedPopulation(Population):
         read_kw = dict(format="ecsv", fill_values=[("", np.nan), ("--", np.nan)])
 
         standard = ascii.read(self._standardized_data_path, **read_kw)
-        if self.verbose:
+        if self._verbose:
             print(f"Loaded standardized table from {self._standardized_data_path}")
         return standard

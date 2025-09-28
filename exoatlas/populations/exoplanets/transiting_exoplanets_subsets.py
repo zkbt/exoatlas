@@ -27,7 +27,7 @@ class TransitingExoplanetsSubset(TransitingExoplanets):
         self.label = label
 
         # trim to just the data we want
-        self.standard = self.standard[self.to_include()]
+        self.table = self.table[self.to_include()]
 
         self._plotkw["color"] = None
         self._plotkw["c"] = None

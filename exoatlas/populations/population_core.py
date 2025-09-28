@@ -1,9 +1,5 @@
 # general class for exoplanet populations
 from ..imports import *
-
-# from ..telescopes import *
-# from ..models import *
-from .column_descriptions import *
 from .pineda_skew import make_skew_samples_from_lowerupper, gaussian_central_1sigma
 
 # these are keywords that can be set for a population
@@ -83,6 +79,40 @@ class Population:
     or more!
     """
 
+    # columns that are required for all populations
+    _required_columns = ["name", "hostname"]
+
+    # general methods (all others will be interpreted as quantities)
+    _population_methods = [
+        "add_calculation",
+        "add_column",
+        "create_planning_table",
+        "create_subset_by_hostname",
+        "create_subset_by_name",
+        "create_subset_by_position",
+        "create_table",
+        "display_individual_references",
+        "get",
+        "get_available_quantities",
+        "get_fractional_uncertainty",
+        "get_uncertainty",
+        "get_uncertainty_from_table",
+        "get_uncertainty_lowerupper",
+        "get_uncertainty_lowerupper_from_table",
+        "get_values_from_table",
+        "help",
+        "label",
+        "standard",
+        "load_individual_references",
+        "plot_measurements_from_individual_references",
+        "print_column_summary",
+        "save",
+        "show_upcoming_transits",
+        "sort",
+        "update_reference",
+        "update_values",
+    ]
+
     def __init__(self, standard, label=None, **plotkw):
         """
         Initialize a Population of exoplanets from a standardized table.
@@ -109,12 +139,12 @@ class Population:
 
         if isinstance(standard, Table) or isinstance(standard, Row):
             # a standardized table with a minimum set of columns we can expect
-            self.standard = QTable(copy.deepcopy(standard))
+            self.table = QTable(copy.deepcopy(standard))
             # (the deepcopy seems to be needed to reset indexing,
             #  so that astropy.table doesn't try to track slices across
             #  too many subsets, because it was getting lost in weird ways)
 
-            # store a label for this population
+            # store a label for this `Population`
             self.label = label
 
             # keywords to use for plotting
@@ -122,22 +152,20 @@ class Population:
 
         elif isinstance(standard, str):
             filename = standard
-            self.standard = QTable(ascii.read(filename))
-            self.label = self.standard.meta["label"]
-            self._plotkw = self.standard.meta["plotkw"]
+            self.table = QTable(ascii.read(filename))
+            self.label = self.table.meta["label"]
+            self._plotkw = self.table.meta["plotkw"]
 
         # define some cleaned names and hostnames, for indexing
         try:
-            self.standard["tidyname"]
+            self.table["tidyname"]
         except KeyError:
-            self.standard["tidyname"] = [
-                clean(x).lower() for x in self.standard["name"]
-            ]
+            self.table["tidyname"] = [clean(x).lower() for x in self.table["name"]]
         try:
-            self.standard["tidyhostname"]
+            self.table["tidyhostname"]
         except KeyError:
-            self.standard["tidyhostname"] = [
-                clean(x).lower() for x in self.standard["hostname"]
+            self.table["tidyhostname"] = [
+                clean(x).lower() for x in self.table["hostname"]
             ]
 
         # make sure the table is searchable via names
@@ -145,8 +173,8 @@ class Population:
         self._make_sure_index_exists("tidyhostname")
 
         # test that indexing still works
-        name = self.standard["tidyname"][0]
-        self.standard.loc[name]
+        name = self.table["tidyname"][0]
+        self.table.loc[name]
 
         # define internal lists of column names
         self._populate_column_summaries()
@@ -158,7 +186,7 @@ class Population:
 
     def _create_function_to_access_table_quantity(self, name):
         """
-        For a given column name "x", add a `.x()` method to this Population.
+        For a given column name "x", add a `.x()` method to this `Population`.
 
         This internal wrapper creates a named method to access
         the data in a particular column of the standardized table.
@@ -173,7 +201,7 @@ class Population:
             The name of the column to add.
         """
 
-        assert name in self.standard.colnames
+        assert name in self.table.colnames
 
         # create the method to extract a particular column
         def f(distribution=False, **kw):
@@ -212,9 +240,9 @@ class Population:
         """
         Populate this object with one method for each table column.
 
-        This wrapper converts table columns from the internal .standard
+        This wrapper converts table columns from the internal .table
         table into callable methods, so that (for example), the data
-        in `self.standard['radius']` can be retrieved as `self.radius()`.
+        in `self.table['radius']` can be retrieved as `self.radius()`.
         This is necessary for seamlesssly integrating core table quantities
         with derived quantities (some of which must be callable because
         they require keyword arguments), for making them appear as hints
@@ -230,7 +258,7 @@ class Population:
 
     def _populate_column_summaries(self):
         """
-        Populate a dictionary summarizing the types of columns in `.standard`.
+        Populate a dictionary summarizing the types of columns in `.table`.
         """
         uncertainty_suffixes = [
             "_uncertainty_lower",
@@ -251,12 +279,12 @@ class Population:
 
         self._colnames = {}
         self._colnames["everything"] = np.unique(
-            [remove_suffixes(x) for x in self.standard.colnames]
+            [remove_suffixes(x) for x in self.table.colnames]
         )
         self._colnames["with uncertainties"] = np.unique(
             [
                 remove_suffixes(x)
-                for x in self.standard.colnames
+                for x in self.table.colnames
                 if ends_with_any_of(x, uncertainty_suffixes)
             ]
         )
@@ -270,14 +298,14 @@ class Population:
         # self._colnames["with limits"] = np.unique(
         #    [
         #        remove_suffixes(x)
-        #        for x in self.standard.colnames
+        #        for x in self.table.colnames
         #        if ends_with_any_of(x, limit_suffixes)
         #    ]
         # )
         self._colnames["with references"] = np.unique(
             [
                 remove_suffixes(x)
-                for x in self.standard.colnames
+                for x in self.table.colnames
                 if ends_with_any_of(x, reference_suffixes)
             ]
         )
@@ -293,7 +321,7 @@ class Population:
         """
         Add a column to the existing population.
 
-        This wrapper adds a new column of data to the `.standard` table,
+        This wrapper adds a new column of data to the `.table` table,
         populates columns for uncertainties if provided, and registers
         a new method for accessing that data.
 
@@ -301,7 +329,7 @@ class Population:
         ----------
         name : str
             The name of this column; it must be able to be a valid Python variable name.
-            If "x", we will add the column `.standard["x"]` and `.x()` as methods.
+            If "x", we will add the column `.table["x"]` and `.x()` as methods.
         data : astropy.units.Quantity
             An array of data to be added into this column. It must have the same
             size at the population, and its entries should be ordered the same
@@ -318,31 +346,31 @@ class Population:
         """
 
         # warn if overwriting an existing column
-        if name in self.standard.colnames:
+        if name in self.table.colnames:
             warnings.warn(
-                f"'{name}' already exists in `.standard`; you're overwriting something!"
+                f"'{name}' already exists in `.table`; you're overwriting something!"
             )
 
         # put the data into the column
-        self.standard[name] = data
+        self.table[name] = data
 
         # add uncertainties, if provided
         if uncertainty is not None:
-            self.standard[f"{name}_uncertainty"] = uncertainty
+            self.table[f"{name}_uncertainty"] = uncertainty
         elif (uncertainty_lower is not None) and (uncertainty_upper is not None):
-            self.standard["{name}_uncertainty_lower"] = uncertainty_lower
-            self.standard["{name}_uncertainty_upper"] = uncertainty_upper
+            self.table["{name}_uncertainty_lower"] = uncertainty_lower
+            self.table["{name}_uncertainty_upper"] = uncertainty_upper
 
         # register the method for the column
         if hasattr(self, name):
             warnings.warn(
-                f"'.{name}()' already exists in `.standard` for this Population; please consider a different name!"
+                f"'.{name}()' already exists in `.table` for this `Population`; please consider a different name!"
             )
         setattr(self, name, self._create_function_to_access_table_quantity(name))
 
     def add_calculation(self, name, function):
         """
-        Add a new calculation to this population.
+        Add a new calculation to this `Population`.
 
         This wrapper adds a new method to calculate a new quantity,
         defining a new function that can be called with access to the
@@ -382,9 +410,9 @@ class Population:
 
     def print_column_summary(self):
         """
-        Print a summary of columns that come directly from the `.standard` table.
+        Print a summary of columns that come directly from the `.table` table.
         """
-        print(f"The following columns are present in the internal `.standard` table:\n")
+        print(f"The following columns are present in the internal `.table` table:\n")
         for k in self._colnames:
             print(f"{k} =\n{self._colnames[k]}\n")
 
@@ -401,7 +429,7 @@ class Population:
         index_keys : list
             The list of keys that are being used as an index.
         """
-        return [x.columns[0].name for x in self.standard.indices]
+        return [x.columns[0].name for x in self.table.indices]
 
     def _make_sure_index_exists(self, k):
         """
@@ -413,12 +441,12 @@ class Population:
             The new key to add.
         """
         if k not in self._list_table_indices():
-            self.standard.add_index(k)
+            self.table.add_index(k)
 
     @property
     def _fileprefix(self):
         """
-        Define a fileprefix for this population, to be used
+        Define a fileprefix for this `Population`, to be used
         for setting the filename of the standardized population.
 
         Return
@@ -435,9 +463,9 @@ class Population:
 
     def save(self, filename=None, overwrite=True):
         """
-        Save this population out to a file.
+        Save this `Population` out to a file.
 
-        This saves the standardized data table from this population
+        This saves the standardized data table from this `Population`
         out to a file, along with metadata needed to be loaded
         back into as a drop-in replacement for a live population.
 
@@ -466,7 +494,7 @@ class Population:
                 )
 
                 # save the table as an ascii table for humans to read
-        to_save = copy.deepcopy(self.standard)
+        to_save = copy.deepcopy(self.table)
         to_save.meta["label"] = self.label
         to_save.meta["plotkw"] = self._plotkw
 
@@ -480,7 +508,7 @@ class Population:
 
     def sort(self, x, reverse=False):
         """
-        Sort this population by some key or attribute.
+        Sort this `Population` by some key or attribute.
 
         This sorts the population in place, meaning that the
         Population object from which it is called will be modified.
@@ -505,7 +533,7 @@ class Population:
             i = i[::-1]
 
         # reorder the standardized table
-        self.standard = self.standard[i]
+        self.table = self.table[i]
 
     def __add__(self, other):
         """
@@ -532,9 +560,7 @@ class Population:
             warnings.simplefilter("ignore")
 
             #  create a new table, joining both together
-            table = join(
-                self.standard.filled(), other.standard.filled(), join_type="outer"
-            )
+            table = join(self.table.filled(), other.table.filled(), join_type="outer")
             # TO-DO, I'm not 100% sure why the tables need to be `filled()` here; shouldn't they already be?
 
             # create an informative label
@@ -567,7 +593,7 @@ class Population:
             warnings.simplefilter("ignore")
 
             #  create a new table, joining both together
-            table = setdiff(self.standard, other.standard, keys=key)
+            table = setdiff(self.table, other.table, keys=key)
 
             # create an informative label
             label = f"{self.label} - {other.label}"
@@ -612,16 +638,16 @@ class Population:
 
         try:
             # if the key is an index/slice/mask, return it
-            if self.label is None:
-                label = None
-            else:
-                label = f"Subset of {self.label}"
+            # if self.label is None:
+            #    label = None
+            # else:
+            #    label = f"Subset of {self.label}"
             subset = type(self)(
-                standard=self.standard[key], label=label, **self._plotkw
+                standard=self.table[key], label=self.label, **self._plotkw
             )
 
             # if the key is a column, raise an error
-            if type(key) in self.standard.colnames:
+            if type(key) in self.table.colnames:
                 raise IndexError(
                     f"""
                 You seem to be trying to access a column from this
@@ -630,7 +656,7 @@ class Population:
                 population.
 
                 To access your particular column, please try either
-                `pop.{key}` or `pop.standard[{key}]` to return a
+                `pop.{key}` or `pop.table[{key}]` to return a
                 1D array of the entries in that column.
                 """
                 )
@@ -642,22 +668,32 @@ class Population:
             except KeyError:
                 subset = self.create_subset_by_hostname(key)
 
-        # kind of kludgy, to enforce different colors
-        subset._plotkw["color"] = None
-        subset._plotkw["c"] = None
-        subset._plotkw["zorder"] = subset._plotkw.get("zorder", 1) + 1
-
-        # KLUDGE to put tiny subsets on top; FIXME?!
-        if len(subset) < 10:
-            subset._plotkw["bubble_anyway"] = True
-            subset._plotkw["s"] = 256
-            subset._plotkw["zorder"] = 10000
+        # kind of kludgy, to enforce a different color
+        # subset._plotkw["color"] = None
+        # subset._plotkw["c"] = None
+        # zorder = subset._plotkw.get("zorder", 1)
+        # if zorder is not None:
+        #    zorder += 1
+        # subset._plotkw["zorder"] = zorder
 
         return subset
 
+    def _make_visually_distinct(self):
+        """
+        Make a (likely small) Population stand out visually.
+
+        This function is called when the Population is
+        indexed by name to isolate a small set of individual
+        systems.
+        """
+        self._plotkw["color"] = "orangered"
+        self._plotkw["zorder"] = 10000
+        self._plotkw["bubble_anyway"] = self._plotkw.get("bubble_anyway", True)
+        self._plotkw["s"] = np.maximum(self._plotkw.get("s", 1), 256)
+
     def create_subset_by_name(self, key):
         """
-        Extract a subset of this population,
+        Extract a subset of this `Population`,
         based on one or more planet names.
 
         Parameters
@@ -686,7 +722,7 @@ class Population:
             tidy = [clean(k).lower() for k in key]
 
         # pull out rows by planet name
-        subset = self.standard.loc["tidyname", tidy]
+        subset = self.table.loc["tidyname", tidy]
 
         # create a useful label for the population
         if isinstance(key, str):
@@ -695,11 +731,13 @@ class Population:
             label = "+".join(key)
 
         # create that new sub-population
-        return type(self)(standard=subset, label=label, **self._plotkw)
+        new = type(self)(standard=subset, label=label, **self._plotkw)
+        new._make_visually_distinct()
+        return new
 
     def create_subset_by_hostname(self, key):
         """
-        Extract a subset of this population,
+        Extract a subset of this `Population`,
         based on one or more planet hostnames.
 
         Parameters
@@ -728,7 +766,7 @@ class Population:
             tidy = [clean(k).lower() for k in key]
 
         # pull out rows by planet name
-        subset = self.standard.loc["tidyhostname", tidy]
+        subset = self.table.loc["tidyhostname", tidy]
 
         # create a useful label for the population
         if isinstance(key, str):
@@ -737,7 +775,9 @@ class Population:
             label = "+".join(key)
 
         # create that new sub-population
-        return type(self)(standard=subset, label=label, **self._plotkw)
+        new = type(self)(standard=subset, label=label, **self._plotkw)
+        new._make_visually_distinct()
+        return new
 
     def create_subset_by_position(
         self,
@@ -747,10 +787,10 @@ class Population:
         return_indices=False,
     ):
         """
-        Extract a subset of this population,
+        Extract a subset of this `Population`,
         by performing a spatial cross-match by
         RA and Dec. This will return all planets
-        from this population that fall within
+        from this `Population` that fall within
         the specified radius of at least one of
         the specified coordinates.
 
@@ -789,7 +829,7 @@ class Population:
         if use_proper_motions:
             raise NotImplementedError("No cross-matching with proper motions yet :-(")
 
-        # create astropy coordinates for this population
+        # create astropy coordinates for this `Population`
         population_coords = SkyCoord(ra=self.ra(), dec=self.dec())
 
         # do a spatial cross match on the sky
@@ -803,7 +843,7 @@ class Population:
         # create new populations that are linked by spatial position
         i_match = match.nonzero()[0]
         # matched_coordinates = coordinates[idx[i_match]]
-        subset = self.standard[i_match]
+        subset = self.table[i_match]
 
         # define a meaningful label
         label = f"Spatial Cross-Match ({len(coordinates)} positions, {radius} radius)"
@@ -845,12 +885,12 @@ class Population:
 
         # first try for asymmetric table uncertainties
         try:
-            lower = _clean_column(self.standard[f"{key}_uncertainty_lower"])
-            upper = _clean_column(self.standard[f"{key}_uncertainty_upper"])
+            lower = _clean_column(self.table[f"{key}_uncertainty_lower"])
+            upper = _clean_column(self.table[f"{key}_uncertainty_upper"])
             return np.abs(lower), np.abs(upper)
         except KeyError:
             # next try for symmetric table uncertainties
-            sym = _clean_column(self.standard[f"{key}_uncertainty"])
+            sym = _clean_column(self.table[f"{key}_uncertainty"])
             return np.abs(sym), np.abs(sym)
 
     def get_uncertainty_from_table(self, key, **kw):
@@ -882,7 +922,7 @@ class Population:
         """
         Retrieve values directly from the standardized table.
 
-        This wrapper extracts values from the internal `.standard`
+        This wrapper extracts values from the internal `.table`
         table without performing any calculations or filtering.
         Some quantities might have explicit methods that override
         direct retrieval from the table, but this provides direct
@@ -892,7 +932,7 @@ class Population:
         ----------
         key : str
             The quantity to extract. This must exactly match a
-            column in `.standard`; if not, `KeyError` will be raised.
+            column in `.table`; if not, `KeyError` will be raised.
         distribution : bool
             Should it be returned as an astropy distribution,
             for uncertainty propagation?
@@ -906,9 +946,9 @@ class Population:
                 If `distribution` is True, it will be an astropy Distribution.
         """
 
-        # extract the column from self.standard for this key
+        # extract the column from self.table for this key
         try:
-            raw_column = self.standard[key]
+            raw_column = self.table[key]
         except KeyError:
             raise KeyError(
                 f"The column '{key}' wasn't found in {self}'s internal table."
@@ -959,7 +999,7 @@ class Population:
 
             2) We look for an implicit method definition that was created
             by `_populate_column_methods()`, where every data column in
-            the `.standard` table gets its own function with basic docstring.
+            the `.table` table gets its own function with basic docstring.
             These definitions should also show up with `pop.<tab>` in jupyter.
 
             3) We use this `__getattr__` function. It will be called only if
@@ -984,7 +1024,7 @@ class Population:
         if key in ["label", "_plotkw", "standard"]:
             raise RuntimeError(
                 f"""
-                Yikes! It looks like `.{key}` isn't defined for this Population. 
+                Yikes! It looks like `.{key}` isn't defined for this `Population`. 
                 Ideally, this error should never been seen, but if it does, something's 
                 gone dreadfully wrong. 
                 """
@@ -1156,8 +1196,18 @@ class Population:
         # first try for uncertainties direct from table
         try:
             sigma_lower, sigma_upper = self.get_uncertainty_lowerupper_from_table(key)
+
+            # KLUDGE for stellar_luminosity, which has a calculation choice *and* appears in table
+            # (FIXME - we should be more explicit about how we overwrite table columns)
+            assert np.isfinite(sigma_lower * sigma_upper).all()
+            # This assertion will force a Distribution-based uncertainty estimate if
+            # *any* of the uncertainties in the table columns are nan; that means
+            # practically that if there's a calculation choice (like stellar_luminosity)
+            # the uncertainties will propagate through there. This *might* be what
+            # we want, but I'm not 100% positive of that yet.
+
             return sigma_lower, sigma_upper
-        except KeyError:
+        except (AssertionError, KeyError):
             mu = self.get(key, **kw)
             with warnings.catch_warnings():
                 warnings.simplefilter("ignore", category=RuntimeWarning)
@@ -1193,8 +1243,8 @@ class Population:
                         sigma_lower, sigma_upper = 0 * mu, 0 * mu
                     sigma_lowers.append(sigma_lower)
                     sigma_uppers.append(sigma_upper)
-                average_sigma_lower = np.mean(u.Quantity(sigma_lowers), axis=0)
-                average_sigma_upper = np.mean(u.Quantity(sigma_uppers), axis=0)
+                average_sigma_lower = np.nanmedian(u.Quantity(sigma_lowers), axis=0)
+                average_sigma_upper = np.nanmedian(u.Quantity(sigma_uppers), axis=0)
 
                 def replace_negative(x):
                     bad = x < 0
@@ -1260,15 +1310,15 @@ class Population:
         Summarize the amount of good data in each.
         """
 
-        N = len(self.standard)
-        for k in basic_columns:
+        N = len(self.table)
+        for k in self._required_columns:
             try:
-                n = sum(self.standard[k].mask == False)
+                n = sum(self.table[k].mask == False)
             except AttributeError:
                 try:
-                    n = sum(np.isfinite(self.standard[k]))
+                    n = sum(np.isfinite(self.table[k]))
                 except TypeError:
-                    n = sum(np.atleast_1d(self.standard[k] != ""))
+                    n = sum(np.atleast_1d(self.table[k] != ""))
             print(f"{k:>25} | {n:4}/{N} rows = {n/N:4.0%} are not empty")
 
     def _find_index(self, name):
@@ -1284,7 +1334,7 @@ class Population:
         """
         Update values for one or more planets.
 
-        This modifies the internal `.standard` table
+        This modifies the internal `.table` table
         to update individual values. This is meant to
         be a tool that can be used to provide alternate,
         better, and/or unpublished planet parameters
@@ -1318,7 +1368,7 @@ class Population:
             planets_to_index = [clean(p).lower() for p in planets]
 
         # extract just the subsection of the table relating to these planets
-        i = self.standard.loc_indices[planets_to_index]
+        i = self.table.loc_indices[planets_to_index]
 
         # loop over keyword arguments
         for k, v in kwargs.items():
@@ -1329,19 +1379,19 @@ class Population:
             if k[-12:] == "_uncertainty":
                 # nudge symmetric uncertainties into asymmetric form
                 for suffix, sign in zip(["_lower", "_upper"], [-1, 1]):
-                    old = self.standard[i][k + suffix] * 1
+                    old = self.table[i][k + suffix] * 1
                     new = sign * np.abs(v)
-                    self.standard[i][k + suffix] = new
+                    self.table[k + suffix][i] = new
                     print(f"{planets_to_index} | {k+suffix}: {old} > {new}")
             else:
                 # update value in table
-                old = self.standard[i][k] * 1
+                old = self.table[k][i] * 1
                 new = v
-                self.standard[i][k] = new
+                self.table[k][i] = new
                 print(f"{planets_to_index} | {k}: {old} > {new}")
 
             # warn if uncertainties should have been provided but weren't
-            should_have_uncertainty = f"{k}_uncertainty_lower" in self.standard.colnames
+            should_have_uncertainty = f"{k}_uncertainty_lower" in self.table.colnames
             does_have_uncertainty = (f"{k}_uncertainty" in kwargs) or (
                 (f"{k}_uncertainty_lower" in kwargs)
                 and (f"{k}_uncertainty_upper" in kwargs)
@@ -1353,9 +1403,41 @@ class Population:
 
     def __len__(self):
         """
-        How many planets are in this population?
+        How many planets are in this `Population`?
         """
-        return len(self.standard)
+        return len(self.table)
+
+    def get_available_quantities(self):
+        """
+        Get a list of all available quantities for this `Population`.
+        """
+        return [
+            k
+            for k in dir(self)
+            if (k[0] != "_") and (k not in self._population_methods)
+        ]
+
+    def help(self, what_to_help_with=["methods", "quantities"]):
+        """
+        Describe the methods available in this `Population`.
+        """
+
+        # categories of methods to describe
+        lists = dict(
+            methods=self._population_methods,
+            quantities=self.get_available_quantities(),
+        )
+        emoji = dict(methods="🧶", quantities="⚖️")
+        for w in what_to_help_with:
+            e = emoji[w]
+            print(f"{e} The available {w} are:")
+            for k in lists[w]:
+                try:
+                    summary = getattr(self, k).__doc__.splitlines()[1].strip()
+                except (IndexError, AttributeError):
+                    summary = ""
+                print(f" {k} = {summary}")
+            print()
 
     def create_table(
         self,
@@ -1369,9 +1451,10 @@ class Population:
             "dec",
             "distance",
         ],
+        **kw,
     ):
         """
-        Create an astropy table based on this population,
+        Create an astropy table based on this `Population`,
         using a subset of columns, which may include ones
         that have been calculated as Population properties.
 
@@ -1381,7 +1464,11 @@ class Population:
             The columns you want to include. Anything that
             can be accessed via Population.??? can be provided
             here as a string.
-
+        **kw : dict
+            All additional keywords will be passed to all
+            methods. For example, `wavelength=` will be passed
+            to all quantity methods, and those that will do
+            something with a `wavelength=` keyword will notice it.
         Returns
         -------
         table : astropy.table.QTable
@@ -1391,7 +1478,7 @@ class Population:
         # FIXME! need to add method support for arguments
 
         # create a dictionary with the desired columns
-        d = {c: getattr(self, c)() for c in desired_columns}
+        d = {c: getattr(self, c)(**kw) for c in desired_columns}
 
         # turn that into an astropy Table
         t = QTable(d)
@@ -1588,14 +1675,16 @@ class Population:
         scaled_radius,
         transit_duration_from_orbit,
         transit_duration,
-        mass_estimated_from_radius,
-        radius_estimated_from_mass,
+        mass_estimated_from_radius_assuming_rockyish,
+        mass_estimated_from_radius_assuming_chen_and_kipping,
+        radius_estimated_from_mass_assuming_chen_and_kipping,
         kludge_mass,
         kludge_radius,
         kludge_stellar_age,
         surface_gravity,
         density,
         escape_velocity,
+        relative_escape_velocity,
         orbital_velocity,
         impact_velocity,
         escape_parameter,
@@ -1624,5 +1713,6 @@ class Population:
         reflection_snr,
         transmission_snr,
     )
+    from .calculations.planning import show_upcoming_transits, altaz, airmass
 
     from .tess import attach_tess_sectors, split_into_tess_sectors
