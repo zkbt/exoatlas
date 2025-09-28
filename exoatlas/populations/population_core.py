@@ -1703,6 +1703,7 @@ class Population:
         transmission_signal,
         emission_signal,
         reflection_signal,
+        reflection_to_emission_ratio,
         stellar_brightness,
         stellar_brightness_in_telescope_units,
         depth_uncertainty,
@@ -1713,3 +1714,5 @@ class Population:
         transmission_snr,
     )
     from .calculations.planning import show_upcoming_transits, altaz, airmass
+
+    from .tess import attach_tess_sectors, split_into_tess_sectors

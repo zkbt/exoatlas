@@ -312,7 +312,7 @@ def relative_cumulative_xuv_insolation(self, distribution=False, **kw):
     return self.relative_insolation(distribution=distribution) * xuv_proxy
 
 
-def teq(self, distribution=False, albedo=0, f=1 / 4, **kw):
+def teq(self, distribution=False, albedo_bond=0, f=1 / 4, **kw):
     """
     Planet Equilibrium Temperature (K)
 
@@ -321,7 +321,7 @@ def teq(self, distribution=False, albedo=0, f=1 / 4, **kw):
 
     Parameters
     ----------
-    albedo : float
+    albedo_bond : float
         The planet's Bond albedo, meaning the fraction of incoming
         stellar light reflected away, integrated over wavelength.
         The remaining light is absorbed and needs to be emitted
@@ -350,7 +350,7 @@ def teq(self, distribution=False, albedo=0, f=1 / 4, **kw):
     """
     S = self.insolation(distribution=distribution)
     sigma = con.sigma_sb
-    teq = ((S * f * (1 - albedo) / sigma) ** (1 / 4)).to(u.K)
+    teq = ((S * f * (1 - albedo_bond) / sigma) ** (1 / 4)).to(u.K)
     return teq
 
 
@@ -897,7 +897,7 @@ def escape_parameter(
     self,
     temperature="teq",
     mu=1,
-    albedo=0,
+    albedo_bond=0,
     f=1 / 4,
     kludge=False,
     distribution=False,
@@ -935,7 +935,7 @@ def escape_parameter(
         Mean molecular weight of escaping particle,
         in atomic mass units. The default of mu=1
         corresponds to atomic hydrogen.
-    albedo : float
+    albedo_bond : float
         Albedo for calculating equilibrium temperature
         (see docstring for `.teq()` for details)
     f : float
@@ -951,7 +951,7 @@ def escape_parameter(
         which can be used for error propagation.
     """
     if temperature == "teq":
-        T = self.teq(albedo=albedo, f=f, distributio=distribution)
+        T = self.teq(albedo_bond=albedo_bond, f=f, distributio=distribution)
     else:
         T = temperature
 
@@ -970,7 +970,9 @@ def escape_parameter(
     return (e_grav / e_thermal).decompose()
 
 
-def scale_height(self, mu=2.3, albedo=0, f=1 / 4, kludge=False, distribution=False):
+def scale_height(
+    self, mu=2.3, albedo_bond=0, f=1 / 4, kludge=False, distribution=False
+):
     """
     Atmospheric Scale Height (km)
 
@@ -992,7 +994,7 @@ def scale_height(self, mu=2.3, albedo=0, f=1 / 4, kludge=False, distribution=Fal
         in atomic mass units. The default of mu=2.3
         corresponds approximately to chemical equilibrium
         of a solar composition atmosphere at fairly
-    albedo : float
+    albedo_bond : float
         Albedo for calculating equilibrium temperature
         (see docstring for `.teq()` for details)
     f : float
@@ -1008,7 +1010,7 @@ def scale_height(self, mu=2.3, albedo=0, f=1 / 4, kludge=False, distribution=Fal
         which can be used for error propagation.
     """
     k = con.k_B
-    T = self.teq(albedo=albedo, f=f, distribution=distribution)
+    T = self.teq(albedo_bond=albedo_bond, f=f, distribution=distribution)
     m_p = con.m_p
     g = self.surface_gravity(kludge=kludge, distribution=distribution)
     H = (k * T / mu / m_p / g).to("km")

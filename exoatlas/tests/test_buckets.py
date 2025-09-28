@@ -33,5 +33,22 @@ def test_buckets():
     ).build([t])
 
 
+def test_telescope_snr():
+
+    e = TransitingExoplanets()
+
+    # is JWST always lower uncertainty than Hubble?
+    hubble = DepthUncertainty(telescope_name="HST", wavelength=1 * u.micron)
+    jwst = DepthUncertainty(telescope_name="JWST", wavelength=1 * u.micron)
+    ratio = jwst.value(e) / hubble.value(e)
+    assert np.all(ratio[np.isfinite(ratio)] < 1)
+
+    # is JWST always higher SNR than Hubble?
+    hubble = DepthSNR(telescope_name="HST", wavelength=1 * u.micron)
+    jwst = DepthSNR(telescope_name="JWST", wavelength=1 * u.micron)
+    ratio = jwst.value(e) / hubble.value(e)
+    assert np.all(ratio[np.isfinite(ratio)] > 1)
+
+
 if __name__ == "__main__":  # pragma: no cover
     outputs = {k.split("_")[-1]: v() for k, v in locals().items() if "test_" in k}
