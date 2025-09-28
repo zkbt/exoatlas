@@ -90,6 +90,7 @@ setup(
         "tqdm",
         "pytz",
         "adjusttext",
+        "arviz",
     ],
     extras_require={
         "develop": [

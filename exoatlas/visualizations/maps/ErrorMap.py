@@ -12,7 +12,11 @@ class ErrorMap(BubbleMap):
     their intensity scaled to some overall visual weight.
     """
 
-    def intensity(self, invisible_fraction=0.75, x_power=2, y_power=2):
+    def __init__(self, invisible_fraction=0.5, **kw):
+        super().__init__(**kw)
+        self.invisible_fraction = invisible_fraction
+
+    def intensity(self, x_power=2, y_power=2):
         """
         What visual intensity should each datapoint have?
 
@@ -50,13 +54,13 @@ class ErrorMap(BubbleMap):
         dlny = self.y_uncertainty / self.y * np.abs(y_power)
 
         # things with bigger errors should have lower weight
-        weight = 1 - np.sqrt(dlnx**2 + dlny**2) / invisible_fraction
+        weight = 1 - np.sqrt(dlnx**2 + dlny**2) / self.invisible_fraction
 
         # clip the weights above 1 (shouldn't exist?) or below zero
-        # clipped = np.minimum(np.maximum(weight, 0), 1)
+        clipped = np.minimum(np.maximum(weight, 0), 1)
 
         # return the visual weight
-        return remove_unit(weight)
+        return remove_unit(clipped)
 
     def plot(self, pop, ax=None, annotate_kw={}, **kw):
         """
@@ -187,7 +191,7 @@ class ErrorMap(BubbleMap):
                     cmap=one2another(
                         bottom=color,
                         top=color,
-                        alphabottom=0.25 * kw["alpha"],
+                        alphabottom=0,  # 0.25 * kw["alpha"],
                         alphatop=kw["alpha"],
                     ),
                     zorder=self.pop._plotkw.get("zorder", None),

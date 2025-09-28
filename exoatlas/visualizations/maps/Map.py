@@ -25,7 +25,26 @@ def clean_pops(initial):
     """
 
     if type(initial) == dict:
-        return initial
+
+        def flatten_dictionary(x):
+            """
+            Recursively flatten nested dictionaries into one level of dictionary of Populations.
+            """
+            elements_are_all_populations = True
+            flatter_dictionary = {}
+            for k1, v1 in x.items():
+                if isinstance(v1, Population):
+                    flatter_dictionary[k1] = v1
+                elif isinstance(v1, dict):
+                    for k2, v2 in v1.items():
+                        flatter_dictionary[f"{k1}-{k2}"] = v2
+                    elements_are_all_populations = False
+            if elements_are_all_populations:
+                return flatter_dictionary
+            else:
+                return flatten_dictionary(flatter_dictionary)
+
+        return flatten_dictionary(initial)
     elif type(initial) == list:
         d = {}
         for p in initial:
@@ -346,7 +365,22 @@ class Map:
             lim = u.Quantity(s.lim)
             lower = min(lim).to_string(format="latex", precision=2)
             upper = max(lim).to_string(format="latex", precision=2)
-            plt.title(f"{lower} < {s.symbol} < {upper}")
+            plt.title(
+                f"{lower}<{s.symbol}<{upper}".replace("\\mathrm{}", "").replace(
+                    "\\;", ""
+                ),
+                fontsize="medium",
+            )
+
+    def refine(self, **kw):
+        """
+        A function that's run at the end of 'build',
+        to add models, if desired, to make
+        more changes to the plot.
+
+        This is designed to be overwritten.
+        """
+        pass
 
     def build(
         self,

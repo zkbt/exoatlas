@@ -1699,6 +1699,7 @@ class Population:
     from .calculations.stellar import (
         stellar_luminosity_from_radius_and_teff,
         stellar_luminosity,
+        relative_stellar_luminosity,
         distance_modulus,
     )
 

@@ -11,8 +11,16 @@ class Flux(Plottable):
     symbol = r"$\sf f/f_\oplus$"
 
 
-class LogRelativeInstellation(Plottable):
+class RelativeInstellation(Plottable):
     source = "relative_instellation"
+    label = "Planet Bolometric Flux Received\n(relative to Earth)"
+    scale = "log"
+    lim = [10**4, 10**-4]
+    symbol = r"$\sf f/f_\oplus$"
+
+
+class LogRelativeInstellation(Plottable):
+    source = "log_relative_instellation"
     label = "log10[Planet Bolometric Flux Received\n(relative to Earth)]"
     scale = "linear"
     lim = [4, -4]
@@ -107,6 +115,10 @@ class StellarLuminosity(Plottable):
     scale = "log"
     lim = [None, None]
     symbol = r"$\sf L_\star/L_\odot$"
+
+
+class RelativeStellarLuminosity(StellarLuminosity):
+    source = "relative_stellar_luminosity"
 
 
 class LogRelativeStellarLuminosity(Plottable):
