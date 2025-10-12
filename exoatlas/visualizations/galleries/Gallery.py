@@ -122,6 +122,7 @@ class Gallery:
                 wspace=wspace,
                 hspace=hspace,
             ),
+            **kw,
         )
 
     def remove_unused_axes(self):

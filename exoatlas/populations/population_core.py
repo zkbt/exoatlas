@@ -16,6 +16,7 @@ default_plotkw = dict(
     filled=True,
     outlined=False,
     bubble_anyway=False,
+    annotate_kw={},
 )
 
 # what keywords can we set for the population plotkw?
@@ -149,12 +150,13 @@ class Population:
 
             # keywords to use for plotting
             self._plotkw = plotkw
-
         elif isinstance(standard, str):
             filename = standard
             self.table = QTable(ascii.read(filename))
             self.label = self.table.meta["label"]
             self._plotkw = self.table.meta["plotkw"]
+        elif standard is None:
+            standard = Table(dict(name=[], hostname=[]))
 
         # define some cleaned names and hostnames, for indexing
         try:
@@ -173,8 +175,8 @@ class Population:
         self._make_sure_index_exists("tidyhostname")
 
         # test that indexing still works
-        name = self.table["tidyname"][0]
-        self.table.loc[name]
+        # name = self.table["tidyname"][0]
+        # self.table.loc[name]
 
         # define internal lists of column names
         self._populate_column_summaries()
@@ -1444,7 +1446,7 @@ class Population:
         desired_columns=[
             "name",
             "radius",
-            "relative_insolation",
+            "relative_instellation",
             "stellar_radius",
             "stellar_teff",
             "ra",
@@ -1495,7 +1497,7 @@ class Population:
             "transit_midpoint",
             "transit_duration",
             "radius",
-            "relative_insolation",
+            "relative_instellation",
             "stellar_radius",
             "stellar_teff",
             "distance",
@@ -1664,8 +1666,8 @@ class Population:
         transit_impact_parameter_from_inclination,
         transit_impact_parameter,
         insolation,
-        relative_insolation,
-        log_relative_insolation,
+        relative_instellation,
+        log_relative_instellation,
         relative_cumulative_xuv_insolation,
         teq,
         planet_luminosity,
@@ -1689,11 +1691,15 @@ class Population:
         impact_velocity,
         escape_parameter,
         scale_height,
+        log_relative_escape_velocity,
+        log_relative_radius,
+        log_relative_stellar_luminosity,
     )
 
     from .calculations.stellar import (
         stellar_luminosity_from_radius_and_teff,
         stellar_luminosity,
+        relative_stellar_luminosity,
         distance_modulus,
     )
 
@@ -1714,5 +1720,6 @@ class Population:
         transmission_snr,
     )
     from .calculations.planning import show_upcoming_transits, altaz, airmass
+    from .calculations.shoreline import probability_of_atmosphere
 
     from .tess import attach_tess_sectors, split_into_tess_sectors

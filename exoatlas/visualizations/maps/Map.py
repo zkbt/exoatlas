@@ -25,7 +25,26 @@ def clean_pops(initial):
     """
 
     if type(initial) == dict:
-        return initial
+
+        def flatten_dictionary(x):
+            """
+            Recursively flatten nested dictionaries into one level of dictionary of Populations.
+            """
+            elements_are_all_populations = True
+            flatter_dictionary = {}
+            for k1, v1 in x.items():
+                if isinstance(v1, Population):
+                    flatter_dictionary[k1] = v1
+                elif isinstance(v1, dict):
+                    for k2, v2 in v1.items():
+                        flatter_dictionary[f"{k1}-{k2}"] = v2
+                    elements_are_all_populations = False
+            if elements_are_all_populations:
+                return flatter_dictionary
+            else:
+                return flatten_dictionary(flatter_dictionary)
+
+        return flatten_dictionary(initial)
     elif type(initial) == list:
         d = {}
         for p in initial:
@@ -47,8 +66,11 @@ class Map:
     title = None
     xaxis = None
     yaxis = None
+    sliceaxis = None
 
-    def __init__(self, xaxis=None, yaxis=None, label=None, ax=None, **kw):
+    def __init__(
+        self, xaxis=None, yaxis=None, sliceaxis=None, label=None, ax=None, **kw
+    ):
         """
         Initialize a plotting map.
 
@@ -82,6 +104,7 @@ class Map:
         # set up the x and y axes
         self.plottable["x"] = clean_plottable(xaxis or self.xaxis, **kw)
         self.plottable["y"] = clean_plottable(yaxis or self.yaxis, **kw)
+        self.plottable["slice"] = clean_plottable(sliceaxis or self.sliceaxis, **kw)
 
         # store a label for this map
         self.label = (
@@ -140,6 +163,10 @@ class Map:
         Point this map at a particular population. This will be called
         when building up multiple populations on the same plot.
 
+        If a "slice" axis has been defined, this will also
+        create a temporary population that has been limited
+        down to a specific data range along that slice.
+
         Parameters
         ----------
         pop : Population, str, int
@@ -165,6 +192,17 @@ class Map:
             as a population at which we might point 
             {self}"""
             )
+
+        # slice (limit values along some dimension) if desired
+        how_to_slice = self.plottable.get("slice", None)
+        if how_to_slice is not None:
+            x = how_to_slice.value(self.pop)
+            lim = how_to_slice.lim
+            ok = (x >= min(lim)) * (x <= max(lim))
+            try:
+                self.pop = self.pop[ok]
+            except IndexError:
+                self.pop = None
 
     @property
     def x(self):
@@ -320,6 +358,29 @@ class Map:
         self.ax.set_xlim(*self.xlim)
         self.ax.set_xlabel(self.xlabel)
         self.ax.set_ylabel(self.ylabel)
+
+        # if this is a slice, title the axis with the slice limits
+        if self.plottable.get("slice", None) is not None:
+            s = self.plottable["slice"]
+            lim = u.Quantity(s.lim)
+            lower = min(lim).to_string(format="latex", precision=2)
+            upper = max(lim).to_string(format="latex", precision=2)
+            plt.title(
+                f"{lower}<{s.symbol}<{upper}".replace("\\mathrm{}", "").replace(
+                    "\\;", ""
+                ),
+                fontsize="medium",
+            )
+
+    def refine(self, **kw):
+        """
+        A function that's run at the end of 'build',
+        to add models, if desired, to make
+        more changes to the plot.
+
+        This is designed to be overwritten.
+        """
+        pass
 
     def build(
         self,

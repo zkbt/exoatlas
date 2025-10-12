@@ -253,7 +253,7 @@ def insolation(self, distribution=False, **kw):
     return S.to(u.W / u.m**2)
 
 
-def relative_insolation(self, distribution=False, **kw):
+def relative_instellation(self, distribution=False, **kw):
     """
     Relative Planet Insolation  (S/S_Earth)
 
@@ -271,9 +271,9 @@ def relative_insolation(self, distribution=False, **kw):
     return self.insolation(distribution=distribution) / earth_insolation
 
 
-def log_relative_insolation(self, distribution=False, **kw):
+def log_relative_instellation(self, distribution=False, **kw):
     """
-    log(Relative Planet Insolation)
+    log[Planet Instellation (relative to Earth)]
 
     Calculate log10 of the insolation the planet receives from its star,
     given the luminosity of the star and the semimajor axis,
@@ -286,7 +286,63 @@ def log_relative_insolation(self, distribution=False, **kw):
         If True, return an astropy.uncertainty.Distribution,
         which can be used for error propagation.
     """
-    return np.log10(self.relative_insolation(distribution=distribution))
+    return np.log10(self.relative_instellation(distribution=distribution))
+
+
+def log_relative_escape_velocity(self, **kw):
+    """
+    log10[Planet Escape Velocity (relative to Earth)]
+
+    Calculate log10 of the planet's escape velocity
+    from its mass and radius, divided
+    by Earth's escape velocity.
+
+    Parameters
+    ----------
+    kludge : bool
+        Should we include kludged estimates for mass (from msini and/or
+        empirical mass-radius) and/or radius (from empircal mass-radius)
+        when doing this calculation?
+    distribution : bool
+        If False, return a simple array of values.
+        If True, return an astropy.uncertainty.Distribution,
+        which can be used for error propagation.
+    """
+    return np.log10(self.relative_escape_velocity(**kw))
+
+
+def log_relative_radius(self, **kw):
+    """
+    log[Planet Radius (relative to Earth)]
+
+    Calculate log10 of planet radius,
+    expressed relative to Earth.
+
+    Parameters
+    ----------
+    distribution : bool
+        If False, return a simple array of values.
+        If True, return an astropy.uncertainty.Distribution,
+        which can be used for error propagation.
+    """
+    return np.log10(self.radius(**kw))
+
+
+def log_relative_stellar_luminosity(self, **kw):
+    """
+    log10[Stellar Luminosity (relative to the Sun)]
+
+    Calculate log10 of the star's luminosity,
+    relative to the Sun.
+
+    Parameters
+    ----------
+    distribution : bool
+        If False, return a simple array of values.
+        If True, return an astropy.uncertainty.Distribution,
+        which can be used for error propagation.
+    """
+    return np.log10(self.stellar_luminosity(**kw).to_value(u.Lsun))
 
 
 def relative_cumulative_xuv_insolation(self, distribution=False, **kw):
@@ -309,7 +365,7 @@ def relative_cumulative_xuv_insolation(self, distribution=False, **kw):
     xuv_proxy = (
         self.stellar_luminosity(distribution=distribution).to_value(u.Lsun) ** -0.6
     )
-    return self.relative_insolation(distribution=distribution) * xuv_proxy
+    return self.relative_instellation(distribution=distribution) * xuv_proxy
 
 
 def teq(self, distribution=False, albedo_bond=0, f=1 / 4, **kw):

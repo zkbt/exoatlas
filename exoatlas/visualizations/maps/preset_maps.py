@@ -346,7 +346,7 @@ class Flux_x_EscapeVelocity(ErrorMap):
         teq = np.logspace(1, 4) * u.K
         earth_teq = (5780 * u.K / np.sqrt(2 * u.AU / u.Rsun)).to(u.K)
 
-        relative_insolation = (teq / earth_teq) ** 4
+        relative_instellation = (teq / earth_teq) ** 4
         m = 1 * u.M_p
 
         def escape_velocity(T, lam=1):
@@ -361,7 +361,7 @@ class Flux_x_EscapeVelocity(ErrorMap):
         # loop over factors of 10 of lambda
         for lam in 10 ** np.arange(6):
             plt.plot(
-                relative_insolation,
+                relative_instellation,
                 escape_velocity(teq, lam=lam),
                 color=color,
                 alpha=alpha,
@@ -371,7 +371,7 @@ class Flux_x_EscapeVelocity(ErrorMap):
 
     def plot_jeans_shoreline(
         self,
-        reference_relative_insolation=0.43337238,
+        reference_relative_instellation=0.43337238,
         reference_escape_velocity=5.02270418 * u.km / u.s,
         alpha=0.5,
         color="gray",
@@ -379,16 +379,16 @@ class Flux_x_EscapeVelocity(ErrorMap):
         y=100,
         **kw
     ):
-        relative_insolation = np.logspace(-5, 5)
+        relative_instellation = np.logspace(-5, 5)
         # v ~ T**(1/2) ~ I**(1/8)
         escape_velocity = (
             reference_escape_velocity
-            * (relative_insolation / reference_relative_insolation) ** 0.125
+            * (relative_instellation / reference_relative_instellation) ** 0.125
         )
-        plt.plot(relative_insolation, escape_velocity, alpha=alpha, color=color)
+        plt.plot(relative_instellation, escape_velocity, alpha=alpha, color=color)
 
         plt.text(
-            reference_relative_insolation,
+            reference_relative_instellation,
             reference_escape_velocity,
             r"$v_{thermal} \propto v_{escape}$    ",
             fontsize=8,
@@ -400,7 +400,7 @@ class Flux_x_EscapeVelocity(ErrorMap):
 
     def plot_shoreline(
         self,
-        reference_relative_insolation=0.43337238,
+        reference_relative_instellation=0.43337238,
         reference_escape_velocity=5.02270418 * u.km / u.s,
         alpha=0.5,
         color="blue",
@@ -408,15 +408,15 @@ class Flux_x_EscapeVelocity(ErrorMap):
         y=100,
         **kw
     ):
-        relative_insolation = np.logspace(-5, 5)
+        relative_instellation = np.logspace(-5, 5)
         escape_velocity = (
             reference_escape_velocity
-            * (relative_insolation / reference_relative_insolation) ** 0.25
+            * (relative_instellation / reference_relative_instellation) ** 0.25
         )
-        plt.plot(relative_insolation, escape_velocity, alpha=alpha, color=color)
+        plt.plot(relative_instellation, escape_velocity, alpha=alpha, color=color)
 
         plt.text(
-            reference_relative_insolation,
+            reference_relative_instellation,
             reference_escape_velocity,
             r"   $I \propto v_{escape}^4$",
             fontsize=8,
@@ -432,7 +432,7 @@ class EscapeVelocity_x_Flux(BubbleMap):
 
     def plot_jeans_shoreline(
         self,
-        reference_relative_insolation=0.43337238,
+        reference_relative_instellation=0.43337238,
         reference_escape_velocity=5.02270418 * u.km / u.s,
         alpha=0.5,
         color="gray",
@@ -440,15 +440,15 @@ class EscapeVelocity_x_Flux(BubbleMap):
         y=100,
         **kw
     ):
-        relative_insolation = np.logspace(-5, 5)
+        relative_instellation = np.logspace(-5, 5)
         # v ~ T**(1/2) ~ I**(1/8)
         escape_velocity = (
             reference_escape_velocity
-            * (relative_insolation / reference_relative_insolation) ** 0.125
+            * (relative_instellation / reference_relative_instellation) ** 0.125
         )
         plt.plot(
             escape_velocity,
-            relative_insolation,
+            relative_instellation,
             alpha=alpha,
             color=color,
             label=r"$v_{thermal} \propto v_{escape}$",
@@ -456,7 +456,7 @@ class EscapeVelocity_x_Flux(BubbleMap):
 
     def plot_shoreline(
         self,
-        reference_relative_insolation=0.43337238,
+        reference_relative_instellation=0.43337238,
         reference_escape_velocity=5.02270418 * u.km / u.s,
         alpha=0.5,
         color="blue",
@@ -464,14 +464,14 @@ class EscapeVelocity_x_Flux(BubbleMap):
         y=100,
         **kw
     ):
-        relative_insolation = np.logspace(-5, 5)
+        relative_instellation = np.logspace(-5, 5)
         escape_velocity = (
             reference_escape_velocity
-            * (relative_insolation / reference_relative_insolation) ** 0.25
+            * (relative_instellation / reference_relative_instellation) ** 0.25
         )
         plt.plot(
             escape_velocity,
-            relative_insolation,
+            relative_instellation,
             alpha=alpha,
             color=color,
             label=r"$I \propto v_{escape}^4$",

@@ -3,9 +3,33 @@ from ...populations import Population
 from matplotlib.colors import Normalize, LogNorm
 
 
+def choose_first_not_none(*args):
+    """
+    Wrapper to pick first verson of a thing that isn't None.
+
+    (For many variables this can happen with `x1 or x2`, but
+    this gets grumpy for `astropy.units.Quantity` objects.)
+
+    Parameters
+    ----------
+    *args : anything
+        Any number of positional arguments.
+
+    Returns
+    -------
+    something :
+        The first positional argument that isn't None.
+        Otherwise, return None.
+    """
+    for a in args:
+        if a is not None:
+            return a
+
+
 class Plottable:
     source = None
     label = None
+    symbol = None
     scale = "log"
     lim = [None, None]
     unit = None
@@ -19,7 +43,16 @@ class Plottable:
 
     """
 
-    def __init__(self, source=None, label=None, scale=None, lim=None, unit=None, **kw):
+    def __init__(
+        self,
+        source=None,
+        label=None,
+        symbol=None,
+        scale=None,
+        lim=None,
+        unit=None,
+        **kw,
+    ):
         """
         Initialize a Plottable quantity.
 
@@ -52,6 +85,13 @@ class Plottable:
             Human-friendly string describing
             this axis, which will appear as
             its label in the plot.
+        symbol : str
+            A very short mathematical symbol
+            to describe the quantity, nicely
+            typeset with LaTeX. "label" will
+            mostly be used for labeling axes,
+            but for some purposes it might
+            be helpful to have a shorter symbol.
         scale : str
             String ('linear', 'log', ?) to
             indicate what scale should be
@@ -84,11 +124,12 @@ class Plottable:
         """
 
         # set properties to be defaults, updated by keywords
-        self.source = source or self.source
-        self.label = label or self.label
-        self.scale = scale or self.scale
-        self.lim = lim or self.lim
-        self.unit = unit or self.unit
+        self.source = choose_first_not_none(source, self.source)
+        self.label = choose_first_not_none(label, self.label)
+        self.symbol = choose_first_not_none(symbol, self.symbol)
+        self.scale = choose_first_not_none(scale, self.scale)
+        self.lim = choose_first_not_none(lim, self.lim)
+        self.unit = choose_first_not_none(unit, self.unit)
 
         # set keywords to be defaults for source, updated by **kw
         self.kw = self._get_default_keyword_arguments() | kw
@@ -204,8 +245,11 @@ class Plottable:
         value : Quantity
             The value an astropy Quantity array.
         """
-        value = pop.get(self.source, **self.kw)
-        return self._convert_unit(value)
+        if pop is None:
+            return None
+        else:
+            value = pop.get(self.source, **self.kw)
+            return self._convert_unit(value)
 
     def uncertainty_lowerupper(self, pop):
         """
@@ -243,8 +287,11 @@ class Plottable:
             The magnitude of the upper uncertainties (x_{-lower}^{+upper}),
             as an astropy Quantity array.
         """
-        lower, upper = pop.get_uncertainty_lowerupper(self.source, **self.kw)
-        return self._convert_unit(lower), self._convert_unit(upper)
+        if pop is None:
+            return None
+        else:
+            lower, upper = pop.get_uncertainty_lowerupper(self.source, **self.kw)
+            return self._convert_unit(lower), self._convert_unit(upper)
 
     def uncertainty(self, pop):
         """
@@ -277,8 +324,11 @@ class Plottable:
         sigma : np.array
             The uncertainties an astropy Quantity array.
         """
-        sigma = pop.get_uncertainty(self.source, **self.kw)
-        return self._convert_unit(sigma)
+        if pop is None:
+            return None
+        else:
+            sigma = pop.get_uncertainty(self.source, **self.kw)
+            return self._convert_unit(sigma)
 
     def normalized_value(self, pop):
         """
@@ -303,30 +353,33 @@ class Plottable:
             The value, normalized
         """
 
-        # get unitless array of values
-        value = remove_unit(self._convert_unit(pop.get(self.source, **self.kw)))
-
-        # set non-nan limits if none are provided
-        vmin, vmax = self.lim
-        if vmin == None:
-            vmin = np.nanmin(value)
-        if vmax == None:
-            vmax = np.nanmax(value)
-
-        # call different scaling functions
-        reversed = vmin > vmax
-        if reversed:
-            kw = dict(vmin=vmax, vmax=vmin)
+        if pop is None:
+            return None
         else:
-            kw = dict(vmin=vmin, vmax=vmax)
-        if self.scale == "linear":
-            normalize = Normalize(**kw)
-        elif self.scale == "log":
-            normalize = LogNorm(**kw)
-        if reversed:
-            return 1 - normalize(value)
-        else:
-            return normalize(value)
+            # get unitless array of values
+            value = remove_unit(self._convert_unit(pop.get(self.source, **self.kw)))
+
+            # set non-nan limits if none are provided
+            vmin, vmax = self.lim
+            if vmin == None:
+                vmin = np.nanmin(value)
+            if vmax == None:
+                vmax = np.nanmax(value)
+
+            # call different scaling functions
+            reversed = vmin > vmax
+            if reversed:
+                kw = dict(vmin=vmax, vmax=vmin)
+            else:
+                kw = dict(vmin=vmin, vmax=vmax)
+            if self.scale == "linear":
+                normalize = Normalize(**kw)
+            elif self.scale == "log":
+                normalize = LogNorm(**kw)
+            if reversed:
+                return 1 - normalize(value)
+            else:
+                return normalize(value)
 
 
 def clean_plottable(initial, **kw):

@@ -67,6 +67,22 @@ def stellar_luminosity(self, distribution=False, **kw):
     return L
 
 
+def relative_stellar_luminosity(self, **kw):
+    """
+    Relative Stellar Luminosity (L*, Lsun)
+
+    A unitless version of stellar luminosity.
+
+    Parameters
+    ----------
+    distribution : bool
+        If False, return a simple array of values.
+        If True, return an astropy.uncertainty.Distribution,
+        which can be used for error propagation.
+    """
+    return self.stellar_luminosity(**kw).to_value(u.Lsun)
+
+
 def distance_modulus(self, distribution=False, **kw):
     """
     Distance Modulus ($\mu$, magnitudes)

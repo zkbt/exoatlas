@@ -91,6 +91,7 @@ setup(
         "pytz",
         "tess-point",
         "adjusttext",
+        "arviz",
     ],
     extras_require={
         "develop": [

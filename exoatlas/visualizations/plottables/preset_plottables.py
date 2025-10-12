@@ -4,16 +4,33 @@ from ...telescopes import *
 
 
 class Flux(Plottable):
-    source = "relative_insolation"
+    source = "relative_instellation"
     label = "Planet Bolometric Flux Received\n(relative to Earth)"
     scale = "log"
     lim = [6e4, 2e-4]
+    symbol = r"$\sf f/f_\oplus$"
+
+
+class RelativeInstellation(Plottable):
+    source = "relative_instellation"
+    label = "Planet Bolometric Flux Received\n(relative to Earth)"
+    scale = "log"
+    lim = [10**4, 10**-4]
+    symbol = r"$\sf f/f_\oplus$"
+
+
+class LogRelativeInstellation(Plottable):
+    source = "log_relative_instellation"
+    label = "log10[Planet Bolometric Flux Received\n(relative to Earth)]"
+    scale = "linear"
+    lim = [4, -4]
+    symbol = r"$\sf \log_{10}(f/f_\oplus)$"
 
 
 class Teq(Plottable):
     source = "teq"
     scale = "log"
-    lim = [200, 2000]
+    lim = [200, 2000] * u.K
 
     def _update_label(self):
 
@@ -39,28 +56,36 @@ class Radius(Plottable):
     source = "radius"
     label = "Planet Radius\n(Earth radii)"
     scale = "log"
-    lim = [0.3, 30]
+    lim = [0.3, 30] * u.R_earth
+    symbol = "$\sf R_p$"
+
+
+class LogRadius(Plottable):
+    source = "log_relative_escape_velocity"
+    scale = "log"
+    lim = [-1, 1]
+    symbol = r"$\sf \log_{10}(R_p/R_\oplus)$"
 
 
 class Mass(Plottable):
     source = "mass"
     label = "Planet Mass\n(Earth masses)"
     scale = "log"
-    lim = [0.03, 3000]
+    lim = [0.03, 3000] * u.M_earth
 
 
 class SemimajorAxis(Plottable):
     source = "semimajoraxis"
     label = "Semimajor Axis\n(AU)"
     scale = "log"
-    lim = [0.001, 1000]
+    lim = [0.001, 1000] * u.AU
 
 
 class AngularSeparation(Plottable):
     source = "angular_separation"
     label = "Angular Separation\n(arcsec)"
     scale = "log"
-    lim = [0.001, 10]
+    lim = [0.001, 10] * u.arcsec
 
 
 class Contrast(Plottable):
@@ -74,14 +99,14 @@ class KludgedMass(Plottable):
     source = "kludge_mass"
     label = "Planet Mass or msini\n(Earth masses)"
     scale = "log"
-    lim = [0.03, 4131]
+    lim = [0.03, 4131] * u.M_earth
 
 
 class StellarTeff(Plottable):
     source = "stellar_teff"
     label = "Stellar Temperature\n(K)"
     scale = "linear"
-    lim = [2000, 7000]
+    lim = [2000, 7000] * u.K
 
 
 class StellarLuminosity(Plottable):
@@ -89,34 +114,49 @@ class StellarLuminosity(Plottable):
     label = "Stellar Luminosity (L$_\odot$)"
     scale = "log"
     lim = [None, None]
+    symbol = r"$\sf L_\star/L_\odot$"
+
+
+class RelativeStellarLuminosity(StellarLuminosity):
+    source = "relative_stellar_luminosity"
+
+
+class LogRelativeStellarLuminosity(Plottable):
+    source = "log_relative_stellar_luminosity"
+    scale = "linear"
+    lim = [-4, 1]
+    symbol = r"$\sf \log_{10}(L_\star/L_\odot)$"
 
 
 class Distance(Plottable):
     source = "distance"
     label = "Distance\n(parsecs)"
     scale = "log"
-    lim = [5, 1000]
-
-
-class Distance(Plottable):
-    source = "distance"
-    label = "Distance\n(parsecs)"
-    scale = "log"
-    lim = [5, 1000]
+    lim = [5, 1000] * u.pc
+    symbol = r"$\sf D$"
 
 
 class EscapeVelocity(Plottable):
     source = "escape_velocity"
     label = "Escape Velocity\n(km/s)"
     scale = "log"
-    lim = [2, 500]
+    lim = [2, 500] * u.km / u.s
+    symbol = r"$\sf v_{\rm esc}"
 
 
 class RelativeEscapeVelocity(Plottable):
     source = "relative_escape_velocity"
     label = "Escape Velocity\n(relative to Earth)"
     scale = "log"
-    lim = [0.1, 100]
+    lim = [-2, 2]
+    symbol = r"$\sf v_{\rm esc}/v_{esc,\oplus}$"
+
+
+class LogRelativeEscapeVelocity(Plottable):
+    source = "log_relative_escape_velocity"
+    scale = "linear"
+    lim = [-1, 1]
+    symbol = r"$\sf \log_{10}(v_{\rm esc}/v_{esc,\oplus})$"
 
 
 class EscapeParameter(Plottable):
@@ -130,28 +170,28 @@ class Density(Plottable):
     source = "density"
     label = "Planet Density\n(g/cm$^3$)"
     scale = "log"
-    lim = [0.01, 100]
+    lim = [0.01, 100] * u.g / u.cm**3
 
 
 class StellarRadius(Plottable):
     source = "stellar_radius"
     label = "Stellar Radius\n(solar radii)"
     scale = "linear"
-    lim = [0.0, 2.0]
+    lim = [0.0, 2.0] * u.Rsun
 
 
 class Period(Plottable):
     source = "period"
     label = "Period (days)\n"
     scale = "log"
-    lim = [0.15, 365]
+    lim = [0.15, 365] * u.day
 
 
 class Gmag(Plottable):
     source = "magnitude_gaia"
     label = "G (magnitude)\n"
     scale = "linear"
-    lim = [3.5, 14.5]
+    lim = [3.5, 14.5] * u.mag
 
 
 class Depth(Plottable):
@@ -164,7 +204,7 @@ class Depth(Plottable):
 class StellarBrightness(Plottable):
     source = "stellar_brightness"
     scale = "log"
-    lim = [1e2, 1e8]
+    lim = [1e2, 1e8] * u.Unit("ph s^-1 m^-2 micron^-1")
     unit = u.Unit("ph s^-1 m^-2 micron^-1")
 
     def _update_label(self):
@@ -367,7 +407,7 @@ class RightAscension(Plottable):
     source = "ra"
     label = "Right Ascension (hours)"
     scale = "linear"
-    lim = [24, 0]
+    lim = [24, 0] * u.hourangle
     unit = u.hourangle
 
 
@@ -375,7 +415,7 @@ class Declination(Plottable):
     source = "dec"
     label = "Declination (˚)"
     scale = "linear"
-    lim = [-90, 90]
+    lim = [-90, 90] * u.deg
     unit = u.deg
 
 

@@ -30,6 +30,12 @@ def test_maps():
         plt.title(f"Map={k}")
 
 
+def test_slice():
+    e = TransitingExoplanets()
+    b = BubbleMap(xaxis=Flux(), yaxis=Radius(), sliceaxis=Radius(lim=[1, 2] * u.Rearth))
+    b.build(e)
+
+
 def test_map_types():
     pops = {}
     pops["solarsystem"] = SolarSystem()
