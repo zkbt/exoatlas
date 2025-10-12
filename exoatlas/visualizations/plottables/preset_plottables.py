@@ -35,7 +35,7 @@ class Teq(Plottable):
     def _update_label(self):
 
         self.label = (
-            "Planet Equilibrum Temperature (K, f={f}, {albedo:.0%} albedo)".format(
+            "Planet Equilibrum Temperature (K, f={f}, $A_B$={albedo_bond:.0%})".format(
                 **self.kw
             )
         )
@@ -48,13 +48,13 @@ class CumulativeXUVFlux(Flux):
 
 class ImpactVelocity(Plottable):
     source = "impact_velocity"
-    label = "Estimated Impact Velocity (km/s)"
+    label = "Estimated Impact Velocity\n(km/s)"
     scale = "log"
 
 
 class Radius(Plottable):
     source = "radius"
-    label = "Planet Radius (Earth radii)"
+    label = "Planet Radius\n(Earth radii)"
     scale = "log"
     lim = [0.3, 30] * u.R_earth
     symbol = "$\sf R_p$"
@@ -76,14 +76,14 @@ class Mass(Plottable):
 
 class SemimajorAxis(Plottable):
     source = "semimajoraxis"
-    label = "Semimajor Axis (AU)\n"
+    label = "Semimajor Axis\n(AU)"
     scale = "log"
     lim = [0.001, 1000] * u.AU
 
 
 class AngularSeparation(Plottable):
     source = "angular_separation"
-    label = "Angular Separation (arcsec)\n"
+    label = "Angular Separation\n(arcsec)"
     scale = "log"
     lim = [0.001, 10] * u.arcsec
 
@@ -104,7 +104,7 @@ class KludgedMass(Plottable):
 
 class StellarTeff(Plottable):
     source = "stellar_teff"
-    label = "Stellar Temperature (K)"
+    label = "Stellar Temperature\n(K)"
     scale = "linear"
     lim = [2000, 7000] * u.K
 
@@ -255,6 +255,7 @@ class StellarBrightnessTelescope(Plottable):
         self.setup_unit()
 
         # initialize the basic plottable axis
+        kw["telescope_name"] = telescope_name
         Plottable.__init__(self, **kw)
 
     def setup_telescope(self, telescope_name=None, **kw):
@@ -296,10 +297,10 @@ class StellarBrightnessTelescope(Plottable):
         )
 
 
-class DepthSNR(StellarBrightnessTelescope):
-    source = "depth_snr"
+class DepthUncertainty(StellarBrightnessTelescope):
+    source = "depth_uncertainty"
     scale = "log"
-    lim = [1e-3, 1e3]
+    lim = [1e-6, 1]
 
     def setup_unit(self):
         # kludge to undo telescope brightness unit
@@ -310,9 +311,21 @@ class DepthSNR(StellarBrightnessTelescope):
         """
         How should this plottable be labled on an axis?
         """
-        # define the label, based on the wavelength and telescope
-        w = self.wavelength.to(u.micron).value
-        self.label = f"S/N for Transit Depth\n{self.telescope_unit}"
+        # define the label, based on the telescope
+        self.label = f"Depth Uncertainty\n{self.telescope_unit}"
+
+
+class DepthSNR(DepthUncertainty):
+    source = "depth_snr"
+    scale = "log"
+    lim = [1e-3, 1e3]
+
+    def _update_label(self):
+        """
+        How should this plottable be labled on an axis?
+        """
+        # define the label, based on the telescope
+        self.label = f"S/N for Transit\n{self.telescope_unit}"
 
 
 class Transmission(Depth):
@@ -339,8 +352,8 @@ class Reflection(Depth):
     source = "reflection_signal"
 
     def _update_label(self):
-        albedo = self.kw["albedo"]
-        self.label = f"Reflected Light\nEclipse Depth\n({albedo:.0%} albedo)"
+        albedo_geometric = self.kw["albedo_geometric"]
+        self.label = f"Reflected Eclipse Depth\n(A$_g$={albedo_geometric:.0%})"
 
 
 class ReflectionSNR(DepthSNR):
@@ -349,20 +362,32 @@ class ReflectionSNR(DepthSNR):
     source = "reflection_snr"
 
     def _update_label(self):
-        albedo = self.kw["albedo"]
+        albedo_geometric = self.kw["albedo_geometric"]
         w = self.wavelength.to(u.micron).value
         R = self.R
-        self.label = f"S/N for Reflected Light\nEclipse Depth\n({albedo:.0%} albedo)\n{self.telescope_unit}"
+        self.label = f"S/N for Reflected Eclipse\n(A$_g$={albedo_geometric:.0%})\n{self.telescope_unit}"
 
 
 class Emission(Depth):
     source = "emission_signal"
 
     def _update_label(self):
-        albedo = self.kw["albedo"]
+        albedo_bond = self.kw["albedo_bond"]
         f = self.kw["f"]
         w = self.kw["wavelength"].to_value("micron")
-        self.label = f"Thermal Eclipse Depth\nat $\lambda={w}\mu m$\n(f={f:.2f}, {albedo:.0%} albedo)"
+        self.label = f"Thermal Eclipse Depth\n($A_B$={albedo_bond:.0%}, f={f:.2f}, $\lambda={w}\mu m$)"
+
+
+class ReflectionToEmissionRatio(Depth):
+    source = "reflection_to_emission_ratio"
+    lim = [1e-2, 1e2]
+
+    def _update_label(self):
+        albedo_geometric = self.kw["albedo_geometric"]
+        albedo_bond = self.kw["albedo_bond"]
+        f = self.kw["f"]
+        w = self.kw["wavelength"].to_value("micron")
+        self.label = f"Reflected/Thermal\n($A_g$={albedo_geometric:.0%}, $A_B$={albedo_bond:.0%},\nf={f:.2f}, $\lambda={w}\mu m$)"
 
 
 class EmissionSNR(DepthSNR):
@@ -371,11 +396,11 @@ class EmissionSNR(DepthSNR):
     source = "emission_snr"
 
     def _update_label(self):
-        albedo = self.kw["albedo"]
+        albedo_bond = self.kw["albedo_bond"]
         f = self.kw["f"]
         w = self.wavelength.to(u.micron).value
         R = self.R
-        self.label = f"S/N for Thermal\nEclipse Depth\n( f={f:.2f}, {albedo:.0%} albedo)\n{self.telescope_unit}"
+        self.label = f"S/N for Thermal Eclipse Depth\n( f={f:.2f}, $A_B$={albedo_bond:.0%})\n{self.telescope_unit}"
 
 
 class RightAscension(Plottable):

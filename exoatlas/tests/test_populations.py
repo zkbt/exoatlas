@@ -124,8 +124,10 @@ def test_transiting(planet="GJ1214b"):
     p.emission_signal(wavelength=5 * u.micron)
     p.emission_snr(wavelength=5 * u.micron, telescope_name="JWST")
 
-    p.reflection_signal(albedo=0.5)
-    p.reflection_snr(albedo=0.5, wavelength=5 * u.micron, telescope_name="JWST")
+    p.reflection_signal(albedo_geometric=0.5)
+    p.reflection_snr(
+        albedo_geometric=0.5, wavelength=5 * u.micron, telescope_name="JWST"
+    )
 
 
 """def test_choosing():

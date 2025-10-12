@@ -89,6 +89,7 @@ setup(
         "PyYAML",
         "tqdm",
         "pytz",
+        "tess-point",
         "adjusttext",
         "arviz",
     ],

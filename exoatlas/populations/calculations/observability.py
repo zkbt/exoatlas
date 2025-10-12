@@ -28,7 +28,9 @@ def angular_separation(self, distribution=False, **kw):
     return theta
 
 
-def imaging_contrast(self, albedo=2 / 3, phase_function=0.25, distribution=False, **kw):
+def imaging_contrast(
+    self, albedo_geometric=2 / 3, phase_function=0.25, distribution=False, **kw
+):
     """
     Reflected Light Imaging Contrast (unitless)
 
@@ -38,7 +40,7 @@ def imaging_contrast(self, albedo=2 / 3, phase_function=0.25, distribution=False
 
     Parameters
     ----------
-    albedo : float
+    albedo_geometric : float
         What's the geometric albedo? Default is 2/3, which (I think)
         is reasonably the maximum for Lambertian scattering from
         a face-on planet.
@@ -53,8 +55,7 @@ def imaging_contrast(self, albedo=2 / 3, phase_function=0.25, distribution=False
 
     return (
         phase_function
-        * albedo
-        * 0.25
+        * albedo_geometric
         * (
             self.kludge_radius(distribution=distribution)
             / self.semimajoraxis(distribution=distribution)
@@ -96,22 +97,21 @@ def transmission_signal(self, mu=2.3, kludge=False, distribution=False, **kw):
     return depth
 
 
-def reflection_signal(self, albedo=0.1, distribution=False, **kw):
+def reflection_signal(self, albedo_geometric=0.1, distribution=False, **kw):
     """
     Reflection Eclipse Signal (unitless)
 
     Calculate an estimate of the reflected light eclipse depth
-    for a particular albedo.
+    for a particular geometric albedo.
 
     TO-DO:
     Check reflected light math!!
 
     Parameters
     ----------
-    albedo : float
-        How much incoming light is reflected away to space?
-        Default of 0.1 might be reasonable for rocky surfaces
-        and/or very absorbing hot Jupiters?
+    albedo_geometric : float
+        Fraction of light reflected back toward star and viewer,
+        for calculating reflected light eclipse depths.
     distribution : bool
         If False, return a simple array of values.
         If True, return an astropy.uncertainty.Distribution,
@@ -119,18 +119,18 @@ def reflection_signal(self, albedo=0.1, distribution=False, **kw):
     """
     Rp = self.radius(distribution=distribution)
     a = self.semimajoraxis(distribution=distribution)
-    return albedo * 0.25 * (Rp / a).decompose() ** 2
+    return albedo_geometric * (Rp / a).decompose() ** 2
 
 
 def emission_signal(
-    self, wavelength=5 * u.micron, albedo=0, f=1 / 4, distribution=False, **kw
+    self, albedo_bond=0, f=1 / 4, wavelength=5 * u.micron, distribution=False, **kw
 ):
     """
     Thermal Emission Eclipse Signal (unitless)
 
     Calculate an estimate of the thermal emission eclipse depth
     at a particular wavelength, for a planet's equilibrium
-    temperature calculated for a particular albedo and f.
+    temperature calculated for a particular Bond albedo and f.
     Calculations (falsely!) assume Planck spectra for both
     the star and planet. Default parameters assumed 0 albedo
     and that heat is redistributed uniformly over the entire
@@ -138,14 +138,14 @@ def emission_signal(
 
     Parameters
     ----------
-    wavelength : astropy.unit.Quantity
-        The wavelength at which it should be calculated.
-    albedo : float
-        Fraction of light reflected instead of emitted.
+    albedo_bond : float
+        Fraction of reflected light for temperature calculation.
         See .teq() docstring for details + interpretation.
     f : float
         Heat distribution parameter for dayside temperature.
         See .teq() docstring for details and interpretation.
+    wavelength : astropy.unit.Quantity
+        The wavelength at which thermal emission should be calculated.
     distribution : bool
         If False, return a simple array of values.
         If True, return an astropy.uncertainty.Distribution,
@@ -160,7 +160,7 @@ def emission_signal(
         radius=self.stellar_radius(distribution=distribution),
     )
     planet = rc.Thermal(
-        teff=self.teq(albedo=albedo, f=f, distribution=distribution),
+        teff=self.teq(albedo_bond=albedo_bond, f=f, distribution=distribution),
         radius=self.radius(distribution=distribution),
     )
 
@@ -170,6 +170,44 @@ def emission_signal(
         depths = planet.spectrum(wavelength) / star.spectrum(wavelength)
 
     return depths
+
+
+def reflection_to_emission_ratio(
+    self, albedo_geometric=0.1, albedo_bond=0.15, f=1 / 4, wavelength=5 * u.micron, **kw
+):
+    """
+    Reflection Eclipse Signal (unitless)
+
+    Calculate an estimate of the reflected light eclipse depth
+    for a particular albedo.
+
+    TO-DO:
+    Replace emission with sum-of-Planck-spectra instead!
+
+    Parameters
+    ----------
+    albedo_geometric : float
+        Fraction of light reflected back toward star and viewer,
+        for calculating reflected light eclipse depths.
+    albedo_bond : float
+        Fraction of reflected light for temperature calculation.
+        See .teq() docstring for details + interpretation.
+    f : float
+        Heat distribution parameter for dayside temperature.
+        See .teq() docstring for details and interpretation.
+    wavelength : astropy.unit.Quantity
+        The wavelength at which thermal emission should be calculated.
+    distribution : bool
+        If False, return a simple array of values.
+        If True, return an astropy.uncertainty.Distribution,
+        which can be used for error propagation.
+    """
+    reflection = self.reflection_signal(albedo_geometric=albedo_geometric, **kw)
+    emission = self.emission_signal(
+        albedo_bond=albedo_bond, f=f, wavelength=wavelength, **kw
+    )
+
+    return reflection / emission
 
 
 def stellar_brightness(self, wavelength=5 * u.micron, distribution=False, **kw):
@@ -432,7 +470,7 @@ def depth_snr(self, telescope_name="JWST", distribution=False, **kw):
 
 
 def emission_snr(
-    self, telescope_name="JWST", albedo=0, f=1 / 4, distribution=False, **kw
+    self, telescope_name="JWST", albedo_bond=0, f=1 / 4, distribution=False, **kw
 ):
     """
     Thermal Emission Eclipse Depth S/N
@@ -466,7 +504,7 @@ def emission_snr(
         this will be ignored. Otherwise, it will set the total amount
         of in-transit time observed, assuming that an equal amount of
         time will *also* be observed out of transit.
-    albedo : float
+    albedo_bond : float
         Fraction of light reflected instead of emitted.
         See .teq() docstring for details + interpretation.
     f : float
@@ -482,11 +520,15 @@ def emission_snr(
         telescope_name=telescope_name, distribution=distribution, **kw
     )
     kw["wavelength"] = telescope_unit.wavelength
-    signal = self.emission_signal(albedo=albedo, f=f, distribution=distribution, **kw)
+    signal = self.emission_signal(
+        albedo_bond=albedo_bond, f=f, distribution=distribution, **kw
+    )
     return signal / noise
 
 
-def reflection_snr(self, telescope_name="JWST", albedo=0.1, distribution=False, **kw):
+def reflection_snr(
+    self, telescope_name="JWST", albedo_geometric=0.1, distribution=False, **kw
+):
     """
     Reflected Light Eclipse Depth S/N
 
@@ -519,13 +561,7 @@ def reflection_snr(self, telescope_name="JWST", albedo=0.1, distribution=False, 
         this will be ignored. Otherwise, it will set the total amount
         of in-transit time observed, assuming that an equal amount of
         time will *also* be observed out of transit.
-    albedo : float
-        Fraction of light reflected instead of emitted.
-        See .teq() docstring for details + interpretation.
-    f : float
-        Heat distribution parameter for dayside temperature.
-        See .teq() docstring for details and interpretation.
-    albedo : float
+    albedo_geometric : float
         How much incoming light is reflected away to space?
         Default of 0.1 might be reasonable for rocky surfaces
         and/or very absorbing hot Jupiters?
@@ -538,7 +574,9 @@ def reflection_snr(self, telescope_name="JWST", albedo=0.1, distribution=False, 
     noise, telescope_unit = self._get_noise_and_unit(
         telescope_name=telescope_name, distribution=distribution, **kw
     )
-    signal = self.reflection_signal(albedo=albedo, distribution=distribution)
+    signal = self.reflection_signal(
+        albedo_geometric=albedo_geometric, distribution=distribution
+    )
     return signal / noise
 
 
