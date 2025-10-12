@@ -1,4 +1,4 @@
-from .shoreline import *
+from .shoreline_maps import *
 from ..animation import get_animation_writer
 from ..plottables import *
 from ...models import *

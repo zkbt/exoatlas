@@ -1719,3 +1719,4 @@ class Population:
         transmission_snr,
     )
     from .calculations.planning import show_upcoming_transits, altaz, airmass
+    from .calculations.shoreline import probability_of_atmosphere

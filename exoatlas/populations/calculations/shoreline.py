@@ -1,5 +1,4 @@
 from ...imports import *
-from ..maps import ErrorMap, BubbleMap
 import arviz as az
 
 
@@ -109,29 +108,46 @@ class Shoreline:
         return 1 / (1 + np.exp(distance_from_shoreline / width_of_shoreline))
 
 
-class ShorelineErrorMap(ErrorMap, Shoreline):
+def probability_of_atmosphere(self, shoreline, distribution=False, **kw):
     """
-    Define a cosmic shoreline map, for looking at
-    some slice of the 3D cosmic shoreline.
+    Probability of Atmosphere (fractional)
 
-    It contains the powers both of an ErrorMap
-    and of a Shoreline with model posteriors.
-    """
-
-    def __init__(self, **kw):
-        super().__init__(**kw)
-        Shoreline.__init__(self, **kw)
+    Estimate the chance that a planet has an atmosphere
+    according to the 3D cosmic shoreline described in
+    https://ui.adsabs.harvard.edu/abs/2025arXiv250702136B/
 
 
-class ShorelineBubbleMap(BubbleMap, Shoreline):
-    """
-    Define a cosmic shoreline map, for looking at
-    some slice of the 3D cosmic shoreline.
-
-    It contains the powers both of an BubbleMap
-    and of a Shoreline with model posteriors.
+    Parameters
+    ----------
+    shoreline : exoatlas.visualizations.Shoreline
+        A shoreline object with a posterior of shoreline
+        parameters attached to it, for calculating probabilities
+    distribution : bool
+        If False, return a simple array of values.
+        If True, return an astropy.uncertainty.Distribution,
+        which can be used for error propagation.
     """
 
-    def __init__(self, **kw):
-        super().__init__(**kw)
-        Shoreline.__init__(self, **kw)
+    if shoreline is None:
+        raise ValueError(".probability_of_atmosphere")
+
+    # set the parameters, either as samples from posterior or the MAP values
+    parameter_names = ["log_f_0", "p", "q", "ln_w"]
+    if distribution:
+        n_samples = self._number_of_uncertainty_samples
+        sampled_parameters = shoreline.sampled_parameters(n_samples)
+        parameter_inputs = {
+            k: Distribution(sampled_parameters[k]) for k in parameter_names
+        }
+    else:
+        parameter_inputs = dict(shoreline.best_parameters()[parameter_names])
+
+    # set the data inputs, either as samples from uncertainties or the MAP values
+    data_inputs = dict(
+        log_v=self.log_relative_escape_velocity(distribution=distribution, **kw),
+        log_L=self.log_relative_stellar_luminosity(distribution=distribution, **kw),
+        log_f=self.log_relative_instellation(distribution=distribution, **kw),
+    )
+    # calculate the shoreline atmosphere probability
+    probability = shoreline.probability_of_atmosphere(**parameter_inputs, **data_inputs)
+    return probability
