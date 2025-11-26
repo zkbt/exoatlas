@@ -173,11 +173,11 @@ def one2another(bottom="white", top="red", alphabottom=1.0, alphatop=1.0, N=256)
     Create a cmap that goes smoothly (linearly in RGBA) from "bottom" to "top".
     """
     try:
-        rgb_bottom = bottom[0:3] + 0
+        rgb_bottom = np.array(bottom).flatten()[0:3] + 0
     except:
         rgb_bottom = name2color(bottom or "white")
     try:
-        rgb_top = top[0:3] + 0
+        rgb_top = np.array(top).flatten()[0:3] + 0
     except:
         rgb_top = name2color(top or "black")
 

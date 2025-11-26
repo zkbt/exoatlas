@@ -99,7 +99,9 @@ class ErrorMap(BubbleMap):
 
         # set the base color to use throughout
         default_color = plt.scatter([], []).get_facecolor()[0]
-        color = self.pop.color or default_color
+        color = self.pop.color
+        if color is None:
+            color = default_color
         marker = self.pop.marker or "o"
 
         # if the entire population is exact (e.g., Solar System),

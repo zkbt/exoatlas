@@ -33,6 +33,7 @@ allowed_plotkw += [
     "filled",
     "markeredgewidth",
     "markeredgecolor",
+    "linewidths",
 ]
 
 

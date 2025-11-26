@@ -187,11 +187,13 @@ class BubbleMap(Map):
         """
 
         # should we ignore any variable color instructions?
-        population_color = self.pop._plotkw.get("color", None) or self.pop._plotkw.get(
-            "c", None
-        )
+        population_color = self.pop._plotkw.get("color", None)
+        if population_color is None:
+            population_color = self.pop._plotkw.get("c", None)
         if self.pop.respond_to_color == False:
-            color = population_color or getattr(self, "static_color", None)
+            color = population_color
+            if color is None:
+                color = getattr(self, "static_color", None)
         # should we use a variable color?
         elif "color" in self.plottable:
             normalized = self.plottable["color"].normalized_value(self.pop)
@@ -199,7 +201,9 @@ class BubbleMap(Map):
         # finally, should we just use a default color?
         else:
             # get default, first from pop and then from map
-            color = population_color or getattr(self, "static_color", None)
+            color = population_color
+            if color is None:
+                color = getattr(self, "static_color", None)
 
         # return a valid input to any one of the following:
         #   plt.scatter(c=...)

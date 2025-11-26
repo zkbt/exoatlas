@@ -478,6 +478,7 @@ class Map:
         va="center",
         format="   {}",
         names=[],
+        names_to_avoid=[],
         **kw,
     ):
         """
@@ -519,6 +520,7 @@ class Map:
 
         # searchable list
         tidynames = [clean(x).lower() for x in names]
+        tidynames_to_avoid = [clean(x).lower() for x in names_to_avoid]
 
         # loop over the elements in the population
         for i in range(len(self.x)):
@@ -530,6 +532,9 @@ class Map:
             tidyhost = self.pop.tidyname()[i]
             if len(tidynames) > 0:
                 if (tidyname not in tidynames) and (tidyhost not in tidynames):
+                    continue
+            if len(tidynames_to_avoid) > 0:
+                if tidyname in tidynames_to_avoid:
                     continue
 
             # skip over the planets that aren't within limits

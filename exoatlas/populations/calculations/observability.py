@@ -294,6 +294,7 @@ def depth_uncertainty(
     telescope_name="JWST",
     per_transit=False,
     dt=1 * u.hour,
+    twinkling=False,
     distribution=False,
     **kw
 ):
@@ -364,6 +365,11 @@ def depth_uncertainty(
 
     # what's the flux uncertainty on the time scale of one transit?
     sigma = 1 / np.sqrt(N)
+
+    if twinkling:
+        # KLUDGE!!!!
+        sigma_floor = 50e-6
+        sigma = np.sqrt(sigma**2 + sigma_floor**2)
 
     # inflate by a factor of sqrt(2) for equal out-of-transit
     oot = np.sqrt(2)

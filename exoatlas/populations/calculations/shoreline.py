@@ -36,7 +36,7 @@ class Shoreline:
         """
         Return one "best" set of parameters.
         """
-        best_parameters = self.summary["median"]
+        best_parameters = self.summary["median"][self.var_names]
         return best_parameters
 
     def sampled_parameters(self, N_samples=100):

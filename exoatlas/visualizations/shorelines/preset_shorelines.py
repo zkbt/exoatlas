@@ -73,7 +73,14 @@ class Shoreline_SemimajorAxis_x_StellarLuminosity_x_Radius(ShorelineErrorMap):
         plt.plot(a_ee, L, color=color, alpha=alpha, **kw)
 
     def plot_hz_kopparapu(
-        self, color="seagreen", alpha=0.25, linewidth=0, zorder=-100, ax=None, **kw
+        self,
+        color="seagreen",
+        alpha=0.25,
+        linewidth=0,
+        zorder=-100,
+        ax=None,
+        annotate=False,
+        **kw,
     ):
         """
         Plot the Kopparapu et al. (2013) habitable zone.
@@ -123,6 +130,17 @@ class Shoreline_SemimajorAxis_x_StellarLuminosity_x_Radius(ShorelineErrorMap):
             **kw,
         )
 
+        if annotate:
+            plt.text(
+                np.max(a_inner),
+                np.max(L) * 0.8,
+                "habitable zone",
+                va="top",
+                ha="right",
+                fontsize=8,
+                color="seagreen",
+            )
+
     def plot_stellar_radius(self, color="gray", alpha=0.5, **kw):
         """
         Plot the radius of the star, for reference.
@@ -169,7 +187,7 @@ class Shoreline_SemimajorAxis_x_StellarLuminosity_x_Radius(ShorelineErrorMap):
             plt.plot(a_shoreline, L, color="gray", alpha=0.1)
 
     def plot_shoreline_probability(
-        self, N_samples=100, colormesh=True, contour=True, ax=None
+        self, N_samples=100, colormesh=True, contour=True, ax=None, annotate=True
     ):
 
         plt.sca(ax or self.ax)
@@ -226,6 +244,18 @@ class Shoreline_SemimajorAxis_x_StellarLuminosity_x_Radius(ShorelineErrorMap):
                 colors=["gray", "black", "gray"],
             )
 
+        if annotate:
+            a_text = 10 ** np.interp(0.5, log_P_2d[-1, :], log_a_1d)
+            plt.text(
+                a_text,
+                10 ** np.max(log_L_1d) * 0.8,
+                "cosmic\nshoreline",
+                va="top",
+                ha="right",
+                fontsize=8,
+                color="gray",
+            )
+
     def refine(self):
         self.plot_hz_earth()
         self.plot_hz_kopparapu()
@@ -267,7 +297,11 @@ class ShorelineStandardMap(ShorelineErrorMap):
         self.slice_var = slice_var
 
     def plot_shoreline_probability(
-        self, N_samples=100, colormesh=True, contour=True, ax=None
+        self,
+        N_samples=100,
+        colormesh=True,
+        contour=True,
+        ax=None,
     ):
 
         plt.sca(ax or self.ax)
