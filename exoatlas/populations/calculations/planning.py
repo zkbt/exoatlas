@@ -295,6 +295,8 @@ def show_upcoming_transits(
     # stack and join individual planets into one giant table with metadata
     table_of_all_transits = vstack(tables_for_individual_planets)
     transit_planning_table = join(table_of_all_transits, initial_planning_table)
+    transit_planning_table.sort("midpoint")
+
     transit_planning_table.meta["where"] = where
     transit_planning_table.meta["when"] = when
     transit_planning_table.meta["window"] = window
