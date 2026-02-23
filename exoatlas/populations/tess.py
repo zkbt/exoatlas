@@ -1,7 +1,5 @@
 from ..imports import *
 
-from tess_stars2px import tess_stars2px_function_entry
-
 
 def get_tess_sector_information(pop):
     """
@@ -20,6 +18,9 @@ def get_tess_sector_information(pop):
         Stars may appear 0 times (= not observed) or
         one or more times (= one row for each sector).
     """
+
+    from tess_stars2px import tess_stars2px_function_entry
+
     ra = pop.ra().to_value("deg")
     dec = pop.dec().to_value("deg")
     id = np.arange(len(pop))
