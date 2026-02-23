@@ -116,7 +116,7 @@ def plot_airmass_for_transit(row, max_airmass=2.0, savefig=False):
 
         # add title
         plt.title(
-            f'{row["name"]}\n{row.meta["where"].name} | {row["midpoint"].iso} UTC'
+            f'{row["name"]} | (orbital phase = {row["orbital_phase"]}) \n{row.meta["where"].name} | {row["midpoint"].iso} UTC'
         )
 
         # set xlimit to be exactly sunset to sunrise
@@ -142,6 +142,7 @@ def show_upcoming_transits(
     allow_partial_transits=False,
     min_altitude=30 * u.deg,
     max_altitude=90 * u.deg,
+    orbital_phase=0.0,
     visualize=True,
 ):
     """
@@ -173,6 +174,15 @@ def show_upcoming_transits(
     max_altitude : astropy.units.Quantity
         The highest altitude to consider observable.
         (some telescopes can't observe at zenith!)
+    orbital_phase : float
+        (A kludge for predicting secondary eclipses),
+        the fractional phase of the orbit at which the
+        "transit" occurs. The default of 0.0 centers
+        on the actual transit. A value of 0.5 would be
+        the center of a secondary eclipse for a circular
+        orbit, and for eccentric orbits the phase
+        would need to be calculated on a case-by-case
+        basis.
     visualize : bool
         Should we automatically produce an airmass
         plot for each observable transit event?
@@ -204,7 +214,7 @@ def show_upcoming_transits(
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
 
-        # lopp through planets
+        # loop through planets
         for i in range(len(self)):
 
             # set the target location on the sky
@@ -214,7 +224,8 @@ def show_upcoming_transits(
             try:
                 # set the orbital parameters
                 es = ap.EclipsingSystem(
-                    primary_eclipse_time=Time(self.transit_midpoint()[i], format="jd"),
+                    primary_eclipse_time=Time(self.transit_midpoint()[i], format="jd")
+                    + orbital_phase * self.period()[i],
                     orbital_period=self.period()[i],
                     duration=self.transit_duration()[i],
                 )
@@ -264,12 +275,17 @@ def show_upcoming_transits(
                 table_of_transits_for_this_planet = Table(
                     dict(
                         name=[self.name()[i]] * N,
+                        orbital_phase=[orbital_phase] * N,
+                        date=Time(midtransit_times[ok]).iso,
                         ingress=ingress_and_egress_times[ok, 0],
                         midpoint=midtransit_times[ok],
                         egress=ingress_and_egress_times[ok, 1],
                         target=[target] * N,
                     )
                 )
+                # sort transits in time
+                table_of_transits_for_this_planet.sort("midpoint")
+                # append to list
                 tables_for_individual_planets.append(table_of_transits_for_this_planet)
 
     if len(tables_for_individual_planets) == 0:

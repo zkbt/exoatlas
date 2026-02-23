@@ -355,7 +355,8 @@ class Population:
             )
 
         # put the data into the column
-        self.table[name] = data
+        self.table.add_column(Column(name=name, data=data))
+        assert name in self.table.colnames
 
         # add uncertainties, if provided
         if uncertainty is not None:
@@ -365,10 +366,6 @@ class Population:
             self.table["{name}_uncertainty_upper"] = uncertainty_upper
 
         # register the method for the column
-        if hasattr(self, name):
-            warnings.warn(
-                f"'.{name}()' already exists in `.table` for this `Population`; please consider a different name!"
-            )
         setattr(self, name, self._create_function_to_access_table_quantity(name))
 
     def add_calculation(self, name, function):
