@@ -4,7 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import scipy.interpolate
 import astropy.io.ascii
-import pkg_resources
+from importlib.resources import files
 import string
 import warnings
 
@@ -45,7 +45,8 @@ class Relation:
 
         # figure out the path to the data file, relative to this package
         # path = os.path.dirname(__file__) + '/'+ self.filename
-        path = pkg_resources.resource_filename(__name__, self.filename)
+        path = files(__name__) / self.filename
+
         # print("loading data from {0}".format(path))
 
         # load as an astropy table
@@ -187,7 +188,7 @@ class Relation:
             figsize=(N * size, N * size),
             dpi=100,
         )
-        gs = plt.matplotlib.gridspec.GridSpec(N, N)
+        gs = plt.matplotlib.gridspec.GridSpec(N, N, figure=fig)
 
         for i in range(N):
             outkey = keys[i]

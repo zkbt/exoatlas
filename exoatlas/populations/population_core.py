@@ -722,7 +722,7 @@ class Population:
             tidy = [clean(k).lower() for k in key]
 
         # pull out rows by planet name
-        subset = self.table.loc["tidyname", tidy]
+        subset = self.table.loc.with_index("tidyname")[tidy]
 
         # create a useful label for the population
         if isinstance(key, str):
@@ -766,7 +766,7 @@ class Population:
             tidy = [clean(k).lower() for k in key]
 
         # pull out rows by planet name
-        subset = self.table.loc["tidyhostname", tidy]
+        subset = self.table.loc.with_index("tidyhostname")[tidy]
 
         # create a useful label for the population
         if isinstance(key, str):
@@ -1369,6 +1369,8 @@ class Population:
 
         # extract just the subsection of the table relating to these planets
         i = self.table.loc_indices[planets_to_index]
+        # mask = np.isin(self.table["tidyname"], planets_to_index)
+        # i = np.where(mask)[0]
 
         # loop over keyword arguments
         for k, v in kwargs.items():

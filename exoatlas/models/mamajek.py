@@ -55,7 +55,8 @@ class Mamajek(Relation):
 
         # figure out the path to the data file, relative to this package
         # path = os.path.dirname(__file__) + '/'+ self.filename
-        path = pkg_resources.resource_filename(__name__, self.filename)
+        path = files(__name__) / self.filename
+
         # print("loading data from {0}".format(path))
 
         # load as an astropy table
