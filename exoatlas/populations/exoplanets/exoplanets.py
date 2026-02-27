@@ -893,7 +893,9 @@ class Exoplanets(ExoplanetsPSCP):
             try:
                 # print(f"{k}_reference", references)
                 these_references = QTable(
-                    self.individual_references.table.loc[f"{k}_reference", references]
+                    self.individual_references.table.loc.with_index(f"{k}_reference")[
+                        references
+                    ]
                 )
             except KeyError:
                 # if verbose:
@@ -903,7 +905,7 @@ class Exoplanets(ExoplanetsPSCP):
             # extract a (possibly even smaller) table of just these planets, or give up
             try:
                 these_planets = QTable(
-                    these_references.loc["tidyname", planets_to_index]
+                    these_references.loc.with_index("tidyname")[planets_to_index]
                 )
             except KeyError:
                 if verbose:
@@ -934,8 +936,10 @@ class Exoplanets(ExoplanetsPSCP):
                 for tidyname in np.unique(new["tidyname"]):
                     if verbose:
                         print(f"'{k}' for '{tidyname}'")
-                    old_for_this_planet = self.table.loc["tidyname", tidyname]
-                    new_for_this_planet = new.loc["tidyname", tidyname]
+                    old_for_this_planet = self.table.loc.with_index("tidyname")[
+                        tidyname
+                    ]
+                    new_for_this_planet = new.loc.with_index("tidyname")[tidyname]
                     # if verbose:
                     # print("old", old_for_this_planet["tidyname"])
                     # print("new", new_for_this_planet["tidyname"])
