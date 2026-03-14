@@ -240,7 +240,7 @@ class Shoreline_SemimajorAxis_x_StellarLuminosity_x_Radius(ShorelineErrorMap):
                 log_P_2d,
                 levels=[0.05, 0.5, 0.95],
                 linestyles="--",  # (0, (5,5)),
-                alpha=0.25,
+                alpha=0.5,
                 colors=["gray", "black", "gray"],
             )
 
@@ -249,11 +249,12 @@ class Shoreline_SemimajorAxis_x_StellarLuminosity_x_Radius(ShorelineErrorMap):
             plt.text(
                 a_text,
                 10 ** np.max(log_L_1d) * 0.8,
-                "cosmic\nshoreline",
+                "   cosmic\n    shoreline",
                 va="top",
-                ha="right",
+                ha="left",
                 fontsize=8,
-                color="gray",
+                color="black",
+                alpha=0.5,
             )
 
     def refine(self):
@@ -286,9 +287,9 @@ class ShorelineStandardMap(ShorelineErrorMap):
 
         # initialize the map
         super().__init__(
-            xaxis=self.linear_plottables[x_var](lim=10 ** self.lims[x_var]),
-            yaxis=self.linear_plottables[y_var](lim=10 ** self.lims[y_var]),
-            sliceaxis=self.log_plottables[slice_var](lim=self.lims[slice_var]),
+            xaxis=self.linear_plottables[x_var](lim=10 ** self.lims[x_var], **kw),
+            yaxis=self.linear_plottables[y_var](lim=10 ** self.lims[y_var], **kw),
+            sliceaxis=self.log_plottables[slice_var](lim=self.lims[slice_var], **kw),
             **kw,
         )
 
