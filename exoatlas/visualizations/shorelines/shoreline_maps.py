@@ -15,6 +15,20 @@ class ShorelineErrorMap(ErrorMap, Shoreline):
         super().__init__(**kw)
         Shoreline.__init__(self, **kw)
 
+    def add_colorbar(self):
+        """
+        Add a colorbar showing the shoreline probability.
+
+        (This can be called only if self.plot_shoreline_probability() has been too.)
+        """
+        colorbar = plt.colorbar(
+            self._shoreline_probability_imshow, label="P(atmosphere)"
+        )
+        colorbar.set_ticks([0, 0.5, 1])
+        colorbar.add_lines(self._shoreline_probability_contours)
+        for l in colorbar.lines:
+            l.set_linestyles("--")
+
 
 class ShorelineBubbleMap(BubbleMap, Shoreline):
     """

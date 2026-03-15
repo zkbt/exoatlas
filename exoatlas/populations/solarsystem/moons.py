@@ -27,7 +27,7 @@ class SolarSystemMoons(PredefinedPopulation):
         PredefinedPopulation.__init__(self, **kwargs)
         self.color = "mediumblue"
         self.zorder = None
-        self.s = 16
+        self.s = 8
         self.respond_to_color = False
         self.exact = True
         self.marker = "s"
