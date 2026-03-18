@@ -369,7 +369,7 @@ class Map:
                 f"{lower}<{s.symbol}<{upper}".replace("\\mathrm{}", "").replace(
                     "\\;", ""
                 ),
-                fontsize="medium",
+                fontsize="small",
             )
 
     def refine(self, **kw):
@@ -685,7 +685,7 @@ class Map:
             plt.plot(x[i], y[i], **linekw)
             self.pop = original_pop
 
-    def adjust_annotations(self):
+    def adjust_annotations(self, **kw):
         """
         Try to adjust annotations to minimize overlaps.
 
@@ -700,7 +700,7 @@ class Map:
 
         adjust_text(
             list(self.annotated.values()),
-            arrowprops=dict(arrowstyle="-", color="grey", alpha=0.5),
+            arrowprops=dict(arrowstyle="-", **kw),
             ax=self.ax,
         )
 

@@ -177,7 +177,7 @@ class Gallery:
         for i, k in enumerate(self.maps):
             self.maps[k].ax = np.atleast_1d(self.ax.flatten())[i]
 
-    def refine_maps(self):
+    def refine_maps(self, **kw):
         """
         Make small changes to Maps, after data are plotted.
 
@@ -203,7 +203,16 @@ class Gallery:
                 # plt.setp(a.get_xticklabels(), visible=False)
                 a.set_xlabel("")
 
-    def build(self, pops, save=False, steps=True, format="png", savefig_kw={}):
+    def build(
+        self,
+        pops,
+        save=False,
+        steps=True,
+        format="png",
+        savefig_kw={},
+        refine_kw={},
+        **kw,
+    ):
         """
         Populate all Maps in a Gallery,
         using a set of populations.
@@ -220,6 +229,8 @@ class Gallery:
             we recommend `png` or `pdf`.
         savefig_kw : dict
             Keywords to pass to `plt.savefig` for saving figures.
+        refine_kw : dict
+            Keywords to pass to gallery (+ map) `.refine()` functions.
 
         Returns
         -------
@@ -248,7 +259,9 @@ class Gallery:
 
         return
 
-    def add_panel_labels(self, preset="inside", **kw):
+    def add_panel_labels(
+        self, preset="inside", letters="abcdefghijklmnopqrstuvwxyz", **kw
+    ):
         """
         Add (a), (b), (c) labels to the axes
 
@@ -272,7 +285,6 @@ class Gallery:
             textkw.update(x=0, y=1.02, va="bottom")
         textkw.update(**kw)
 
-        letters = "abcdefghijklmnopqrstuvwxyz"
         for i, a in enumerate(axes):
             textkw["s"] = f"({letters[i]})"
             textkw["transform"] = a.transAxes

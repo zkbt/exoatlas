@@ -39,9 +39,14 @@ class Shoreline:
         best_parameters = self.summary["median"][self.var_names]
         return best_parameters
 
-    def sampled_parameters(self, N_samples=100):
+    def sampled_parameters(self, N_samples=1000):
         """
         Return samples from the parameters.
+
+        Parameters
+        ----------
+        N_samples : int
+            The number of posterior samples to return.
         """
         df = self.posterior.to_dataframe(var_names=self.var_names)
         sampled_parameters = df[:: int(len(df) / N_samples)]
@@ -98,7 +103,7 @@ class Shoreline:
             (independent variable), log10(escape velocity relative to Earth)
         log_L : float, Quantity, array
             (independent variable), log10(stellar luminosity relative to Sun)
-        log_L : float, Quantity, array
+        log_f : float, Quantity, array
             (independent variable), log10(bolometric flux relative to Earth)
         """
         distance_from_shoreline = log_f - self.log_f_shoreline(
@@ -106,6 +111,96 @@ class Shoreline:
         )
         width_of_shoreline = np.exp(ln_w)
         return 1 / (1 + np.exp(distance_from_shoreline / width_of_shoreline))
+
+    def calculate_probability_of_atmosphere_from_posterior_samples(
+        self,
+        log_v=0,
+        log_L=0,
+        log_f=0,
+        N_samples=1000,
+        visualize=False,
+        latex=False,
+    ):
+        """
+        Calculate the probability a planet has an atmosphere,
+        marginalized over the posterior for the shoreline parameters.
+
+        This does not account for uncertainties on the individual
+        planet properties, but it does incorporate the uncertainties
+        on the parameters of the shoreline.
+
+        Parameters
+        ----------
+        log_v : float, Quantity, array
+            log10(escape velocity relative to Earth) for one or more planets
+        log_L : float, Quantity, array
+            log10(stellar luminosity relative to Sun) for one or more planets
+        log_f : float, Quantity, array
+            log10(bolometric flux relative to Earth) for one or more planets
+        N_samples : int
+            The number of posterior samples to use.
+        visualize : bool
+            Should we show a histogram of all predictions for each planet?
+        latex : bool
+            Should we return the result as LaTeX strings, instead of
+            numerical values for the confidence intervals?
+
+        Returns
+        -------
+        median : float, Quantity, array
+            The median atmosphere probability for each planet. If you
+            just want one number, use this one.
+        lower : float, Quantity, array
+            The lower 1 sigma confidence limit, below the median, on the
+            range of possible probabilities given uncertainties
+            in the shoreline parameters.
+        upper : float, Quantity, array
+            The upper 1 sigma confidence limit, above the median, on the
+            range of possible probabilities given uncertainties
+            in the shoreline parameters.
+
+        (or...)
+
+        strings : list of strings
+            If `latex==True`, then return a list of strings, where
+            the confidence interval is typeset as LaTeX.
+        """
+
+        # extract parameter posterior samples
+        sampled_parameters = self.sampled_parameters(N_samples=N_samples)
+
+        # create astropy.uncertinty Distributions for the posterior parameter samples
+        parameter_inputs = {
+            k: Distribution(sampled_parameters[k]) for k in self.var_names
+        }
+
+        # calculate distributions of probabilities for each planet
+        distributions = self.probability_of_atmosphere(
+            log_v=log_v, log_f=log_f, log_L=log_L, **parameter_inputs
+        )
+
+        # collapse into confidence intervals
+        median = distributions.pdf_mean()
+        lower = median - distributions.pdf_percentiles(50 - 68.3 / 2)
+        upper = distributions.pdf_percentiles(50 + 68.3 / 2) - median
+
+        # maybe make a plot
+        if visualize:
+            plt.figure(figsize=(8, 3))
+            for d in distributions:
+                plt.hist(d.distribution, bins=np.linspace(0, 1))
+                plt.axvline(d.pdf_median())
+            plt.xlabel("Predicted Shoreline Probability of Atmosphere")
+            plt.ylabel("Frequency of Prediction\n(over parameter posterior)")
+
+        # maybe convert to latex
+        if latex:
+            return [
+                f"{latexify_confidence_interval(m*100, l*100, u*100)}\%"
+                for m, l, u in zip(median, lower, upper)
+            ]
+        else:
+            return median, lower, upper
 
 
 def probability_of_atmosphere(self, shoreline, distribution=False, **kw):

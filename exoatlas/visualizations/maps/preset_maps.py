@@ -14,7 +14,7 @@ class Flux_x_Radius(ErrorMap):
         """
         Add an extra axis along the bottom of this map,
         quoting the equilibrium temperature associated
-        with a particular bolometric flux received.
+        with a particular Bolometric Flux.
         """
 
         ax_temp = self.ax.twiny()

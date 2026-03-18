@@ -32,7 +32,7 @@ class PlanetGalleryWithEscape(Gallery):
         self.maps["mass_x_escape"] = Mass_x_EscapeVelocity(ax=self.ax[0, 0])
         # ErrorMap(xaxis=Mass, yaxis=EscapeVelocity, ax=self.ax[0, 0])
 
-    def refine_maps(self):
+    def refine_maps(self, **kw):
         """
         Make small changes to Maps, after data are plotted.
         """
@@ -100,7 +100,7 @@ class PlanetGallery(Gallery):
         self.maps["mass_x_radius"] = Mass_x_Radius(ax=self.ax[0])
         self.maps["radius_x_radius"] = StellarRadius_x_PlanetRadius(ax=self.ax[2])
 
-    def refine_maps(self):
+    def refine_maps(self, **kw):
         """
         Make small changes to Maps, after data are plotted.
         """
@@ -163,7 +163,7 @@ class ObservableGallery(GridGallery):
             m.plottable["color"] = Flux(scale="log", lim=[1, 1e4])
             m.size_normalization = 6
 
-    def refine_maps(self):
+    def refine_maps(self, **kw):
         GridGallery.refine_maps(self)
         self.maps["ra_x_dec"].ax.set_xticks([18, 12, 6, 0])
         RA_x_Dec.add_monthaxis(self, ax=self.maps["ra_x_dec"].ax, position=40)
@@ -199,7 +199,7 @@ class EverythingGallery(GridGallery):
             mapsize=(7, 2),
         )
 
-    def refine_maps(self):
+    def refine_maps(self, **kw):
         GridGallery.refine_maps(self)
         self.maps["relative_instellation_x_radius"].add_legend(fontsize=5)
 
@@ -375,7 +375,7 @@ class EverythingGallery(GridGallery):
 
         if True:
             fr = Flux_x_Radius(**kw)
-            fr.xlabel = "Bolometric Flux Received\n(relative to Earth)"
+            fr.xlabel = "Bolometric Flux\n(relative to Earth)"
             fr.build(pops=pops, ax=plt.subplot(gs[1, column]))
             fr.remove_ylabel()
             column += 1

@@ -5,7 +5,7 @@ from ...telescopes import *
 
 class Flux(Plottable):
     source = "relative_instellation"
-    label = "Planet Bolometric Flux Received\n(relative to Earth)"
+    label = "Planet Bolometric Flux\n(relative to Earth)"
     scale = "log"
     lim = [6e4, 2e-4]
     symbol = r"$\sf f/f_\oplus$"
@@ -13,7 +13,7 @@ class Flux(Plottable):
 
 class RelativeInstellation(Plottable):
     source = "relative_instellation"
-    label = "Planet Bolometric Flux Received\n(relative to Earth)"
+    label = "Planet Bolometric Flux\n(relative to Earth)"
     scale = "log"
     lim = [10**4, 10**-4]
     symbol = r"$\sf f/f_\oplus$"
@@ -21,7 +21,7 @@ class RelativeInstellation(Plottable):
 
 class LogRelativeInstellation(Plottable):
     source = "log_relative_instellation"
-    label = "log10[Planet Bolometric Flux Received\n(relative to Earth)]"
+    label = "log10[Planet Bolometric Flux\n(relative to Earth)]"
     scale = "linear"
     lim = [4, -4]
     symbol = r"$\sf \log_{10}(f/f_\oplus)$"
@@ -111,7 +111,7 @@ class StellarTeff(Plottable):
 
 class StellarLuminosity(Plottable):
     source = "stellar_luminosity"
-    label = "Stellar Luminosity (L$_\odot$)"
+    label = "Stellar Luminosity\n(relative to the Sun)"
     scale = "log"
     lim = [None, None]
     symbol = r"$\sf L_\star/L_\odot$"
@@ -138,7 +138,7 @@ class Distance(Plottable):
 
 class EscapeVelocity(Plottable):
     source = "escape_velocity"
-    label = "Escape Velocity\n(km/s)"
+    label = "Planet Escape Velocity\n(km/s)"
     scale = "log"
     lim = [2, 500] * u.km / u.s
     symbol = r"$\sf v_{\rm esc}"
@@ -146,7 +146,7 @@ class EscapeVelocity(Plottable):
 
 class RelativeEscapeVelocity(Plottable):
     source = "relative_escape_velocity"
-    label = "Escape Velocity\n(relative to Earth)"
+    label = "Planet Escape Velocity\n(relative to Earth)"
     scale = "log"
     lim = [-2, 2]
     symbol = r"$\sf v_{\rm esc}/v_{esc,\oplus}$"
