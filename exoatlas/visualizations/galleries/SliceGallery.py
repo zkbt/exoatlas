@@ -129,6 +129,7 @@ class SliceAnimatedGallery(SliceGridGallery):
         bitrate=None,
         bounce=True,
         pause=True,
+        refine_kw={},
         **kwargs,
     ):
 
@@ -160,10 +161,10 @@ class SliceAnimatedGallery(SliceGridGallery):
                 plt.gca().cla()
 
                 # build the plot, including populations
-                m.build(*args, **kwargs)
+                m.build(*args)
 
                 # refine the plot
-                m.refine(**kwargs)
+                m.refine(**refine_kw)
 
                 # save this snapshot to a movie frame
                 writer.grab_frame()

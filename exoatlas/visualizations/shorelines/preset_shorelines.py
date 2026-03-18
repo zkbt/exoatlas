@@ -53,7 +53,9 @@ class Shoreline_SemimajorAxis_x_StellarLuminosity_x_Radius(ShorelineErrorMap):
         relative_escape_velocity = self._convert_radius_to_relative_escape_velocity(R)
         return relative_escape_velocity
 
-    def plot_hz_earth(self, color="seagreen", alpha=0.75, ax=None, **kw):
+    def plot_hz_earth(
+        self, color="seagreen", alpha=0.75, ax=None, annotate=False, **kw
+    ):
         """
         Plot the Earth equivalent habitable zone.
 
@@ -71,6 +73,17 @@ class Shoreline_SemimajorAxis_x_StellarLuminosity_x_Radius(ShorelineErrorMap):
         # plot Earth-equivalent instellation distance
         a_ee = 1 * u.AU * (L / u.Lsun) ** 0.5
         plt.plot(a_ee, L, color=color, alpha=alpha, **kw)
+
+        if annotate:
+            plt.text(
+                1.8,
+                7,
+                "habitable\nzone   ",
+                va="top",
+                ha="right",
+                fontsize=7,
+                color="seagreen",
+            )
 
     def plot_hz_kopparapu(
         self,
@@ -132,12 +145,12 @@ class Shoreline_SemimajorAxis_x_StellarLuminosity_x_Radius(ShorelineErrorMap):
 
         if annotate:
             plt.text(
-                np.max(a_inner),
-                np.max(L) * 0.8,
-                "habitable zone",
+                1.8,
+                7,
+                "habitable\nzone   ",
                 va="top",
                 ha="right",
-                fontsize=8,
+                fontsize=7,
                 color="seagreen",
             )
 
@@ -248,28 +261,22 @@ class Shoreline_SemimajorAxis_x_StellarLuminosity_x_Radius(ShorelineErrorMap):
             a_text = 10 ** np.interp(0.5, log_P_2d[-1, :], log_a_1d)
             plt.text(
                 a_text,
-                10 ** np.max(log_L_1d) * 0.8,
+                7,
                 "   cosmic\n    shoreline",
                 va="top",
                 ha="left",
-                fontsize=8,
+                fontsize=7,
                 color="black",
                 alpha=0.5,
             )
 
-    def refine(self):
-        self.plot_hz_earth()
+    def refine(self, **kw):
+        self.plot_hz_earth(annotate=True)
         self.plot_hz_kopparapu()
-        self.plot_shoreline_probability()
-        plt.text(
-            0.5, 8, "habitable\nzone", va="top", ha="left", fontsize=8, color="seagreen"
-        )
+        self.plot_shoreline_probability(annotate=True)
 
 
 class ShorelineStandardMap(ShorelineErrorMap):
-    lims = dict(
-        v=np.array([-1.5, 1.0]), f=np.array([-4.0, 4.0]), L=np.array([0.5, -3.5])
-    )
 
     linear_plottables = dict(
         v=RelativeEscapeVelocity, f=RelativeInstellation, L=RelativeStellarLuminosity
@@ -281,12 +288,26 @@ class ShorelineStandardMap(ShorelineErrorMap):
         L=LogRelativeStellarLuminosity,
     )
 
-    def __init__(self, order="vfL", posterior=None, **kw):
+    def __init__(
+        self, order="vfL", posterior=None, vlim=None, flim=None, Llim=None, **kw
+    ):
         # decide which quantity is plotted on which axis
         x_var, y_var, slice_var = order
 
         # make sure they're all different
         assert sorted(order) == ["L", "f", "v"]
+
+        # set default limits
+        self.lims = dict(
+            v=np.array([-1.5, 1.0]), f=np.array([-4.0, 4.0]), L=np.array([0.5, -3.5])
+        )
+        # adjust limits if necessary
+        if vlim is not None:
+            self.lims["v"] = np.array(vlim)
+        if flim is not None:
+            self.lims["f"] = np.array(flim)
+        if Llim is not None:
+            self.lims["L"] = np.array(Llim)
 
         # initialize the map
         super().__init__(
@@ -300,6 +321,9 @@ class ShorelineStandardMap(ShorelineErrorMap):
         self.x_var = x_var
         self.y_var = y_var
         self.slice_var = slice_var
+
+        # set a buffer to extend the plots a little beyond the ranges
+        self._axes_buffer = 1.5
 
     def plot_shoreline_probability(
         self,
@@ -315,7 +339,13 @@ class ShorelineStandardMap(ShorelineErrorMap):
         sampled_parameters = self.sampled_parameters(N_samples)
 
         # set up 1D grid for background colormap
-        smooth_log_grids = {k: np.linspace(*self.lims[k], 1000) for k in self.lims}
+        smooth_log_grids = {}
+        for k in self.lims:
+            smooth_log_grids[k] = np.linspace(
+                min(self.lims[k]) - np.log10(self._axes_buffer) * 3,
+                max(self.lims[k]) + np.log10(self._axes_buffer) * 3,
+                2000,
+            )
 
         # set up 3D grid for background colormap
         log_x_2d, log_y_2d = np.meshgrid(
@@ -388,10 +418,11 @@ class ShorelineStandardMap(ShorelineErrorMap):
         try:
             instellation_axis
         except NameError:
-            raise NameError(
-                "This map doesn't seem to have any instellation axis,"
-                "so we can't plot flux limits on it."
-            )
+            return
+            # print(
+            #    "This map doesn't seem to have any instellation axis,"
+            #    "so we can't plot flux limits on it."
+            # )
 
         # calculate flux limits
         def calculate_S(T, f=1 / 4, A=0):
@@ -426,7 +457,7 @@ class ShorelineStandardMap(ShorelineErrorMap):
             else:
                 return
 
-    def refine(self, probability=True, limits=False):
+    def refine(self, probability=True, limits=False, **kw):
         """
         Refine a standard shoreline Map.
 
@@ -435,6 +466,9 @@ class ShorelineStandardMap(ShorelineErrorMap):
         probability : bool
             Should we imshow the probability of an atmosphere?
         label_flux_limits : bool
+            Should we draw flux limits on the plot?
+        **kw : dict
+            Additional keywords will be ignored.
 
         """
         if probability:
@@ -448,21 +482,17 @@ class ShorelineStandardMap(ShorelineErrorMap):
         plt.yscale("log")
         xlim = self.plottable["x"].lim
         ylim = self.plottable["y"].lim
-        plt.xlim(min(xlim), max(xlim))
-        plt.ylim(min(ylim), max(ylim))
+        plt.xlim(
+            min(xlim) / self._axes_buffer,
+            max(xlim) * self._axes_buffer,
+        )
+        plt.ylim(
+            min(ylim) / self._axes_buffer,
+            max(ylim) * self._axes_buffer,
+        )
 
 
-_teq_limits = [194, 1673] * u.K
+_teq_limits = [194, 1700] * u.K
 _flux_limits = 4 * con.sigma_sb * _teq_limits**4
 _earth_insolation = (1 * u.Lsun / 4 / np.pi / u.AU**2).to(u.W / u.m**2)
 _f_lim = list((_flux_limits / _earth_insolation).value)
-
-
-class ShorelineCO2Map(ShorelineStandardMap):
-    """
-    A standard Shoreline Map, but zoomed in to "warm CO2" atmospheres.
-    """
-
-    lims = dict(
-        v=np.array([-1, np.log10(4)]), f=np.log10(_f_lim), L=np.array([0.5, -3.5])
-    )

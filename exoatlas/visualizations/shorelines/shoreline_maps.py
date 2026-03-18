@@ -21,10 +21,18 @@ class ShorelineErrorMap(ErrorMap, Shoreline):
 
         (This can be called only if self.plot_shoreline_probability() has been too.)
         """
+
+        # put colors on the colorbar
         colorbar = plt.colorbar(
-            self._shoreline_probability_imshow, label="P(atmosphere)"
+            self._shoreline_probability_imshow,
+            label="P(atmosphere)",
+            norm=plt.matplotlib.colors.Normalize(vmin=0, vmax=1),
         )
+
+        # set tick labels
         colorbar.set_ticks([0, 0.5, 1])
+
+        # add lines from the contours, with dashed linestyle
         colorbar.add_lines(self._shoreline_probability_contours)
         for l in colorbar.lines:
             l.set_linestyles("--")

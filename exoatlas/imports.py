@@ -214,3 +214,16 @@ def remove_unit(x):
         return x.value
     else:
         return x
+
+
+def latexify_confidence_interval(median, lower, upper, symmetry_threshold=0.01):
+    """
+    Convert a confidence interval into LaTeX.
+    """
+    symmetric = np.abs(lower - upper) / (lower + upper) < symmetry_threshold
+    if symmetric:
+        sigma = (lower + upper) / 2
+        s = rf"{median:.3g} \pm {sigma:.2g}"
+    else:
+        s = rf"{median:.3g}_{{-{lower:.2g}}}^{{+{upper:.2g}}}"
+    return s
