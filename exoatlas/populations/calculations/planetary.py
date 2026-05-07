@@ -593,7 +593,7 @@ def mass_estimated_from_radius_assuming_rockyish(self, distribution=False, **kw)
 
     Estimate a planet's mass from its radius assuming it's rocky,
     following the mass-radius relation with intrinsic scatter
-    from Berta-Thompson et al. (2025).
+    from Berta-Thompson et al. (2026).
 
     Parameters
     ----------
