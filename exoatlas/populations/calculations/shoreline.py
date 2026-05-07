@@ -6,7 +6,7 @@ class Shoreline:
     """
     This `Shoreline` object handles all model
     calculations related to the cosmic shoreline
-    from Berta-Thompson et al. (2025).
+    from Berta-Thompson et al. (2026).
     """
 
     var_names = ["log_f_0", "p", "q", "ln_w"]
@@ -18,14 +18,37 @@ class Shoreline:
         Parameters
         ----------
         posterior : arviz.InferenceData, string, None
-            The samples from the posterior probability distribution.
-            If
+            The samples from the posterior probability distribution,
+            either as an arviz InferenceData object, or as
+            string referring to netcdf file containing one.
+            If None, the default posterior will be downloaded
+            from the Zenodo repository associated with the
+            Berta-Thompson et al. (2026) Cosmic Shoreline.
+        **kw : dict
+            All additional keywords will be ignored.
         """
+
         if isinstance(posterior, az.InferenceData):
+            # just adopt a given set of posterior samples
             self.posterior = posterior
+        elif isinstance(posterior, str):
+            # load a local file with posterior samples
+            filename = posterior
+            self.posterior = az.from_netcdf(filename)
+        elif posterior is None:
+            # download the default posterior from Zenodo
+            link = "https://zenodo.org/records/15858798/files/cosmic-shoreline-btwm2026-posterior.nc?download=1"
+            filename = download_file(link)
+            self.posterior = az.from_netcdf(filename)
         else:
-            # download from zenodo and load it in with arviz
-            raise NotImplementedError
+            # nothing else
+            raise NotImplementedError(
+                f"""
+            Sorry, we couldn't figure out how to load
+            {posterior}
+            as shoreline posterior parameter samples.
+            """
+            )
 
         self.summary = az.summary(self.posterior, kind="all", stat_focus="median")
 
