@@ -740,7 +740,7 @@ def kludge_radius(self, distribution=False, **kw):
     return self._choose_calculation(
         methods=[
             "radius_from_table",
-            # "radius_estimated_from_mass_assuming_chen_and_kipping",
+            "radius_estimated_from_mass_assuming_chen_and_kipping",
         ],
         distribution=distribution,
         **kw,
