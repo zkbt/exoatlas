@@ -1,5 +1,5 @@
-from ...imports import *
-from ...models.chen import *
+from ..imports import *
+from ..models.chen import *
 
 
 def semimajoraxis_from_period(self, distribution=False, **kw):

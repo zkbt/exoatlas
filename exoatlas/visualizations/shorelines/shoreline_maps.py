@@ -1,4 +1,4 @@
-from ...populations.calculations.shoreline import *
+from ...calculations.shoreline import *
 from ...visualizations.maps import ErrorMap, BubbleMap
 
 

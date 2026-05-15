@@ -1,6 +1,6 @@
 from .setup_tests import *
 from exoatlas import *
-from exoatlas.populations.calculations.shoreline import *
+from exoatlas.calculations.shoreline import *
 
 
 def test_probability_of_atmosphere():
