@@ -14,6 +14,7 @@ nav:
   - user/observing.ipynb
   - user/planning.ipynb
   - user/uncertainties.ipynb
+  - user/shoreline.ipynb
 - Developer Guide:
   - developer/index.md
   - developer/github.ipynb

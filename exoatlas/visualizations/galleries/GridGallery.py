@@ -111,3 +111,27 @@ class SliceGridGallery(GridGallery):
                 getattr(m, x)(*args, **kwargs)
 
         return f
+
+    def add_colorbar(self, i=-1, **kw):
+        '''
+        Add a colorbar to the grid of plots.
+
+        Parameters 
+        ---------- 
+        i : int 
+            Index of which map to add to.
+        '''
+        k = list(self.maps.keys())[i]
+        self.maps[k].add_colorbar(**kw)
+
+    def add_legend(self, i=-1, **kw):
+        '''
+        Add a colorbar to the grid of plots.
+
+        Parameters 
+        ---------- 
+        i : int 
+            Index of which map to add to.
+        '''
+        k = list(self.maps.keys())[i]
+        self.maps[k].add_legend(**kw)

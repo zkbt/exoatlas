@@ -4,6 +4,7 @@ site/
 .vscode
 *.ecsv
 *.pdf
+*.mp4
 .ipynb_checkpoints
 scratch/
 notebooks/

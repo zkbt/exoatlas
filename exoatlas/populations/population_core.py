@@ -690,6 +690,8 @@ class Population:
         self._plotkw["zorder"] = 10000
         self._plotkw["bubble_anyway"] = self._plotkw.get("bubble_anyway", True)
         self._plotkw["s"] = np.maximum(self._plotkw.get("s", 1), 256)
+        if len(self) < 5:
+            self.annotate_planets = True
 
     def create_subset_by_name(self, key):
         """

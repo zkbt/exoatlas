@@ -15,7 +15,7 @@ class ShorelineErrorMap(ErrorMap, Shoreline):
         super().__init__(**kw)
         Shoreline.__init__(self, **kw)
 
-    def add_colorbar(self):
+    def add_colorbar(self, **kw):
         """
         Add a colorbar showing the shoreline probability.
 
