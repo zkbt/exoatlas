@@ -457,7 +457,7 @@ class ShorelineStandardMap(ShorelineErrorMap):
             else:
                 return
 
-    def refine(self, probability=True, limits=False, **kw):
+    def refine(self, probability=True, limits=True, **kw):
         """
         Refine a standard shoreline Map.
 

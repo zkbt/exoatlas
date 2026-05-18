@@ -19,7 +19,8 @@ except (ModuleNotFoundError, AttributeError, ImportError):
 code_directory = files(import_name)
 
 
-import numpy as np, matplotlib.pyplot as plt, matplotlib.animation as animation
+import numpy as np
+import matplotlib.pyplot as plt
 from matplotlib.ticker import ScalarFormatter, FormatStrFormatter, LogLocator
 
 

@@ -79,7 +79,7 @@ class SliceAnimatedGallery(SliceGridGallery):
     A gallery to flip through multiple slices as an animation.
     """
 
-    def __init__(self, map_to_slice, N=4, **kw):
+    def __init__(self, map_to_slice, N=4, figsize=(6,6), dpi=600, **kw):
         """
         Initialize an animation showing different slices of the same 3D space.
 
@@ -97,7 +97,7 @@ class SliceAnimatedGallery(SliceGridGallery):
         **kw : dict
             All other keywords will be passed to 'setup_maps'.
         """
-        self.setup_maps(map_to_slice=map_to_slice, N=N, **kw)
+        self.setup_maps(map_to_slice=map_to_slice, N=N, figsize=figsize, dpi=dpi, **kw)
 
     def setup_maps(self, map_to_slice, N=4, figsize=(6, 4), **kw):
 
@@ -149,7 +149,7 @@ class SliceAnimatedGallery(SliceGridGallery):
                     what_to_loop_over = keys + keys[1:-1][::-1]
             else:
                 what_to_loop_over = keys
-            print(what_to_loop_over)
+
             # loop over slices
             for i in tqdm(what_to_loop_over):
 
@@ -168,3 +168,8 @@ class SliceAnimatedGallery(SliceGridGallery):
 
                 # save this snapshot to a movie frame
                 writer.grab_frame()
+
+
+        # display the created animation
+        from IPython.display import Video, display
+        display(Video(filename, html_attributes='controls loop'))

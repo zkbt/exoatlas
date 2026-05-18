@@ -1,5 +1,5 @@
-from ...imports import *
-from ...telescopes import *
+from ..imports import *
+from ..telescopes import *
 
 
 def angular_separation(self, distribution=False, **kw):

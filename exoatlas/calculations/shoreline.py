@@ -1,4 +1,4 @@
-from ...imports import *
+from ..imports import *
 import arviz as az
 
 
@@ -6,31 +6,81 @@ class Shoreline:
     """
     This `Shoreline` object handles all model
     calculations related to the cosmic shoreline
-    from Berta-Thompson et al. (2025).
+    from Berta-Thompson et al. (2026).
     """
 
     var_names = ["log_f_0", "p", "q", "ln_w"]
 
-    def __init__(self, posterior=None, **kw):
+    def __init__(self, posterior=None, cache=True, **kw):
         """
         Initialize a Shoreline object.
 
         Parameters
         ----------
         posterior : arviz.InferenceData, string, None
-            The samples from the posterior probability distribution.
-            If
+            The samples from the posterior probability distribution,
+            either as an arviz InferenceData object, or as
+            string referring to netcdf file containing one.
+            If None, the default posterior will be downloaded
+            from the Zenodo repository associated with the
+            Berta-Thompson et al. (2026) Cosmic Shoreline.
+        cache : bool
+            If no posterior is provided and the posterior 
+            is being downloaded from Zenodo, this sets whether
+            `download_file` should cache a copy of the file 
+            locally to avoid re-downloading it every time 
+            the shoreline is needed. This should mostly be 
+            True, unless for some reason the local copy of 
+            the posteriors needs to be updated.
+        **kw : dict
+            All additional keywords will be ignored.
         """
+
         if isinstance(posterior, az.InferenceData):
+            # just adopt a given set of posterior samples
             self.posterior = posterior
+        elif isinstance(posterior, str):
+            # load a local file with posterior samples
+            filename = posterior
+            self.posterior = az.from_netcdf(filename)
+        elif posterior is None:
+            self.posterior = self.download_posterior(cache=cache)
         else:
-            # download from zenodo and load it in with arviz
-            raise NotImplementedError
+            # nothing else
+            raise NotImplementedError(
+                f"""
+            Sorry, we couldn't figure out how to load
+            {posterior}
+            as shoreline posterior parameter samples.
+            """
+            )
 
         self.summary = az.summary(self.posterior, kind="all", stat_focus="median")
 
     def __repr__(self):
         return f"<🏝️{self.var_names}>"
+
+    def download_posterior(self, cache=True):
+        ''' 
+        Download the latest version of the BTMW26 posterior from Zenodo.
+
+        Parameters 
+        ----------
+        cache : bool
+            Should `download_file` cache a copy of the file 
+            locally to avoid re-downloading it every time 
+            the shoreline is needed? This should mostly be 
+            True, unless for some reason the local copy of 
+            the posteriors needs to be updated.
+        '''
+        # define the link
+        zenodo_code = '15858798'
+        posterior_filename = 'cosmic-shoreline-btwm2026-posterior.nc'
+        link = f"https://zenodo.org/records/{zenodo_code}/files/{posterior_filename}?download=1"
+
+        # use astropy to download the file
+        filename = download_file(link, cache=cache)
+        return az.from_netcdf(filename)
 
     def best_parameters(self):
         """
@@ -78,7 +128,7 @@ class Shoreline:
         return log_f_0 + p * log_v + q * log_L
 
     def probability_of_atmosphere(
-        self, log_f_0=1.0, p=4.0, q=0.0, ln_w=0, log_v=0, log_L=0, log_f=0
+        self, log_f_0=1.0, p=4.0, q=0.0, ln_w=0, log_v=0, log_L=0, log_f=0, **kw
     ):
         """
         Calculate the probability a planet has an atmosphere.
@@ -105,6 +155,8 @@ class Shoreline:
             (independent variable), log10(stellar luminosity relative to Sun)
         log_f : float, Quantity, array
             (independent variable), log10(bolometric flux relative to Earth)
+        **kw : dict 
+            All additional keywords will be ignored.
         """
         distance_from_shoreline = log_f - self.log_f_shoreline(
             log_f_0=log_f_0, p=p, q=q, log_v=log_v, log_L=log_L
@@ -197,13 +249,13 @@ class Shoreline:
         if latex:
             return [
                 f"{latexify_confidence_interval(m*100, l*100, u*100)}\%"
-                for m, l, u in zip(median, lower, upper)
+                for m, l, u in zip(np.atleast_1d(median), np.atleast_1d(lower), np.atleast_1d(upper))
             ]
         else:
             return median, lower, upper
 
 
-def probability_of_atmosphere(self, shoreline, distribution=False, **kw):
+def probability_of_atmosphere(self, shoreline=None, distribution=False, **kw):
     """
     Probability of Atmosphere (fractional)
 
@@ -216,7 +268,8 @@ def probability_of_atmosphere(self, shoreline, distribution=False, **kw):
     ----------
     shoreline : exoatlas.visualizations.Shoreline
         A shoreline object with a posterior of shoreline
-        parameters attached to it, for calculating probabilities
+        parameters attached to it, for calculating probabilities. 
+        If None, it will default to the 
     distribution : bool
         If False, return a simple array of values.
         If True, return an astropy.uncertainty.Distribution,
@@ -224,7 +277,7 @@ def probability_of_atmosphere(self, shoreline, distribution=False, **kw):
     """
 
     if shoreline is None:
-        raise ValueError(".probability_of_atmosphere")
+        shoreline = Shoreline()
 
     # set the parameters, either as samples from posterior or the MAP values
     parameter_names = ["log_f_0", "p", "q", "ln_w"]

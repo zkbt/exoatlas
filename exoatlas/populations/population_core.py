@@ -690,6 +690,8 @@ class Population:
         self._plotkw["zorder"] = 10000
         self._plotkw["bubble_anyway"] = self._plotkw.get("bubble_anyway", True)
         self._plotkw["s"] = np.maximum(self._plotkw.get("s", 1), 256)
+        if len(self) < 5:
+            self.annotate_planets = True
 
     def create_subset_by_name(self, key):
         """
@@ -1655,7 +1657,7 @@ class Population:
 
         return values
 
-    from .calculations.planetary import (
+    from ..calculations.planetary import (
         semimajoraxis_from_period,
         semimajoraxis_from_transit_scaled_semimajoraxis,
         semimajoraxis,
@@ -1696,14 +1698,14 @@ class Population:
         log_relative_stellar_luminosity,
     )
 
-    from .calculations.stellar import (
+    from ..calculations.stellar import (
         stellar_luminosity_from_radius_and_teff,
         stellar_luminosity,
         relative_stellar_luminosity,
         distance_modulus,
     )
 
-    from .calculations.observability import (
+    from ..calculations.observability import (
         angular_separation,
         imaging_contrast,
         transmission_signal,
@@ -1719,7 +1721,7 @@ class Population:
         reflection_snr,
         transmission_snr,
     )
-    from .calculations.planning import show_upcoming_transits, altaz, airmass
-    from .calculations.shoreline import probability_of_atmosphere
+    from ..calculations.planning import show_upcoming_transits, altaz, airmass
+    from ..calculations.shoreline import probability_of_atmosphere
 
     from .tess import attach_tess_sectors, split_into_tess_sectors
