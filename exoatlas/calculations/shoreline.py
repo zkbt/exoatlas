@@ -1,5 +1,6 @@
 from ..imports import *
 import arviz as az
+import xarray as xa
 
 
 class Shoreline:
@@ -17,9 +18,9 @@ class Shoreline:
 
         Parameters
         ----------
-        posterior : arviz.InferenceData, string, None
+        posterior : xarray.DataTree, string, None
             The samples from the posterior probability distribution,
-            either as an arviz InferenceData object, or as
+            either as an xarray.DataTree object, or as
             string referring to netcdf file containing one.
             If None, the default posterior will be downloaded
             from the Zenodo repository associated with the
@@ -36,7 +37,7 @@ class Shoreline:
             All additional keywords will be ignored.
         """
 
-        if isinstance(posterior, az.InferenceData):
+        if isinstance(posterior, xa.DataTree):
             # just adopt a given set of posterior samples
             self.posterior = posterior
         elif isinstance(posterior, str):

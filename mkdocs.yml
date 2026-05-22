@@ -20,19 +20,22 @@ nav:
   - developer/github.ipynb
   - developer/testing.ipynb
   - developer/documentation.ipynb
-- acknowledgements.ipynb
 - API Reference:
-    - Introduction: api_index.md
-    - Modules: autoapi/ 
+    - api_index.md
+    - Code: autoapi/ 
+- acknowledgements.ipynb
 
 theme:
   name: "material"
   icon:
     logo: material/map
+  favicon: material/map
   features:
     - navigation.tracking
     - navigation.path
     - navigation.indexes
+    - navigation.footer
+  prev_next_buttons_location: bottom
 repo_url: https://github.com/zkbt/exoatlas/
 plugins:
   - search
@@ -56,6 +59,9 @@ plugins:
           options:
             docstring_style: numpy
             docstring_section_style: table
+            extensions:
+              - griffe_inherited_docstrings:
+                  merge: true
   - exclude:
       glob:     
         - "downloads-for-exoatlas/*"
@@ -67,6 +73,7 @@ plugins:
 markdown_extensions:
     - toc:
         permalink: "#"
+        toc_depth: 1
     - pymdownx.arithmatex:
         generic: true
 extra_javascript:

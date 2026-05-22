@@ -89,7 +89,8 @@ setup(
         "tqdm>=4.67.1",
         "pytz>2025.2",
         "tess-point>0.9.2",
-        "arviz>=0.21.0",
+        "arviz>=1.1.0",
+        "xarray>=2025.10.1",
         "adjusttext",
         #"PyYAML",
     ],
@@ -109,6 +110,7 @@ setup(
             "mkdocs-exclude>=1.0.2",
             "twine",
             "pre-commit",
+            "griffe-inherited-docstrings",
         ]
     },
     # what version of Python is required?

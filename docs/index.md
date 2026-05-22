@@ -1,7 +1,6 @@
-# exoatlas
+# 🌌 exoatlas!
 
-## 🌌 Welcome!
-`exoatlas` is a Python package for interacting with basic properties of exoplanets and Solar System planets. It provides a friendly way to download useful data from online archives like the [NASA Exoplanet Archive](https://exoplanetarchive.ipac.caltech.edu) and [JPL Solar System Dynamics](https://ssd.jpl.nasa.gov), easy access to planet properties, and some pre-packaged visualizations for summarizing and comparing populations of planets.
+Welcome! `exoatlas` is a Python package for interacting with basic properties of exoplanets and Solar System planets. It provides a friendly way to download useful data from online archives like the [NASA Exoplanet Archive](https://exoplanetarchive.ipac.caltech.edu) and [JPL Solar System Dynamics](https://ssd.jpl.nasa.gov), easy access to planet properties, and some pre-packaged visualizations for summarizing and comparing populations of planets.
 
 ## 📦 How to Install `exoatlas`
 For most users, simply installing via 
@@ -10,7 +9,7 @@ For most users, simply installing via
 
 should do the trick. If you want more detail, either because running that command seems scary *or* because you want to do something fancier, then please check out the [installation instructions](installation.ipynb).
 
-## 📚 How to Read this Documentation
+## 📖 How to Use this Documentation
 Let's be honest, you're probably going to skip over most of the documentation to look for your own very specific use. Good for you, that sounds like the right way to go! 
 
 The documenation is targeted at someone with basic knowledge in astronomy, planetary science, and Python. Each page is fairly self-contained, so feel free to start wherever you like. Here's a little map help guide your search more efficiently. 
