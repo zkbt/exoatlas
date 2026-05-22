@@ -26,8 +26,10 @@ The documenation is targeted at someone with basic knowledge in astronomy, plane
 | plan telescope observations of `exoatlas` planets     | [Planning](user/planning.ipynb) |
 | understand how `exoatlas` propagates uncertainties    | [Uncertainties]( user/uncertainties.ipynb) |
 | use `exoatlas`'s [BTWM26](https://ui.adsabs.harvard.edu/abs/2025arXiv250702136B/abstract) cosmic shoreline calculator   | [Shoreline](user/shoreline.ipynb) |
+| dive into the nitty gritty of `exoatlas` definitions  | [API Reference](autoapi/) |
 
-## How to Cite `exoatlas`
+
+## 🗂️ How to Cite `exoatlas`
 A manuscript is currently under review at JOSS (as of late spring 2026). Once that is complete, we will link to the SciEx entry where you can access bibliographic data for the code/paper in multiple formats. In the meantime, [this arxiv posting](https://scixplorer.org/abs/2025arXiv250702210B/abstract) is a good reference.
 
 ## 📞 How to Get Help
