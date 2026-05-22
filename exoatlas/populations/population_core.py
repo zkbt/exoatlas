@@ -4,7 +4,7 @@ from .pineda_skew import make_skew_samples_from_lowerupper, gaussian_central_1si
 
 # these are keywords that can be set for a population
 default_plotkw = dict(
-    color="black",
+    color=None,
     alpha=1,
     zorder=0,
     marker="o",
@@ -1023,7 +1023,7 @@ class Population:
         """
 
         # do a quick check that something essential isn't missing
-        if key in ["label", "_plotkw", "standard"]:
+        if key in ["label", "_plotkw"]:
             raise RuntimeError(
                 f"""
                 Yikes! It looks like `.{key}` isn't defined for this `Population`. 

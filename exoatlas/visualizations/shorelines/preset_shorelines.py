@@ -406,7 +406,7 @@ class ShorelineStandardMap(ShorelineErrorMap):
         )
 
     def label_flux_limits(
-        self, limits={"magma ocean": 1700 * u.K, "$\sf CO_2$ freezes": 194 * u.K}
+        self, limits={"magma ocean": 1700 * u.K, r"$\sf CO_2$ freezes": 194 * u.K}
     ):
 
         # figure out which axis is instellation

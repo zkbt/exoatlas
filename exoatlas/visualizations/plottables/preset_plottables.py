@@ -57,7 +57,7 @@ class Radius(Plottable):
     label = "Planet Radius\n(Earth radii)"
     scale = "log"
     lim = [0.3, 30] * u.R_earth
-    symbol = "$\sf R_p$"
+    symbol = r"$\sf R_p$"
 
 
 class LogRadius(Plottable):
@@ -161,7 +161,7 @@ class LogRelativeEscapeVelocity(Plottable):
 
 class EscapeParameter(Plottable):
     source = "escape_parameter"
-    label = "$\lambda = E_{grav}/E_{thermal}$"
+    label = r"$\lambda = E_{grav}/E_{thermal}$"
     scale = "log"
     lim = [None, None]
 
@@ -208,7 +208,7 @@ class StellarBrightness(Plottable):
     unit = u.Unit("ph s^-1 m^-2 micron^-1")
 
     def _update_label(self):
-        self.label = f'Stellar Brightness at Earth at $\lambda={self.kw["wavelength"].to("micron").value:.1f}\mu$m\n({self.unit.to_string("latex_inline")})'
+        self.label = rf'Stellar Brightness at Earth at $\lambda={{self.kw["wavelength"].to("micron").value:.1f}}\mu$m'+f'\n({self.unit.to_string("latex_inline")})'
 
 
 class StellarBrightnessTelescope(Plottable):
@@ -218,7 +218,7 @@ class StellarBrightnessTelescope(Plottable):
 
     def _update_label(self):
         self.label = (
-            f"Stellar Brightness at Earth at $\lambda={w}\mu$m\n({self.unit_string})"
+            rf"Stellar Brightness at Earth at $\lambda={{w}}\mu$m"+f"\n({self.unit_string})"
         )
 
     def __init__(self, telescope_name="JWST", **kw):
@@ -293,7 +293,7 @@ class StellarBrightnessTelescope(Plottable):
         # define the label, based on the wavelength and telescope
         w = self.wavelength.to(u.micron).value
         self.label = (
-            f"Stellar Brightness at Earth at $\lambda={w}\mu$m\n({self.unit_string})"
+            rf"Stellar Brightness at Earth at $\lambda={{w}}\mu$m"+f"\n({self.unit_string})"
         )
 
 
@@ -333,7 +333,7 @@ class Transmission(Depth):
 
     def _update_label(self):
         mu = self.kw["mu"]
-        self.label = f"Transit Depth\nof 1 Scale Height\n for $\mu$={mu} Atmosphere"
+        self.label = f"Transit Depth\nof 1 Scale Height\n" +rf"for $\mu$={{mu}}Atmosphere"
 
 
 class TransmissionSNR(DepthSNR):
@@ -345,7 +345,7 @@ class TransmissionSNR(DepthSNR):
         mu = self.kw["mu"]
         w = self.wavelength.to(u.micron).value
         R = self.R
-        self.label = f"S/N for Transit Depth\nof 1 Scale Height\n for $\mu$={mu} Atmosphere\n{self.telescope_unit}"
+        self.label = f"S/N for Transit Depth\nof 1 Scale Height\n"+rf" for $\mu$={{mu}} Atmosphere"+f"\n{self.telescope_unit}"
 
 
 class Reflection(Depth):
@@ -375,7 +375,7 @@ class Emission(Depth):
         albedo_bond = self.kw["albedo_bond"]
         f = self.kw["f"]
         w = self.kw["wavelength"].to_value("micron")
-        self.label = f"Thermal Eclipse Depth\n($A_B$={albedo_bond:.0%}, f={f:.2f}, $\lambda={w}\mu m$)"
+        self.label = f"Thermal Eclipse Depth\n($A_B$={albedo_bond:.0%}, f={f:.2f}, "+rf"$\lambda={{w}}\mu m$)"
 
 
 class ReflectionToEmissionRatio(Depth):
@@ -387,7 +387,7 @@ class ReflectionToEmissionRatio(Depth):
         albedo_bond = self.kw["albedo_bond"]
         f = self.kw["f"]
         w = self.kw["wavelength"].to_value("micron")
-        self.label = f"Reflected/Thermal\n($A_g$={albedo_geometric:.0%}, $A_B$={albedo_bond:.0%},\nf={f:.2f}, $\lambda={w}\mu m$)"
+        self.label = f"Reflected/Thermal\n" + f"($A_g$={albedo_geometric:.0%}, $A_B$={albedo_bond:.0%},\n"+rf"f={{f:.2f}}, $\lambda={{w}}\mu m$)"
 
 
 class EmissionSNR(DepthSNR):

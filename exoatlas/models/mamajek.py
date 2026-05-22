@@ -60,7 +60,7 @@ class Mamajek(Relation):
         # print("loading data from {0}".format(path))
 
         # load as an astropy table
-        self.table = pd.read_csv(path, sep="\s+", comment="#")
+        self.table = pd.read_csv(path, sep=r"\s+", comment="#")
 
         # give an update
         # print("   ...success!")

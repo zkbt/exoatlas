@@ -85,7 +85,7 @@ def relative_stellar_luminosity(self, **kw):
 
 def distance_modulus(self, distribution=False, **kw):
     """
-    Distance Modulus ($\mu$, magnitudes)
+    Distance Modulus (magnitudes)
 
     Parameters
     ----------

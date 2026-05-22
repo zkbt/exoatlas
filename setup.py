@@ -105,7 +105,7 @@ setup(
             "mkdocstrings",
             "mkdocstrings-python",
             "pytkdocs[numpy-style]",
-            "mkdocs-jupyter",
+            "mkdocs-jupyter>=0.26.0",
             "mkdocs-exclude",
             "twine",
             "pre-commit",

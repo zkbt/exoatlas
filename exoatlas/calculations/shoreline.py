@@ -55,7 +55,7 @@ class Shoreline:
             """
             )
 
-        self.summary = az.summary(self.posterior, kind="all", stat_focus="median")
+        self.summary = az.summary(self.posterior, kind="all_median")
 
     def __repr__(self):
         return f"<🏝️{self.var_names}>"
@@ -248,7 +248,7 @@ class Shoreline:
         # maybe convert to latex
         if latex:
             return [
-                f"{latexify_confidence_interval(m*100, l*100, u*100)}\%"
+                rf"{{latexify_confidence_interval(m*100, l*100, u*100)}}\%"
                 for m, l, u in zip(np.atleast_1d(median), np.atleast_1d(lower), np.atleast_1d(upper))
             ]
         else:
