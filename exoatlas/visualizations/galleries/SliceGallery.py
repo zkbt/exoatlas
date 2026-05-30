@@ -152,7 +152,7 @@ class SliceAnimatedGallery(SliceGridGallery):
                 what_to_loop_over = keys
 
             # loop over slices
-            for i in tqdm(what_to_loop_over):
+            for i in what_to_loop_over:
 
                 m = self.maps[i]
 
