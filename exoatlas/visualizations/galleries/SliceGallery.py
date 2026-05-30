@@ -171,5 +171,8 @@ class SliceAnimatedGallery(SliceGridGallery):
 
 
         # display the created animation
-        from IPython.display import Video, display
-        display(Video(filename, html_attributes='controls loop'))
+        from IPython.display import Image, Video, display
+        if '.gif' in filename:
+            display(Image(filename))
+        else:
+            display(Video(filename, html_attributes='controls loop'))

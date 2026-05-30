@@ -372,10 +372,10 @@ class ShorelineStandardMap(ShorelineErrorMap):
 
             # set up parameters for this sample iteration
             input_parameters = dict(
-                p=sampled_parameters["p"].values[s],
-                q=sampled_parameters["q"].values[s],
-                log_f_0=sampled_parameters["log_f_0"].values[s],
-                ln_w=sampled_parameters["ln_w"].values[s],
+                p=sampled_parameters["p"][s],
+                q=sampled_parameters["q"][s],
+                log_f_0=sampled_parameters["log_f_0"][s],
+                ln_w=sampled_parameters["ln_w"][s],
             )
 
             # calculate the 2D probability and store it as part of
