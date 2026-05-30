@@ -714,7 +714,7 @@ def kludge_mass(self, distribution=False, **kw):
             "mass_from_table",
             "msini_from_orbit",
             "mass_estimated_from_radius_assuming_rockyish",
-            #            "mass_estimated_from_radius_assuming_chen_and_kipping",
+            #"mass_estimated_from_radius_assuming_chen_and_kipping",
         ],
         distribution=distribution,
         **kw,

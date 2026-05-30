@@ -208,7 +208,7 @@ class StellarBrightness(Plottable):
     unit = u.Unit("ph s^-1 m^-2 micron^-1")
 
     def _update_label(self):
-        self.label = rf'Stellar Brightness at Earth at $\lambda={{self.kw["wavelength"].to("micron").value:.1f}}\mu$m'+f'\n({self.unit.to_string("latex_inline")})'
+        self.label = rf'Stellar Brightness at Earth at $\lambda={self.kw["wavelength"].to("micron").value:.1f}\mu$m'+f'\n({self.unit.to_string("latex_inline")})'
 
 
 class StellarBrightnessTelescope(Plottable):
@@ -218,7 +218,7 @@ class StellarBrightnessTelescope(Plottable):
 
     def _update_label(self):
         self.label = (
-            rf"Stellar Brightness at Earth at $\lambda={{w}}\mu$m"+f"\n({self.unit_string})"
+            rf"Stellar Brightness at Earth at $\lambda={w}\mu$m"+f"\n({self.unit_string})"
         )
 
     def __init__(self, telescope_name="JWST", **kw):
@@ -293,7 +293,7 @@ class StellarBrightnessTelescope(Plottable):
         # define the label, based on the wavelength and telescope
         w = self.wavelength.to(u.micron).value
         self.label = (
-            rf"Stellar Brightness at Earth at $\lambda={{w}}\mu$m"+f"\n({self.unit_string})"
+            rf"Stellar Brightness at Earth at $\lambda={w}\mu$m"+f"\n({self.unit_string})"
         )
 
 

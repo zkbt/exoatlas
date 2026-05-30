@@ -130,6 +130,7 @@ class SliceAnimatedGallery(SliceGridGallery):
         bounce=True,
         pause=True,
         refine_kw={},
+        show_in_notebook=False,
         **kwargs,
     ):
 
@@ -171,8 +172,9 @@ class SliceAnimatedGallery(SliceGridGallery):
 
 
         # display the created animation
-        from IPython.display import Image, Video, display
-        if '.gif' in filename:
-            display(Image(filename))
-        else:
-            display(Video(filename, html_attributes='controls loop'))
+        if show_in_notebook:
+            from IPython.display import Image, Video, display
+            if '.gif' in filename:
+                display(Image(filename))
+            else:
+                display(Video(filename, html_attributes='controls loop'))
