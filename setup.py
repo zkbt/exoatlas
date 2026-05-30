@@ -85,13 +85,14 @@ setup(
         "astropy>=3.2.3",
         "astroquery>=0.3.9",
         "astroplan>=0.10",
-        "rainbow-connection>=0.0.1",
-        "PyYAML",
-        "tqdm",
-        "pytz",
-        "tess-point",
+        "rainbow-connection>=0.0.17",
+        "tqdm>=4.67.1",
+        "pytz>2025.2",
+        "tess-point>0.9.2",
+        "arviz>=0.3.0", # arviz>1.0.0 loses InferenceData type, but exoatlas should be flexible to handle this
+        "xarray>=2024.10.0", # (when DataTree was introduced, needed if using arviz>1.0.0)
         "adjusttext",
-        "arviz",
+        #"PyYAML",
     ],
     extras_require={
         "develop": [
@@ -100,15 +101,16 @@ setup(
             "black[jupyter]",
             "jupyter",
             "ipython",
-            "mkdocs",
-            "mkdocs-material",
-            "mkdocstrings",
-            "mkdocstrings-python",
+            "mkdocs>=1.6.1",
+            "mkdocs-material>=9.6.9",
+            "mkdocstrings>=0.29.0",
+            "mkdocstrings-python>=1.16.7",
             "pytkdocs[numpy-style]",
-            "mkdocs-jupyter",
-            "mkdocs-exclude",
+            "mkdocs-jupyter>=0.26.3",
+            "mkdocs-exclude>=1.0.2",
             "twine",
             "pre-commit",
+            "griffe-inherited-docstrings",
         ]
     },
     # what version of Python is required?

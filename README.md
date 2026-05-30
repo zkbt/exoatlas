@@ -1,8 +1,6 @@
 # exoatlas
 Tools for compiling and plotting populations of transiting exoplanets. To learn how to use `exoatlas`, please [read the documentation](https://zkbt.github.io/exoatlas/). 
 
-*1 July 2025: We submitted a paper on `exoatlas` to the Journal of Open Source Software; a draft is available [here](paper/paper.pdf).*
-
 ### Installation
 If you want the most recent stable version, the simplest way is to install it from PyPI directly via `pip` from any UNIX prompt:
 ```bash
@@ -29,16 +27,16 @@ Here's a very quick preview:
 ```python
 # import some population definitions and plotting tool
 from exoatlas import TransitingExoplanets, SolarSystem
-from exoatlas.visualizations import PlanetGalleryWithEscape
+from exoatlas.visualizations import PlanetGallery
 
 # create a dictionary of populations
 exo = TransitingExoplanets()
 solar = SolarSystem()
 
 # use a default visualization to summarize these populations
-PlanetGalleryWithEscape().build([solar, exo])
+PlanetGallery().build([solar, exo])
 ```
 For a slightly less quick preview, which will hopefully entice you to keep reading through the rest of the documentation, please 
 
 ### Authors
-This toolkit was made by [Zach Berta-Thompson](http://casa.colorado.edu/~bertathompson/). It relies heavily on the incredible work done by the folks over at the [NASA Exoplanet Archive](https://exoplanetarchive.ipac.caltech.edu), and their generously designed API.
+This toolkit was developed mostly by [Zach Berta-Thompson](http://casa.colorado.edu/~bertathompson/). It relies heavily on the incredible work done by the folks over at the [NASA Exoplanet Archive](https://exoplanetarchive.ipac.caltech.edu), and their generously designed API.

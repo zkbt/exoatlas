@@ -147,9 +147,9 @@ def eccentricity(self, distribution=False, **kw):
 
 def argument_of_periastron(self, distribution=False, **kw):
     """
-    Planet Orbital Argument of Periastron ($\omega$, degrees)
+    Planet Orbital Argument of Periastron (omega, degrees)
 
-    The argument of periastron of the planet's orbit, $\omega$.
+    The argument of periastron of the planet's orbit (omega).
     If it is `nan` (often because eccentricity is zero), then
     this will be assumed to be 0.
 
@@ -714,7 +714,7 @@ def kludge_mass(self, distribution=False, **kw):
             "mass_from_table",
             "msini_from_orbit",
             "mass_estimated_from_radius_assuming_rockyish",
-            #            "mass_estimated_from_radius_assuming_chen_and_kipping",
+            #"mass_estimated_from_radius_assuming_chen_and_kipping",
         ],
         distribution=distribution,
         **kw,

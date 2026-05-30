@@ -5,6 +5,7 @@ site/
 *.ecsv
 *.pdf
 *.mp4
+*.gif
 .ipynb_checkpoints
 scratch/
 notebooks/

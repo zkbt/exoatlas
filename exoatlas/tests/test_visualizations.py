@@ -60,6 +60,7 @@ def test_galleries():
     pops["solarsystem"] = SolarSystem()
     FourPanelTransitGallery().build(pops)
     PlanetGalleryWithEscape().build(pops)
+    PlanetGallery().build(pops)
 
 
 if __name__ == "__main__":  # pragma: no cover

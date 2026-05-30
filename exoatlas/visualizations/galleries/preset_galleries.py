@@ -68,7 +68,7 @@ def add_size_explainer(ax=None, label="", x=0.95, y=0.95, ha="right", va="top", 
         ax = plt.gca()
 
     plt.text(
-        x, y, f"area $\propto$ {label}", ha=ha, va=va, transform=ax.transAxes, **kw
+        x, y, rf"area $\propto$ {label}", ha=ha, va=va, transform=ax.transAxes, **kw
     )
 
 

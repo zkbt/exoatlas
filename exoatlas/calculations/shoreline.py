@@ -1,5 +1,6 @@
 from ..imports import *
 import arviz as az
+import xarray as xa
 
 
 class Shoreline:
@@ -17,9 +18,9 @@ class Shoreline:
 
         Parameters
         ----------
-        posterior : arviz.InferenceData, string, None
+        posterior : xarray.DataTree, string, None
             The samples from the posterior probability distribution,
-            either as an arviz InferenceData object, or as
+            either as an xarray.DataTree object, or as
             string referring to netcdf file containing one.
             If None, the default posterior will be downloaded
             from the Zenodo repository associated with the
@@ -36,7 +37,16 @@ class Shoreline:
             All additional keywords will be ignored.
         """
 
-        if isinstance(posterior, az.InferenceData):
+
+        try:
+            # in arviz<1.1.0 posteriors might be InferenceData
+            with warnings.catch_warnings():
+                warnings.simplefilter('ignore')
+                posterior_data_type = az.InferenceData
+        except AttributeError:
+            # in modern arviz>=1.1.0, posteriors are xarray 
+            posterior_data_type = xa.DataTree
+        if isinstance(posterior, posterior_data_type):
             # just adopt a given set of posterior samples
             self.posterior = posterior
         elif isinstance(posterior, str):
@@ -54,8 +64,12 @@ class Shoreline:
             as shoreline posterior parameter samples.
             """
             )
-
-        self.summary = az.summary(self.posterior, kind="all", stat_focus="median")
+        try:
+            # new arviz 
+            self.summary = az.summary(self.posterior, kind="all_median", round_to="none")
+        except TypeError:
+            # old arviz
+            self.summary = az.summary(self.posterior,  kind="all", stat_focus="median", round_to="none")
 
     def __repr__(self):
         return f"<🏝️{self.var_names}>"
@@ -86,7 +100,7 @@ class Shoreline:
         """
         Return one "best" set of parameters.
         """
-        best_parameters = self.summary["median"][self.var_names]
+        best_parameters = {k:float(self.summary["median"][k].astype(float)) for k in self.var_names}
         return best_parameters
 
     def sampled_parameters(self, N_samples=1000):
@@ -98,8 +112,12 @@ class Shoreline:
         N_samples : int
             The number of posterior samples to return.
         """
-        df = self.posterior.to_dataframe(var_names=self.var_names)
-        sampled_parameters = df[:: int(len(df) / N_samples)]
+        po = self.posterior['posterior']
+        sampled_parameters = {}
+        for k in self.var_names:
+            all_samples_for_this_parameter = np.array(po[k]).flatten()
+            skip = np.maximum(int(len(all_samples_for_this_parameter) / N_samples), 1)
+            sampled_parameters[k] = all_samples_for_this_parameter[::skip]
         return sampled_parameters
 
     def log_f_shoreline(self, log_f_0=0.0, p=0.0, q=0.0, log_v=0, log_L=0):
@@ -248,7 +266,7 @@ class Shoreline:
         # maybe convert to latex
         if latex:
             return [
-                f"{latexify_confidence_interval(m*100, l*100, u*100)}\%"
+                rf"{{latexify_confidence_interval(m*100, l*100, u*100)}}\%"
                 for m, l, u in zip(np.atleast_1d(median), np.atleast_1d(lower), np.atleast_1d(upper))
             ]
         else:
@@ -288,7 +306,7 @@ def probability_of_atmosphere(self, shoreline=None, distribution=False, **kw):
             k: Distribution(sampled_parameters[k]) for k in parameter_names
         }
     else:
-        parameter_inputs = dict(shoreline.best_parameters()[parameter_names])
+        parameter_inputs = dict(shoreline.best_parameters())
 
     # set the data inputs, either as samples from uncertainties or the MAP values
     data_inputs = dict(
