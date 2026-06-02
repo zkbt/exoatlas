@@ -12,7 +12,7 @@ should do the trick. If you want more detail, either because running that comman
 ## 📖 How to Use this Documentation
 Let's be honest, you're probably going to skip over most of the documentation to look for your own very specific use. Good for you, that sounds like the right way to go! 
 
-The documenation is targeted at someone with basic knowledge in astronomy, planetary science, and Python. Each page is fairly self-contained, so feel free to start wherever you like. Here's a little map help guide your search more efficiently. 
+The documentation is targeted at someone with basic knowledge in astronomy, planetary science, and Python. Each page is fairly self-contained, so feel free to start wherever you like. Here's a little map help guide your search more efficiently. 
 
 | If you're here because you want to...                 | ...then try jumping to:  | 
 | ----------------------------------------------------- | ---------------------- | 
