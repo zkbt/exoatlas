@@ -18,7 +18,7 @@ authors:
   - name: Mirielle Caradonna
     orcid: 0009-0000-9058-0069
     affiliation: 1
-  - name: Catriona Murray
+  - name: Catriona A. Murray
     orcid: 0000-0001-8504-5862
     affiliation: 1
   - name: Valerie Arriero
