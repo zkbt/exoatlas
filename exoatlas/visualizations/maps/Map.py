@@ -4,7 +4,6 @@
 from ...imports import *
 from ..plottables.plottable import *
 from ...populations import Population
-from adjustText import adjust_text
 
 
 def clean_pops(initial):
@@ -558,6 +557,10 @@ class Map:
                 pass
 
         if adjust:
+            try:
+                from adjustText import adjust_text
+            except ModuleNotFoundError, ImportError:
+                warnings.warn('adjust_text not found. Please install it via `pip install adjusttext`')
             adjust_text(
                 list(self.annotated.values()),
                 arrowprops=dict(
@@ -639,6 +642,10 @@ class Map:
                 pass
 
         if adjust:
+            try:
+                from adjustText import adjust_text
+            except ModuleNotFoundError, ImportError:
+                warnings.warn('adjust_text not found. Please install it via `pip install adjusttext`')
             adjust_text(
                 list(self.annotated.values()),
                 arrowprops=dict(
@@ -696,7 +703,10 @@ class Map:
         drawing lines from text back to points.
         """
 
-        from adjustText import adjust_text
+        try:
+            from adjustText import adjust_text
+        except ModuleNotFoundError, ImportError:
+            warnings.warn('adjust_text not found. Please install it via `pip install adjusttext`')
 
         adjust_text(
             list(self.annotated.values()),

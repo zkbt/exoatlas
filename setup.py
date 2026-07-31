@@ -91,8 +91,6 @@ setup(
         "tess-point>0.9.2",
         "arviz>=0.3.0", # arviz>1.0.0 loses InferenceData type, but exoatlas should be flexible to handle this
         "xarray>=2024.10.0", # (when DataTree was introduced, needed if using arviz>1.0.0)
-        "adjusttext",
-        #"PyYAML",
     ],
     extras_require={
         "develop": [
