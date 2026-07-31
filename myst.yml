@@ -32,7 +32,9 @@ project:
         - file: docs/developer/testing.ipynb
     #- file: docs/api_index.md
     - file: docs/acknowledgements.ipynb
-
+  # run notebooks
+  execute:
+    execute_notebooks: "auto"
 site:
   template: book-theme
   # options:
@@ -43,3 +45,4 @@ site:
     logo_text: " "
   parts:
     primary_sidebar_footer: "© Berta-Thompson (2023-2026)"
+
