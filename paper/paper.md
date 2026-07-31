@@ -1,5 +1,5 @@
 ---
-title: 'exoatlas: friendly Python code for exoplanet populations'
+title: 'exoatlas: Friendly Python Code for Exoplanet Populations'
 tags:
   - Python
   - astronomy
@@ -60,11 +60,11 @@ Planets are complicated. Understanding how they work requires connecting individ
 
 `exoatlas` was designed to meet a need among both researchers and educators for an intuitive Python tool to access planet populations. Particularly in working with students and junior scientists, for whom easy avenues for exploration and play would have particular benefit, significant barriers often frustrate attempts to perform the following tasks:
 
-- retrieving basic properties for exoplanets + Solar System objects 
+- retrieving basic properties for exoplanets and Solar System objects 
 - calculating derived planet quantities with propagated uncertainties
 - comparing individual exoplanets to relevant comparison samples
 - planning future telescope observations of known exoplanet systems
-- making beautiful and up-to-date planet data visualizations
+- creating beautiful and up-to-date planet data visualizations
 
 Online planetary data archives merge incredible curatorial efforts with powerful tools for data access and visualization. These archives include the NASA Exoplanet Archive [@exo-archive], exoplanet.eu [@exoplaneteu], exo.MAST [@exomast], the University of Geneva Data Analysis Center for Exoplanets [@dace], TEPCat [@tepcat], and the Open Exoplanet Catalog [@open-exo] for exoplanets, and the JPL Solar System Dynamics [@ssd], IAU Minor Planet Center [@mpc], and the NSSDCA Planetary Facts sheets [@facts] for Solar System objects. Through web portals, many of these archives enable the user to find or quickly create up-to-date plots of planetary properties. Through downloadable tables and/or application programming interfaces (APIs), they can provide raw or curated planetary properties with clear citations to the scientific literature. Drawing from these and other archives, tools like NASA's Eyes [@eyes] and Stellarium [@stellarium] allow the easy visualization of planetary orbits, and tools like Tapir [@tapir], the Exoplanet Archive Transit and Ephemeris Service [@exo-archive], and VarAstro [@varastro] help plan new exoplanet observations.
 
@@ -73,7 +73,7 @@ Online planetary data archives merge incredible curatorial efforts with powerful
 
 # Mapping populations with `exoatlas` 
 
-The user interface for `exoatlas` centers around the Python `Population` class, with each `Population` object containing a standardized table of planet properties and methods for interacting with that table. `exoatlas` makes extensive use of `astropy` [@astropy] to be as familiar as possible for modern astronomers, and it is thoroughly documented with astronomical audiences in mind at [zkbt.github.io/exoatlas/](https://zkbt.github.io/exoatlas/). 
+The user interface for `exoatlas` centers around the Python `Population` class, with each `Population` object containing a standardized table of planet properties and methods for interacting with that table. `exoatlas` makes extensive use of `astropy` [@astropy] to be as familiar as possible for modern astronomers, and it is thoroughly documented with astronomical audiences in mind. 
 
 - To retrieve planet data, `exoatlas` provides `Population` objects that automatically access archive data for exoplanets as well as Solar System major planets, minor planets, and moons. Exoplanet data come from the NASA Exoplanet Archive [@exo-archive] API, and Solar System data come from the JPL Solar System Dynamics [@ssd] API or small reformatted data tables included in the package repository itself. Whatever the original data source, all `Population` objects act similarly and have uniform nomenclature for accessing data columns. Planet quantities all have physical units attached with `astropy.units` to facilitate unit conversions and minimize conceptual errors. New `Population` objects can also be created from `astropy.table` tables, enabling custom datasets to be included.
 - To calculate derived quantities for planets, a set of default methods are included within the core `Population` definition, or users may attach their own calculation methods. If data for a quantity is missing, calculations can be used to swap in alternate estimates; for example, a planet's semimajor axis $a$ will attempt first to pull from the original data table, and then second to calculate $a$ from the planet's period $P$ and the star's mass $M_\star$ assuming Newton's Version of Kepler's Third Law $P^2 = 4\pi^2 a^3/GM_\star$, and then third to calculate from a transit-derived ratio $a/R_*$. Uncertainties on all derived quantities can be numerically propagated using the `astropy.uncertainty` framework, where distributions of samples are generated for each original table quantity, carried through calculations, and then used to estimate confidence intervals.
@@ -93,10 +93,21 @@ PlanetGallery().build([e, s, h])
 ![Example `exoatlas` visualization placing the first discovered transiting exoplanet HD209458b in context with other transiting exoplanets and the eight major Solar System planets. Errorbars use a color intensity that scales inversely with quantity uncertainties, to avoid giving undue visual weight to the least precise data. \label{fig:exoatlas}](joss-exoatlas-example.png)
 
 # Research, teaching, and learning
-`exoatlas` was designed to support the researcher who wants to contextualize planet populations in papers, proposals, or talks, the educator who wants help connect lessons more immediately to real exoplanet and Solar System data, and the student who simply wants to learn a little more about oodles of neat planets. All these communities are encouraged try `exoatlas`, to ask for help, to suggest improvements, and/or to contribute code!
+`exoatlas` was designed to support the researcher who wants to contextualize planet populations in papers, proposals, or talks, the educator who wants help connect lessons more immediately to real exoplanet and Solar System data, and the student who simply wants to learn a little more about oodles of neat planets. All these communities are encouraged try `exoatlas`, to ask for help, to suggest improvements, and/or to contribute code.
+
+# AI usage disclosure
+
+No generative AI tools were used in the development of this software, the writing
+of this manuscript, or the preparation of supporting materials.
 
 # Acknowledgements
 
 We acknowledge the long commitment federally-funded archives have made to preserving and sharing data with the scientific community, and the heroic efforts of the people who build, maintain, and continually improve those archives. This material is based upon work supported by the National Science Foundation under Grant No. 1945633.
+
+
+This work made use of the following software packages: \texttt{astropy} [@astropy:2013; @astropy:2018; @astropy:2022; @astropy], \texttt{Jupyter} [@ipython; @jupyter], \texttt{matplotlib} [@matplotlib], \texttt{pandas} [@mckinney; @pandas], \texttt{python} [@python], \texttt{scipy} [@scipy-nature-methods; @scipy] \texttt{ArviZ} [@arviz_2019; @arviz], \texttt{astroquery} [@astroquery-arxiv; @astroquery], \texttt{tqdm} [@tqdm], and \texttt{xarray} [@hoyer; @xarray].  Software citation information aggregated using \texttt{\href{https://www.tomwagg.com/software-citation-station/}{The Software Citation Station}} [@software-citation-station-paper; @software-citation-station-zenodo].
+
+This research has made use of data and/or services provided by the International Astronomical Union's Minor Planet Center. This research has made use of data obtained from or tools provided by the portal exoplanet.eu of The Extrasolar Planets Encyclopaedia. This research has made use of the exo.MAST service at the Mikulski Archive for Space Telescopes (MAST), operated by the Space Telescope Science Institute (STScI). STScI is operated by the Association of Universities for Research in Astronomy, Inc., under NASA contract NAS5-26555.
+
 
 # References
