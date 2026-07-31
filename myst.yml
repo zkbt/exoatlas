@@ -32,17 +32,14 @@ project:
         - file: docs/developer/testing.ipynb
     #- file: docs/api_index.md
     - file: docs/acknowledgements.ipynb
-  # run notebooks
-  execute:
-    execute_notebooks: "auto"
 site:
   template: book-theme
   # options:
-  #   favicon: favicon.ico
   #   logo: site_logo.png
   options:
     #logo_text: "exoatlas: friendly python code for exoplanet populations"
     logo_text: " "
+    favicon: favicon.ico
   parts:
     primary_sidebar_footer: "© Berta-Thompson (2023-2026)"
 
