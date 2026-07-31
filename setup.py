@@ -99,16 +99,9 @@ setup(
             "black[jupyter]",
             "jupyter",
             "ipython",
-            "mkdocs>=1.6.1",
-            "mkdocs-material>=9.6.9",
-            "mkdocstrings>=0.29.0",
-            "mkdocstrings-python>=1.16.7",
-            "pytkdocs[numpy-style]",
-            "mkdocs-jupyter>=0.26.3",
-            "mkdocs-exclude>=1.0.2",
+            "jupyter-book>=2.0.0",
             "twine",
             "pre-commit",
-            "griffe-inherited-docstrings",
         ]
     },
     # what version of Python is required?
