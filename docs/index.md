@@ -1,4 +1,4 @@
-# 🌌 exoatlas!
+# 🌌 exoatlas
 
 Welcome! `exoatlas` is a Python package for interacting with basic properties of exoplanets and Solar System planets. It provides a friendly way to download useful data from online archives like the [NASA Exoplanet Archive](https://exoplanetarchive.ipac.caltech.edu) and [JPL Solar System Dynamics](https://ssd.jpl.nasa.gov), easy access to planet properties, and some pre-packaged visualizations for summarizing and comparing populations of planets.
 

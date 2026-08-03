@@ -44,6 +44,15 @@ if "release" in sys.argv[-1]:
     os.system("rm -rf dist/exoatlas*")
     sys.exit()
 
+# running `python setup.py docs` from the command line will update the online docs
+if "docs" in sys.argv[-1]:
+    # build the documentation locally
+    os.system('export BASE_URL="/exoatlas"; jupyter book build --html --execute')
+    # copy it over to gh-pages branch and push
+    os.system("ghp-import -n -p -f _build/html")
+    sys.exit()
+
+
 # a little kludge to get the version number from __version__
 exec(open("exoatlas/version.py").read())
 
@@ -99,16 +108,10 @@ setup(
             "black[jupyter]",
             "jupyter",
             "ipython",
-            "mkdocs>=1.6.1",
-            "mkdocs-material>=9.6.9",
-            "mkdocstrings>=0.29.0",
-            "mkdocstrings-python>=1.16.7",
-            "pytkdocs[numpy-style]",
-            "mkdocs-jupyter>=0.26.3",
-            "mkdocs-exclude>=1.0.2",
+            "jupyter-book>=2.0.0",
+            "ghp-import",
             "twine",
             "pre-commit",
-            "griffe-inherited-docstrings",
         ]
     },
     # what version of Python is required?
