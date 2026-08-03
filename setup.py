@@ -44,12 +44,10 @@ if "release" in sys.argv[-1]:
     os.system("rm -rf dist/exoatlas*")
     sys.exit()
 
-# running `python setup.py docs` from the command line update the online docs
+# running `python setup.py docs` from the command line will update the online docs
 if "docs" in sys.argv[-1]:
     # build the documentation locally
-    os.system('export BASE_URL="/exoatlas"')
-    os.system("jupyter book build --html --execute")
-
+    os.system('export BASE_URL="/exoatlas"; jupyter book build --html --execute')
     # copy it over to gh-pages branch and push
     os.system("ghp-import -n -p -f _build/html")
     sys.exit()
