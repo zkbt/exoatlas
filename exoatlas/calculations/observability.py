@@ -1,6 +1,6 @@
 from ..imports import *
 from ..telescopes import *
-
+from ..models.spectra import *
 
 def angular_separation(self, distribution=False, **kw):
     """
@@ -152,14 +152,11 @@ def emission_signal(
         which can be used for error propagation.
     """
 
-    # create thermal emission sources for both star and planet
-    import rainbowconnection as rc
-
-    star = rc.Thermal(
+    star = Thermal(
         teff=self.stellar_teff(distribution=distribution),
         radius=self.stellar_radius(distribution=distribution),
     )
-    planet = rc.Thermal(
+    planet = Thermal(
         teff=self.teq(albedo_bond=albedo_bond, f=f, distribution=distribution),
         radius=self.radius(distribution=distribution),
     )
@@ -232,14 +229,11 @@ def stellar_brightness(self, wavelength=5 * u.micron, distribution=False, **kw):
         which can be used for error propagation.
     """
 
-    # import some tools for easy cartoon spectra
-    import rainbowconnection as rc
-
     # create source with right temperature, size, distance
     Teff = self.stellar_teff(distribution=distribution)
     Rs = self.stellar_radius(distribution=distribution)
     D = self.distance(distribution=distribution)
-    star = rc.Thermal(teff=Teff, radius=Rs).at(distance=D)
+    star = Thermal(teff=Teff, radius=Rs).at(distance=D)
 
     # calculate the energy flux
     flux_in_energy = star.spectrum(wavelength)

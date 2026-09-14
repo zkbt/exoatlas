@@ -4,6 +4,20 @@ from exoatlas.models import *
 from exoatlas.imports import *
 
 
+def test_spectrum():
+    N = 100
+    w = np.linspace(1, 1000, N) * u.nm
+    f = np.random.normal(100, 1, N) * u.W / u.m**2 / u.nm
+    s = Spectrum(w, f)
+    s.integrate()
+
+    s = Thermal()
+    s.integrate()
+
+    s = SumOfThermal()
+    s.integrate()
+
+
 def test_mamajek():
     m = Mamajek()
     m.plot(["logT", "logL", "logR", "logM"])
