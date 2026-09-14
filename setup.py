@@ -1,6 +1,6 @@
 """
 This setup.py file sets up our package to be installable on any computer,
-so that folks can `import rainbowconnection` from within any directory.
+so that folks can `import exoatlas` from within any directory.
 Thanks to this file, you can...
 
 ...tell python to look for code in the current directory (which you
@@ -19,7 +19,7 @@ or
 `python setup.py install`
 
 ...upload the entire package to the Python Package Index, so that other folks
-will be able to install your package via the simple `pip install rainbow-connection`, by
+will be able to install your package via the simple `pip install exoatlas`, by
 running the following command:
 
 `python setup.py release`
@@ -94,7 +94,6 @@ setup(
         "astropy>=3.2.3",
         "astroquery>=0.3.9",
         "astroplan>=0.10",
-        "rainbow-connection>=0.0.17",
         "tqdm>=4.67.1",
         "pytz>2025.2",
         "tess-point>0.9.2",
