@@ -1115,3 +1115,39 @@ def scale_height(
     g = self.surface_gravity(kludge=kludge, distribution=distribution)
     H = (k * T / mu / m_p / g).to("km")
     return H
+
+def tidal_circularization_timescale(self, Q_planet=1e4, kludge=False, distribution=False
+):
+    """
+    Tidal Circularization Timescale (Myr)
+
+    A very rough estimate of the timescale on which the planet's
+    orbital eccentricity damps away due to tidal circularization.
+
+    Parameters
+    ----------
+    Q_planet : float
+        The tidal quality factor Q for the planet.
+    kludge : bool
+        Should we include kludged estimates for mass (from msini and/or
+        empirical mass-radius) and/or radius (from empircal mass-radius)
+        when doing this calculation?
+    distribution : bool
+        If False, return a simple array of values.
+        If True, return an astropy.uncertainty.Distribution,
+        which can be used for error propagation.
+    """
+
+    M_star = a.stellar_mass(distribution=distribution)
+    R_planet = a.radius(distribution=distribution)
+    M_planet = a.mass(distribution=distribution)
+    semimajor = a.semimajoraxis(distribution=distribution)
+
+    # from Jackson et al. (2008)
+    tau = (
+        1
+        / (63 / 4 * (con.G * M_star**3) ** (1 / 2) * R_planet**5 / Q_planet / M_planet)
+        * semimajor ** (13 / 2)
+    )
+
+    return tau.to('Myr')

@@ -1787,6 +1787,7 @@ class Population:
         log_relative_escape_velocity,
         log_relative_radius,
         log_relative_stellar_luminosity,
+        tidal_circularization_timescale,
     )
 
     from ..calculations.stellar import (
