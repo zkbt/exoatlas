@@ -630,6 +630,28 @@ def transit_duration(self, distribution=False, **kw):
         **kw,
     )
 
+def ingress_duration(self, distribution=False, **kw):
+    """
+    The ingress/egress duration (days).
+
+    An approximate estimate of the ingress/egress duration,
+    which will break down for eccentric planets, for
+    large planet-to-star radius ratios, and for
+    grazing transits.
+
+    Parameters
+    ----------
+    distribution : bool
+        If False, return a simple array of values.
+        If True, return an astropy.uncertainty.Distribution,
+        which can be used for error propagation.
+    """
+    T = self.transit_duration(distribution=distribution)
+    k = self.scaled_radius(distribution=distribution)
+    b = self.transit_impact_parameter(distribution=distribution)
+
+    ingress_approximately = T*k/(1-b**2)
+    return ingress_approximately
 
 def mass_estimated_from_radius_assuming_rockyish(self, distribution=False, **kw):
     """
@@ -1138,10 +1160,10 @@ def tidal_circularization_timescale(self, Q_planet=1e4, kludge=False, distributi
         which can be used for error propagation.
     """
 
-    M_star = a.stellar_mass(distribution=distribution)
-    R_planet = a.radius(distribution=distribution)
-    M_planet = a.mass(distribution=distribution)
-    semimajor = a.semimajoraxis(distribution=distribution)
+    M_star = self.stellar_mass(distribution=distribution)
+    R_planet = self.radius(distribution=distribution)
+    M_planet = self.mass(distribution=distribution)
+    semimajor = self.semimajoraxis(distribution=distribution)
 
     # from Jackson et al. (2008)
     tau = (

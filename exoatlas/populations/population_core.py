@@ -1770,6 +1770,7 @@ class Population:
         scaled_radius,
         transit_duration_from_orbit,
         transit_duration,
+        ingress_duration,
         mass_estimated_from_radius_assuming_rockyish,
         mass_estimated_from_radius_assuming_chen_and_kipping,
         radius_estimated_from_mass_assuming_chen_and_kipping,
