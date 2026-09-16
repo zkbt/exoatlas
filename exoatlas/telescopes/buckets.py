@@ -83,6 +83,7 @@ def define_JWST_unit(wavelength=5 * u.micron, efficiency=0.3, **kw):
         **kw,
     )
 
+
 def define_GMOS_unit(wavelength=0.5 * u.micron, efficiency=0.05, **kw):
     """
     Create a JWST telescope unit.
@@ -245,7 +246,7 @@ telescope_units = dict(
     JWST=define_JWST_unit,
     APO=define_APO_unit,
     SBO=define_SBO_unit,
-    GMOS=define_GMOS_unit
+    GMOS=define_GMOS_unit,
 )
 
 

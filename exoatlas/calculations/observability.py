@@ -2,6 +2,7 @@ from ..imports import *
 from ..telescopes import *
 from ..models.spectra import *
 
+
 def angular_separation(self, distribution=False, **kw):
     """
     Maximum Angular Separation (a/D, arcseconds)

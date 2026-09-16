@@ -229,11 +229,11 @@ def transit_impact_parameter(self, distribution=False, **kw):
 earth_insolation = (1 * u.Lsun / 4 / np.pi / u.AU**2).to(u.W / u.m**2)
 
 
-def insolation(self, distribution=False, **kw):
+def instellation(self, distribution=False, **kw):
     """
-    Planet Insolation (S, W/m**2)
+    Planet Instellation (S, W/m**2)
 
-    Calculate the insolation the planet receives from its star,
+    Calculate the instellation the planet receives from its star,
     given the luminosity of the star and the semimajor axis,
     expressed in units of W/m**2. (For reference, Earth
     receives 1360 W/m**2).
@@ -245,7 +245,6 @@ def insolation(self, distribution=False, **kw):
         If True, return an astropy.uncertainty.Distribution,
         which can be used for error propagation.
     """
-
     # calculate the average insolation the planet receives
     L = self.stellar_luminosity(distribution=distribution)
     a = self.semimajoraxis(distribution=distribution)
@@ -253,11 +252,34 @@ def insolation(self, distribution=False, **kw):
     return S.to(u.W / u.m**2)
 
 
-def relative_instellation(self, distribution=False, **kw):
+def insolation(self, distribution=False, **kw):
     """
-    Relative Planet Insolation  (S/S_Earth)
+    Planet Insolation (S, W/m**2)
 
     Calculate the insolation the planet receives from its star,
+    given the luminosity of the star and the semimajor axis,
+    expressed in units of W/m**2. (For reference, Earth
+    receives 1360 W/m**2).
+
+    This is an exact wrapper for `.instellation()`,
+    just because folks use different words.
+
+    Parameters
+    ----------
+    distribution : bool
+        If False, return a simple array of values.
+        If True, return an astropy.uncertainty.Distribution,
+        which can be used for error propagation.
+    """
+    # calculate the average insolation the planet receives
+    return self.instellation(distribution=distribution, **kw)
+
+
+def relative_instellation(self, distribution=False, **kw):
+    """
+    Relative Planet Instellation  (S/S_Earth)
+
+    Calculate the instellation the planet receives from its star,
     given the luminosity of the star and the semimajor axis,
     expressed relative to Earth's insolation.
 
@@ -268,7 +290,29 @@ def relative_instellation(self, distribution=False, **kw):
         If True, return an astropy.uncertainty.Distribution,
         which can be used for error propagation.
     """
-    return self.insolation(distribution=distribution) / earth_insolation
+    return self.instellation(distribution=distribution) / earth_insolation
+
+
+def relative_insolation(self, distribution=False, **kw):
+    """
+    Relative Planet Insolation  (S/S_Earth)
+
+    Calculate the insolation the planet receives from its star,
+    given the luminosity of the star and the semimajor axis,
+    expressed relative to Earth's insolation.
+
+    This is an exact wrapper for `.instellation()`,
+    just because folks use different words.
+
+    Parameters
+    ----------
+    distribution : bool
+        If False, return a simple array of values.
+        If True, return an astropy.uncertainty.Distribution,
+        which can be used for error propagation.
+    """
+
+    return self.relative_instellation(distribution=distribution, **kw)
 
 
 def log_relative_instellation(self, distribution=False, **kw):
@@ -714,7 +758,7 @@ def kludge_mass(self, distribution=False, **kw):
             "mass_from_table",
             "msini_from_orbit",
             "mass_estimated_from_radius_assuming_rockyish",
-            #"mass_estimated_from_radius_assuming_chen_and_kipping",
+            # "mass_estimated_from_radius_assuming_chen_and_kipping",
         ],
         distribution=distribution,
         **kw,

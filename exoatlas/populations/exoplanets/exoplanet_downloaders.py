@@ -61,7 +61,7 @@ class ExoplanetArchiveDownloader(Downloader):
 
     @property
     def where_string(self):
-        if (self.planet is "") or (self.planet is None):
+        if (self.planet == "") or (self.planet is None):
             return ""
         else:
             return f"where+pl_name+like+'{self.planet}'".replace(" ", "%20")

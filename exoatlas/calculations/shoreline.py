@@ -26,25 +26,24 @@ class Shoreline:
             from the Zenodo repository associated with the
             Berta-Thompson et al. (2026) Cosmic Shoreline.
         cache : bool
-            If no posterior is provided and the posterior 
+            If no posterior is provided and the posterior
             is being downloaded from Zenodo, this sets whether
-            `download_file` should cache a copy of the file 
-            locally to avoid re-downloading it every time 
-            the shoreline is needed. This should mostly be 
-            True, unless for some reason the local copy of 
+            `download_file` should cache a copy of the file
+            locally to avoid re-downloading it every time
+            the shoreline is needed. This should mostly be
+            True, unless for some reason the local copy of
             the posteriors needs to be updated.
         **kw : dict
             All additional keywords will be ignored.
         """
 
-
         try:
             # in arviz<1.1.0 posteriors might be InferenceData
             with warnings.catch_warnings():
-                warnings.simplefilter('ignore')
+                warnings.simplefilter("ignore")
                 posterior_data_type = az.InferenceData
         except AttributeError:
-            # in modern arviz>=1.1.0, posteriors are xarray 
+            # in modern arviz>=1.1.0, posteriors are xarray
             posterior_data_type = xa.DataTree
         if isinstance(posterior, posterior_data_type):
             # just adopt a given set of posterior samples
@@ -57,39 +56,41 @@ class Shoreline:
             self.posterior = self.download_posterior(cache=cache)
         else:
             # nothing else
-            raise NotImplementedError(
-                f"""
+            raise NotImplementedError(f"""
             Sorry, we couldn't figure out how to load
             {posterior}
             as shoreline posterior parameter samples.
-            """
-            )
+            """)
         try:
-            # new arviz 
-            self.summary = az.summary(self.posterior, kind="all_median", round_to="none")
+            # new arviz
+            self.summary = az.summary(
+                self.posterior, kind="all_median", round_to="none"
+            )
         except TypeError:
             # old arviz
-            self.summary = az.summary(self.posterior,  kind="all", stat_focus="median", round_to="none")
+            self.summary = az.summary(
+                self.posterior, kind="all", stat_focus="median", round_to="none"
+            )
 
     def __repr__(self):
         return f"<🏝️{self.var_names}>"
 
     def download_posterior(self, cache=True):
-        ''' 
+        """
         Download the latest version of the BTMW26 posterior from Zenodo.
 
-        Parameters 
+        Parameters
         ----------
         cache : bool
-            Should `download_file` cache a copy of the file 
-            locally to avoid re-downloading it every time 
-            the shoreline is needed? This should mostly be 
-            True, unless for some reason the local copy of 
+            Should `download_file` cache a copy of the file
+            locally to avoid re-downloading it every time
+            the shoreline is needed? This should mostly be
+            True, unless for some reason the local copy of
             the posteriors needs to be updated.
-        '''
+        """
         # define the link
-        zenodo_code = '15858798'
-        posterior_filename = 'cosmic-shoreline-btwm2026-posterior.nc'
+        zenodo_code = "15858798"
+        posterior_filename = "cosmic-shoreline-btwm2026-posterior.nc"
         link = f"https://zenodo.org/records/{zenodo_code}/files/{posterior_filename}?download=1"
 
         # use astropy to download the file
@@ -100,7 +101,9 @@ class Shoreline:
         """
         Return one "best" set of parameters.
         """
-        best_parameters = {k:float(self.summary["median"][k].astype(float)) for k in self.var_names}
+        best_parameters = {
+            k: float(self.summary["median"][k].astype(float)) for k in self.var_names
+        }
         return best_parameters
 
     def sampled_parameters(self, N_samples=1000):
@@ -112,7 +115,7 @@ class Shoreline:
         N_samples : int
             The number of posterior samples to return.
         """
-        po = self.posterior['posterior']
+        po = self.posterior["posterior"]
         sampled_parameters = {}
         for k in self.var_names:
             all_samples_for_this_parameter = np.array(po[k]).flatten()
@@ -173,7 +176,7 @@ class Shoreline:
             (independent variable), log10(stellar luminosity relative to Sun)
         log_f : float, Quantity, array
             (independent variable), log10(bolometric flux relative to Earth)
-        **kw : dict 
+        **kw : dict
             All additional keywords will be ignored.
         """
         distance_from_shoreline = log_f - self.log_f_shoreline(
@@ -267,7 +270,9 @@ class Shoreline:
         if latex:
             return [
                 rf"{{latexify_confidence_interval(m*100, l*100, u*100)}}\%"
-                for m, l, u in zip(np.atleast_1d(median), np.atleast_1d(lower), np.atleast_1d(upper))
+                for m, l, u in zip(
+                    np.atleast_1d(median), np.atleast_1d(lower), np.atleast_1d(upper)
+                )
             ]
         else:
             return median, lower, upper
@@ -286,8 +291,8 @@ def probability_of_atmosphere(self, shoreline=None, distribution=False, **kw):
     ----------
     shoreline : exoatlas.visualizations.Shoreline
         A shoreline object with a posterior of shoreline
-        parameters attached to it, for calculating probabilities. 
-        If None, it will default to the 
+        parameters attached to it, for calculating probabilities.
+        If None, it will default to the
     distribution : bool
         If False, return a simple array of values.
         If True, return an astropy.uncertainty.Distribution,

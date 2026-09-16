@@ -97,8 +97,8 @@ setup(
         "tqdm>=4.67.1",
         "pytz>2025.2",
         "tess-point>0.9.2",
-        "arviz>=0.3.0", # arviz>1.0.0 loses InferenceData type, but exoatlas should be flexible to handle this
-        "xarray>=2024.10.0", # (when DataTree was introduced, needed if using arviz>1.0.0)
+        "arviz>=0.3.0",  # arviz>1.0.0 loses InferenceData type, but exoatlas should be flexible to handle this
+        "xarray>=2024.10.0",  # (when DataTree was introduced, needed if using arviz>1.0.0)
     ],
     extras_require={
         "develop": [

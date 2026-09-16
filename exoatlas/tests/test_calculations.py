@@ -32,9 +32,7 @@ orbital_velocity,
 impact_velocity,
 escape_parameter,
 scale_height
-""".strip().split(
-        ",\n"
-    )
+""".strip().split(",\n")
     test_calculations(calculations=calculations)
 
 
@@ -46,9 +44,7 @@ def test_stellar_calculations():
 stellar_luminosity_from_radius_and_teff,
 stellar_luminosity,
 distance_modulus
-""".strip().split(
-        ",\n"
-    )
+""".strip().split(",\n")
     test_calculations(calculations=calculations)
 
 
@@ -68,9 +64,7 @@ depth_snr,
 emission_snr,
 reflection_snr,
 transmission_snr
-""".strip().split(
-        ",\n"
-    )
+""".strip().split(",\n")
     test_calculations(calculations=calculations)
 
 

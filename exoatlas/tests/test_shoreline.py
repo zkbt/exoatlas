@@ -1,6 +1,6 @@
 from .setup_tests import *
 from exoatlas import *
-from exoatlas.visualizations import * 
+from exoatlas.visualizations import *
 from exoatlas.calculations.shoreline import *
 
 
@@ -28,7 +28,7 @@ def test_shoreline_visualizations():
     e = TransitingExoplanets()
 
     # pick the name of the planet to highlight
-    planet_name = 'LTT1445Ab'
+    planet_name = "LTT1445Ab"
 
     # create a subset population to highlight that one planet
     highlight = e[planet_name]
@@ -42,7 +42,7 @@ def test_shoreline_visualizations():
     # add the planets to the panels
     g.build([s, e, highlight])
 
-    # add embellishments to the plot, including probability 
+    # add embellishments to the plot, including probability
     g.refine()
 
     # colorbar for probability
