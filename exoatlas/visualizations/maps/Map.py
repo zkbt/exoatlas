@@ -185,12 +185,10 @@ class Map:
             self.pop = self.populations[pop]
             self.pop_key = pop
         else:
-            raise ValueError(
-                f"""
+            raise ValueError(f"""
             It's not clear how to interpret {pop}
             as a population at which we might point 
-            {self}"""
-            )
+            {self}""")
 
         # slice (limit values along some dimension) if desired
         how_to_slice = self.plottable.get("slice", None)
@@ -322,15 +320,13 @@ class Map:
             these_scattered_points = self.ax.scatter(self.x, self.y, **self.kw(**kw))
 
             if self.pop_key in self.scattered:
-                warnings.warn(
-                    f"""
+                warnings.warn(f"""
                 Key '{self.pop_key}' already exists. This might be fine for plotting, 
                 but if you want to access any of the plotted elements to modify them 
                 later, you might not be able to because they may have been overwritten.
                 Might we please encourage you to give your populations unique labels 
                 via the `population.label = "here's some neat label"`?
-                """
-                )
+                """)
             self.scattered[self.pop_key] = these_scattered_points
 
             # set the scales, limits, labels
@@ -560,7 +556,9 @@ class Map:
             try:
                 from adjustText import adjust_text
             except ModuleNotFoundError, ImportError:
-                warnings.warn('adjust_text not found. Please install it via `pip install adjusttext`')
+                warnings.warn(
+                    "adjust_text not found. Please install it via `pip install adjusttext`"
+                )
             adjust_text(
                 list(self.annotated.values()),
                 arrowprops=dict(
@@ -645,7 +643,9 @@ class Map:
             try:
                 from adjustText import adjust_text
             except ModuleNotFoundError, ImportError:
-                warnings.warn('adjust_text not found. Please install it via `pip install adjusttext`')
+                warnings.warn(
+                    "adjust_text not found. Please install it via `pip install adjusttext`"
+                )
             adjust_text(
                 list(self.annotated.values()),
                 arrowprops=dict(
@@ -706,7 +706,9 @@ class Map:
         try:
             from adjustText import adjust_text
         except ModuleNotFoundError, ImportError:
-            warnings.warn('adjust_text not found. Please install it via `pip install adjusttext`')
+            warnings.warn(
+                "adjust_text not found. Please install it via `pip install adjusttext`"
+            )
 
         adjust_text(
             list(self.annotated.values()),

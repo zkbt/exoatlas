@@ -408,6 +408,56 @@ class Population:
 
         setattr(self.__class__, name, function)
 
+    def print_planets(
+        self,
+        keys=[
+            "radius",
+            "mass",
+            "surface_gravity",
+            "relative_instellation",
+            "teq",
+            "period",
+            "semimajoraxis",
+            "scaled_semimajoraxis",
+            "scaled_radius",
+            "stellar_radius",
+            "stellar_mass",
+            "stellar_teff",
+            "stellar_luminosity",
+            "stellar_metallicity",
+            "stellar_age",
+            "magnitude_gaia",
+            "distance",
+        ],
+        **kw,
+    ):
+        """
+        Print a quick summary of the planets in a population.
+
+        (This will probably be too much and/or very slow
+        if running on populations of more than a few planets.)
+
+        Parameters
+        ----------
+        keys : list
+            The quantities to print.
+        **kw : dict
+            All other keywords will be passed through to
+            the `.get` and `.get_uncertainty` functions
+            for derived quantities that depend on keyword
+            arguments (for example, "albedo_bond" and "f"
+            for a calculation of equilibrium temperature
+            `.teq(albedo_bond=0, f=1/4)`.
+        """
+        for i in range(len(self)):
+            print(f"🌎 {self.name()[i]} 🌖")
+            for k in keys:
+                x = self.get(k, **kw)[i]
+                sigma = self.get_uncertainty(k, **kw)[i]
+                reference = self.get_reference(k)[i]
+                print(f"{k} = {x:.5g} +/- {sigma:.5g} ({reference})")
+            print()
+
     def print_column_summary(self):
         """
         Print a summary of columns that come directly from the `.table` table.
@@ -499,12 +549,10 @@ class Population:
         to_save.meta["plotkw"] = self._plotkw
 
         to_save.write(filename, format="ascii.ecsv", overwrite=overwrite)
-        print(
-            f"""
+        print(f"""
         Saved {self} to {filename}.
         It can be reloaded with `x = Population('{filename}')`
-        """
-        )
+        """)
 
     def sort(self, x, reverse=False):
         """
@@ -648,8 +696,7 @@ class Population:
 
             # if the key is a column, raise an error
             if type(key) in self.table.colnames:
-                raise IndexError(
-                    f"""
+                raise IndexError(f"""
                 You seem to be trying to access a column from this
                 population via `pop[{key}]`. For clarity, all `[]`
                 indexing is reserved for selecting subsets of the
@@ -658,8 +705,7 @@ class Population:
                 To access your particular column, please try either
                 `pop.{key}` or `pop.table[{key}]` to return a
                 1D array of the entries in that column.
-                """
-                )
+                """)
         except KeyError:
             # use a string or a list of strings make a subset by planet name
             # FIXME - maybe we should make this say more when it's making a sneaky choice for us?
@@ -1024,13 +1070,11 @@ class Population:
 
         # do a quick check that something essential isn't missing
         if key in ["label", "_plotkw"]:
-            raise RuntimeError(
-                f"""
+            raise RuntimeError(f"""
                 Yikes! It looks like `.{key}` isn't defined for this `Population`. 
                 Ideally, this error should never been seen, but if it does, something's 
                 gone dreadfully wrong. 
-                """
-            )
+                """)
 
         # try to get a plotkw from this pop, from the plotting defaults, from None
         try:
@@ -1101,12 +1145,26 @@ class Population:
             """
             return f
 
-        raise AttributeError(
-            f"""
+        if key.endswith("_reference"):
+            quantity_key = key.split("_reference")[0]
+
+            def f(**kw):
+                return self.get_reference(key=quantity_key, **kw)
+
+            f.__docstring__ = f"""
+            A function to return reference for '.{quantity_key}'. 
+
+            Returns
+            -------
+            ref : np.array, u.Quantity
+                The reference(s) for the planet parameter(s).
+            """
+            return f
+
+        raise AttributeError(f"""
             Alas, there seems to be no way to find `.{key}`
             as a table column, attribute, method, or property of {self}.
-            """
-        )
+            """)
 
     def __setattr__(self, key, value):
         """
@@ -1306,6 +1364,34 @@ class Population:
         fractional_uncertainty = sigma_x / x
         return fractional_uncertainty
 
+    def get_reference(self, key, **kw):
+        """
+        Return the reference(s) for a particular quantity.
+
+        This returns a column of reference strings for
+        the particular quantity requested. It only works
+        for values that can be extracted directly from
+        the table; it won't work (yet) on derived quantities.
+
+        Parameters
+        ----------
+        key : str
+            The quantity for which we want references.
+
+        Returns
+        -------
+        references : np.array
+            The references, as an array of strings
+        """
+        try:
+            references = np.array(self.table[f"{key}_reference"])
+            # check for derived quantities that do have (unused) reference in table
+            doesnt_match = self.get(key) != self.get_values_from_table(key)
+            references[doesnt_match] = "?"
+        except (KeyError, AssertionError):
+            references = np.array(["?"] * len(self.table))
+        return references
+
     def _validate_columns(self):
         """
         Make sure this standardized table has all the necessary columns.
@@ -1389,7 +1475,12 @@ class Population:
                     print(f"{planets_to_index} | {k+suffix}: {old} > {new}")
             else:
                 # update value in table
-                old = self.table[k][i] * 1
+                try:
+                    # if a number
+                    old = self.table[k][i] * 1
+                except TypeError:
+                    # if a string
+                    old = self.table[k][i] + ""
                 new = v
                 self.table[k][i] = new
                 print(f"{planets_to_index} | {k}: {old} > {new}")
@@ -1621,13 +1712,11 @@ class Population:
                 ]
                 values[has_smaller_uncertainty] = v[has_smaller_uncertainty]
         else:
-            raise ValueError(
-                f"""
+            raise ValueError(f"""
             "{how_to_choose}" is not a valid option choosing from among
             {methods}
             Only "preference" or "precision" are currently allowed. 
-            """
-            )
+            """)
 
         if visualize:
             plt.figure(figsize=(8, 3))
@@ -1667,8 +1756,10 @@ class Population:
         argument_of_periastron,
         transit_impact_parameter_from_inclination,
         transit_impact_parameter,
+        instellation,
         insolation,
         relative_instellation,
+        relative_insolation,
         log_relative_instellation,
         relative_cumulative_xuv_insolation,
         teq,

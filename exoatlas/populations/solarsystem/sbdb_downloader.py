@@ -33,8 +33,7 @@ class SBDBDownloader(Downloader):
         Download a brand new table from the JPL/SBDB Query API.
         """
 
-        print(
-            f"""
+        print(f"""
         Attempting to freshly download data from
         {self.base}
         
@@ -44,8 +43,7 @@ class SBDBDownloader(Downloader):
         a few 100MB, so however long it takes your computer
         to download that is probably a reasonable-ish amount 
         of time to wait before getting stressed out. 
-        """
-        )
+        """)
 
         self._parameters = {}
         self._parameters["fields"] = (

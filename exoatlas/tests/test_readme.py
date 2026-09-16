@@ -1,7 +1,7 @@
 def test_readme():
-    '''
+    """
     Test the code that appears on the GitHub README.
-    '''
+    """
 
     # import some population definitions and plotting tool
     from exoatlas import TransitingExoplanets, SolarSystem

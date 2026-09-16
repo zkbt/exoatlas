@@ -79,7 +79,7 @@ class SliceAnimatedGallery(SliceGridGallery):
     A gallery to flip through multiple slices as an animation.
     """
 
-    def __init__(self, map_to_slice, N=4, figsize=(6,6), dpi=600, **kw):
+    def __init__(self, map_to_slice, N=4, figsize=(6, 6), dpi=600, **kw):
         """
         Initialize an animation showing different slices of the same 3D space.
 
@@ -170,11 +170,11 @@ class SliceAnimatedGallery(SliceGridGallery):
                 # save this snapshot to a movie frame
                 writer.grab_frame()
 
-
         # display the created animation
         if show_in_notebook:
             from IPython.display import Image, Video, display
-            if '.gif' in filename:
+
+            if ".gif" in filename:
                 display(Image(filename))
             else:
-                display(Video(filename, html_attributes='controls loop'))
+                display(Video(filename, html_attributes="controls loop"))

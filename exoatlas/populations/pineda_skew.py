@@ -379,8 +379,8 @@ def make_skew_samples_from_lowerupper(
     Returns
     -------
     samples : Quantity and/or array-like
-        an array with shape (N_data, N_samples) with samples drawn from 
-        a skew normal distribution that matches the provided center and 
+        an array with shape (N_data, N_samples) with samples drawn from
+        a skew normal distribution that matches the provided center and
         asymmetric lower/upper limits
     """
 
