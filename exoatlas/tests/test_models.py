@@ -1,7 +1,17 @@
 from .setup_tests import *
-
 from exoatlas.models import *
 from exoatlas.imports import *
+
+
+def test_tang():
+    t = Tang()
+    t.plot()
+
+
+def test_baraffe():
+    b = Baraffe()
+    b.plot()
+    b.imshow()
 
 
 def test_spectrum():

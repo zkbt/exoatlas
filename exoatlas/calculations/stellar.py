@@ -1,6 +1,5 @@
 from ..imports import *
 
-
 '''def stellar_luminosity_from_table(self, distribution=False, **kw):
     """
     Stellar Luminosity (L*, Lsun)

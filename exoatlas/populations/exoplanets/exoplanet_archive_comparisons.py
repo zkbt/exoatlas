@@ -206,13 +206,11 @@ class NASAExoplanetArchiveComparison:
                 if k == "pscp":
                     is_egregious = np.abs(ratio - 1) > egregious_threshold
                     bad_planets = self.tables[k][is_egregious]["pl_name"]
-                    print(
-                        f"""
+                    print(f"""
                     The parameter '{p}' is off by more than {egregious_threshold:%} for the {len(bad_planets)} planets 
                     {bad_planets}
                     simply because of weird rounding and/or Earth-Jupiter unit conversions.
-                    """
-                    )
+                    """)
                     print(list(self.tables[k][is_egregious]["pl_name"]))
             plt.legend(frameon=False)
             plt.savefig(os.path.join(self.plot_directory, f"check-units-{p}.png"))

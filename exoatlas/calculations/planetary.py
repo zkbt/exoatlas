@@ -225,15 +225,13 @@ def transit_impact_parameter(self, distribution=False, **kw):
     return b
 
 
-# the 1360 W/m^2 that Earth receives from the Sun
-earth_insolation = (1 * u.Lsun / 4 / np.pi / u.AU**2).to(u.W / u.m**2)
 
 
-def insolation(self, distribution=False, **kw):
+def instellation(self, distribution=False, **kw):
     """
-    Planet Insolation (S, W/m**2)
+    Planet Instellation (S, W/m**2)
 
-    Calculate the insolation the planet receives from its star,
+    Calculate the instellation the planet receives from its star,
     given the luminosity of the star and the semimajor axis,
     expressed in units of W/m**2. (For reference, Earth
     receives 1360 W/m**2).
@@ -245,7 +243,6 @@ def insolation(self, distribution=False, **kw):
         If True, return an astropy.uncertainty.Distribution,
         which can be used for error propagation.
     """
-
     # calculate the average insolation the planet receives
     L = self.stellar_luminosity(distribution=distribution)
     a = self.semimajoraxis(distribution=distribution)
@@ -253,11 +250,34 @@ def insolation(self, distribution=False, **kw):
     return S.to(u.W / u.m**2)
 
 
-def relative_instellation(self, distribution=False, **kw):
+def insolation(self, distribution=False, **kw):
     """
-    Relative Planet Insolation  (S/S_Earth)
+    Planet Insolation (S, W/m**2)
 
     Calculate the insolation the planet receives from its star,
+    given the luminosity of the star and the semimajor axis,
+    expressed in units of W/m**2. (For reference, Earth
+    receives 1360 W/m**2).
+
+    This is an exact wrapper for `.instellation()`,
+    just because folks use different words.
+
+    Parameters
+    ----------
+    distribution : bool
+        If False, return a simple array of values.
+        If True, return an astropy.uncertainty.Distribution,
+        which can be used for error propagation.
+    """
+    # calculate the average insolation the planet receives
+    return self.instellation(distribution=distribution, **kw)
+
+
+def relative_instellation(self, distribution=False, **kw):
+    """
+    Relative Planet Instellation  (S/S_Earth)
+
+    Calculate the instellation the planet receives from its star,
     given the luminosity of the star and the semimajor axis,
     expressed relative to Earth's insolation.
 
@@ -268,7 +288,29 @@ def relative_instellation(self, distribution=False, **kw):
         If True, return an astropy.uncertainty.Distribution,
         which can be used for error propagation.
     """
-    return self.insolation(distribution=distribution) / earth_insolation
+    return self.instellation(distribution=distribution) / earth_insolation
+
+
+def relative_insolation(self, distribution=False, **kw):
+    """
+    Relative Planet Insolation  (S/S_Earth)
+
+    Calculate the insolation the planet receives from its star,
+    given the luminosity of the star and the semimajor axis,
+    expressed relative to Earth's insolation.
+
+    This is an exact wrapper for `.instellation()`,
+    just because folks use different words.
+
+    Parameters
+    ----------
+    distribution : bool
+        If False, return a simple array of values.
+        If True, return an astropy.uncertainty.Distribution,
+        which can be used for error propagation.
+    """
+
+    return self.relative_instellation(distribution=distribution, **kw)
 
 
 def log_relative_instellation(self, distribution=False, **kw):
@@ -409,6 +451,26 @@ def teq(self, distribution=False, albedo_bond=0, f=1 / 4, **kw):
     teq = ((S * f * (1 - albedo_bond) / sigma) ** (1 / 4)).to(u.K)
     return teq
 
+def tirr(self, distribution=False, **kw):
+    """
+    Planet Irradiation Temperature (K)
+
+    Calculate the irradiation temperature of the planet, capturing
+    them flux a planet receives, but before accounting for
+    how that gets reflected or redistributed over the planet.
+    It's the temperature a flat surface would have if it absorbed
+    all starlight at zenith and reradiated it to space (for example,
+    at the substellar point on a dark planet).
+
+    Parameters
+    ----------
+
+    distribution : bool
+        If False, return a simple array of values.
+        If True, return an astropy.uncertainty.Distribution,
+        which can be used for error propagation.
+    """
+    return self.teq(f=1, albedo_bond=0, distribution=distribution, **kw)
 
 def planet_luminosity(self, distribution=False, **kw):
     """
@@ -586,6 +648,28 @@ def transit_duration(self, distribution=False, **kw):
         **kw,
     )
 
+def ingress_duration(self, distribution=False, **kw):
+    """
+    The ingress/egress duration (days).
+
+    An approximate estimate of the ingress/egress duration,
+    which will break down for eccentric planets, for
+    large planet-to-star radius ratios, and for
+    grazing transits.
+
+    Parameters
+    ----------
+    distribution : bool
+        If False, return a simple array of values.
+        If True, return an astropy.uncertainty.Distribution,
+        which can be used for error propagation.
+    """
+    T = self.transit_duration(distribution=distribution)
+    k = self.scaled_radius(distribution=distribution)
+    b = self.transit_impact_parameter(distribution=distribution)
+
+    ingress_approximately = T*k/(1-b**2)
+    return ingress_approximately
 
 def mass_estimated_from_radius_assuming_rockyish(self, distribution=False, **kw):
     """
@@ -714,7 +798,7 @@ def kludge_mass(self, distribution=False, **kw):
             "mass_from_table",
             "msini_from_orbit",
             "mass_estimated_from_radius_assuming_rockyish",
-            #"mass_estimated_from_radius_assuming_chen_and_kipping",
+            # "mass_estimated_from_radius_assuming_chen_and_kipping",
         ],
         distribution=distribution,
         **kw,
@@ -1071,3 +1155,39 @@ def scale_height(
     g = self.surface_gravity(kludge=kludge, distribution=distribution)
     H = (k * T / mu / m_p / g).to("km")
     return H
+
+def tidal_circularization_timescale(self, Q_planet=1e4, kludge=False, distribution=False
+):
+    """
+    Tidal Circularization Timescale (Myr)
+
+    A very rough estimate of the timescale on which the planet's
+    orbital eccentricity damps away due to tidal circularization.
+
+    Parameters
+    ----------
+    Q_planet : float
+        The tidal quality factor Q for the planet.
+    kludge : bool
+        Should we include kludged estimates for mass (from msini and/or
+        empirical mass-radius) and/or radius (from empircal mass-radius)
+        when doing this calculation?
+    distribution : bool
+        If False, return a simple array of values.
+        If True, return an astropy.uncertainty.Distribution,
+        which can be used for error propagation.
+    """
+
+    M_star = self.stellar_mass(distribution=distribution)
+    R_planet = self.radius(distribution=distribution)
+    M_planet = self.mass(distribution=distribution)
+    semimajor = self.semimajoraxis(distribution=distribution)
+
+    # from Jackson et al. (2008)
+    tau = (
+        1
+        / (63 / 4 * (con.G * M_star**3) ** (1 / 2) * R_planet**5 / Q_planet / M_planet)
+        * semimajor ** (13 / 2)
+    )
+
+    return tau.to('Myr')

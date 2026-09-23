@@ -12,6 +12,7 @@ __all__ = [
     "NonKepler",
     "TESS",
     "NonTESS",
+    "NonKeplerNonTESS",
     "Space",
     "Ground",
     "GoodMass",
@@ -29,8 +30,8 @@ class TransitingExoplanetsSubset(TransitingExoplanets):
         # trim to just the data we want
         self.table = self.table[self.to_include()]
 
-        self._plotkw["color"] = None
-        self._plotkw["c"] = None
+        self._plotkw["color"] = kw.get("color", None)
+        self._plotkw["c"] = kw.get("color", None)
 
     def to_include(self):
         raise NotImplementedError(
@@ -40,8 +41,10 @@ class TransitingExoplanetsSubset(TransitingExoplanets):
 
 class Kepler(TransitingExoplanetsSubset):
     def __init__(self, **kw):
+        kw = dict( label="Kepler", color="royalblue", zorder=0) | kw
+
         TransitingExoplanetsSubset.__init__(
-            self, label="Kepler", color="royalblue", zorder=0, **kw
+            self, **kw
         )
 
     def to_include(self):
@@ -53,8 +56,10 @@ class Kepler(TransitingExoplanetsSubset):
 
 class NonKepler(TransitingExoplanetsSubset):
     def __init__(self, **kw):
+        kw = dict( label="Non-Kepler", color="black", zorder=0) | kw
+
         TransitingExoplanetsSubset.__init__(
-            self, label="Non-Kepler", color="black", zorder=0, **kw
+            self, **kw
         )
 
     def to_include(self):
@@ -66,8 +71,10 @@ class NonKepler(TransitingExoplanetsSubset):
 
 class TESS(TransitingExoplanetsSubset):
     def __init__(self, **kw):
+        kw = dict( label="TESS", color="orange", zorder=0) | kw
+
         TransitingExoplanetsSubset.__init__(
-            self, label="TESS", color="orangered", zorder=0, **kw
+            self, **kw
         )
 
     def to_include(self):
@@ -79,8 +86,9 @@ class TESS(TransitingExoplanetsSubset):
 
 class NonTESS(TransitingExoplanetsSubset):
     def __init__(self, **kw):
+        kw = dict(label="NonTESS", color="black", zorder=0) | kw
         TransitingExoplanetsSubset.__init__(
-            self, label="NonTESS", color="black", zorder=0, **kw
+            self,  **kw
         )
 
     def to_include(self):
@@ -88,6 +96,23 @@ class NonTESS(TransitingExoplanetsSubset):
             self.discovery_facility() == "Transiting Exoplanet Survey Satellite (TESS)"
         )
         return foundbytess == False
+
+class NonKeplerNonTESS(TransitingExoplanetsSubset):
+    def __init__(self, **kw):
+        kw = dict(label="No Kepler, No TESS", color="black", zorder=0) | kw
+        TransitingExoplanetsSubset.__init__(
+            self,  **kw
+        )
+
+    def to_include(self):
+        foundbytess = (
+            self.discovery_facility() == "Transiting Exoplanet Survey Satellite (TESS)"
+        )
+        foundbykepler = (self.discovery_facility() == "Kepler") | (
+            self.discovery_facility() == "K2"
+        )
+        return (foundbytess == False)*(foundbykepler == False)
+
 
 
 space_telescopes = [
@@ -114,8 +139,9 @@ class Space(TransitingExoplanetsSubset):
 
 class Ground(TransitingExoplanetsSubset):
     def __init__(self, **kw):
+        kw = dict(label="Ground-based", color="black", zorder=0) | kw
         TransitingExoplanetsSubset.__init__(
-            self, label="Ground-based", color="black", zorder=0, **kw
+            self,  **kw
         )
 
     def to_include(self):
@@ -143,7 +169,8 @@ def mass_is_good(pop):
 class GoodMass(TransitingExoplanetsSubset):
     def __init__(self, sigma=sigma, **kw):
         self.maximum_uncertainty = 1 / sigma
-        TransitingExoplanetsSubset.__init__(self, label="Good Mass", **kw)
+        kw = dict(label="Good Mass") | kw
+        TransitingExoplanetsSubset.__init__(self,  **kw)
 
     def to_include(self):
         return mass_is_good(self)
@@ -152,8 +179,10 @@ class GoodMass(TransitingExoplanetsSubset):
 class BadMass(TransitingExoplanetsSubset):
     def __init__(self, sigma=sigma, **kw):
         self.maximum_uncertainty = 1 / sigma
+        kw = dict(label="Bad Mass", color="lightblue") | kw
+
         TransitingExoplanetsSubset.__init__(
-            self, label="Bad Mass", color="lightblue", **kw
+            self,  **kw
         )
 
     def to_include(self):

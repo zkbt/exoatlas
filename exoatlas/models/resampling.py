@@ -8,7 +8,6 @@ import matplotlib.pyplot as plt
 from scipy.interpolate import interp1d
 import astropy.units as u
 
-
 __all__ = [
     "bintoR",
     "bintogrid",
@@ -476,12 +475,10 @@ def bintogrid(
     # warn if multiple inputs are provided
     number_of_grid_options = np.sum([z is not None for z in [newx_edges, newx, dx, nx]])
     if number_of_grid_options > 1:
-        cheerfully_suggest(
-            """More than one output grid sent to `bintogrid`.
+        cheerfully_suggest("""More than one output grid sent to `bintogrid`.
                          The one being used is the first to appear in
                          [`newx_edges`, `newx`, `dx`, `nx`]
-                         but you might want to choose more carefully."""
-        )
+                         but you might want to choose more carefully.""")
 
     # define inputs based on the following order
     if newx_edges is not None:
@@ -560,11 +557,9 @@ def bintogrid(
         final_newx = 0.5 * (final_newx_left + final_newx_right)
         dx_without_unit = (final_newx_right - final_newx_left) / x_unit
     else:
-        raise RuntimeError(
-            """No output grid sent to `bintogrid`.
+        raise RuntimeError("""No output grid sent to `bintogrid`.
                               Please choose one of the following:
-                              [`newx_edges`, `newx`, `dx`, `nx`]"""
-        )
+                              [`newx_edges`, `newx`, `dx`, `nx`]""")
 
     # don't complain about zero-divisions in here (to allow infinite uncertainties)
     with np.errstate(divide="ignore", invalid="ignore"):

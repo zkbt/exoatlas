@@ -4,7 +4,7 @@
 from ..imports import *
 from .resampling import *
 
-__all__ = ['Spectrum', 'Thermal', 'SumOfThermal']
+__all__ = ["Spectrum", "Thermal", "SumOfThermal"]
 
 # define some useful units
 spectral_luminosity_unit = u.W / u.micron
@@ -22,6 +22,7 @@ unit2name = {
     intensity_unit: "Intensity",
     spectral_intensity_unit: "Intensity",
 }
+
 
 def determine_quantity(unit):
     """
@@ -49,6 +50,7 @@ def check_wavelength_unit(w):
 
 
 bgkw = dict(color="gray", alpha=0.5, zorder=-100)
+
 
 class Spectrum:
     """
@@ -121,8 +123,8 @@ class Spectrum:
             newx=w.to("nm").value,
             drop_nans=False,
         )
-        unitless_neww = binned['x']
-        unitless_newf = binned['y']
+        unitless_neww = binned["x"]
+        unitless_newf = binned["y"]
 
         # make sure the wavelengths match up
         assert np.all(unitless_neww == w.to("nm").value)
@@ -209,14 +211,12 @@ class Spectrum:
             return np.arctan(self.radius / self.distance).to("deg")
         except (AttributeError, AssertionError):
             # complain if no distance is defined
-            raise ValueError(
-                """
+            raise ValueError("""
             This Spectrum has no .distance attribute.
             Please consider using `.at(distance)` to
             create a new light source as viewed from
             a distance.
-            """
-            )
+            """)
 
     def at(self, distance=1 * u.au):
         """
@@ -265,17 +265,17 @@ class Spectrum:
         # update this copy's distance and return
         new.filter = f
         try:
-            new._flux = self._flux*f(self._wavelength)
+            new._flux = self._flux * f(self._wavelength)
         except AttributeError:
+
             def surface_flux(self, wavelength=None):
                 w = self.get_wavelength(wavelength)
                 unfiltered_flux = self.surface_flux(wavelength=w)
-                filtered_flux = unfiltered_flux*f(w)
+                filtered_flux = unfiltered_flux * f(w)
                 return filtered_flux
+
             new.surface_flux = surface_flux
-        return new #BLERG! DOESN'T WORK!
-
-
+        return new  # BLERG! DOESN'T WORK!
 
     # FIXME -- for analytic functions, it'd help to define some kind of
     # a bounding box in wavelength space, so this integral could be done
@@ -441,7 +441,7 @@ class Thermal(Spectrum):
         up = h * c / (wavelength * k * temperature)
 
         # calculate the intensity from the Planck function
-        intensity = (2 * h * c ** 2 / wavelength ** 5 / (np.exp(up) - 1)) / u.steradian
+        intensity = (2 * h * c**2 / wavelength**5 / (np.exp(up) - 1)) / u.steradian
 
         # return the intensity
         return intensity.to("W/(m**2*micron*sr)")
@@ -509,7 +509,7 @@ class Thermal(Spectrum):
             return super().integrate(lower=lower, upper=upper)
 
         # if there are infinite wavelength limits, do the integral analytically
-        surface_flux = con.sigma_sb * self.teff ** 4
+        surface_flux = con.sigma_sb * self.teff**4
         factor = (self.surface_area() / self.normalization()).decompose()
         return factor * surface_flux
 
@@ -530,19 +530,19 @@ class SumOfThermal(Thermal):
         dlat = np.pi / n_grid
         dlon = np.pi / n_grid
 
-        lats = np.arange(-np.pi / 2., np.pi / 2., dlat)
+        lats = np.arange(-np.pi / 2.0, np.pi / 2.0, dlat)
         lons = np.arange(-np.pi, np.pi, dlon)
-        lats_mesh, lons_mesh = np.meshgrid(lats, lons, indexing='ij')
+        lats_mesh, lons_mesh = np.meshgrid(lats, lons, indexing="ij")
 
         # define inclination
-        inc = np.pi / 2.
+        inc = np.pi / 2.0
 
         # calculate substellar temperature (f=1)
-        T_sub = T_dmax * (3. / 2.) ** (1. / 4.)
+        T_sub = T_dmax * (3.0 / 2.0) ** (1.0 / 4.0)
 
         # calculate cosine from substellar and temperature at each point in 2D map
         cos_angle_hotspot = np.cos(lats_mesh) * np.cos(lons_mesh)
-        T_points = T_sub * cos_angle_hotspot ** 0.25
+        T_points = T_sub * cos_angle_hotspot**0.25
         T_points[cos_angle_hotspot <= 0] = 0  # set nightside to 0
         if plots:
             plt.imshow(T_points.value)
@@ -550,15 +550,23 @@ class SumOfThermal(Thermal):
             plt.show()
 
         # calculate spectrum at each point
-        planet_spectrum = (2 * h * c ** 2 / wavelength ** 5 / (
-                    np.exp(h * c / (wavelength * k * T_points[:, :, np.newaxis])) - 1)) / u.steradian
-        cos_angle_obs = np.sin(lats_mesh) * np.sin(np.pi / 2 - inc) + np.cos(lats_mesh) * np.cos(
-            np.pi / 2 - inc) * np.cos(lons_mesh)
+        planet_spectrum = (
+            2
+            * h
+            * c**2
+            / wavelength**5
+            / (np.exp(h * c / (wavelength * k * T_points[:, :, np.newaxis])) - 1)
+        ) / u.steradian
+        cos_angle_obs = np.sin(lats_mesh) * np.sin(np.pi / 2 - inc) + np.cos(
+            lats_mesh
+        ) * np.cos(np.pi / 2 - inc) * np.cos(lons_mesh)
         planet_spectrum[cos_angle_obs <= 0] = 0
         unit_solid_angle = np.cos(lats_mesh) * dlat * dlon
 
         # calculate intensity and sum them
-        intensity = planet_spectrum * (unit_solid_angle * cos_angle_obs)[:, :, np.newaxis]
+        intensity = (
+            planet_spectrum * (unit_solid_angle * cos_angle_obs)[:, :, np.newaxis]
+        )
         sum_intensity = intensity.sum(axis=(0, 1)) / np.pi
         if plots:
             plt.imshow(intensity[:, :, 0].value)
