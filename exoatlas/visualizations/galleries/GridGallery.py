@@ -8,10 +8,13 @@ class GridGallery(Gallery):
         rows=[Declination, Radius],
         cols=[RightAscension, Flux],
         mapsize=(5, 3),
+        label = None,
         **kw,
     ):
         self.mapsize = mapsize
         self.setup_maps(rows, cols, **kw)
+        # make sure this gallery has a label
+        self.label = label or "+".join([p.label for p in self.maps.values()])
 
     def setup_maps(self, rows=[], cols=[], map_type=BubbleMap, **kw):
 

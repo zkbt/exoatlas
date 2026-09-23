@@ -225,8 +225,6 @@ def transit_impact_parameter(self, distribution=False, **kw):
     return b
 
 
-# the 1360 W/m^2 that Earth receives from the Sun
-earth_insolation = (1 * u.Lsun / 4 / np.pi / u.AU**2).to(u.W / u.m**2)
 
 
 def instellation(self, distribution=False, **kw):
@@ -453,6 +451,26 @@ def teq(self, distribution=False, albedo_bond=0, f=1 / 4, **kw):
     teq = ((S * f * (1 - albedo_bond) / sigma) ** (1 / 4)).to(u.K)
     return teq
 
+def tirr(self, distribution=False, **kw):
+    """
+    Planet Irradiation Temperature (K)
+
+    Calculate the irradiation temperature of the planet, capturing
+    them flux a planet receives, but before accounting for
+    how that gets reflected or redistributed over the planet.
+    It's the temperature a flat surface would have if it absorbed
+    all starlight at zenith and reradiated it to space (for example,
+    at the substellar point on a dark planet).
+
+    Parameters
+    ----------
+
+    distribution : bool
+        If False, return a simple array of values.
+        If True, return an astropy.uncertainty.Distribution,
+        which can be used for error propagation.
+    """
+    return self.teq(f=1, albedo_bond=0, distribution=distribution, **kw)
 
 def planet_luminosity(self, distribution=False, **kw):
     """

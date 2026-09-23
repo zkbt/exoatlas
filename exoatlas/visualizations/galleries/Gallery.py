@@ -243,7 +243,7 @@ class Gallery:
 
             # put data into the axes
             for k, p in self.maps.items():
-                p.build(pops=pops, legend=False)
+                p.build(pops=pops, **kw)
 
             # remove any empty axes
             self.remove_unused_axes()

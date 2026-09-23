@@ -1763,6 +1763,7 @@ class Population:
         log_relative_instellation,
         relative_cumulative_xuv_insolation,
         teq,
+        tirr,
         planet_luminosity,
         transit_depth_from_radii,
         transit_depth,

@@ -116,6 +116,11 @@ class StellarLuminosity(Plottable):
     lim = [None, None]
     symbol = r"$\sf L_\star/L_\odot$"
 
+class Age(Plottable):
+    source = "stellar_age"
+    label = "Age\n(Gyr)"
+    scale = "log"
+    lim = [None, None]
 
 class RelativeStellarLuminosity(StellarLuminosity):
     source = "relative_stellar_luminosity"
