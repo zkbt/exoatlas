@@ -72,12 +72,15 @@ class Tang:
                 np.log10(self.core_masses),
                 np.log10(self.gas_fractions),
             ],
-            self.radii,
+            np.log10(self.radii),
             bounds_error=False,
             fill_value=np.nan,
         )
 
-    def __call__(self, age=1e9, flux=20, core=10, gas=0.1):
+    def __call__(self, age=1*u.Gyr,
+                 flux=20,
+                 core=10*u.M_earth,
+                 gas=0.1):
         """
         Interpolate the model radius.
 
@@ -86,11 +89,11 @@ class Tang:
 
         Parameters
         ----------
-        age : float, np.array
+        age : float, np.array, u.Quantity
             The age, in year.
         flux : float, np.array
             The bolometric flux received by planet, relative to Earth.
-        core : float, np.array
+        core : float, np.array, u.Quantity
             The core mass, in Earth masses.
         gas : float, np.array
             The H/He fraction, as fraction of the planet (or core?!?) mass.
@@ -102,9 +105,9 @@ class Tang:
         """
 
         # make sure all inputs are 1D arrays
-        a = np.atleast_1d(age)
+        a = np.atleast_1d(age.to_value('year'))
         f = np.atleast_1d(flux)
-        c = np.atleast_1d(core)
+        c = np.atleast_1d(core.to_value('M_earth'))
         g = np.atleast_1d(gas)
 
         # construct array of inputs onto which we will interpolate
@@ -116,21 +119,21 @@ class Tang:
         inputs[:, 3] = g
 
         # do the interpolation (in log space!)
-        radius = self.log_interpolator(np.log10(inputs))
+        radius = 10**self.log_interpolator(np.log10(inputs))*u.R_earth
 
         # return the interpolated result
         return radius
 
     def plot(self):
-        ages = [1e7, 1e8, 1e9, 1e10]
+        ages = [1e7, 1e8, 1e9, 1e10]*u.year
         fi, ax = plt.subplots(1, len(ages), sharey=True, figsize=(8, 3))
-        mass = np.logspace(-1, 2)
+        mass = np.logspace(-1, 2)*u.M_earth
         for i, age in enumerate(ages):
             plt.sca(ax[i])
             for g in [0.001, 0.01, 0.1]:
                 plt.plot(mass, self(age=age, core=mass, gas=g), label=f"{g:.1%} H/He")
             plt.xlabel("Mass (Earth masses)")
-            plt.title(f"$10^{{{np.log10(age):.0f}}}$ years")
+            plt.title(f"$10^{{{np.log10(age.to_value('year')):.0f}}}$ years")
         plt.legend(frameon=False)
         plt.sca(ax[0])
         plt.ylabel("Radius (Earth radii)")

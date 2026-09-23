@@ -52,7 +52,7 @@ class Baraffe:
                 fill_value=np.nan,
             )
 
-    def __call__(self, mass=1, age=4.5e9):
+    def __call__(self, mass=1*u.Msun, age=4.5*u.Gyr):
         """
         Interpolate stellar models to given mass and age.
 
@@ -77,8 +77,8 @@ class Baraffe:
         """
 
         # make sure all inputs are 1D arrays
-        m = np.atleast_1d(mass)
-        a = np.atleast_1d(age)
+        m = np.atleast_1d(mass.to_value('Msun'))
+        a = np.atleast_1d(age.to_value('year'))
 
         # construct array of inputs onto which we will interpolate
         N = np.max([len(m), len(a)])
@@ -101,7 +101,7 @@ class Baraffe:
         outputs = [
             z.reshape(logmass_2d.shape)
             for z in self(
-                mass=10 ** logmass_2d.flatten(), age=10 ** logage_2d.flatten()
+                mass=10 ** logmass_2d.flatten()*u.Msun, age=10 ** logage_2d.flatten()*u.year
             )
         ]
 
@@ -123,8 +123,8 @@ class Baraffe:
             sharex="col",
             sharey="row",
         )
-        for mass in [0.1, 0.4, 0.7, 1.0]:
-            ages = np.logspace(6, 10, 1000)
+        for mass in [0.1, 0.4, 0.7, 1.0]*u.Msun:
+            ages = np.logspace(6, 10, 1000)*u.year
             outputs = self(mass=mass, age=ages)
             for i, k in enumerate(self.log_interpolators):
                 plt.sca(ax[i, 0])
@@ -133,8 +133,8 @@ class Baraffe:
 
             plt.xlabel("Age (yr)")
             plt.legend()
-        for age in np.logspace(6, 10, 5):
-            masses = np.logspace(-1, 0, 1000)
+        for age in np.logspace(6, 10, 5)*u.year:
+            masses = np.logspace(-1, 0, 1000)*u.Msun
             outputs = self(mass=masses, age=age)
             for i, k in enumerate(self.log_interpolators):
                 plt.sca(ax[i, 1])
