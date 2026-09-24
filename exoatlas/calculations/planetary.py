@@ -1192,7 +1192,7 @@ def tidal_circularization_timescale(self, Q_planet=1e4, kludge=False, distributi
 
     return tau.to('Myr')
 
-def tidal_locking_timescale(self, Q_planet=1e4, omega_planet=1.7e-4, kludge=False, distribution=False
+def tidal_locking_timescale(self, Q_planet=1e4, omega_planet=1.7e-4/u.s, kludge=False, distribution=False
 ):
     """
     Tidal Locking Timescale (Myr)
@@ -1205,7 +1205,8 @@ def tidal_locking_timescale(self, Q_planet=1e4, omega_planet=1.7e-4, kludge=Fals
     Q_planet : float
         The tidal quality factor Q for the planet.
     omega_planet : float
-        The initial rotation rate of the planet, in s^-1
+        The initial rotation rate of the planet, in s^-1.
+        Default value is Jupiter, according to Guillot.
     kludge : bool
         Should we include kludged estimates for mass (from msini and/or
         empirical mass-radius) and/or radius (from empircal mass-radius)
@@ -1222,6 +1223,6 @@ def tidal_locking_timescale(self, Q_planet=1e4, omega_planet=1.7e-4, kludge=Fals
     semimajor = self.semimajoraxis(distribution=distribution)
 
     # from Guillot et al. (1996)
-    tau = Q*(R_planet**3/con.G/M_planet)*omega_p*(M_planet/M_star)**2*(semimajor/R_planet)**6
+    tau = Q_planet*(R_planet**3/con.G/M_planet)*omega_planet*(M_planet/M_star)**2*(semimajor/R_planet)**6
 
     return tau.to('Myr')
