@@ -1180,7 +1180,7 @@ def tidal_circularization_timescale(self, Q_planet=1e4, kludge=False, distributi
 
     M_star = self.stellar_mass(distribution=distribution)
     R_planet = self.radius(distribution=distribution)
-    M_planet = self.mass(distribution=distribution)
+    M_planet = self.mass(distribution=distribution, kludge=kludge)
     semimajor = self.semimajoraxis(distribution=distribution)
 
     # from Jackson et al. (2008)
@@ -1189,5 +1189,40 @@ def tidal_circularization_timescale(self, Q_planet=1e4, kludge=False, distributi
         / (63 / 4 * (con.G * M_star**3) ** (1 / 2) * R_planet**5 / Q_planet / M_planet)
         * semimajor ** (13 / 2)
     )
+
+    return tau.to('Myr')
+
+def tidal_locking_timescale(self, Q_planet=1e4, omega_planet=1.7e-4/u.s, kludge=False, distribution=False
+):
+    """
+    Tidal Locking Timescale (Myr)
+
+    A very rough estimate of the timescale on which the planet's
+    rotation period will synchronize with its orbital period.
+
+    Parameters
+    ----------
+    Q_planet : float
+        The tidal quality factor Q for the planet.
+    omega_planet : float
+        The initial rotation rate of the planet, in s^-1.
+        Default value is Jupiter, according to Guillot.
+    kludge : bool
+        Should we include kludged estimates for mass (from msini and/or
+        empirical mass-radius) and/or radius (from empircal mass-radius)
+        when doing this calculation?
+    distribution : bool
+        If False, return a simple array of values.
+        If True, return an astropy.uncertainty.Distribution,
+        which can be used for error propagation.
+    """
+
+    M_star = self.stellar_mass(distribution=distribution)
+    R_planet = self.radius(distribution=distribution)
+    M_planet = self.mass(distribution=distribution, kludge=kludge)
+    semimajor = self.semimajoraxis(distribution=distribution)
+
+    # from Guillot et al. (1996)
+    tau = Q_planet*(R_planet**3/con.G/M_planet)*omega_planet*(M_planet/M_star)**2*(semimajor/R_planet)**6
 
     return tau.to('Myr')
