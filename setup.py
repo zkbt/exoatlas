@@ -24,6 +24,12 @@ running the following command:
 
 `python setup.py release`
 
+...publish the documentation by running everything locally and pushing it
+up to the gh-pages branch of the repository
+
+`python setup.py docs`
+
+
 The template for this setup.py came was pieced together with help from
 barentsen, christinahedges, timothydmorton, and dfm. Check them out on github
 for more neat tricks!
