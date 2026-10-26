@@ -25,6 +25,7 @@ def test_reflection(telescope_name="JWST", wavelength=1 * u.micron):
         ).build(t, ax=ax[i])
         d = {True: "Transit", False: "Hour"}
         plt.title(f"S/N in 1 {d[per_transit]}")
+    plt.close("all")
 
 
 def test_emission(telescope_name="JWST", wavelength=5 * u.micron):
@@ -44,6 +45,7 @@ def test_emission(telescope_name="JWST", wavelength=5 * u.micron):
         ).build(t, ax=ax[i])
         d = {True: "Transit", False: "Hour"}
         plt.title(f"S/N in 1 {d[per_transit]}")
+    plt.close("all")
 
 
 def test_transmission(telescope_name="JWST", wavelength=5 * u.micron):
@@ -63,6 +65,7 @@ def test_transmission(telescope_name="JWST", wavelength=5 * u.micron):
         ).build(t, ax=ax[i])
         d = {True: "Transit", False: "Hour"}
         plt.title(f"S/N in 1 {d[per_transit]}")
+    plt.close("all")
 
 
 if __name__ == "__main__":

@@ -116,11 +116,13 @@ class StellarLuminosity(Plottable):
     lim = [None, None]
     symbol = r"$\sf L_\star/L_\odot$"
 
+
 class Age(Plottable):
     source = "stellar_age"
     label = "Age\n(Gyr)"
     scale = "log"
     lim = [None, None]
+
 
 class RelativeStellarLuminosity(StellarLuminosity):
     source = "relative_stellar_luminosity"
@@ -344,7 +346,7 @@ class Transmission(Depth):
     def _update_label(self):
         mu = self.kw["mu"]
         self.label = (
-            f"Transit Depth\nof 1 Scale Height\n" + rf"for $\mu$={{mu}}Atmosphere"
+            f"Transit Depth\nof 1 Scale Height\n" + rf"for $\mu$={mu} Atmosphere"
         )
 
 
@@ -359,7 +361,7 @@ class TransmissionSNR(DepthSNR):
         R = self.R
         self.label = (
             f"S/N for Transit Depth\nof 1 Scale Height\n"
-            + rf" for $\mu$={{mu}} Atmosphere"
+            + rf" for $\mu$={mu} Atmosphere"
             + f"\n{self.telescope_unit}"
         )
 

@@ -6,12 +6,14 @@ from exoatlas.imports import *
 def test_tang():
     t = Tang()
     t.plot()
+    plt.close("all")
 
 
 def test_baraffe():
     b = Baraffe()
     b.plot()
     b.imshow()
+    plt.close("all")
 
 
 def test_spectrum():
@@ -41,17 +43,20 @@ def test_seager():
     """
     plt.cla()
     plot_both_seager()
+    plt.close("all")
 
 
 def test_zeng():
     plt.cla()
     plot_three_zeng()
+    plt.close("all")
 
 
 def test_chen():
     plt.cla()
     plot_chen("mass")
     plot_chen("radius", alpha=0.5, linewidth=4)
+    plt.close("all")
 
 
 def test_kopparapu():

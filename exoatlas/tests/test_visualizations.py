@@ -28,12 +28,14 @@ def test_maps():
         print(k, p)
         p().build(pops=pops)
         plt.title(f"Map={k}")
+        plt.close("all")
 
 
 def test_slice():
     e = TransitingExoplanets()
     b = BubbleMap(xaxis=Flux(), yaxis=Radius(), sliceaxis=Radius(lim=[1, 2] * u.Rearth))
     b.build(e)
+    plt.close("all")
 
 
 def test_map_types():
@@ -53,6 +55,7 @@ def test_map_types():
         xaxis=Plottable(source="insolation"), yaxis=Plottable(source="radius")
     )
     fr.build(pops=pops)
+    plt.close("all")
 
 
 def test_galleries():
@@ -61,6 +64,7 @@ def test_galleries():
     FourPanelTransitGallery().build(pops)
     PlanetGalleryWithEscape().build(pops)
     PlanetGallery().build(pops)
+    plt.close("all")
 
 
 if __name__ == "__main__":  # pragma: no cover

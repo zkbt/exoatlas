@@ -77,10 +77,7 @@ class Tang:
             fill_value=np.nan,
         )
 
-    def __call__(self, age=1*u.Gyr,
-                 flux=20,
-                 core=10*u.M_earth,
-                 gas=0.1):
+    def __call__(self, age=1 * u.Gyr, flux=20, core=10 * u.M_earth, gas=0.1):
         """
         Interpolate the model radius.
 
@@ -105,9 +102,9 @@ class Tang:
         """
 
         # make sure all inputs are 1D arrays
-        a = np.atleast_1d(age.to_value('year'))
+        a = np.atleast_1d(age.to_value("year"))
         f = np.atleast_1d(flux)
-        c = np.atleast_1d(core.to_value('M_earth'))
+        c = np.atleast_1d(core.to_value("M_earth"))
         g = np.atleast_1d(gas)
 
         # construct array of inputs onto which we will interpolate
@@ -119,15 +116,15 @@ class Tang:
         inputs[:, 3] = g
 
         # do the interpolation (in log space!)
-        radius = 10**self.log_interpolator(np.log10(inputs))*u.R_earth
+        radius = 10 ** self.log_interpolator(np.log10(inputs)) * u.R_earth
 
         # return the interpolated result
         return radius
 
     def plot(self):
-        ages = [1e7, 1e8, 1e9, 1e10]*u.year
+        ages = [1e7, 1e8, 1e9, 1e10] * u.year
         fi, ax = plt.subplots(1, len(ages), sharey=True, figsize=(8, 3))
-        mass = np.logspace(-1, 2)*u.M_earth
+        mass = np.logspace(-1, 2) * u.M_earth
         for i, age in enumerate(ages):
             plt.sca(ax[i])
             for g in [0.001, 0.01, 0.1]:

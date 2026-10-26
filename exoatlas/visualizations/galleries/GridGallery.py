@@ -8,7 +8,7 @@ class GridGallery(Gallery):
         rows=[Declination, Radius],
         cols=[RightAscension, Flux],
         mapsize=(5, 3),
-        label = None,
+        label=None,
         **kw,
     ):
         self.mapsize = mapsize

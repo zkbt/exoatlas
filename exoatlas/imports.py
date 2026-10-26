@@ -230,6 +230,5 @@ def latexify_confidence_interval(median, lower, upper, symmetry_threshold=0.01):
     return s
 
 
-
 # the 1360 W/m^2 that Earth receives from the Sun
 earth_insolation = (1 * u.Lsun / 4 / np.pi / u.AU**2).to(u.W / u.m**2)

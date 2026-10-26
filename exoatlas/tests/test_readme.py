@@ -1,3 +1,6 @@
+from .setup_tests import *
+
+
 def test_readme():
     """
     Test the code that appears on the GitHub README.
