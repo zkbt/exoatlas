@@ -1,0 +1,1 @@
+import{a as e,b as r}from"/exoatlas/build/_shared/chunk-7FGDXJSL.js";import"/exoatlas/build/_shared/chunk-GEZIJWLJ.js";import"/exoatlas/build/_shared/chunk-RAQ24GF6.js";export{e as ArchitectureModule,r as createArchitectureServices};
