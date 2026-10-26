@@ -41,9 +41,10 @@ def get_exoplanets_by_method(methods="all", include_solar_system=True):
     # create a dictionary of populations,
     pops = {}
     for m in methods:
-        pops[m] = e[e.discovery_method() == m]
-        pops[m].label = m
-        pops[m].color = None
+        k = str(m)
+        pops[k] = e[e.discovery_method() == m]
+        pops[k].label = k
+        pops[k].color = None
 
     if include_solar_system:
         s = SolarSystem()

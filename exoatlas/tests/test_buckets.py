@@ -31,6 +31,7 @@ def test_buckets():
         ),
         yaxis=Depth,
     ).build([t])
+    plt.close("all")
 
 
 def test_telescope_snr():

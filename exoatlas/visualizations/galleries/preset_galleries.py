@@ -201,7 +201,9 @@ class EverythingGallery(GridGallery):
 
     def refine_maps(self, **kw):
         GridGallery.refine_maps(self)
-        self.maps["relative_instellation_x_radius"].add_legend(fontsize=5)
+        self.maps["relative_instellation_x_radius"].add_legend(
+            fontsize=5, loc="lower left"
+        )
 
 
 '''class ObservableGallery(BuildablePlot):

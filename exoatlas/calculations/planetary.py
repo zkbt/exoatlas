@@ -225,8 +225,6 @@ def transit_impact_parameter(self, distribution=False, **kw):
     return b
 
 
-
-
 def instellation(self, distribution=False, **kw):
     """
     Planet Instellation (S, W/m**2)
@@ -451,6 +449,7 @@ def teq(self, distribution=False, albedo_bond=0, f=1 / 4, **kw):
     teq = ((S * f * (1 - albedo_bond) / sigma) ** (1 / 4)).to(u.K)
     return teq
 
+
 def tirr(self, distribution=False, **kw):
     """
     Planet Irradiation Temperature (K)
@@ -471,6 +470,7 @@ def tirr(self, distribution=False, **kw):
         which can be used for error propagation.
     """
     return self.teq(f=1, albedo_bond=0, distribution=distribution, **kw)
+
 
 def planet_luminosity(self, distribution=False, **kw):
     """
@@ -648,6 +648,7 @@ def transit_duration(self, distribution=False, **kw):
         **kw,
     )
 
+
 def ingress_duration(self, distribution=False, **kw):
     """
     The ingress/egress duration (days).
@@ -668,8 +669,9 @@ def ingress_duration(self, distribution=False, **kw):
     k = self.scaled_radius(distribution=distribution)
     b = self.transit_impact_parameter(distribution=distribution)
 
-    ingress_approximately = T*k/(1-b**2)
+    ingress_approximately = T * k / (1 - b**2)
     return ingress_approximately
+
 
 def mass_estimated_from_radius_assuming_rockyish(self, distribution=False, **kw):
     """
@@ -1156,7 +1158,9 @@ def scale_height(
     H = (k * T / mu / m_p / g).to("km")
     return H
 
-def tidal_circularization_timescale(self, Q_planet=1e4, kludge=False, distribution=False
+
+def tidal_circularization_timescale(
+    self, Q_planet=1e4, kludge=False, distribution=False
 ):
     """
     Tidal Circularization Timescale (Myr)
@@ -1190,9 +1194,11 @@ def tidal_circularization_timescale(self, Q_planet=1e4, kludge=False, distributi
         * semimajor ** (13 / 2)
     )
 
-    return tau.to('Myr')
+    return tau.to("Myr")
 
-def tidal_locking_timescale(self, Q_planet=1e4, omega_planet=1.7e-4/u.s, kludge=False, distribution=False
+
+def tidal_locking_timescale(
+    self, Q_planet=1e4, omega_planet=1.7e-4 / u.s, kludge=False, distribution=False
 ):
     """
     Tidal Locking Timescale (Myr)
@@ -1223,6 +1229,12 @@ def tidal_locking_timescale(self, Q_planet=1e4, omega_planet=1.7e-4/u.s, kludge=
     semimajor = self.semimajoraxis(distribution=distribution)
 
     # from Guillot et al. (1996)
-    tau = Q_planet*(R_planet**3/con.G/M_planet)*omega_planet*(M_planet/M_star)**2*(semimajor/R_planet)**6
+    tau = (
+        Q_planet
+        * (R_planet**3 / con.G / M_planet)
+        * omega_planet
+        * (M_planet / M_star) ** 2
+        * (semimajor / R_planet) ** 6
+    )
 
-    return tau.to('Myr')
+    return tau.to("Myr")

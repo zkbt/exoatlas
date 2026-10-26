@@ -41,11 +41,9 @@ class TransitingExoplanetsSubset(TransitingExoplanets):
 
 class Kepler(TransitingExoplanetsSubset):
     def __init__(self, **kw):
-        kw = dict( label="Kepler", color="royalblue", zorder=0) | kw
+        kw = dict(label="Kepler", color="royalblue", zorder=0) | kw
 
-        TransitingExoplanetsSubset.__init__(
-            self, **kw
-        )
+        TransitingExoplanetsSubset.__init__(self, **kw)
 
     def to_include(self):
         foundbykepler = (self.discovery_facility() == "Kepler") | (
@@ -56,11 +54,9 @@ class Kepler(TransitingExoplanetsSubset):
 
 class NonKepler(TransitingExoplanetsSubset):
     def __init__(self, **kw):
-        kw = dict( label="Non-Kepler", color="black", zorder=0) | kw
+        kw = dict(label="Non-Kepler", color="black", zorder=0) | kw
 
-        TransitingExoplanetsSubset.__init__(
-            self, **kw
-        )
+        TransitingExoplanetsSubset.__init__(self, **kw)
 
     def to_include(self):
         foundbykepler = (self.discovery_facility() == "Kepler") | (
@@ -71,11 +67,9 @@ class NonKepler(TransitingExoplanetsSubset):
 
 class TESS(TransitingExoplanetsSubset):
     def __init__(self, **kw):
-        kw = dict( label="TESS", color="orange", zorder=0) | kw
+        kw = dict(label="TESS", color="orange", zorder=0) | kw
 
-        TransitingExoplanetsSubset.__init__(
-            self, **kw
-        )
+        TransitingExoplanetsSubset.__init__(self, **kw)
 
     def to_include(self):
         foundbytess = (
@@ -87,9 +81,7 @@ class TESS(TransitingExoplanetsSubset):
 class NonTESS(TransitingExoplanetsSubset):
     def __init__(self, **kw):
         kw = dict(label="NonTESS", color="black", zorder=0) | kw
-        TransitingExoplanetsSubset.__init__(
-            self,  **kw
-        )
+        TransitingExoplanetsSubset.__init__(self, **kw)
 
     def to_include(self):
         foundbytess = (
@@ -97,12 +89,11 @@ class NonTESS(TransitingExoplanetsSubset):
         )
         return foundbytess == False
 
+
 class NonKeplerNonTESS(TransitingExoplanetsSubset):
     def __init__(self, **kw):
         kw = dict(label="No Kepler, No TESS", color="black", zorder=0) | kw
-        TransitingExoplanetsSubset.__init__(
-            self,  **kw
-        )
+        TransitingExoplanetsSubset.__init__(self, **kw)
 
     def to_include(self):
         foundbytess = (
@@ -111,8 +102,7 @@ class NonKeplerNonTESS(TransitingExoplanetsSubset):
         foundbykepler = (self.discovery_facility() == "Kepler") | (
             self.discovery_facility() == "K2"
         )
-        return (foundbytess == False)*(foundbykepler == False)
-
+        return (foundbytess == False) * (foundbykepler == False)
 
 
 space_telescopes = [
@@ -140,9 +130,7 @@ class Space(TransitingExoplanetsSubset):
 class Ground(TransitingExoplanetsSubset):
     def __init__(self, **kw):
         kw = dict(label="Ground-based", color="black", zorder=0) | kw
-        TransitingExoplanetsSubset.__init__(
-            self,  **kw
-        )
+        TransitingExoplanetsSubset.__init__(self, **kw)
 
     def to_include(self):
         foundfromspace = np.zeros(len(self)).astype(bool)
@@ -170,7 +158,7 @@ class GoodMass(TransitingExoplanetsSubset):
     def __init__(self, sigma=sigma, **kw):
         self.maximum_uncertainty = 1 / sigma
         kw = dict(label="Good Mass") | kw
-        TransitingExoplanetsSubset.__init__(self,  **kw)
+        TransitingExoplanetsSubset.__init__(self, **kw)
 
     def to_include(self):
         return mass_is_good(self)
@@ -181,9 +169,7 @@ class BadMass(TransitingExoplanetsSubset):
         self.maximum_uncertainty = 1 / sigma
         kw = dict(label="Bad Mass", color="lightblue") | kw
 
-        TransitingExoplanetsSubset.__init__(
-            self,  **kw
-        )
+        TransitingExoplanetsSubset.__init__(self, **kw)
 
     def to_include(self):
         return mass_is_good(self) == False

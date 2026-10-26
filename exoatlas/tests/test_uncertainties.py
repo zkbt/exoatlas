@@ -55,6 +55,7 @@ def test_skew(N_data=25):
     plt.legend(frameon=False)
     plt.xlabel(r"$\log_{10}(\sigma_{upper}/\sigma_{lower})$")
     plt.ylabel(r"$\sigma_{68\%, measured}/\sigma_{injected}$")
+    plt.close("all")
 
 
 def test_make_astropy_distribution(key="radius"):
@@ -77,6 +78,7 @@ def test_make_astropy_distribution(key="radius"):
     plt.plot((sample_lower - mu) / lower, **sample_kw)
     plt.plot((sample_upper - mu) / upper, **sample_kw)
     plt.ylabel("upper + lower\n" + r"$\sigma_{samples}/\sigma_{table}$")
+    plt.close("all")
 
 
 def test_uncertainties():

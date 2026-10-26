@@ -1790,7 +1790,7 @@ class Population:
         log_relative_radius,
         log_relative_stellar_luminosity,
         tidal_circularization_timescale,
-        tidal_locking_timescale
+        tidal_locking_timescale,
     )
 
     from ..calculations.stellar import (

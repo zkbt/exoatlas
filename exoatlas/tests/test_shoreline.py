@@ -19,6 +19,7 @@ def test_shoreline_probability_of_atmosphere():
     plt.xscale("log")
     plt.xlabel("Planet Semimajor Axis (AU)")
     plt.ylabel("Probability of Atmosphere")
+    plt.close("all")
 
 
 def test_shoreline_visualizations():
@@ -47,3 +48,4 @@ def test_shoreline_visualizations():
 
     # colorbar for probability
     g.add_colorbar()
+    plt.close("all")
