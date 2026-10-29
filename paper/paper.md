@@ -30,7 +30,7 @@ authors:
   - name: Girish M. Duvvuri
     orcid: 0000-0002-7119-2543
     affiliation: 2
-  - name: Sebastian Pineda
+  - name: J. Sebastian Pineda
     orcid: 0000-0002-4489-0135
     affiliation: 3
 affiliations:
