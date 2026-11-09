@@ -269,7 +269,7 @@ class Shoreline:
         # maybe convert to latex
         if latex:
             return [
-                rf"{{latexify_confidence_interval(m*100, l*100, u*100)}}\%"
+                rf"{latexify_confidence_interval(m*100, l*100, u*100)}\%"
                 for m, l, u in zip(
                     np.atleast_1d(median), np.atleast_1d(lower), np.atleast_1d(upper)
                 )
