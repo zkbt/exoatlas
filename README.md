@@ -1,4 +1,7 @@
 # exoatlas
+
+[![DOI](https://joss.theoj.org/papers/10.21105/joss.09655/status.svg)](https://doi.org/10.21105/joss.09655)
+
 Tools for compiling and plotting populations of transiting exoplanets. To learn how to use `exoatlas`, please [read the documentation](https://zkbt.github.io/exoatlas/). 
 
 ### Installation
@@ -40,3 +43,23 @@ For a slightly less quick preview, which will hopefully entice you to keep readi
 
 ### Authors
 This toolkit was developed mostly by [Zach Berta-Thompson](http://casa.colorado.edu/~bertathompson/). It relies heavily on the incredible work done by the folks over at the [NASA Exoplanet Archive](https://exoplanetarchive.ipac.caltech.edu), and their generously designed API.
+
+
+### Citation
+To acknowledge the use of `exoatlas`, please cite: 
+
+```
+@article{2026-exoatlas-berta-thompson,
+  title = {Exoatlas: {{Friendly Python Code}} for {{Exoplanet Populations}}},
+  shorttitle = {Exoatlas},
+  author = {{Berta-Thompson}, Zach K. and Wachiraphan, Patcharapol and Stephens, Autumn and Caradonna, Mirielle and Murray, Catriona A. and Arriero, Valerie and Avery, Jackson and Duvvuri, Girish M. and Pineda, J. Sebastian},
+  year = 2026,
+  month = nov,
+  journal = {Journal of Open Source Software},
+  volume = {11},
+  number = {127},
+  pages = {9655},
+  issn = {2475-9066},
+  doi = {10.21105/joss.09655},
+}
+```

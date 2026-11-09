@@ -1,4 +1,5 @@
 # 🌌 exoatlas
+[![DOI](https://joss.theoj.org/papers/10.21105/joss.09655/status.svg)](https://doi.org/10.21105/joss.09655)
 
 Welcome! `exoatlas` is a Python package for interacting with basic properties of exoplanets and Solar System planets. It provides a friendly way to download useful data from online archives like the [NASA Exoplanet Archive](https://exoplanetarchive.ipac.caltech.edu) and [JPL Solar System Dynamics](https://ssd.jpl.nasa.gov), easy access to planet properties, and some pre-packaged visualizations for summarizing and comparing populations of planets.
 
@@ -29,7 +30,23 @@ The documentation is targeted at someone with basic knowledge in astronomy, plan
 
 
 ## 🗂️ How to Cite `exoatlas`
-A manuscript is currently under review at JOSS (as of late spring 2026). Once that is complete, we will link to the SciEx entry where you can access bibliographic data for the code/paper in multiple formats. In the meantime, [this arxiv posting](https://scixplorer.org/abs/2025arXiv250702210B/abstract) is a good reference.
+
+A manuscript describing this package has been published in The Journal of Open Source Software as "[exoatlas: Friendly Python Code for Exoplanet Populations](https://joss.theoj.org/papers/10.21105/joss.09655)" Please cite that paper to acknowledge use of this code. Here is a [BibTex](https://www.overleaf.com/learn/latex/Bibliography_management_with_bibtex) entry:
+```
+@article{2026-exoatlas-berta-thompson,
+  title = {Exoatlas: {{Friendly Python Code}} for {{Exoplanet Populations}}},
+  shorttitle = {Exoatlas},
+  author = {{Berta-Thompson}, Zach K. and Wachiraphan, Patcharapol and Stephens, Autumn and Caradonna, Mirielle and Murray, Catriona A. and Arriero, Valerie and Avery, Jackson and Duvvuri, Girish M. and Pineda, J. Sebastian},
+  year = 2026,
+  month = nov,
+  journal = {Journal of Open Source Software},
+  volume = {11},
+  number = {127},
+  pages = {9655},
+  issn = {2475-9066},
+  doi = {10.21105/joss.09655},
+}
+```
 
 ## 📞 How to Get Help
 
