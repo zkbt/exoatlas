@@ -46,7 +46,7 @@ This toolkit was developed mostly by [Zach Berta-Thompson](http://casa.colorado.
 
 
 ### Citation
-To acknowledge the use of `exoatlas`, please cite: 
+To acknowledge the use of `exoatlas`, please cite [the JOSS paper](https://joss.theoj.org/papers/10.21105/joss.09655): 
 
 ```
 @article{2026-exoatlas-berta-thompson,
