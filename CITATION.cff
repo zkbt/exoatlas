@@ -1,0 +1,74 @@
+cff-version: "1.2.0"
+authors:
+- family-names: Berta-Thompson
+  given-names: Zach K.
+  orcid: "https://orcid.org/0000-0002-3321-4924"
+- family-names: Wachiraphan
+  given-names: Patcharapol
+  orcid: "https://orcid.org/0000-0001-6484-7559"
+- family-names: Stephens
+  given-names: Autumn
+  orcid: "https://orcid.org/0009-0009-7798-8700"
+- family-names: Caradonna
+  given-names: Mirielle
+  orcid: "https://orcid.org/0009-0000-9058-0069"
+- family-names: Murray
+  given-names: Catriona A.
+  orcid: "https://orcid.org/0000-0001-8504-5862"
+- family-names: Arriero
+  given-names: Valerie
+  orcid: "https://orcid.org/0009-0007-0158-1651"
+- family-names: Avery
+  given-names: Jackson
+  orcid: "https://orcid.org/0009-0003-0287-0149"
+- family-names: Duvvuri
+  given-names: Girish M.
+  orcid: "https://orcid.org/0000-0002-7119-2543"
+- family-names: Pineda
+  given-names: J. Sebastian
+  orcid: "https://orcid.org/0000-0002-4489-0135"
+doi: 10.5281/zenodo.23667242
+message: If you use this software, please cite our article in the
+  Journal of Open Source Software.
+preferred-citation:
+  authors:
+  - family-names: Berta-Thompson
+    given-names: Zach K.
+    orcid: "https://orcid.org/0000-0002-3321-4924"
+  - family-names: Wachiraphan
+    given-names: Patcharapol
+    orcid: "https://orcid.org/0000-0001-6484-7559"
+  - family-names: Stephens
+    given-names: Autumn
+    orcid: "https://orcid.org/0009-0009-7798-8700"
+  - family-names: Caradonna
+    given-names: Mirielle
+    orcid: "https://orcid.org/0009-0000-9058-0069"
+  - family-names: Murray
+    given-names: Catriona A.
+    orcid: "https://orcid.org/0000-0001-8504-5862"
+  - family-names: Arriero
+    given-names: Valerie
+    orcid: "https://orcid.org/0009-0007-0158-1651"
+  - family-names: Avery
+    given-names: Jackson
+    orcid: "https://orcid.org/0009-0003-0287-0149"
+  - family-names: Duvvuri
+    given-names: Girish M.
+    orcid: "https://orcid.org/0000-0002-7119-2543"
+  - family-names: Pineda
+    given-names: J. Sebastian
+    orcid: "https://orcid.org/0000-0002-4489-0135"
+  date-published: 2026-11-08
+  doi: 10.21105/joss.09655
+  issn: 2475-9066
+  issue: 127
+  journal: Journal of Open Source Software
+  publisher:
+    name: Open Journals
+  start: 9655
+  title: "exoatlas: Friendly Python Code for Exoplanet Populations"
+  type: article
+  url: "https://joss.theoj.org/papers/10.21105/joss.09655"
+  volume: 11
+title: "exoatlas: Friendly Python Code for Exoplanet Populations"
