@@ -1105,10 +1105,10 @@ def escape_parameter(
         R = self.get("radius", distribution=distribution)
 
     k = con.k_B
-    m_p = con.m_p
+    m = con.m_p * mu
     G = con.G
     e_thermal = k * T
-    e_grav = G * M * m_p / R
+    e_grav = G * M * m / R
     return (e_grav / e_thermal).decompose()
 
 
